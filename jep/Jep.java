@@ -290,9 +290,13 @@ public final class Jep {
     public void setClassLoader(ClassLoader cl) {
         if(cl != null && cl != this.classLoader) {
             this.classLoader = cl;
-            // TODO call native set
+            // call native set
+            setClassLoader(this.tstate, cl);
         }
     }
+    
+    
+    private native void setClassLoader(int tstate, ClassLoader cl);
     
     
     /**

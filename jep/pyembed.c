@@ -429,9 +429,26 @@ int pyembed_compile_string(JNIEnv *env,
 }
 
 
-jobject pyembed_getvalue(JNIEnv *env,
-                         jint _jepThread,
-                         char *str) {
+void pyembed_setloader(JNIEnv *env, jint _jepThread, jobject cl) {
+    jobject    oldLoader = NULL;
+    JepThread *jepThread = (JepThread *) _jepThread;
+    if(!jepThread) {
+        THROW_JEP(env, "Couldn't get thread objects.");
+        return;
+    }
+    
+    if(!cl)
+        return;
+    
+    oldLoader = jepThread->classloader;
+    if(oldLoader)
+        (*env)->DeleteGlobalRef(env, oldLoader);
+    
+    jepThread->classloader = (*env)->NewGlobalRef(env, cl);
+}
+
+
+jobject pyembed_getvalue(JNIEnv *env, jint _jepThread, char *str) {
     PyThreadState  *prevThread;
     PyObject       *main, *dict, *result;
     jobject         ret = NULL;

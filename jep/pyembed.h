@@ -60,6 +60,7 @@ void pyembed_close(void);
 void pyembed_run(JNIEnv*, jint, char*);
 void pyembed_eval(JNIEnv *, jint, char*);
 int pyembed_compile_string(JNIEnv*, jint, char*);
+void pyembed_setloader(JNIEnv*, jint, jobject);
 jobject pyembed_getvalue(JNIEnv*, jint, char*);
 
 JepThread* pyembed_get_jepthread(void);
