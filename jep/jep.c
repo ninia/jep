@@ -82,6 +82,25 @@ JNIEXPORT void JNICALL Java_jep_Jep_run
 
 /*
  * Class:     jep_Jep
+ * Method:    compileString
+ * Signature: (ILjava/lang/String;)I
+ */
+JNIEXPORT jint JNICALL Java_jep_Jep_compileString
+(JNIEnv *env, jobject obj, jint tstate, jstring jstr) {
+    const char *str;
+    jint ret;
+
+    str = jstring2char(env, jstr);
+
+    ret = (jint) pyembed_compile_string(env, tstate, (char *) str);
+
+    release_utf_char(env, jstr, str);
+    return ret;
+}
+
+
+/*
+ * Class:     jep_Jep
  * Method:    eval
  * Signature: (Ljava/lang/String;Ljava/lang/ClassLoader;Ljava/lang/String;)Ljava/lang/Object;
  */

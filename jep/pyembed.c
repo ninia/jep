@@ -486,6 +486,38 @@ EXIT:
 }
 
 
+// returns 1 if finished, 0 if not, throws exception otherwise
+int pyembed_compile_string(JNIEnv *env,
+                           jint tstate,
+                           char *str) {
+    PyThreadState *prevThread, *thread;
+    PyObject      *code;
+    int            ret = -1;
+    
+    thread = (PyThreadState *) tstate;
+
+    PyEval_AcquireLock();
+    prevThread = PyThreadState_Swap(thread);
+    
+    code = Py_CompileString(str, "<stdin>", Py_single_input);
+    
+    if(code != NULL) {
+        Py_DECREF(code);
+        ret = 1;
+    }
+    else if(PyErr_ExceptionMatches(PyExc_SyntaxError)) {
+        PyErr_Clear();
+        ret = 0;
+    }
+    else
+        process_py_exception(env, 0);
+
+    PyThreadState_Swap(prevThread);
+    PyEval_ReleaseLock();
+    return ret;
+}
+
+
 jobject pyembed_getvalue(JNIEnv *env,
                          jint tstate,
                          char *str) {

@@ -142,8 +142,6 @@ public final class Jep {
      * @exception JepException if an error occurs
      */
     public boolean eval(String str) throws JepException {
-        boolean finished = true;
-        
         try {
             if(str == null || str.equals("")) {
                 str = null;
@@ -155,26 +153,16 @@ public final class Jep {
                 }
             }
             else {
-                char last = str.charAt(str.length() - 1);
-            
-                // trim comments
-                int pos = str.indexOf("#");
-                if(pos > -1)
-                    str = str.substring(0, pos);
-            
-                if(last == '\\' || last == ':')
-                    finished = false;
-                else if(Character.isWhitespace(str.charAt(0)))
-                    finished = false;
+                // try to compile string. if successful, input is finished.
+                int finished = compileString(this.tstate, str);
+                if(finished == 0) {
+                    if(this.evalLines == null)
+                        this.evalLines = new StringBuffer();
+                    evalLines.append(str + "\n");
+                    return false;
+                }
             }
 
-            if(!finished) {
-                if(this.evalLines == null)
-                    this.evalLines = new StringBuffer();
-                evalLines.append(str + "\n");
-                return false;
-            }
-        
             // may need to run previous lines
             if(this.evalLines != null) {
                 eval(this.tstate,
@@ -198,6 +186,10 @@ public final class Jep {
         
         return false;
     }
+
+
+    private native int compileString(int tstate,
+                                     String str) throws JepException;
 
     
     private native void eval(int tstate,
