@@ -70,12 +70,14 @@ public class Run {
         try {
             if(debug) {
                 jep = new Jep(true, ".");
+                jep.eval("__name__ = '__main__'");
+                
                 BufferedReader in = new BufferedReader(new FileReader(file));
                 String line = in.readLine();
                 
                 while(line != null) {
                     System.out.println("# " + line);
-                    jep.eval(line + "\n");
+                    jep.eval(line); // jep adds newline
                     
                     line = in.readLine();
                 }
