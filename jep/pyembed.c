@@ -626,6 +626,7 @@ void pyembed_run(JNIEnv *env,
 
         PyRun_File(script, file, Py_file_input, globals, locals);
         
+        fclose(script);
         process_py_exception(env, 1);
         Py_DECREF(locals);
         Py_DECREF(globals);
