@@ -84,7 +84,7 @@ AC_DEFUN([AC_CHECK_LONG_DOUBLE], [
 AC_REQUIRE([AC_PROG_CPP])
 ac_save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="$CPPFLAGS -Wno-long-double"
-AC_TRY_CPP([void main()],
+AC_TRY_CPP([int main(int argc, char **argv) {}],
     CPPFLAGS="$CPPFLAGS",
     CPPFLAGS="$ac_save_CPPFLAGS")
 ])
@@ -93,8 +93,7 @@ dnl --------------------------------------------------
 dnl check features
 AC_DEFUN([AC_ARG_DEALLOC], [
 AC_ARG_ENABLE([dealloc],
-    AC_HELP_STRING([--enable-dealloc],
-                   [enable object deallocation (default yes)]),
+    [  --enable-dealloc        enable object deallocation (default yes)],
     [use_dealloc=$enableval],
     [use_dealloc=yes])
 
@@ -106,8 +105,7 @@ fi
 dnl enable/disable automagic exception mapping
 AC_DEFUN([AC_ARG_EXCEPT], [
 AC_ARG_ENABLE([map-exceptions],
-    AC_HELP_STRING([--enable-map-exceptions],
-                   [enable automagic exception mapping (default yes)]),
+    [  --enable-map-exceptions enable automagic exception mapping (default yes)],
     [use_except=$enableval],
     [use_except=yes])
 
@@ -131,7 +129,7 @@ fi
 dnl mrj, check python version
 AC_DEFUN([AC_CHECK_PYTHON_VERSION], [
 AC_MSG_CHECKING([python version >= 2])
-AC_PREPROC_IFELSE([
+AC_TRY_CPP([
 #include "Python.h"
 #if PY_MAJOR_VERSION < 2
 #  error Python version 2.2 or greater is required.
@@ -146,7 +144,7 @@ AC_PREPROC_IFELSE([
 
 AC_DEFUN([AC_CHECK_PYTHON_THREAD], [
 AC_MSG_CHECKING([python has threads])
-AC_PREPROC_IFELSE([
+AC_TRY_CPP([
 #include "Python.h"
 #if !WITH_THREAD
 #  error threads required

@@ -14,14 +14,6 @@ AC_SUBST(ISODATE)
 
 AC_CANONICAL_HOST
 
-dnl mrj - check JAVA_HOME, set path
-AC_CHECK_JAVA_HOME
-
-dnl mrj - uses libraries
-AM_PROG_LIBTOOL
-dnl mrj - disable long double warning
-AC_CHECK_LONG_DOUBLE
-
 dnl features
 AC_ARG_DEALLOC
 AC_ARG_EXCEPT
@@ -29,8 +21,17 @@ AC_ARG_EXCEPT
 dnl Checks for programs.
 AC_PROG_INSTALL
 AC_PROG_CC
+
+dnl mrj - uses libraries
+AM_PROG_LIBTOOL
+
+dnl mrj - check JAVA_HOME, set path
+AC_CHECK_JAVA_HOME
 AC_PROG_JAVAC
 AC_PROG_JAVAH
+
+dnl mrj - disable long double warning
+AC_CHECK_LONG_DOUBLE
 
 dnl Checks for libraries.
 PGAC_CHECK_PYTHON_ALL
