@@ -66,6 +66,10 @@ SOURCE=..\pyembed.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\pyjarray.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\pyjclass.c
 # End Source File
 # Begin Source File
@@ -95,6 +99,10 @@ SOURCE=..\jep.h
 # Begin Source File
 
 SOURCE=..\pyembed.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\pyjarray.h
 # End Source File
 # Begin Source File
 
