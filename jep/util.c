@@ -218,7 +218,7 @@ int process_py_exception(JNIEnv *env, int printTrace) {
     if(ptrace)
         Py_DECREF(ptrace);
     
-    if(PyString_Check(message)) {
+    if(message && PyString_Check(message)) {
         m = PyString_AsString(message);
         THROW_JEP(env, m);
     }
