@@ -228,10 +228,8 @@ public final class Jep {
      * the implementation currently returns a String.
      *
      * Python is pretty picky about what it excepts here. The general syntax:
-     *
-     * <code>eval("a = 5")</code>
-     * <code>String a = (String) getValue("a")</code>
-     *
+     * <blockquote>eval("a = 5")
+     *String a = (String) getValue("a")</blockquote>
      * will work.
      * </pre>
      *
