@@ -21,8 +21,8 @@ Example: ./makejar.sh com/trinitycapital/DB/ DB.jar
     exit 1
 fi
 
-echo "pushd ../"
-pushd ../
+echo "cd .."
+cd ..
 
 files=`find $1 -name "*.class" -maxdepth 1`
 
@@ -43,7 +43,7 @@ if test "$ret" == "0" -a -e ${1}manifest; then
     $JAR -umf ${1}manifest ${1}${2}
 fi
 
-echo "popd"
-popd
+echo "cd jep"
+cd jep
 
 exit $ret
