@@ -67,6 +67,13 @@ typedef long long jeplong;
 # define PyObject_TypeCheck(ob, tp) ((ob)->ob_type == (tp))
 #endif
 
+// added in python 2.3
+#ifndef PyDoc_STR
+# define PyDoc_VAR(name)         static char name[]
+# define PyDoc_STR(str)          (str)
+# define PyDoc_STRVAR(name, str) PyDoc_VAR(name) = PyDoc_STR(str)
+#endif
+
 // call toString() on jobject, make a python string and return
 // sets error conditions as needed.
 // returns new reference to PyObject
