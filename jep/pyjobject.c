@@ -384,12 +384,8 @@ PyObject* find_method(JNIEnv *env,
             
             if(PyObject_Compare(key, methodName) == 0) {
                 PyObject *method = PyTuple_GetItem(tuple, 1);    /* borrowed */
-                Py_INCREF(method);
-                
                 if(pyjmethod_check(method))
                     cand[pos++] = (PyJmethod_Object *) method;
-                
-                Py_DECREF(method);
             }
             
             Py_DECREF(key);
