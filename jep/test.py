@@ -1,4 +1,4 @@
-#a
+#as
 import sys
 
 print "Hello world using Jep."
