@@ -283,6 +283,7 @@ static void pyjobject_dealloc(PyJobject_Object *self) {
         
         Py_DECREF(self->attr);
         Py_DECREF(self->methods);
+        Py_DECREF(self->fields);
         if(self->pyjclass)
             Py_DECREF(self->pyjclass);
     }
