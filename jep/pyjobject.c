@@ -217,6 +217,8 @@ static int pyjobject_init(PyJobject_Object *pyjob) {
     fieldArray = (jobjectArray) (*env)->CallObjectMethod(env,
                                                          pyjob->clazz,
                                                          classGetFields);
+    if(process_java_exception(env) || !fieldArray)
+        goto EXIT_ERROR;
     
     // for each field, create a pyjfield object and
     // add to the internal members list.
