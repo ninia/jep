@@ -113,10 +113,9 @@ public final class Jep {
     }
     
 
-    private synchronized native void run(String hash,
-                                         ClassLoader cl,
-                                         String script)
-        throws JepException;
+    private native void run(String hash,
+                            ClassLoader cl,
+                            String script) throws JepException;
 
 
     /**
@@ -129,58 +128,65 @@ public final class Jep {
     public boolean eval(String str) throws JepException {
         boolean finished = true;
         
-        if(str == null || str.equals("")) {
-            str = null;
-            if(!this.interactive)
-                return false;
+        try {
+            if(str == null || str.equals("")) {
+                str = null;
+                if(!this.interactive)
+                    return false;
+                else {
+                    if(this.evalLines == null)
+                        return true; // nothing to eval
+                }
+            }
             else {
+                char last = str.charAt(str.length() - 1);
+            
+                // trim comments
+                int pos = str.indexOf("#");
+                if(pos > -1)
+                    str = str.substring(0, pos);
+            
+                if(last == '\\' || last == ':')
+                    finished = false;
+                else if(Character.isWhitespace(str.charAt(0)))
+                    finished = false;
+            }
+
+            if(!finished) {
                 if(this.evalLines == null)
-                    return true; // nothing to eval
+                    this.evalLines = new StringBuffer();
+                evalLines.append(str + "\n");
+                return false;
+            }
+        
+            // may need to run previous lines
+            if(this.evalLines != null) {
+                eval(this.hash,
+                     this.classLoader,
+                     this.evalLines.toString());
+                this.evalLines = null;
+            
+                if(str == null)
+                    return true;
+            }
+        
+            if(str != null) {
+                eval(this.hash, this.classLoader, str);
+                return true;
             }
         }
-        else {
-            char last = str.charAt(str.length() - 1);
-            
-            // trim comments
-            int pos = str.indexOf("#");
-            if(pos > -1)
-                str = str.substring(0, pos);
-            
-            if(last == '\\' || last == ':')
-                finished = false;
-            else if(Character.isWhitespace(str.charAt(0)))
-                finished = false;
-        }
-
-        if(!finished) {
-            if(this.evalLines == null)
-                this.evalLines = new StringBuffer();
-            evalLines.append(str + "\n");
-            return false;
-        }
-        
-        // may need to run previous lines
-        if(this.evalLines != null) {
-            eval(this.hash, this.classLoader, this.evalLines.toString());
+        catch(JepException e) {
             this.evalLines = null;
-            
-            if(str == null)
-                return true;
-        }
-        
-        if(str != null) {
-            eval(this.hash, this.classLoader, str);
-            return true;
+            throw new JepException(e);
         }
         
         return false;
     }
 
     
-    private synchronized native void eval(String hash,
-                                          ClassLoader cl,
-                                          String str)
-        throws JepException;
+    private native void eval(String hash,
+                             ClassLoader cl,
+                             String str) throws JepException;
 
 
     /**
@@ -196,10 +202,9 @@ public final class Jep {
     }
 
     
-    private synchronized native Object getValue(String hash,
-                                                ClassLoader cl,
-                                                String str)
-        throws JepException;
+    private native Object getValue(String hash,
+                                   ClassLoader cl,
+                                   String str) throws JepException;
     
 
     // -------------------------------------------------- set things
@@ -227,7 +232,7 @@ public final class Jep {
         set(hash, name, v);
     }
 
-    private synchronized native void set(String hash, String name, Object v)
+    private native void set(String hash, String name, Object v)
         throws JepException;
 
 
@@ -243,7 +248,7 @@ public final class Jep {
         set(hash, name, v);
     }
 
-    private synchronized native void set(String hash, String name, String v)
+    private native void set(String hash, String name, String v)
         throws JepException;
 
 
@@ -290,7 +295,7 @@ public final class Jep {
         set(hash, name, (int) v);
     }
     
-    private synchronized native void set(String hash, String name, int v)
+    private native void set(String hash, String name, int v)
         throws JepException;
 
     
@@ -319,7 +324,7 @@ public final class Jep {
         set(hash, name, v);
     }
     
-    private synchronized native void set(String hash, String name, long v)
+    private native void set(String hash, String name, long v)
         throws JepException;
     
     
@@ -335,7 +340,7 @@ public final class Jep {
         set(hash, name, v);
     }
     
-    private synchronized native void set(String hash, String name, double v)
+    private native void set(String hash, String name, double v)
         throws JepException;
 
 
@@ -351,7 +356,7 @@ public final class Jep {
         set(hash, name, v);
     }
     
-    private synchronized native void set(String hash, String name, float v)
+    private native void set(String hash, String name, float v)
         throws JepException;
 
     // -------------------------------------------------- close me
@@ -360,7 +365,7 @@ public final class Jep {
      * Shutdown python interpreter. Make sure you call this.
      *
      */
-    public synchronized void close() {
+    public void close() {
         if(this.hash == null)
             return;
         
