@@ -37,3 +37,7 @@ Comments are welcome.
         - The developer kits from Apple with gcc and Java development
         - You'll need to make a symlink from libjep.dynlib to /Library/Java/Extentions, like:
             sudo ln -s `pwd`/.libs/libjep.dylib /Library/Java/Extensions/libjep.jnilib
+
+    AUTOMAKE 1.6
+        If you're using automake > 1.4, please run the `autogen.sh` script before running configure. This includes Mac OS X.
+
