@@ -26,6 +26,12 @@ package jep;
 
 import java.io.File;
 
+/**
+ * Describe class <code>Jep</code> here.
+ *
+ * @author <a href="mailto:mrjohnson@trinitycapital.com">Mike Johnson</a>
+ * @version 1.0
+ */
 public final class Jep {
     
     private String hash = null;
@@ -36,6 +42,7 @@ public final class Jep {
     // eval() storage.
     private StringBuffer evalLines = null;
     
+    private boolean interactive = false;
     
     /**
      * Creates a new <code>Jep</code> instance.
@@ -50,6 +57,20 @@ public final class Jep {
     }
 
     
+    /**
+     * Creates a new <code>Jep</code> instance.
+     *
+     * @exception JepException if an error occurs
+     */
+    public Jep(boolean interactive) throws JepException {
+        super();
+        this.hash = String.valueOf(this.hashCode());
+        this.classLoader = this.getClass().getClassLoader();
+        this.interactive = interactive;
+        init(hash);
+    }
+
+
     // load shared library
     static {
         System.loadLibrary("jep");
@@ -102,36 +123,57 @@ public final class Jep {
      * evaluate python statements
      *
      * @param str a <code>String</code> value
+     * @return true if statement complete and was executed.
      * @exception JepException if an error occurs
      */
-    public void eval(String str) throws JepException {
-        char last = str.charAt(str.length() - 1);
+    public boolean eval(String str) throws JepException {
         boolean finished = true;
         
-        // trim comments
-        int pos = str.indexOf("#");
-        if(pos > -1)
-            str = str.substring(0, pos);
-        
-        if(last == '\\' || last == ':')
-            finished = false;
-        else if(Character.isWhitespace(str.charAt(0)))
-            finished = false;
-        
+        if(str == null || str.equals("")) {
+            str = null;
+            if(!this.interactive)
+                return false;
+            else {
+                if(this.evalLines == null)
+                    return true; // nothing to eval
+            }
+        }
+        else {
+            char last = str.charAt(str.length() - 1);
+            
+            // trim comments
+            int pos = str.indexOf("#");
+            if(pos > -1)
+                str = str.substring(0, pos);
+            
+            if(last == '\\' || last == ':')
+                finished = false;
+            else if(Character.isWhitespace(str.charAt(0)))
+                finished = false;
+        }
+
         if(!finished) {
             if(this.evalLines == null)
                 this.evalLines = new StringBuffer();
             evalLines.append(str + "\n");
-            return;
+            return false;
         }
         
         // may need to run previous lines
         if(this.evalLines != null) {
             eval(this.hash, this.classLoader, this.evalLines.toString());
             this.evalLines = null;
+            
+            if(str == null)
+                return true;
         }
         
-        eval(this.hash, this.classLoader, str);
+        if(str != null) {
+            eval(this.hash, this.classLoader, str);
+            return true;
+        }
+        
+        return false;
     }
 
     

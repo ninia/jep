@@ -22,8 +22,15 @@ package jep;
  * @author <a href="mailto:mrjohnson0@users.sourceforge.net">Mike Johnson</a>
  * @version 1.0
  */
+
+import java.io.*;
+
 public class Console {
     
+    private static final String PS1 = ">>> ";
+    private static final String PS2 = "... ";
+
+
     /**
      * Describe <code>main</code> method here.
      *
@@ -31,25 +38,39 @@ public class Console {
      * @exception Exception if an error occurs
      */
     public static void main(String args[]) throws Exception {
+
         Jep jep = null;
+        BufferedReader in = null;
         
         try {
-            jep = new Jep();
-            jep.eval("import jep");
-            jep.eval("print 'Hello, world'");
-            jep.eval("if(True):\n    print 'true'");
-            jep.eval("a = 5");
-            System.out.println("a = " + jep.getValue("a"));
-            jep.eval("def test():");
-            jep.eval("    if(True): # foobar");
-            jep.eval("        print 'called test'");
-            jep.eval("        print 'still in if block.'");
-            jep.eval("    print 'test, last line'");
-            jep.eval("test()");
-            jep.eval("print 'blah'");
+            PrintStream out = System.out;
+            
+            in  = new BufferedReader(new InputStreamReader(System.in));
+            jep = new Jep(true);
+
+            out.print(PS1);
+            String line;
+            while((line = in.readLine()) != null) {
+                boolean ran = true;
+                
+                try {
+                    ran = jep.eval(line);
+                }
+                catch(JepException e) {
+                    e.printStackTrace();
+                }
+                
+                if(ran)
+                    out.print(PS1);
+                else
+                    out.print(PS2);
+            }
         }
         finally {
-            jep.close();
+            if(jep != null)
+                jep.close();
+            if(in != null)
+                in.close();
         }
     }
     

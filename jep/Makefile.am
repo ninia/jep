@@ -65,5 +65,5 @@ Test.class: Test.java
 JepException.class: JepException.java
 	$(JAVAC) -classpath ../ JepException.java
 
-jep.jar: Jep.class Test.class JepException.class
+jep.jar: Jep.class Test.class JepException.class Console.class
 	./makejar.sh jep/ jep.jar
