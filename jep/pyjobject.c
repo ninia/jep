@@ -127,8 +127,8 @@ static int pyjobject_init(PyJobject_Object *pyjob) {
     PyThreadState    *_save;
     
     env = pyjob->env;
-    Py_UNBLOCK_THREADS;
 
+    (*env)->PushLocalFrame(env, 20);
     // ------------------------------ call Class.getMethods()
 
     // well, first call getClass()
@@ -137,11 +137,13 @@ static int pyjobject_init(PyJobject_Object *pyjob) {
                                              pyjob->clazz,
                                              "getClass",
                                              "()Ljava/lang/Class;");
-        PROCESS_JAVA_EXCEPTION(env);
+        if(process_java_exception(env) || !objectGetClass)
+            goto EXIT_ERROR;
     }
 
     langClass = (*env)->CallObjectMethod(env, pyjob->clazz, objectGetClass);
-    PROCESS_JAVA_EXCEPTION(env);
+    if(process_java_exception(env) || !langClass)
+        goto EXIT_ERROR;
 
     // then, get methodid for getMethods()
     if(classGetMethods == 0) {
@@ -149,7 +151,8 @@ static int pyjobject_init(PyJobject_Object *pyjob) {
                                               langClass,
                                               "getMethods",
                                               "()[Ljava/lang/reflect/Method;");
-        PROCESS_JAVA_EXCEPTION(env);
+        if(process_java_exception(env) || !classGetMethods)
+            goto EXIT_ERROR;
     }
 
     // - GetMethodID fails when you pass the clazz object, it expects
@@ -165,7 +168,8 @@ static int pyjobject_init(PyJobject_Object *pyjob) {
     methodArray = (jobjectArray) (*env)->CallObjectMethod(env,
                                                           pyjob->clazz,
                                                           classGetMethods);
-    PROCESS_JAVA_EXCEPTION(env);
+    if(process_java_exception(env) || !methodArray)
+        goto EXIT_ERROR;
     
     // for each method, create a new pyjmethod object
     // and add to the internal methods list.
@@ -179,13 +183,10 @@ static int pyjobject_init(PyJobject_Object *pyjob) {
                                                 i);
 
         // make new PyJmethod_Object, linked to pyjob
-        Py_BLOCK_THREADS;
         pymethod = pyjmethod_new(env, rmethod, pyjob);
 
-        if(!pymethod) {
-            Py_UNBLOCK_THREADS;
+        if(!pymethod)
             continue;
-        }
 
         if(pymethod->pyMethodName && PyString_Check(pymethod->pyMethodName)) {
             if(PyObject_SetAttr((PyObject *) pyjob,
@@ -197,12 +198,9 @@ static int pyjobject_init(PyJobject_Object *pyjob) {
                 pyjobject_addmethod(pyjob, pymethod->pyMethodName);
         }
         
-        Py_UNBLOCK_THREADS;
-        (*env)->DeleteLocalRef(env, rmethod);
         Py_DECREF(pymethod);
     }
     
-    (*env)->DeleteLocalRef(env, methodArray);
     
     // ------------------------------ process fields
     
@@ -211,7 +209,8 @@ static int pyjobject_init(PyJobject_Object *pyjob) {
                                              langClass,
                                              "getFields",
                                              "()[Ljava/lang/reflect/Field;");
-        PROCESS_JAVA_EXCEPTION(env);
+        if(process_java_exception(env) || !classGetFields)
+            goto EXIT_ERROR;
     }
     
     fieldArray = (jobjectArray) (*env)->CallObjectMethod(env,
@@ -229,13 +228,10 @@ static int pyjobject_init(PyJobject_Object *pyjob) {
                                                fieldArray,
                                                i);
         
-        Py_BLOCK_THREADS;
         pyjfield = pyjfield_new(env, rfield, pyjob);
         
-        if(!pyjfield) {
-            Py_UNBLOCK_THREADS;
+        if(!pyjfield)
             continue;
-        }
         
         if(pyjfield->pyFieldName && PyString_Check(pyjfield->pyFieldName)) {
             if(PyObject_SetAttr((PyObject *) pyjob,
@@ -247,29 +243,17 @@ static int pyjobject_init(PyJobject_Object *pyjob) {
                 pyjobject_addfield(pyjob, pyjfield->pyFieldName);
         }
         
-        Py_UNBLOCK_THREADS;
-        (*env)->DeleteLocalRef(env, rfield);
         Py_DECREF(pyjfield);
     }
     
-    (*env)->DeleteLocalRef(env, fieldArray);
-    (*env)->DeleteLocalRef(env, langClass);
-    
     // we've finished the object.
     pyjob->finishAttr = 1;
-    Py_BLOCK_THREADS;
+    (*env)->PopLocalFrame(env, NULL);
     return 1;
     
     
 EXIT_ERROR:
-    Py_BLOCK_THREADS;
-
-    if(methodArray)
-        (*env)->DeleteLocalRef(env, methodArray);
-    if(fieldArray)
-        (*env)->DeleteLocalRef(env, fieldArray);
-    if(langClass)
-        (*env)->DeleteLocalRef(env, langClass);
+    (*env)->PopLocalFrame(env, NULL);
     
     if(PyErr_Occurred()) { // java exceptions translated by this time
         if(pyjob)
@@ -345,7 +329,8 @@ static void pyjobject_addfield(PyJobject_Object *obj, PyObject *name) {
 // typically called by way of pyjmethod when python invokes __call__.
 //
 // steals reference to self, methodname and args.
-PyObject* find_method(PyObject *methodName,
+PyObject* find_method(JNIEnv *env,
+                      PyObject *methodName,
                       int methodCount,
                       PyObject *attr,
                       PyObject *args) {
@@ -470,6 +455,7 @@ PyObject* find_method(PyObject *methodName,
             continue;
         
         // check if argument types match
+        (*env)->PushLocalFrame(env, 20);
         for(parmpos = 0; parmpos < cand[i]->lenParameters; parmpos++) {
             PyObject *param       = PyTuple_GetItem(args, parmpos);
             JNIEnv   *env         = cand[i]->env;
@@ -488,20 +474,17 @@ PyObject* find_method(PyObject *methodName,
                 break;
             
             paramTypeId = get_jtype(env, paramType, pclazz);
-            (*env)->DeleteLocalRef(env, pclazz);
             
             if(pyarg_matches_jtype(env, param, paramType, paramTypeId)) {
-                (*env)->DeleteLocalRef(env, paramType);
-                
                 if(PyErr_Occurred())
                     break;
                 continue;
             }
-            (*env)->DeleteLocalRef(env, paramType);
             
             // args don't match
             break;
         }
+        (*env)->PopLocalFrame(env, NULL);
         
         // this method matches?
         if(parmpos == cand[i]->lenParameters) {
@@ -529,7 +512,8 @@ PyObject* pyjobject_find_method(PyJobject_Object *self,
                                 PyObject *methodName,
                                 PyObject *args) {
     // util method does this for us
-    return find_method(methodName,
+    return find_method(self->env,
+                       methodName,
                        PyList_Size(self->methods),
                        self->attr,
                        args);
@@ -686,7 +670,7 @@ static int pyjobject_setattr(PyJobject_Object *obj,
     // ...
     // after much printf'ing. uhm. must decref it somewhere.
     Py_INCREF(tuple);
-
+    
     PyList_Append(obj->attr, tuple);
     
     Py_DECREF(tuple);
@@ -695,12 +679,12 @@ static int pyjobject_setattr(PyJobject_Object *obj,
 }
 
 
-PyMethodDef pyjobject_methods[] = {
+static PyMethodDef pyjobject_methods[] = {
     {NULL, NULL, 0, NULL}
 };
 
 
-PyTypeObject PyJobject_Type = {
+static PyTypeObject PyJobject_Type = {
     PyObject_HEAD_INIT(0)
     0,                                        /* ob_size */
     "PyJobject",                              /* tp_name */

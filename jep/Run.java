@@ -40,6 +40,7 @@ public class Run {
         Jep jep = null;
         try {
             jep = new Jep();
+            jep.setClassLoader(Thread.currentThread().getContextClassLoader());
             jep.runScript(args[0]);
         }
         catch(Throwable t) {

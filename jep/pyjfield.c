@@ -523,7 +523,6 @@ int pyjfield_set(PyJfield_Object *self, PyObject *value) {
                                    self->fieldId,
                                    jarg.l);
         
-        (*env)->DeleteLocalRef(env, jarg.l);
         if(process_java_exception(env))
             return -1;
         
@@ -555,7 +554,6 @@ int pyjfield_set(PyJfield_Object *self, PyObject *value) {
                                    self->fieldId,
                                    jarg.l);
         
-        (*env)->DeleteLocalRef(env, jarg.l);
         if(process_java_exception(env))
             return -1;
         
@@ -754,12 +752,12 @@ int pyjfield_set(PyJfield_Object *self, PyObject *value) {
 }
 
 
-PyMethodDef pyjfield_methods[] = {
+static PyMethodDef pyjfield_methods[] = {
     {NULL, NULL, 0, NULL}
 };
 
 
-PyTypeObject PyJfield_Type = {
+static PyTypeObject PyJfield_Type = {
     PyObject_HEAD_INIT(0)
     0,
     "PyJfield",

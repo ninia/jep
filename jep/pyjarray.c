@@ -89,8 +89,6 @@ PyObject* pyjarray_new(JNIEnv *env, jobjectArray obj) {
     pyarray->length        = -1;
     pyarray->pinnedArray   = NULL;
     
-    (*env)->DeleteLocalRef(env, clazz);
-
     if(pyjarray_init(pyarray))
         return (PyObject *) pyarray;
     else {
@@ -214,6 +212,9 @@ PyObject* pyjarray_new_v(PyObject *isnull, PyObject *args) {
         PyErr_SetString(PyExc_ValueError, "Unknown arg types.");
         return NULL;
     }
+
+    if(process_java_exception(env))
+        return NULL;
     
     if(!arrayObj || typeId < -1 || size < -1) {
         PyErr_SetString(PyExc_ValueError, "Unknown type.");
@@ -308,37 +309,37 @@ static int pyjarray_init(PyJarray_Object *pyarray) {
     case JINT_ID:
         pyarray->pinnedArray = (*env)->GetIntArrayElements(env,
                                                            pyarray->object,
-                                                           0);
+                                                           &(pyarray->isCopy));
         break;
         
     case JLONG_ID:
         pyarray->pinnedArray = (*env)->GetLongArrayElements(env,
                                                             pyarray->object,
-                                                            0);
+                                                            &(pyarray->isCopy));
         break;
         
     case JBOOLEAN_ID:
         pyarray->pinnedArray = (*env)->GetBooleanArrayElements(env,
                                                                pyarray->object,
-                                                               0);
+                                                               &(pyarray->isCopy));
         break;
         
     case JDOUBLE_ID:
         pyarray->pinnedArray = (*env)->GetDoubleArrayElements(env,
                                                               pyarray->object,
-                                                              0);
+                                                              &(pyarray->isCopy));
         break;
         
     case JSHORT_ID:
         pyarray->pinnedArray = (*env)->GetShortArrayElements(env,
                                                              pyarray->object,
-                                                             0);
+                                                             &(pyarray->isCopy));
         break;
         
     case JFLOAT_ID:
         pyarray->pinnedArray = (*env)->GetFloatArrayElements(env,
                                                              pyarray->object,
-                                                             0);
+                                                             &(pyarray->isCopy));
         break;
 
     }
@@ -346,6 +347,8 @@ static int pyjarray_init(PyJarray_Object *pyarray) {
     (*env)->DeleteLocalRef(env, compType);
     (*env)->DeleteLocalRef(env, compClass);
     
+    if(process_java_exception(env))
+        return 0;
     return 1;
     
 EXIT_ERROR:
@@ -381,6 +384,9 @@ static void pyjarray_release_pinned(PyJarray_Object *self, jint mode) {
     JNIEnv *env = self->env;
 
     if(!self->pinnedArray)
+        return;
+    
+    if(self->isCopy && mode == JNI_ABORT)
         return;
 
     switch(self->componentType) {
@@ -781,7 +787,7 @@ static PySequenceMethods list_as_sequence = {
 };
 
 
-PyTypeObject PyJarray_Type = {
+static PyTypeObject PyJarray_Type = {
     PyObject_HEAD_INIT(0)
     0,                                        /* ob_size */
     "jarray",                                 /* tp_name */
