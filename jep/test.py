@@ -60,7 +60,8 @@ if(__name__ == '__main__'):
         if(next.equals('list 1')):
             print 'array parameter: ', next
     
-    print 'test send stuff  ', testo.sendMeSomeStuff("an arraylist object", jarrayList)
+    print 'test send stuff  ', testo.sendMeSomeStuff("an arraylist object",
+                                                     jarrayList)
     print 'test send stuff  ', testo.sendMeSomeStuff(None, jarrayList)
 
     print """
