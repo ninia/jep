@@ -1,3 +1,2 @@
 #!/bin/sh
-automake -a
-aclocal && autoconf && automake && ./config.status --recheck
+aclocal && autoconf && automake -a
