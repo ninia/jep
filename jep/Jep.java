@@ -135,7 +135,27 @@ public final class Jep {
     
 
     /**
-     * evaluate python statements
+     * <pre>
+     * Evaluate python statements.
+     *
+     * In interactive mode, Jep may not immediately execute the given lines of code.
+     * In that case, eval() returns false and the statement is remembered and
+     * is appended to the next incoming string.
+     *
+     * If you're running an unknown number of statements, finish with
+     * <code>eval(null)</code> to flush the statement buffer.
+     *
+     * Interactive mode is slower than a straight eval call since it has to
+     * compile the code strings to detect the end of the block.
+     * Non-interactive mode is faster, but code blocks must be complete.
+     *
+     * For Example:
+     * <code>eval("if(Test):\n\tprint 'w00t'")</code>
+     *
+     * This is a limitation on the Python interpreter and unlikely to change.
+     *
+     * Also, Python does not readly return object values from eval(). Use
+     * {@link #getValue(java.lang.String)} instead.
      *
      * @param str a <code>String</code> value
      * @return true if statement complete and was executed.
@@ -197,8 +217,17 @@ public final class Jep {
 
 
     /**
+     * <pre>
      * Retrieves a value from python. If the result is not a java object,
-     * the implementation currently returns a String
+     * the implementation currently returns a String.
+     *
+     * Python is pretty picky about what it excepts here. The general syntax:
+     *
+     * <code>eval("a = 5")</code>
+     * <code>String a = (String) getValue("a")</code>
+     *
+     * will work.
+     * </pre>
      *
      * @param str a <code>String</code> value
      * @return an <code>Object</code> value
@@ -224,6 +253,26 @@ public final class Jep {
     public void setClassLoader(ClassLoader cl) {
         if(cl != null)
             this.classLoader = cl;
+    }
+    
+    
+    /**
+     * changes behavior of eval()
+     *
+     * @param v a <code>boolean</code> value
+     */
+    public void setInteractive(boolean v) {
+        this.interactive = v;
+    }
+    
+    
+    /**
+     * get interactive
+     *
+     * @return a <code>boolean</code> value
+     */
+    public boolean isInteractive() {
+        return this.interactive;
     }
 
     
