@@ -1,48 +1,53 @@
-2004-12-13  1.0  Mike Johneon <mrjohnson0@users.sourceforge.net>
-	* fix: pyjmethod.c - throw exception for calling non-static methods
-	* fix: pyembed.c - don't return error state without releasing GIL
-	* fix: util.c - release utf string local references
-	* nit: pyjclass.c - don't close localframe after last EXIT
-	* nit: pyjobject.c - delete local method refs instead of filling localframe
-	* fix: pyjembed.c - flush stdout and stderr after script run
+2005-2-15 Mike Johnson <mrjohnson0@users.sourceforge.net>
+	* pyjobject.c: decref fields list in dealloc
+	* Jep.java, Run.java, BSFJepEngine.java: set license information
+	to libpng. it's the closest to what i wanted. really, i don't care
+	what the heck you do with them.
 	
-2004-07-26  0.9.11  Mike Johnson <mrjohnson0@users.sourceforge.net>
-	* fix: pyjobject.c - fix circular reference memory leak
+2004-12-13 Mike Johnson <mrjohnson0@users.sourceforge.net>
+	* pyjmethod.c: throw exception for calling non-static methods
+	* pyembed.c: don't return error state without releasing GIL
+	* util.c: release utf string local references
+	* pyjclass.c: don't close localframe after last EXIT
+	* pyjobject.c: delete local method refs instead of filling localframe
+	* pyjembed.c: flush stdout and stderr after script run
 	
-2004-06-24  0.9.10  Mike Johnson <mrjohnson0@users.sourceforge.net>
-	* fix: Jep.java - throw exception if calls not from original, python thread
-	* fix: pyjmethod.c - check if method should be called on class, not obj
-	* fix: ltmain.sh - a couple fixes for broken redhat boxen
-	* fix: pyembed.c - fclose script file.
-	* cleanup: - pyembed.c, cleanup tstate, remove hashcode
-	* fix: pyjclass.c - fixed typo in malloc call
-	* add: pyjarray.c - added support for java primitive arrays
-	* add: Run.java - a class to run python scripts
-	* add: console.py - a python-based interactive console, with readline
-	* add: Jep.java - added constructor to append to sys.path
-	* add: Makefile - added javadoc support, javadoc included in CVS
+2004-07-26 Mike Johnson <mrjohnson0@users.sourceforge.net>
+	* pyjobject.c: fix circular reference memory leak
+	
+2004-06-24 Mike Johnson <mrjohnson0@users.sourceforge.net>
+	* Jep.java: throw exception if calls not from original, python thread
+	* pyjmethod.c: check if method should be called on class, not obj
+	* ltmain.sh: a couple fixes for broken redhat boxen
+	* pyembed.c: fclose script file.
+	* pyembed.c: tstate, remove hashcode
+	* pyjclass.c: fixed typo in malloc call
+	* pyjarray.c: added support for java primitive arrays
+	* Run.java: a class to run python scripts
+	* console.py: a python-based interactive console, with readline
+	* Jep.java: added constructor to append to sys.path
+	* Makefile: added javadoc support, javadoc included in CVS
 
-2004-06-17  0.9.1  Mike Johnson <mrjohnson0@users.sourceforge.net>
-	* fix: util.c - check string before converting. fixes crash if you used
+2004-06-17 Mike Johnson <mrjohnson0@users.sourceforge.net>
+	* util.c: check string before converting. fixes crash if you used
 	Jep.set(String - (String) null).
-	* add: Console.java - some work here, pretty functional. basically acts
+	* Console.java: some work here, pretty functional. basically acts
 	like python interactive prompt compiled without readline.
-	* cleanup: Jep.java - some changes to eval() support.
+	* Jep.java: some changes to eval() support.
 	
-2004-06-14  0.9.0  Mike Johnson <mrjohnson0@users.sourceforge.net>
-	* cleanup: for older autotools
-	* fix: for gcc 2.95
-	* fix: pyjobject.c - fixed bug in method search
-	* fix: compiler fixes, project file for windows
-	* fix: finally fixed bug 957106
-	* add: BSFJepEngine
-	* add: a simple windows installer
+2004-06-14 Mike Johnson <mrjohnson0@users.sourceforge.net>
+	* Makefile: for older autotools
+	* Makefile: for gcc 2.95
+	* pyjobject.c: fixed bug in method search
+	* Makefile: compiler fixes, project file for windows
+	* finally fixed bug 957106
+	* BSFJepEngine: added
+	* setup.nsi: a simple windows installer
 	
-2004-05-21  0.8.1  Mike Johnson <mrjohnson0@users.sourceforge.net>
-	* fix: obvious crash on the Mac.
-	* fix: crash related to bug #957106.
+2004-05-21 Mike Johnson <mrjohnson0@users.sourceforge.net>
+	* - obvious crash on the Mac.
+	* - crash related to bug #957106.
 	
-2004-04-29  Mike Johnson  <mrjohnson0@users.sourceforge.net>
-
-	* jep: initial version.
+2004-04-29 Mike Johnson  <mrjohnson0@users.sourceforge.net>
+	* - initial version.
 
