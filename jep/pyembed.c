@@ -40,14 +40,6 @@
 # include <unistd.h>
 #endif
 
-#if HAVE_STDLIB_H
-# include <stdlib.h>
-#else
-int putenv(char *string) {
-    return -1;
-}
-#endif
-
 // shut up the compiler
 #ifdef _POSIX_C_SOURCE
 # undef _POSIX_C_SOURCE
@@ -151,7 +143,7 @@ void pyembed_startup(void) {
 
     printf("Setting up Python interpreter...\n");
     
-    putenv("PYTHONOPTIMIZE=1");
+    Py_OptimizeFlag = 2;
     
     Py_Initialize();
     PyEval_InitThreads();
@@ -553,10 +545,10 @@ void pyembed_run(JNIEnv *env,
     if(access(file, R_OK | F_OK) != 0)
         return;
     else {
-        PyObject *main, *dict;
+        PyObject *main, *locals, *globals;
         FILE *script = fopen(file, "r");
         
-        // some inspiration/code from pythonrun.c
+        // some inspiration from pythonrun.c
         
         main = PyImport_AddModule("__main__");    /* borrowed */
         if(main == NULL) {
@@ -564,22 +556,16 @@ void pyembed_run(JNIEnv *env,
             return;
         }
         
-        dict = PyModule_GetDict(main);
-        Py_INCREF(dict);
-        if(PyDict_GetItemString(dict, "__file__") == NULL) {
-            PyObject *f = PyString_FromString(file);
-            if(PyDict_SetItemString(dict, "__file__", f) < 0) {
-                Py_DECREF(f);
-                THROW_JEP(env, "Couldn't set __file__.");
-                return;
-            }
-            Py_DECREF(f);
-        }
+        globals = PyModule_GetDict(main);
+        locals  = PyModule_GetDict(main);
+        Py_INCREF(locals);
+        Py_INCREF(globals);
 
-        PyRun_File(script, file, Py_file_input, dict, dict);
+        PyRun_File(script, file, Py_file_input, globals, locals);
         
         process_py_exception(env, 1);
-        Py_DECREF(dict);
+        Py_DECREF(locals);
+        Py_DECREF(globals);
     }
 
     PyThreadState_Swap(prevThread);
