@@ -33,6 +33,7 @@ SectionIn 2
 	SetOutPath $INSTDIR
 	File ..\jep.jar
 	File ..\README
+	File ..\console.py
 	WriteUninstaller $INSTDIR\uninstall.exe
         
 SectionEnd
