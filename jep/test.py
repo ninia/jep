@@ -202,15 +202,16 @@ if(__name__ == '__main__'):
     # exceptions are *slow*... you wouldn't want to do much of this
     # in a real environment.
     try:
-        Integer.parseInt('adsf')
+        Integer.parseInt('asdf')
     except(jep.NumberFormatException):
-        print 'parseInt:        caught NumberFormatException'
+        print 'parseInt:         caught NumberFormatException'
 
     try:
         FileInputStream = findClass('java.io.FileInputStream')
         fin = FileInputStream('asdf')
+        fin.close()
     except(jep.FileNotFoundException):
-        print 'parseInt:        caught FileNotFoundException'
+        print 'inputStream:      caught FileNotFoundException'
     
     System = findClass('java/lang/System')
     #System.out.println("regression test.")
