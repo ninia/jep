@@ -27,51 +27,19 @@ import java.io.*;
 
 public class Console {
     
-    private static final String PS1 = ">>> ";
-    private static final String PS2 = "... ";
-
-
     /**
      * Describe <code>main</code> method here.
      *
      * @param args[] a <code>String</code> value
      * @exception Exception if an error occurs
      */
-    public static void main(String args[]) throws Exception {
-
+    public static void main(String args[]) throws Throwable {
         Jep jep = null;
-        BufferedReader in = null;
+        jep = new Jep();
+        jep.runScript("console.py");
         
-        try {
-            PrintStream out = System.out;
-            
-            in  = new BufferedReader(new InputStreamReader(System.in));
-            jep = new Jep(true);
-
-            out.print(PS1);
-            String line;
-            while((line = in.readLine()) != null) {
-                boolean ran = true;
-                
-                try {
-                    ran = jep.eval(line);
-                }
-                catch(JepException e) {
-                    e.printStackTrace();
-                }
-                
-                if(ran)
-                    out.print(PS1);
-                else
-                    out.print(PS2);
-            }
-        }
-        finally {
-            if(jep != null)
-                jep.close();
-            if(in != null)
-                in.close();
-        }
+        // in case we're run with -Xrs
+        System.exit(0);
     }
     
     
