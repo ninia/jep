@@ -71,10 +71,8 @@ PyJclass_Object* pyjclass_new(JNIEnv *env, PyObject *pyjob) {
     jobjectArray      initArray   = NULL;
     PyJobject_Object *pyjobject  = NULL;
 
-    if(PyType_Ready(&PyJclass_Type) < 0) {
-        PyErr_SetString(PyExc_RuntimeError, "pyjclass type not ready.");
+    if(PyType_Ready(&PyJclass_Type) < 0)
         return NULL;
-    }
 
     pyc             = PyObject_NEW(PyJclass_Object, &PyJclass_Type);
     pyc->env        = env;

@@ -43,6 +43,19 @@
         (*env)->ThrowNew(env, clazz, msg);          \
 }
 
+// does the same thing as the function version, but
+// restores thread blocking first
+#define PROCESS_JAVA_EXCEPTION(env)             \
+{                                               \
+    if((*env)->ExceptionCheck(env)) {           \
+        Py_BLOCK_THREADS;                       \
+        process_java_exception(env);            \
+        Py_UNBLOCK_THREADS;                     \
+        goto EXIT_ERROR;                        \
+    }                                           \
+}
+    
+
 #ifdef WIN32
 typedef __int64 jeplong;
 #else

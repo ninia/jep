@@ -73,10 +73,8 @@ PyJmethod_Object* pyjmethod_new(JNIEnv *env,
     const char       *methodName   = NULL;
     jstring           jstr         = NULL;
 
-    if(PyType_Ready(&PyJmethod_Type) < 0) {
-        PyErr_SetString(PyExc_RuntimeError, "pyjmethod type not ready.");
+    if(PyType_Ready(&PyJmethod_Type) < 0)
         return NULL;
-    }
 
     pym                = PyObject_NEW(PyJmethod_Object, &PyJmethod_Type);
     pym->rmethod       = (*env)->NewGlobalRef(env, rmethod);
@@ -88,6 +86,8 @@ PyJmethod_Object* pyjmethod_new(JNIEnv *env,
     pym->isStatic      = -1;
     pym->returnTypeId  = -1;
     
+    // we reference it. make sure it doesn't go away.
+    Py_INCREF(pyjobject);
     
     // ------------------------------ get method name
     
@@ -149,7 +149,6 @@ PyJmethod_Object* pyjmethod_new_static(JNIEnv *env,
     pym->isStatic      = 1;
     pym->returnTypeId  = -1;
 
-    
     // ------------------------------ get method name
     
     rmethodClass = (*env)->GetObjectClass(env, rmethod);
@@ -201,8 +200,11 @@ int pyjmethod_init(PyJmethod_Object *self) {
     jboolean          isStatic               = JNI_FALSE;
     jclass            rmethodClass           = NULL;
     JNIEnv           *env;
+    PyThreadState    *_save;
     
     env = self->env;
+    
+    Py_UNBLOCK_THREADS;
     
     // use a local frame so we don't have to worry too much about local refs.
     // make sure if this method errors out, that this is poped off again
@@ -211,15 +213,13 @@ int pyjmethod_init(PyJmethod_Object *self) {
         return 0;
     
     rmethodClass = (*env)->GetObjectClass(env, self->rmethod);
-    if(process_java_exception(env) || !rmethodClass)
-        goto EXIT_ERROR;
+    PROCESS_JAVA_EXCEPTION(env);
     
     // ------------------------------ get methodid
     
     methodId = (*env)->FromReflectedMethod(env,
                                            self->rmethod);
-    if(process_java_exception(env) || !methodId)
-        goto EXIT_ERROR;
+    PROCESS_JAVA_EXCEPTION(env);
     
     self->methodId = methodId;
     
@@ -231,27 +231,22 @@ int pyjmethod_init(PyJmethod_Object *self) {
                                             rmethodClass,
                                             "getReturnType",
                                             "()Ljava/lang/Class;");
-        if(process_java_exception(env) || !methodGetType)
-            goto EXIT_ERROR;
+        PROCESS_JAVA_EXCEPTION(env);
     }
     
     returnType = (*env)->CallObjectMethod(env,
                                           self->rmethod,
                                           methodGetType);
-    if(process_java_exception(env) || !returnType)
-        goto EXIT_ERROR;
+    PROCESS_JAVA_EXCEPTION(env);
     
     {
         jclass rclazz;
 
         rclazz = (*env)->GetObjectClass(env, returnType);
-        if(process_java_exception(env) || !rclazz)
-            goto EXIT_ERROR;
+        PROCESS_JAVA_EXCEPTION(env);
 
         self->returnTypeId = get_jtype(env, returnType, rclazz);
-
-        if(process_java_exception(env))
-            goto EXIT_ERROR;
+        PROCESS_JAVA_EXCEPTION(env);
     }
     
     // ------------------------------ get parameter array
@@ -261,15 +256,13 @@ int pyjmethod_init(PyJmethod_Object *self) {
                                                  rmethodClass,
                                                  "getParameterTypes",
                                                  "()[Ljava/lang/Class;");
-        if(process_java_exception(env) || !methodGetParmTypes)
-            goto EXIT_ERROR;
+        PROCESS_JAVA_EXCEPTION(env);
     }
     
     paramArray = (jobjectArray) (*env)->CallObjectMethod(env,
                                                          self->rmethod,
                                                          methodGetParmTypes);
-    if(process_java_exception(env) || !paramArray)
-        goto EXIT_ERROR;
+    PROCESS_JAVA_EXCEPTION(env);
     
     self->parameters    = (*env)->NewGlobalRef(env, paramArray);
     self->lenParameters = (*env)->GetArrayLength(env, paramArray);
@@ -284,21 +277,23 @@ int pyjmethod_init(PyJmethod_Object *self) {
                                                   rmethodClass,
                                                   "getExceptionTypes",
                                                   "()[Ljava/lang/Class;");
-        if(process_java_exception(env) || !methodGetExceptions)
-            goto EXIT_ERROR;
+        PROCESS_JAVA_EXCEPTION(env);
     }
     
     exceptions = (jobjectArray) (*env)->CallObjectMethod(env,
                                                          self->rmethod,
                                                          methodGetExceptions);
-    if(process_java_exception(env) || !exceptions)
-        goto EXIT_ERROR;
+    PROCESS_JAVA_EXCEPTION(env);
 
+    Py_BLOCK_THREADS;
     if(!register_exceptions(env,
                             rmethodClass,
                             self->rmethod,
-                            exceptions))
+                            exceptions)) {
+        Py_UNBLOCK_THREADS;
         goto EXIT_ERROR;
+    }
+    Py_UNBLOCK_THREADS;
 
 #endif    
     
@@ -312,34 +307,29 @@ int pyjmethod_init(PyJmethod_Object *self) {
                                                      rmethodClass,
                                                      "getModifiers",
                                                      "()I");
-            if(process_java_exception(env) || !methodGetModifiers)
-                goto EXIT_ERROR;
+            PROCESS_JAVA_EXCEPTION(env);
         }
         
         modifier = (*env)->CallIntMethod(env,
                                          self->rmethod,
                                          methodGetModifiers);
-        if(process_java_exception(env))
-            goto EXIT_ERROR;
+        PROCESS_JAVA_EXCEPTION(env);
         
         modClass = (*env)->FindClass(env, "java/lang/reflect/Modifier");
-        if(process_java_exception(env) || !modClass)
-            goto EXIT_ERROR;
+        PROCESS_JAVA_EXCEPTION(env);
         
         // caching this methodid caused a crash on the mac
         methodId = (*env)->GetStaticMethodID(env,
                                              modClass,
                                              "isStatic",
                                              "(I)Z");
-        if(process_java_exception(env) || !methodId)
-            goto EXIT_ERROR;
+        PROCESS_JAVA_EXCEPTION(env);
         
         isStatic = (*env)->CallStaticBooleanMethod(env,
                                                    modClass,
                                                    methodId,
                                                    modifier);
-        if(process_java_exception(env))
-            goto EXIT_ERROR;
+        PROCESS_JAVA_EXCEPTION(env);
         
         if(isStatic == JNI_TRUE)
             self->isStatic = 1;
@@ -349,10 +339,12 @@ int pyjmethod_init(PyJmethod_Object *self) {
     
     
     (*env)->PopLocalFrame(env, NULL);
+    Py_BLOCK_THREADS;
     return 1;
     
     
 EXIT_ERROR:
+    Py_BLOCK_THREADS;
     (*env)->PopLocalFrame(env, NULL);
     
     if(!PyErr_Occurred())
@@ -372,6 +364,8 @@ static void pyjmethod_dealloc(PyJmethod_Object *self) {
         
         if(self->pyMethodName)
             Py_DECREF(self->pyMethodName);
+        if(self->pyjobject)
+            Py_DECREF(self->pyjobject);
     }
     
     PyObject_Del(self);
@@ -440,6 +434,7 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
     }
 
     // ------------------------------ build jargs off python values
+
     for(pos = 0; pos < self->lenParameters; pos++) {
         PyObject *param       = NULL;
         int       paramTypeId = -1;
@@ -469,7 +464,7 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
             return NULL;
 
         (*env)->DeleteLocalRef(env, paramType);
-    }// for parameters
+    } // for parameters
 
     
     // ------------------------------ call based off return type

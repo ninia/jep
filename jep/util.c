@@ -240,7 +240,7 @@ int process_java_exception(JNIEnv *env) {
     jstring     estr;
     jthrowable  exception    = NULL;
     jclass      clazz;
-    PyObject   *pyException = PyExc_RuntimeError;
+    PyObject   *pyException  = PyExc_RuntimeError;
     PyObject   *str, *tmp, *texc, *className;
     char       *message;
     
@@ -260,12 +260,9 @@ int process_java_exception(JNIEnv *env) {
         return 1;
     }
     
-    estr = jobject_tostring(env,
-                            exception,
-                            clazz);
+    estr = jobject_tostring(env, exception, clazz);
     if((*env)->ExceptionCheck(env) || !estr) {
-        PyErr_Format(PyExc_RuntimeError,
-                     "toString() on exception failed.");
+        PyErr_Format(PyExc_RuntimeError, "toString() on exception failed.");
         return 1;
     }
 
@@ -284,9 +281,7 @@ int process_java_exception(JNIEnv *env) {
         
     str = PyString_FromString(message);
 
-    if((tmp = pystring_split_last(str, ".")) == NULL ||
-       PyErr_Occurred()) {
-        
+    if((tmp = pystring_split_last(str, ".")) == NULL || PyErr_Occurred()) {
         Py_DECREF(str);
         return 1;
     }
@@ -300,10 +295,8 @@ int process_java_exception(JNIEnv *env) {
         return 1;
     }
     
-    if((texc = pyembed_modjep_get(className)) != NULL) {
+    if((texc = pyembed_modjep_get(className)) != NULL)
         pyException = texc;
-        // Py_INCREF(pyException);
-    }
     else
         printf("WARNING, didn't find mapped exception\n.");
 

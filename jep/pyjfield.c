@@ -76,10 +76,8 @@ PyJfield_Object* pyjfield_new(JNIEnv *env,
     jstring          jstr        = NULL;
     const char      *fieldName   = NULL;
 
-    if(PyType_Ready(&PyJfield_Type) < 0) {
-        PyErr_SetString(PyExc_RuntimeError, "pyjfield type not ready.");
+    if(PyType_Ready(&PyJfield_Type) < 0)
         return NULL;
-    }
     
     pyf              = PyObject_NEW(PyJfield_Object, &PyJfield_Type);
     pyf->rfield      = (*env)->NewGlobalRef(env, rfield);
@@ -89,7 +87,8 @@ PyJfield_Object* pyjfield_new(JNIEnv *env,
     pyf->fieldTypeId = -1;
     pyf->isStatic    = -1;
     pyf->init        = 0;
-
+    
+    Py_INCREF(pyjobject);
     
     // ------------------------------ get field name
     
@@ -255,6 +254,8 @@ static void pyjfield_dealloc(PyJfield_Object *self) {
     if(env) {
         if(self->rfield)
             (*env)->DeleteGlobalRef(env, self->rfield);
+        if(self->pyjobject)
+            Py_DECREF(self->pyjobject);
     }
     
     if(self->pyFieldName)

@@ -213,7 +213,13 @@ if(__name__ == '__main__'):
     except(jep.FileNotFoundException):
         print 'inputStream:      caught FileNotFoundException'
     
+    # broken
+    try:
+        print 'Integer = ', Integer.toString()
+    except:
+        print 'nope, still busted.'
+    
     System = findClass('java/lang/System')
-    #System.out.println("regression test.")
+    System.out.println("regression test.")
 
     print 'python loop %i finished.' % (i)

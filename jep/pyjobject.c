@@ -70,10 +70,8 @@ static jmethodID classGetFields  = 0;
 PyObject* pyjobject_new(JNIEnv *env, jobject obj) {
     PyJobject_Object *pyjob;
     
-    if(PyType_Ready(&PyJobject_Type) < 0) {
-        PyErr_SetString(PyExc_RuntimeError, "pyjobject type not ready.");
+    if(PyType_Ready(&PyJobject_Type) < 0)
         return NULL;
-    }
     if(!obj) {
         PyErr_Format(PyExc_RuntimeError, "Invalid object.");
         return NULL;
@@ -126,8 +124,10 @@ static int pyjobject_init(PyJobject_Object *pyjob) {
     int               i, len = 0;
     jobject           langClass   = NULL;
     JNIEnv           *env;
+    PyThreadState    *_save;
     
     env = pyjob->env;
+    Py_UNBLOCK_THREADS;
 
     // ------------------------------ call Class.getMethods()
 
@@ -137,13 +137,11 @@ static int pyjobject_init(PyJobject_Object *pyjob) {
                                              pyjob->clazz,
                                              "getClass",
                                              "()Ljava/lang/Class;");
-        if(process_java_exception(env) || !objectGetClass)
-            goto EXIT_ERROR;
+        PROCESS_JAVA_EXCEPTION(env);
     }
 
     langClass = (*env)->CallObjectMethod(env, pyjob->clazz, objectGetClass);
-    if(process_java_exception(env) || !langClass)
-        goto EXIT_ERROR;
+    PROCESS_JAVA_EXCEPTION(env);
 
     // then, get methodid for getMethods()
     if(classGetMethods == 0) {
@@ -151,8 +149,7 @@ static int pyjobject_init(PyJobject_Object *pyjob) {
                                               langClass,
                                               "getMethods",
                                               "()[Ljava/lang/reflect/Method;");
-        if(process_java_exception(env) || !classGetMethods)
-            goto EXIT_ERROR;
+        PROCESS_JAVA_EXCEPTION(env);
     }
 
     // - GetMethodID fails when you pass the clazz object, it expects
@@ -168,8 +165,7 @@ static int pyjobject_init(PyJobject_Object *pyjob) {
     methodArray = (jobjectArray) (*env)->CallObjectMethod(env,
                                                           pyjob->clazz,
                                                           classGetMethods);
-    if(process_java_exception(env) || !methodArray)
-        goto EXIT_ERROR;
+    PROCESS_JAVA_EXCEPTION(env);
     
     // for each method, create a new pyjmethod object
     // and add to the internal methods list.
@@ -183,9 +179,13 @@ static int pyjobject_init(PyJobject_Object *pyjob) {
                                                 i);
 
         // make new PyJmethod_Object, linked to pyjob
+        Py_BLOCK_THREADS;
         pymethod = pyjmethod_new(env, rmethod, pyjob);
-        if(!pymethod)
+
+        if(!pymethod) {
+            Py_UNBLOCK_THREADS;
             continue;
+        }
 
         if(pymethod->pyMethodName && PyString_Check(pymethod->pyMethodName)) {
             if(PyObject_SetAttr((PyObject *) pyjob,
@@ -197,12 +197,12 @@ static int pyjobject_init(PyJobject_Object *pyjob) {
                 pyjobject_addmethod(pyjob, pymethod->pyMethodName);
         }
         
+        Py_UNBLOCK_THREADS;
         (*env)->DeleteLocalRef(env, rmethod);
         Py_DECREF(pymethod);
     }
     
     (*env)->DeleteLocalRef(env, methodArray);
-    
     
     // ------------------------------ process fields
     
@@ -211,8 +211,7 @@ static int pyjobject_init(PyJobject_Object *pyjob) {
                                              langClass,
                                              "getFields",
                                              "()[Ljava/lang/reflect/Field;");
-        if(process_java_exception(env) || !classGetFields)
-            goto EXIT_ERROR;
+        PROCESS_JAVA_EXCEPTION(env);
     }
     
     fieldArray = (jobjectArray) (*env)->CallObjectMethod(env,
@@ -230,9 +229,13 @@ static int pyjobject_init(PyJobject_Object *pyjob) {
                                                fieldArray,
                                                i);
         
+        Py_BLOCK_THREADS;
         pyjfield = pyjfield_new(env, rfield, pyjob);
-        if(!pyjfield)
+        
+        if(!pyjfield) {
+            Py_UNBLOCK_THREADS;
             continue;
+        }
         
         if(pyjfield->pyFieldName && PyString_Check(pyjfield->pyFieldName)) {
             if(PyObject_SetAttr((PyObject *) pyjob,
@@ -244,6 +247,7 @@ static int pyjobject_init(PyJobject_Object *pyjob) {
                 pyjobject_addfield(pyjob, pyjfield->pyFieldName);
         }
         
+        Py_UNBLOCK_THREADS;
         (*env)->DeleteLocalRef(env, rfield);
         Py_DECREF(pyjfield);
     }
@@ -253,10 +257,13 @@ static int pyjobject_init(PyJobject_Object *pyjob) {
     
     // we've finished the object.
     pyjob->finishAttr = 1;
+    Py_BLOCK_THREADS;
     return 1;
     
     
 EXIT_ERROR:
+    Py_BLOCK_THREADS;
+
     if(methodArray)
         (*env)->DeleteLocalRef(env, methodArray);
     if(fieldArray)
@@ -268,6 +275,7 @@ EXIT_ERROR:
         if(pyjob)
             pyjobject_dealloc(pyjob);
     }
+
     return 0;
 }
 
@@ -341,7 +349,7 @@ PyObject* find_method(PyObject *methodName,
                       int methodCount,
                       PyObject *attr,
                       PyObject *args) {
-    
+    PyThreadState    *_save;
     // all possible method candidates
     PyJmethod_Object *cand[methodCount];
     int               pos, i, listSize, argsSize;
@@ -354,11 +362,11 @@ PyObject* find_method(PyObject *methodName,
         return NULL;
     }
 
-    if(!attr || !PyList_Check(attr)) {
+    if(!attr || !PyList_CheckExact(attr)) {
         PyErr_Format(PyExc_RuntimeError, "Invalid attr list.");
         return NULL;
     }
-    
+
     // just for safety
     for(i = 0; i < methodCount; i++)
         cand[i] = NULL;
@@ -370,25 +378,34 @@ PyObject* find_method(PyObject *methodName,
         if(PyErr_Occurred())
             break;
         
-        if(!tuple || tuple == Py_None)
-            continue;
-        if(!PyTuple_Check(tuple))
+        if(!tuple || tuple == Py_None || !PyTuple_CheckExact(tuple))
             continue;
 
         if(PyTuple_Size(tuple) == 2) {
             PyObject *key = PyTuple_GetItem(tuple, 0);           /* borrowed */
+            Py_INCREF(key);
             
-            if(PyErr_Occurred())
+            if(PyErr_Occurred()) {
+                Py_DECREF(key);
                 break;
+            }
             
-            if(!key || !PyString_Check(key))
+            if(!key || !PyString_Check(key)) {
+                Py_DECREF(key);
                 continue;
+            }
             
             if(PyObject_Compare(key, methodName) == 0) {
                 PyObject *method = PyTuple_GetItem(tuple, 1);    /* borrowed */
+                Py_INCREF(method);
+                
                 if(pyjmethod_check(method))
                     cand[pos++] = (PyJmethod_Object *) method;
+                
+                Py_DECREF(method);
             }
+            
+            Py_DECREF(key);
         }
     }
     
@@ -499,7 +516,6 @@ PyObject* find_method(PyObject *methodName,
 PyObject* pyjobject_find_method(PyJobject_Object *self,
                                 PyObject *methodName,
                                 PyObject *args) {
-    
     // util method does this for us
     return find_method(methodName,
                        PyList_Size(self->methods),
@@ -606,6 +622,7 @@ static int pyjobject_setattr(PyJobject_Object *obj,
         PyErr_Format(PyExc_RuntimeError, "Invalid attr list.");
         return -1;
     }
+    
     Py_INCREF(v);
     
     if(obj->finishAttr) {
@@ -624,23 +641,23 @@ static int pyjobject_setattr(PyJobject_Object *obj,
             return -1;
         
         if(cur == Py_None) {
-            PyErr_Format(PyExc_RuntimeError, "No such field.");
+            PyErr_SetString(PyExc_RuntimeError, "No such field.");
             return -1;
         }
         
         if(!pyjfield_check(cur)) {
-            PyErr_Format(PyExc_TypeError, "Not a pyjfield object.");
+            PyErr_SetString(PyExc_TypeError, "Not a pyjfield object.");
             return -1;
         }
         
         if(!PyList_Check(obj->attr)) {
             Py_DECREF(pyname);
-            PyErr_Format(PyExc_RuntimeError, "Invalid attr list.");
+            PyErr_SetString(PyExc_RuntimeError, "Invalid attr list.");
             return -1;
         }
         
         // now, just ask pyjfield to handle.
-        ret = pyjfield_set((PyJfield_Object *) cur, v); /* steals ref */
+        ret = pyjfield_set((PyJfield_Object *) cur, v); /* borrows ref */
         
         Py_DECREF(cur);
         Py_DECREF(v);
@@ -653,8 +670,12 @@ static int pyjobject_setattr(PyJobject_Object *obj,
     Py_INCREF(pyname);
     PyTuple_SetItem(tuple, 0, pyname);   /* steals ref */
     PyTuple_SetItem(tuple, 1, v);        /* steals ref */
-
+    
     // the docs don't mention this, but the source INCREFs tuple
+    // ...
+    // after much printf'ing. uhm. must decref it somewhere.
+    Py_INCREF(tuple);
+
     PyList_Append(obj->attr, tuple);
     
     Py_DECREF(tuple);
