@@ -784,6 +784,8 @@ int pyarg_matches_jtype(JNIEnv *env,
     case JLONG_ID:
         if(PyLong_Check(param))
             return 1;
+        if(PyInt_Check(param))
+            return 1;
         break;
         
     case JBOOLEAN_ID:
@@ -936,7 +938,7 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
             return ret;
         }
         
-        ret.i = (jint) PyInt_AsLong(param);
+        ret.i = (jint) PyInt_AS_LONG(param);
         return ret;
     }
 
@@ -966,14 +968,17 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
     }
 
     case JLONG_ID: {
-        if(param == Py_None || !PyLong_Check(param)) {
+        if(PyInt_Check(param))
+            ret.j = (jlong) PyInt_AS_LONG(param);
+        else if(PyLong_Check(param))
+            ret.j = (jlong) PyLong_AsLongLong(param);
+        else {
             PyErr_Format(PyExc_ValueError,
                          "Expected long parameter at %i.",
                          pos + 1);
             return ret;
         }
-            
-        ret.j = (jlong) PyLong_AsLongLong(param);
+        
         return ret;
     }
 
