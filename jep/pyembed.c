@@ -73,7 +73,13 @@ static struct PyMethodDef jep_methods[] = {
     { "jarray",
       pyjarray_new_v,
       METH_VARARGS,
-      "Create a new primitive array in Java." },
+      "Create a new primitive array in Java.\n"
+      "Accepts:\n"
+      "(size, type _ID, [value=0]) || "
+      "(size, jobject) || "
+      "(size, str) || "
+      "(size, jarray)"
+    },
     
     { NULL, NULL }
 };
