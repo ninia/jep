@@ -349,13 +349,16 @@ jstring jobject_tostring(JNIEnv *env, jobject obj, jclass clazz) {
 // you *must* call release when you're finished with it.
 // returns local reference.
 const char* jstring2char(JNIEnv *env, jstring str) {
+    if(str == NULL)
+        return NULL;
     return (*env)->GetStringUTFChars(env, str, 0);
 }
 
 
 // release memory allocated by jstring2char
 void release_utf_char(JNIEnv *env, jstring str, const char *v) {
-    (*env)->ReleaseStringUTFChars(env, str, v);
+    if(v != NULL && str != NULL)
+        (*env)->ReleaseStringUTFChars(env, str, v);
 }
 
 
