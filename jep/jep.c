@@ -24,8 +24,6 @@
 #include "jep.h"
 #include "pyembed.h"
 
-#define EXIT_FAILURE 1
-
 
 // -------------------------------------------------- jni functions
 
