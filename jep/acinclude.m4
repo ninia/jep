@@ -41,31 +41,31 @@ AC_DEFUN(jm_CHECK_TYPE_STRUCT_UTIMBUF,
 
 
 AC_DEFUN([AC_PROG_JAVAH],[
+AC_MSG_CHECKING([for jni.h])
 AC_REQUIRE([AC_PROG_CPP])
 JAVAH=$JAVA_HOME/bin/javah
-#AC_PATH_PROG(JAVAH,javah)
-if test -e $JAVAH; then
-  AC_TRY_CPP([#include <jni.h>],,[
-    ac_save_CPPFLAGS="$CPPFLAGS"
-changequote(, )dnl
-    path_javah=`echo $JAVAH | $lt_cv_path_SED 's/javah//g'`
-    ac_dir=`echo $path_javah | $lt_cv_path_SED 's,\(.*\)/[^/]*/[^/]*$,\1/include,'`
-    ac_machdep=`echo $build_os | $lt_cv_path_SED 's,[-0-9].*,,' | $lt_cv_path_SED 's,cygwin,win32,'`
-changequote([, ])dnl
-    if test x"$ac_dir" == x; then
-        CPPFLAGS="$ac_save_CPPFLAGS -I$JAVA_HOME/include"
-    else
-        CPPFLAGS="$ac_save_CPPFLAGS -I$ac_dir -I$ac_dir/$ac_machdep"
-    fi
-    AC_TRY_CPP([#include <jni.h>],
-               ac_save_CPPFLAGS="$CPPFLAGS",
-               AC_MSG_ERROR([unable to include <jni.h>]))
-    CPPFLAGS="$ac_save_CPPFLAGS"])
-    AC_SUBST([JAVAH], $JAVAH)
-else
-    AC_MSG_WARN([javah was $JAVAH])
-    AC_MSG_ERROR([Couldn't find javah. Make sure JAVA_HOME is set correctly.])
-fi])
+
+ac_save_CPPFLAGS="$CPPFLAGS"
+sdk_inc="${JAVA_HOME}/include"
+
+# older autotools doesn't set this
+if test x$lt_cv_path_SED == "x"; then
+    lt_cv_path_SED=sed
+fi
+
+ac_machdep=`echo $build_os | sed 's/[@<:@]-0-9[@:>@].*//' | sed 's/cygwin/win32/g'`
+
+if test x"$ac_machdep" != x; then
+    CPPFLAGS="$ac_save_CPPFLAGS -I$sdk_inc -I$sdk_inc/$ac_machdep"
+fi
+
+AC_TRY_COMPILE([#include <jni.h>], [],
+    ac_save_CPPFLAGS="$CPPFLAGS",
+    AC_MSG_ERROR([unable to include <jni.h>]))
+
+AC_SUBST([JAVAH], $JAVAH)
+AC_MSG_RESULT([yes])
+])
 
 dnl shutup the compiler, long double is from Python.h
 AC_DEFUN([AC_CHECK_LONG_DOUBLE], [
@@ -125,7 +125,7 @@ fi
 dnl mrj, check python version
 AC_DEFUN([AC_CHECK_PYTHON_VERSION], [
 AC_MSG_CHECKING([python version >= 2])
-AC_TRY_CPP([
+AC_TRY_COMPILE([
 #include "Python.h"
 #if PY_MAJOR_VERSION < 2
 #  error Python version 2.2 or greater is required.
@@ -133,19 +133,19 @@ AC_TRY_CPP([
 #if PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION < 2
 #  error Python version 2.2 or greater is required.
 #endif
-],
+], [],
     AC_MSG_RESULT([yes]),
     AC_MSG_ERROR([python 2.2 or greater is required]))
 ])
 
 AC_DEFUN([AC_CHECK_PYTHON_THREAD], [
 AC_MSG_CHECKING([python has threads])
-AC_TRY_CPP([
+AC_TRY_COMPILE([
 #include "Python.h"
 #if !WITH_THREAD
 #  error threads required
 #endif
-],
+], [],
     AC_MSG_RESULT([yes]),
     AC_MSG_ERROR([python must be compiled with thread support]))
 ])
@@ -179,3 +179,65 @@ AC_PROVIDE([$0])dnl
 ])
 
 m4_include([python.m4])
+
+
+# NOTE: This macro has been submitted for inclusion into   #
+#  GNU Autoconf as AC_PROG_SED.  When it is available in   #
+#  a released version of Autoconf we should remove this    #
+#  macro and use it instead.                               #
+# LT_AC_PROG_SED
+# --------------
+# Check for a fully-functional sed program, that truncates
+# as few characters as possible.  Prefer GNU sed if found.
+AC_DEFUN([LT_AC_PROG_SED],
+[AC_MSG_CHECKING([for a sed that does not truncate output])
+AC_CACHE_VAL(lt_cv_path_SED,
+[# Loop through the user's path and test for sed and gsed.
+# Then use that list of sed's as ones to test for truncation.
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for lt_ac_prog in sed gsed; do
+    for ac_exec_ext in '' $ac_executable_extensions; do
+      if $as_executable_p "$as_dir/$lt_ac_prog$ac_exec_ext"; then
+        lt_ac_sed_list="$lt_ac_sed_list $as_dir/$lt_ac_prog$ac_exec_ext"
+      fi
+    done
+  done
+done
+lt_ac_max=0
+lt_ac_count=0
+# Add /usr/xpg4/bin/sed as it is typically found on Solaris
+# along with /bin/sed that truncates output.
+for lt_ac_sed in $lt_ac_sed_list /usr/xpg4/bin/sed; do
+  test ! -f $lt_ac_sed && break
+  cat /dev/null > conftest.in
+  lt_ac_count=0
+  echo $ECHO_N "0123456789$ECHO_C" >conftest.in
+  # Check for GNU sed and select it if it is found.
+  if "$lt_ac_sed" --version 2>&1 < /dev/null | grep 'GNU' > /dev/null; then
+    lt_cv_path_SED=$lt_ac_sed
+    break
+  fi
+  while true; do
+    cat conftest.in conftest.in >conftest.tmp
+    mv conftest.tmp conftest.in
+    cp conftest.in conftest.nl
+    echo >>conftest.nl
+    $lt_ac_sed -e 's/a$//' < conftest.nl >conftest.out || break
+    cmp -s conftest.out conftest.nl || break
+    # 10000 chars as input seems more than enough
+    test $lt_ac_count -gt 10 && break
+    lt_ac_count=`expr $lt_ac_count + 1`
+    if test $lt_ac_count -gt $lt_ac_max; then
+      lt_ac_max=$lt_ac_count
+      lt_cv_path_SED=$lt_ac_sed
+    fi
+  done
+done
+SED=$lt_cv_path_SED
+])
+AC_MSG_RESULT([$SED])
+])

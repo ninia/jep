@@ -1,4 +1,4 @@
-# Makefile.in generated automatically by automake 1.4-p6 from Makefile.am
+# Makefile.in generated automatically by automake 1.4-p5 from Makefile.am
 
 # Copyright (C) 1994, 1995-8, 1999, 2001 Free Software Foundation, Inc.
 # This Makefile.in is free software; the Free Software Foundation
@@ -59,33 +59,22 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 host_alias = @host_alias@
 host_triplet = @host@
-AR = @AR@
 AS = @AS@
 CC = @CC@
 CPP = @CPP@
-CXX = @CXX@
-CXXCPP = @CXXCPP@
 DLLTOOL = @DLLTOOL@
 ECHO = @ECHO@
-EGREP = @EGREP@
 EXEEXT = @EXEEXT@
-F77 = @F77@
-GCJ = @GCJ@
-GCJFLAGS = @GCJFLAGS@
-HAVE_LIB = @HAVE_LIB@
 ISODATE = @ISODATE@
 JAVAC = @JAVAC@
 JAVAH = @JAVAH@
-LIB = @LIB@
 LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
-LTLIB = @LTLIB@
 MAKEINFO = @MAKEINFO@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
-RC = @RC@
 STRIP = @STRIP@
 VERSION = @VERSION@
 
@@ -93,7 +82,14 @@ AM_CPPFLAGS = $(all_includes)
 
 lib_LTLIBRARIES = libjep.la
 libjep_la_LDFLAGS = -version-info 1:0:0 -no-undefined
-libjep_la_SOURCES = jep.c jep.1 system.h aclocal.m4 	pyembed.c 	util.c 	pyjmethod.c 	pyjobject.c 	pyjclass.c 	pyjfield.c 	pyjarray.c
+libjep_la_SOURCES = jep.c jep.1 system.h aclocal.m4 \
+	pyembed.c \
+	util.c \
+	pyjmethod.c \
+	pyjobject.c \
+	pyjclass.c \
+	pyjfield.c \
+	pyjarray.c
 
 
 METASOURCES = AUTO
@@ -101,7 +97,29 @@ METASOURCES = AUTO
 #  uncomment the following if jep requires the math library
 #jep_LDADD=-lm
 
-EXTRA_DIST = python.m4 	autogen.sh 	pyembed.h 	util.h 	pyjmethod.h 	pyjobject.h 	pyjarray.h 	pyjclass.h 	pyjfield.h 	Jep.java 	Run.java 	BSFJepEngine.java 	JepException.java 	Test.java 	test.py 	jep.h 	makejar.sh 	jep.jar 	ext/bsf.jar 	windows/jep.dsp 	windows/setup.nsi 	javadoc/ 	console.py
+EXTRA_DIST = python.m4 \
+	autogen.sh \
+	pyembed.h \
+	util.h \
+	pyjmethod.h \
+	pyjobject.h \
+	pyjarray.h \
+	pyjclass.h \
+	pyjfield.h \
+	Jep.java \
+	Run.java \
+	BSFJepEngine.java \
+	JepException.java \
+	Test.java \
+	test.py \
+	jep.h \
+	makejar.sh \
+	jep.jar \
+	ext/bsf.jar \
+	windows/jep.dsp \
+	windows/setup.nsi \
+	javadoc/ \
+	console.py
 
 
 #  if you write a self-test script named `chk', uncomment the
@@ -147,7 +165,7 @@ jep.spec.in ltmain.sh missing mkinstalldirs texinfo.tex
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
-TAR = tar
+TAR = gtar
 GZIP_ENV = --best
 DEP_FILES =  .deps/jep.P .deps/pyembed.P .deps/pyjarray.P \
 .deps/pyjclass.P .deps/pyjfield.P .deps/pyjmethod.P .deps/pyjobject.P \
@@ -328,7 +346,7 @@ TAGS:  $(HEADERS) $(SOURCES) config.h.in $(TAGS_DEPENDENCIES) $(LISP)
 	  awk '    { files[$$0] = 1; } \
 	       END { for (i in files) print i; }'`; \
 	test -z "$(ETAGS_ARGS)config.h.in$$unique$(LISP)$$tags" \
-	  || (cd $(srcdir) && etags -o $$here/TAGS $(ETAGS_ARGS) $$tags config.h.in $$unique $(LISP))
+	  || (cd $(srcdir) && etags $(ETAGS_ARGS) $$tags config.h.in $$unique $(LISP) -o $$here/TAGS)
 
 mostlyclean-tags:
 
