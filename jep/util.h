@@ -33,14 +33,18 @@
 #ifndef _Included_util
 #define _Included_util
 
-#ifndef JEPEXCEPTION
-#  define JEPEXCEPTION "jep/JepException"
-#endif
+#define JEPEXCEPTION "jep/JepException"
 
+#define THROW_JEP(env, msg) ({                      \
+    jclass clazz = (*env)->FindClass(env,           \
+                                     JEPEXCEPTION); \
+    if(clazz != NULL)                               \
+        (*env)->ThrowNew(env, clazz, msg);          \
+})
 
 // was added in python 2.2
 #ifndef PyObject_TypeCheck
-#    define PyObject_TypeCheck(ob, tp) ((ob)->ob_type == (tp))
+# define PyObject_TypeCheck(ob, tp) ((ob)->ob_type == (tp))
 #endif
 
 // call toString() on jobject, make a python string and return
