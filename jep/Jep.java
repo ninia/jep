@@ -30,7 +30,9 @@ import java.io.File;
  */
 public final class Jep {
     
-    private int tstate = -1;
+    private int    tstate = -1;
+    // all calls must originate from same thread
+    private Thread thread = null;
     
     // used by default if not passed/set by caller
     private ClassLoader classLoader = null;
@@ -52,6 +54,7 @@ public final class Jep {
         super();
         this.classLoader = this.getClass().getClassLoader();
         this.tstate = init();
+        this.thread = Thread.currentThread();
     }
 
     
@@ -66,6 +69,7 @@ public final class Jep {
         this.classLoader = this.getClass().getClassLoader();
         this.interactive = interactive;
         this.tstate = init();
+        this.thread = Thread.currentThread();
     }
     
     
@@ -81,6 +85,7 @@ public final class Jep {
         this.classLoader = this.getClass().getClassLoader();
         this.interactive = interactive;
         this.tstate = init();
+        this.thread = Thread.currentThread();
         
         // why write C code if you don't have to? :-)
         if(includePath != null) {
@@ -96,7 +101,18 @@ public final class Jep {
     }
 
 
-    private static synchronized native int init() throws JepException;
+    private static native int init() throws JepException;
+
+
+    /**
+     * all calls must check thread
+     *
+     * @exception JepException if an error occurs
+     */
+    private void isValidThread() throws JepException {
+        if(this.thread != Thread.currentThread())
+            throw new JepException("Invalid thread access.");
+    }
 
 
     /**
@@ -106,9 +122,6 @@ public final class Jep {
      * @exception JepException if an error occurs
      */
     public void runScript(String script) throws JepException {
-        if(tstate < 1)
-            throw new JepException("Jep has been closed.");
-        
         runScript(script, null);
     }
 
@@ -123,6 +136,7 @@ public final class Jep {
     public void runScript(String script, ClassLoader cl) throws JepException {
         if(tstate < 1)
             throw new JepException("Jep has been closed.");
+        isValidThread();
         
         if(script == null)
             throw new JepException("Script filename cannot be null.");
@@ -172,6 +186,7 @@ public final class Jep {
     public boolean eval(String str) throws JepException {
         if(tstate < 1)
             throw new JepException("Jep has been closed.");
+        isValidThread();
         
         try {
             // trim windows \r\n
@@ -249,6 +264,7 @@ public final class Jep {
     public Object getValue(String str) throws JepException {
         if(tstate < 1)
             throw new JepException("Jep has been closed.");
+        isValidThread();
         
         return getValue(this.tstate, this.classLoader, str);
     }
@@ -302,6 +318,7 @@ public final class Jep {
     public void set(String name, Object v) throws JepException {
         if(tstate < 1)
             throw new JepException("Jep has been closed.");
+        isValidThread();
         
         set(tstate, name, v);
     }
@@ -320,6 +337,7 @@ public final class Jep {
     public void set(String name, String v) throws JepException {
         if(tstate < 1)
             throw new JepException("Jep has been closed.");
+        isValidThread();
         
         set(tstate, name, v);
     }
@@ -358,6 +376,7 @@ public final class Jep {
     public void set(String name, int v) throws JepException {
         if(tstate < 1)
             throw new JepException("Jep has been closed.");
+        isValidThread();
         
         set(tstate, name, v);
     }
@@ -372,6 +391,7 @@ public final class Jep {
     public void set(String name, short v) throws JepException {
         if(tstate < 1)
             throw new JepException("Jep has been closed.");
+        isValidThread();
         
         set(tstate, name, (int) v);
     }
@@ -390,6 +410,7 @@ public final class Jep {
     public void set(String name, char[] v) throws JepException {
         if(tstate < 1)
             throw new JepException("Jep has been closed.");
+        isValidThread();
         
         set(tstate, name, new String(v));
     }
@@ -405,6 +426,7 @@ public final class Jep {
     public void set(String name, char v) throws JepException {
         if(tstate < 1)
             throw new JepException("Jep has been closed.");
+        isValidThread();
         
         set(tstate, name, new String(new char[] { v }));
     }
@@ -420,6 +442,7 @@ public final class Jep {
     public void set(String name, byte b) throws JepException {
         if(tstate < 1)
             throw new JepException("Jep has been closed.");
+        isValidThread();
         
         set(tstate, name, (int) b);
     }
@@ -435,7 +458,8 @@ public final class Jep {
     public void set(String name, long v) throws JepException {
         if(tstate < 1)
             throw new JepException("Jep has been closed.");
-        
+        isValidThread();
+
         set(tstate, name, v);
     }
     
@@ -453,7 +477,8 @@ public final class Jep {
     public void set(String name, double v) throws JepException {
         if(tstate < 1)
             throw new JepException("Jep has been closed.");
-        
+        isValidThread();
+
         set(tstate, name, v);
     }
     
@@ -471,6 +496,7 @@ public final class Jep {
     public void set(String name, float v) throws JepException {
         if(tstate < 1)
             throw new JepException("Jep has been closed.");
+        isValidThread();
         
         set(tstate, name, v);
     }
