@@ -495,6 +495,9 @@ int pyembed_compile_string(JNIEnv *env,
     PyObject      *code;
     int            ret = -1;
     
+    if(str == NULL)
+        return 0;
+
     thread = (PyThreadState *) tstate;
 
     PyEval_AcquireLock();
