@@ -26,9 +26,13 @@ import java.io.File;
  * @version 1.0
  */
 public final class Jep {
-
+    
     private String hash = null;
+    
+    // used by default if not passed/set by caller
+    private ClassLoader classLoader = null;
 
+    
     /**
      * Creates a new <code>Jep</code> instance.
      *
@@ -37,6 +41,7 @@ public final class Jep {
     public Jep() throws JepException {
         super();
         this.hash = String.valueOf(this.hashCode());
+        this.classLoader = this.getClass().getClassLoader();
         init(hash);
     }
 
@@ -78,7 +83,7 @@ public final class Jep {
             throw new JepException("Invalid file: " + file.getAbsolutePath());
 
         if(cl == null)
-            cl = this.getClass().getClassLoader();
+            cl = this.classLoader;
         
         run(hash, cl, script);
     }
@@ -90,8 +95,36 @@ public final class Jep {
         throws JepException;
 
 
-    // -------------------------------------------------- set things
+    /**
+     * evaluate a python statement
+     *
+     * @param str a <code>String</code> value
+     * @exception JepException if an error occurs
+     */
+    public void eval(String str) throws JepException {
+        eval(hash, this.classLoader, str);
+    }
 
+    
+    private synchronized native void eval(String hash,
+                                          ClassLoader cl,
+                                          String str)
+        throws JepException;
+
+
+    // -------------------------------------------------- set things
+    
+    /**
+     * set default classloader
+     *
+     * @param cl a <code>ClassLoader</code> value
+     */
+    public void setClassLoader(ClassLoader cl) {
+        if(cl != null)
+            this.classLoader = cl;
+    }
+
+    
     /**
      * Describe <code>set</code> method here.
      *

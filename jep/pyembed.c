@@ -439,25 +439,104 @@ static PyObject* pyembed_findclass(PyObject *self, PyObject *args) {
 }
 
 
-void pyembed_run(JNIEnv *env,
-                 const char *hash,
-                 char *file,
-                 jobject classLoader) {
-    int ret = 0;
-    PyThreadState *prevThread, *thread;
-    PyObject      *modjep, *tdict;
+#define SET_TDICT(env, classLoader) ({                                          \
+    PyObject *tdict;                                                            \
+    if((tdict = PyThreadState_GetDict()) != NULL) {                             \
+        PyObject *key, *tlist, *pyenv, *pycl;                                   \
+        jobject   cl = NULL;                                                    \
+                                                                                \
+        if(classLoader)                                                         \
+            cl = (*env)->NewGlobalRef(env, classLoader);                        \
+        if(!cl)                                                                 \
+            PyErr_Warn(PyExc_Warning, "No classloader.");                       \
+                                                                                \
+        pyenv = (PyObject *) PyCObject_FromVoidPtr(env, NULL);                  \
+        pycl  = (PyObject *) PyCObject_FromVoidPtr(cl, NULL);                   \
+        key   = PyString_FromString(DICT_KEY);                                  \
+        tlist = PyList_New(0);                                                  \
+                                                                                \
+        PyList_Append(tlist, modjep);        /* takes ownership */              \
+        PyList_Append(tlist, pyenv);                                            \
+        PyList_Append(tlist, pycl);                                             \
+                                                                                \
+        PyDict_SetItem(tdict, key, tlist);   /* takes key, tlist ownership */   \
+                                                                                \
+        Py_DECREF(key);                                                         \
+        Py_DECREF(pyenv);                                                       \
+        Py_DECREF(tlist);                                                       \
+        Py_DECREF(pycl);                                                        \
+    }                                                                           \
+})
 
+
+void pyembed_eval(JNIEnv *env,
+                  const char *hash,
+                  char *str,
+                  jobject classLoader) {
+    PyThreadState *prevThread, *thread;
+    PyObject      *modjep;
+    PyObject *main, *dict;
+    
     thread = get_threadstate(hash);
     if(thread == NULL) {
         PyErr_Clear();
-
         THROW_JEP(env, "Couldn't get threadstate.");
         return;
     }
     modjep = get_modjep(hash);
     if(modjep == NULL) {
         PyErr_Clear();
-        
+        THROW_JEP(env, "Couldn't find modjep object.");
+        return;
+    }
+    if(str == NULL)
+        return;
+    
+    PyEval_AcquireLock();
+    prevThread = PyThreadState_Swap(thread);
+    
+    // store thread information in thread's dictionary as a list.
+/*     if(pyembed_getthread_object(LIST_ENV) == NULL) */
+/*     if(PyThreadState_GetDict() == NULL) */
+    SET_TDICT(env, classLoader);
+    
+    if(process_py_exception(env, 1))
+        return;
+    
+    main = PyImport_AddModule("__main__");    /* borrowed */
+    if(main == NULL) {
+        THROW_JEP(env, "Couldn't add module __main__.");
+        return;
+    }
+    
+    dict = PyModule_GetDict(main);
+    Py_INCREF(dict);
+    
+    PyRun_String(str, Py_single_input, dict, dict);
+    
+    process_py_exception(env, 1);
+    Py_DECREF(dict);
+    PyThreadState_Swap(prevThread);
+    PyEval_ReleaseLock();
+}
+
+
+void pyembed_run(JNIEnv *env,
+                 const char *hash,
+                 char *file,
+                 jobject classLoader) {
+    PyThreadState *prevThread, *thread;
+    PyObject      *modjep;
+
+    thread = get_threadstate(hash);
+    if(thread == NULL) {
+        PyErr_Clear();
+        THROW_JEP(env, "Couldn't get threadstate.");
+        return;
+    }
+    modjep = get_modjep(hash);
+    if(modjep == NULL) {
+        PyErr_Clear();
         THROW_JEP(env, "Couldn't find modjep object.");
         return;
     }
@@ -466,32 +545,8 @@ void pyembed_run(JNIEnv *env,
     prevThread = PyThreadState_Swap(thread);
     
     // store thread information in thread's dictionary as a list.
-    if((tdict = PyThreadState_GetDict()) != NULL) {
-        PyObject *key, *tlist, *pyenv, *pycl;
-        jobject   cl = NULL;
+    SET_TDICT(env, classLoader);
 
-        if(classLoader)
-            cl = (*env)->NewGlobalRef(env, classLoader);
-        if(!cl)
-            PyErr_Warn(PyExc_Warning, "No classloader.");
-        
-        pyenv = (PyObject *) PyCObject_FromVoidPtr(env, NULL);
-        pycl  = (PyObject *) PyCObject_FromVoidPtr(cl, NULL);
-        key   = PyString_FromString(DICT_KEY);
-        tlist = PyList_New(0);
-        
-        PyList_Append(tlist, modjep);        /* takes ownership */
-        PyList_Append(tlist, pyenv);
-        PyList_Append(tlist, pycl);
-        
-        PyDict_SetItem(tdict, key, tlist);   /* takes key, tlist ownership */
-        
-        Py_DECREF(key);
-        Py_DECREF(pyenv);
-        Py_DECREF(tlist);
-        Py_DECREF(pycl);
-    }
-    
     if(file == NULL)
         return;
 
@@ -503,20 +558,20 @@ void pyembed_run(JNIEnv *env,
         
         // some inspiration/code from pythonrun.c
         
-        main = PyImport_AddModule("__main__");    /* must be borrowed */
-        if(main == NULL)
-            return; // TODO throw exception
+        main = PyImport_AddModule("__main__");    /* borrowed */
+        if(main == NULL) {
+            THROW_JEP(env, "Couldn't add module __main__.");
+            return;
+        }
         
         dict = PyModule_GetDict(main);
         Py_INCREF(dict);
         if(PyDict_GetItemString(dict, "__file__") == NULL) {
             PyObject *f = PyString_FromString(file);
-            
-            if(f == NULL)
-                return; // TODO
             if(PyDict_SetItemString(dict, "__file__", f) < 0) {
                 Py_DECREF(f);
-                return; // TODO
+                THROW_JEP(env, "Couldn't set __file__.");
+                return;
             }
             Py_DECREF(f);
         }
@@ -527,7 +582,6 @@ void pyembed_run(JNIEnv *env,
         Py_DECREF(dict);
     }
 
-    // PyEval_SaveThread();
     PyThreadState_Swap(prevThread);
     PyEval_ReleaseLock();
 }

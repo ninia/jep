@@ -38,6 +38,7 @@ void pyembed_thread_close(const char*);
 
 void pyembed_close(void);
 void pyembed_run(JNIEnv*, const char*, char*, jobject);
+void pyembed_eval(JNIEnv *, const char *, char *, jobject);
 
 int pyembed_modjep_has(PyObject*);
 int pyembed_modjep_add(char*, PyObject*);
