@@ -44,8 +44,8 @@ public class Test implements Runnable {
 
                 jep.runScript("test.py");
             }
-            catch(Exception e) {
-                e.printStackTrace();
+            catch(Throwable t) {
+                t.printStackTrace();
                 break;
             }
             finally {
@@ -185,7 +185,7 @@ public class Test implements Runnable {
     }
     
     
-    public static void main(String argv[]) throws Exception {
+    public static void main(String argv[]) throws Throwable {
         
         if(argv.length < 1) {
             new Thread(new Test()).start();
