@@ -360,10 +360,8 @@ PyObject* find_method(PyObject *methodName,
         
         if(!tuple || tuple == Py_None)
             continue;
-        if(!PyTuple_Check(tuple)) {
-            printf("it's not a tuple, it's: %s\n", tuple->ob_type->tp_name);
+        if(!PyTuple_Check(tuple))
             continue;
-        }
 
         if(PyTuple_Size(tuple) == 2) {
             PyObject *key = PyTuple_GetItem(tuple, 0);           /* borrowed */
