@@ -6,10 +6,13 @@ import jep
 from jep import *
 from threading import Thread
 
+hasReadline = False
+
 try:
     import readline
 
     try:
+        hasReadline = True
         import os
         HISTFILE = '%s/.jep' % (os.environ['HOME'])
         if(not os.access(HISTFILE, os.W_OK)):
@@ -52,23 +55,28 @@ class Prompt(Thread):
             self.eof = True
 
 
-
 def prompt(jep):
-    line = None
-    while(1):
-        ran = True
-        try:
-            ran = jep.eval(line)
-        except:
-            traceback.print_exc()
+    global hasReadline
+    
+    try:
+        line = None
+        while(1):
+            ran = True
+            try:
+                ran = jep.eval(line)
+            except:
+                traceback.print_exc()
 
-        p = Prompt(ran)
-        p.start()
-        p.join()
-        line = p.line
+            p = Prompt(ran)
+            p.start()
+            p.join()
+            line = p.line
 
-        if(p.eof):
-            break
+            if(p.eof):
+                break
+    finally:
+        if(hasReadline):
+            readline.write_history_file(HISTFILE)
 
 
 if(__name__ == '__main__'):
@@ -82,6 +90,3 @@ if(__name__ == '__main__'):
 
     print ''
     jep.close()
-
-    if('readline' in dir()):
-        readline.write_history_file(HISTFILE)
