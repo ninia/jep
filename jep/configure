@@ -18840,11 +18840,11 @@ _ACEOF
 cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
-int main(int argc, char **argv) {return 0;}
+
 int
 main ()
 {
-ac_long=0
+
   ;
   return 0;
 }
@@ -18870,11 +18870,12 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
-  ac_long=1
-
+  ac_long=0
 else
   echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_long=1
 
 fi
 rm -f conftest.err conftest.$ac_objext conftest.$ac_ext

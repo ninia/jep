@@ -85,7 +85,7 @@ AC_REQUIRE([AC_PROG_CPP])
 AC_MSG_CHECKING([how to disable long double warning])
 ac_save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="$CPPFLAGS -Wno-long-double"
-AC_TRY_COMPILE([int main(int argc, char **argv) {return 0;}],
+AC_TRY_COMPILE([],[],
     ac_long=0,
     ac_long=1
 )
