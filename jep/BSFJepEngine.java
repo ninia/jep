@@ -1,7 +1,16 @@
 package jep;
 
+
+import java.util.Vector;
+import java.io.FileReader;
+
+import org.apache.bsf.*;
+import org.apache.bsf.util.*;
+
+
 /**
- * BSFJepEngine.java
+ * <pre>
+ * BSFJepEngine.java - Apache BSF support.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,23 +27,10 @@ package jep;
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * Created: Sat Jun 12 19:41:04 2004
+ * </pre>
  *
- * @author <a href="mailto:mrjohnson0@users.sourceforge.net">Mike Johnson</a>
- * @version 1.0
- */
-
-import java.util.Vector;
-import java.io.FileReader;
-
-import org.apache.bsf.*;
-import org.apache.bsf.util.*;
-
-
-/**
- * Apache BSF support.
- *
- * @author <a href="mailto:mrjohnson@pbook.local">Mike Johnson</a>
- * @version 1.0
+ * @author [mrjohnson0 at sourceforge.net] Mike Johnson
+ * @version $Id$
  */
 public class BSFJepEngine extends BSFEngineImpl {
 

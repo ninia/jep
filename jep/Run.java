@@ -24,8 +24,8 @@ import java.io.*;
  * Created: Sun Jun  6 15:06:34 2004
  * </pre>
  *
- * @author <a href="mailto:mrjohnson0@users.sourceforge.net">Mike Johnson</a>
- * @version 1.0
+ * @author [mrjohnson0 at sourceforge.net] Mike Johnson
+ * @version $Id$	
  */
 public class Run {
     

@@ -22,8 +22,8 @@ package jep;
  * Created: Fri Apr 30 10:35:03 2004
  *
  * </pre>
- * @author <a href="mailto:mrjohnson0@users.sourceforge.net">Mike Johnson</a>
- * @version 1.0
+ * @author [mrjohnson0 at sourceforge.net] Mike Johnson
+ * @version $Id$
  */
 public class JepException extends Throwable {
 

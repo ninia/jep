@@ -25,8 +25,8 @@ import java.io.File;
  *
  * </pre>
  *
- * @author <a href="mailto:mrjohnson0@sourceforge.net">Mike Johnson</a>
- * @version 1.0
+ * @author [mrjohnson0 at sourceforge.net] Mike Johnson
+ * @version $Id$
  */
 public final class Jep {
     

@@ -9,8 +9,8 @@ import java.io.File;
  *
  * Created: Fri Apr 30 12:42:58 2004
  *
- * @author <a href="mailto:mrjohnson0@users.sourceforge.net">Mike Johnson</a>
- * @version 1.0
+ * @author [mrjohnson0 at sourceforge.net] Mike Johnson
+ * @version $Id$
  */
 public class Test implements Runnable {
 
