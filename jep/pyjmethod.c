@@ -196,7 +196,7 @@ int pyjmethod_init(PyJmethod_Object *self) {
     // make sure if this method errors out, that this is poped off again
     (*env)->PushLocalFrame(env, 20);
     if(process_java_exception(env))
-        goto EXIT_ERROR;
+        return 0;
     
     rmethodClass = (*env)->GetObjectClass(env, self->rmethod);
     if(process_java_exception(env) || !rmethodClass)
