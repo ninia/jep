@@ -250,57 +250,6 @@ JepThread* pyembed_get_jepthread(void) {
 }
 
 
-// true of module has attribute
-/* int pyembed_modjep_has(JepThread *jepThread, PyObject *name) { */
-/*     if(!jepThread || !jepThread->modjep) */
-/*         return 0; */
-    
-/*     if(PyObject_HasAttr(jepThread->modjep, name)) */
-/*         return 1; */
-/*     return 0; */
-/* } */
-
-
-// add an object to modjep from caller.
-// steals reference.
-// may set an exception, returns 0 on error.
-/* int pyembed_modjep_add(char *name, PyObject *obj) { */
-/*     PyObject *modjep; */
-    
-/*     modjep = pyembed_getthread_object(LIST_MOD_JEP); */
-/*     if(PyErr_Occurred()) { */
-/*         PyErr_Print(); */
-/*         return 0; */
-/*     } */
-/*     if(!modjep) */
-/*         return 0; */
-    
-/*     PyModule_AddObject(modjep, name, obj);   /\* steals ref *\/ */
-/*     if(PyErr_Occurred()) { */
-/*         PyErr_Print(); */
-/*         return 0; */
-/*     } */
-/*     return 1; */
-/* } */
-
-
-// get name from modjep.
-// returns new reference.
-/* PyObject* pyembed_modjep_get(PyObject *name) { */
-/*     PyObject *modjep; */
-    
-/*     modjep = pyembed_getthread_object(LIST_MOD_JEP); */
-/*     if(PyErr_Occurred()) { */
-/*         PyErr_Print(); */
-/*         return NULL; */
-/*     } */
-/*     if(!modjep) */
-/*         return NULL; */
-    
-/*     return PyObject_GetAttr(modjep, name); */
-/* } */
-
-
 static PyObject* pyembed_forname(PyObject *self, PyObject *args) {
     JNIEnv    *env       = NULL;
     char      *name;
