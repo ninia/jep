@@ -309,7 +309,7 @@ static void pyjobject_addmethod(PyJobject_Object *obj, PyObject *name) {
     if(!PyList_Check(obj->methods))
         return;
 
-    Py_INCREF(name);
+/*     Py_INCREF(name); */
     PyList_Append(obj->methods, name);
 }
 
@@ -320,7 +320,7 @@ static void pyjobject_addfield(PyJobject_Object *obj, PyObject *name) {
     if(!PyList_Check(obj->fields))
         return;
     
-    Py_INCREF(name);
+/*     Py_INCREF(name); */
     PyList_Append(obj->fields, name);
 }
 
