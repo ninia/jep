@@ -50,7 +50,7 @@ public final class Jep {
     }
 
     
-    // load C shared library
+    // load shared library
     static {
         System.loadLibrary("jep");
     }

@@ -25,6 +25,7 @@ EXTRA_DIST=python.m4 \
 	pyjfield.h \
 	Jep.java \
 	Console.java \
+	BSFJepEngine.java \
 	JepException.java \
 	Test.java \
 	test.py \
@@ -42,15 +43,18 @@ libjep_la_TEXINFOS = gpl.texinfo
 #  install the man pages
 man_MANS=jep.1
 
-BUILT_SOURCES = Jep.class Test.class JepException.class jep.jar Console.class
+BUILT_SOURCES = Jep.class Test.class JepException.class jep.jar Console.class BSFJepEngine.class
 
 CLEANFILES = *.class *.jar
 Jep.class: Jep.java
 	$(JAVAC) -classpath ../ Jep.java
 	$(JAVAH) -o jep.h -classpath ../ jep.Jep
 
-Console.class: Console.java
+Console.class: Console.java Jep.java
 	$(JAVAC) -classpath ../ Console.java
+
+BSFJepEngine.class: BSFJepEngine.java Jep.java
+	$(JAVAC) -classpath ../:./ext/bsf.jar BSFJepEngine.java
 
 Test.class: Test.java
 	$(JAVAC) -classpath ../ Test.java

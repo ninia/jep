@@ -30,7 +30,7 @@ public class Console {
      * @param args[] a <code>String</code> value
      * @exception Exception if an error occurs
      */
-    public static void main (String args[]) throws Exception {
+    public static void main(String args[]) throws Exception {
         Jep jep = null;
         
         try {
