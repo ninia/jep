@@ -30,7 +30,8 @@ EXTRA_DIST=python.m4 \
 	Test.java \
 	test.py \
 	jep.h \
-	makejar.sh
+	makejar.sh \
+	ext/bsf.jar
 
 #  if you write a self-test script named `chk', uncomment the
 #  following and add `chk' to the EXTRA_DIST list
