@@ -725,7 +725,7 @@ static PyTypeObject PyJmethod_Type = {
     0,                                        /* tp_descr_get */
     0,                                        /* tp_descr_set */
     0,                                        /* tp_dictoffset */
-    (initproc) PyType_GenericNew,             /* tp_init */
+    0,                                        /* tp_init */
     0,                                        /* tp_alloc */
     NULL,                                     /* tp_new */
 };
