@@ -10,6 +10,8 @@ from jep import *
 #for i in (range(0, 10)):
 if(__name__ == '__main__'):
     i = 0
+
+    print 'sys.path:        ', sys.path
     
     print """
     ##################################################
