@@ -106,6 +106,9 @@ public final class Jep {
      * @exception JepException if an error occurs
      */
     public void runScript(String script) throws JepException {
+        if(tstate < 1)
+            throw new JepException("Jep has been closed.");
+        
         runScript(script, null);
     }
 
@@ -118,6 +121,9 @@ public final class Jep {
      * @exception JepException if an error occurs
      */
     public void runScript(String script, ClassLoader cl) throws JepException {
+        if(tstate < 1)
+            throw new JepException("Jep has been closed.");
+        
         if(script == null)
             throw new JepException("Script filename cannot be null.");
         
@@ -164,6 +170,9 @@ public final class Jep {
      * @exception JepException if an error occurs
      */
     public boolean eval(String str) throws JepException {
+        if(tstate < 1)
+            throw new JepException("Jep has been closed.");
+        
         try {
             // trim windows \r\n
             if(str != null) {
@@ -238,6 +247,9 @@ public final class Jep {
      * @exception JepException if an error occurs
      */
     public Object getValue(String str) throws JepException {
+        if(tstate < 1)
+            throw new JepException("Jep has been closed.");
+        
         return getValue(this.tstate, this.classLoader, str);
     }
 
@@ -287,8 +299,10 @@ public final class Jep {
      * @param v an <code>Object</code> value
      * @exception JepException if an error occurs
      */
-    public void set(String name, Object v)
-        throws JepException {
+    public void set(String name, Object v) throws JepException {
+        if(tstate < 1)
+            throw new JepException("Jep has been closed.");
+        
         set(tstate, name, v);
     }
 
@@ -303,8 +317,10 @@ public final class Jep {
      * @param v a <code>String</code> value
      * @exception JepException if an error occurs
      */
-    public void set(String name, String v)
-        throws JepException {
+    public void set(String name, String v) throws JepException {
+        if(tstate < 1)
+            throw new JepException("Jep has been closed.");
+        
         set(tstate, name, v);
     }
 
@@ -320,9 +336,10 @@ public final class Jep {
      * @param v a <code>boolean</code> value
      * @exception JepException if an error occurs
      */
-    public void set(String name, boolean v)
-        throws JepException {
-
+    public void set(String name, boolean v) throws JepException {
+        if(tstate < 1)
+            throw new JepException("Jep has been closed.");
+        
         // there's essentially no difference between int and bool...
         if(v)
             set(tstate, name, 1);
@@ -338,8 +355,10 @@ public final class Jep {
      * @param v an <code>int</code> value
      * @exception JepException if an error occurs
      */
-    public void set(String name, int v)
-        throws JepException {
+    public void set(String name, int v) throws JepException {
+        if(tstate < 1)
+            throw new JepException("Jep has been closed.");
+        
         set(tstate, name, v);
     }
     
@@ -350,8 +369,10 @@ public final class Jep {
      * @param v an <code>int</code> value
      * @exception JepException if an error occurs
      */
-    public void set(String name, short v)
-        throws JepException {
+    public void set(String name, short v) throws JepException {
+        if(tstate < 1)
+            throw new JepException("Jep has been closed.");
+        
         set(tstate, name, (int) v);
     }
     
@@ -367,6 +388,9 @@ public final class Jep {
      * @exception JepException if an error occurs
      */
     public void set(String name, char[] v) throws JepException {
+        if(tstate < 1)
+            throw new JepException("Jep has been closed.");
+        
         set(tstate, name, new String(v));
     }
 
@@ -379,6 +403,9 @@ public final class Jep {
      * @exception JepException if an error occurs
      */
     public void set(String name, char v) throws JepException {
+        if(tstate < 1)
+            throw new JepException("Jep has been closed.");
+        
         set(tstate, name, new String(new char[] { v }));
     }
 
@@ -391,6 +418,9 @@ public final class Jep {
      * @exception JepException if an error occurs
      */
     public void set(String name, byte b) throws JepException {
+        if(tstate < 1)
+            throw new JepException("Jep has been closed.");
+        
         set(tstate, name, (int) b);
     }
 
@@ -402,8 +432,10 @@ public final class Jep {
      * @param v a <code>long</code> value
      * @exception JepException if an error occurs
      */
-    public void set(String name, long v)
-        throws JepException {
+    public void set(String name, long v) throws JepException {
+        if(tstate < 1)
+            throw new JepException("Jep has been closed.");
+        
         set(tstate, name, v);
     }
     
@@ -418,8 +450,10 @@ public final class Jep {
      * @param v a <code>double</code> value
      * @exception JepException if an error occurs
      */
-    public void set(String name, double v)
-        throws JepException {
+    public void set(String name, double v) throws JepException {
+        if(tstate < 1)
+            throw new JepException("Jep has been closed.");
+        
         set(tstate, name, v);
     }
     
@@ -434,8 +468,10 @@ public final class Jep {
      * @param v a <code>float</code> value
      * @exception JepException if an error occurs
      */
-    public void set(String name, float v)
-        throws JepException {
+    public void set(String name, float v) throws JepException {
+        if(tstate < 1)
+            throw new JepException("Jep has been closed.");
+        
         set(tstate, name, v);
     }
     
