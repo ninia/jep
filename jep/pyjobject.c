@@ -124,7 +124,6 @@ static int pyjobject_init(PyJobject_Object *pyjob) {
     int               i, len = 0;
     jobject           langClass   = NULL;
     JNIEnv           *env;
-    PyThreadState    *_save;
     
     env = pyjob->env;
 

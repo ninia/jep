@@ -1165,6 +1165,9 @@ PyTypeObject PyJarrayIter_Type;
 static PyObject *pyjarray_iter(PyObject *seq) {
     PyJarrayIterObject *it;
     
+    if(PyType_Ready(&PyJarrayIter_Type) < 0)
+        return NULL;
+    
     if(!pyjarray_check(seq)) {
         PyErr_BadInternalCall();
         return NULL;
@@ -1228,7 +1231,7 @@ static PySequenceMethods pyjarrayiter_as_sequence = {
 };
 
 PyTypeObject PyJarrayIter_Type = {
-    PyObject_HEAD_INIT(&PyType_Type)
+    PyObject_HEAD_INIT(0)
     0,                                        /* ob_size */
     "pyjarrayiterator",                       /* tp_name */
     sizeof(PyJarrayIterObject),               /* tp_basicsize */
@@ -1246,7 +1249,7 @@ PyTypeObject PyJarrayIter_Type = {
     0,                                        /* tp_hash */
     0,                                        /* tp_call */
     0,                                        /* tp_str */
-    PyObject_GenericGetAttr,                  /* tp_getattro */
+    (getattrofunc) PyObject_GenericGetAttr,   /* tp_getattro */
     0,                                        /* tp_setattro */
     0,                                        /* tp_as_buffer */
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,  /* tp_flags */
