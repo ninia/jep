@@ -37,9 +37,10 @@ class Prompt(Thread):
     line = None
     eof  = False
 
-    def __init__(self):
+    def __init__(self, ran):
         Thread.__init__(self)
-
+        self.ran = ran
+        
         
     def run(self):
         try:
@@ -61,8 +62,7 @@ def prompt(jep):
         except:
             traceback.print_exc()
 
-        p = Prompt()
-        p.ran = ran
+        p = Prompt(ran)
         p.start()
         p.join()
         line = p.line
