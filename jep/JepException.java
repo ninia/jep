@@ -9,7 +9,7 @@ package jep;
  * @author <a href="mailto:mrjohnson0@users.sourceforge.net">Mike Johnson</a>
  * @version 1.0
  */
-public class JepException extends Exception {
+public class JepException extends Throwable {
 
     /**
      * Creates a new <code>JepException</code> instance.
@@ -27,5 +27,15 @@ public class JepException extends Exception {
      */
     public JepException(String s) {
         super(s);
+    }
+    
+    
+    /**
+     * Creates a new <code>JepException</code> instance.
+     *
+     * @param t a <code>Throwable</code> value
+     */
+    public JepException(Throwable t) {
+        super(t);
     }
 }
