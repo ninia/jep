@@ -820,6 +820,8 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
         if(param == Py_None)
             ;
         else if(PyString_Check(param)) {
+            char *val;
+
             // strings count as objects here
             if(!(*env)->IsAssignableFrom(env,
                                          JSTRING_TYPE,
@@ -831,7 +833,7 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
                 return ret;
             }
 
-            char *val = PyString_AsString(param);
+            val = PyString_AsString(param);
             obj = (*env)->NewStringUTF(env, (const char *) val);
         }
         else {
