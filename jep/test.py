@@ -274,6 +274,7 @@ if(__name__ == '__main__'):
         count = ar.index(10)
         ar = ar[0:count]
     print 'configure starts ', String(ar, 0, count)
+    fin.close()
     
     # array handling
     ar = testo.getStringArray()
