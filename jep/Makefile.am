@@ -22,6 +22,7 @@ EXTRA_DIST=python.m4 \
 	util.h \
 	pyjmethod.h \
 	pyjobject.h \
+	pyjarray.h \
 	pyjclass.h \
 	pyjfield.h \
 	Jep.java \
