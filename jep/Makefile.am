@@ -75,4 +75,4 @@ jep.jar: Jep.class Test.class JepException.class Run.class
 	./makejar.sh jep/ jep.jar
 
 javadoc: jep.jar
-	${JAVA_HOME}/bin/javadoc -breakiterator -classpath ../:ext/bsf.jar jep -d javadoc/
+	${JAVA_HOME}/bin/javadoc -version -windowtitle 'Java Embedded Python' -author -breakiterator -classpath ../:ext/bsf.jar jep -d javadoc/
