@@ -154,8 +154,7 @@ public final class Jep {
             }
             else {
                 // try to compile string. if successful, input is finished.
-                int finished = compileString(this.tstate, str);
-                if(finished == 0) {
+                if(compileString(this.tstate, str) == 0) {
                     if(this.evalLines == null)
                         this.evalLines = new StringBuffer();
                     evalLines.append(str + "\n");
