@@ -39,7 +39,9 @@ public class Test implements Runnable {
                 jep.set("testl", 123123122112L);
                 jep.set("testd", 123.123D);
                 jep.set("testf", 12312.123123F);
-                
+                jep.set("testn", (String) null);
+                jep.set("testn", (Object) null);
+
                 jep.runScript("test.py");
             }
             catch(Exception e) {
