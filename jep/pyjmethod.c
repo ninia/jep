@@ -55,7 +55,6 @@ static jmethodID methodGetType       = 0;
 static jmethodID methodGetParmTypes  = 0;
 static jmethodID methodGetExceptions = 0;
 static jmethodID methodGetModifiers  = 0;
-static jmethodID modifierIsStatic    = 0;
 
 // called internally to make new PyJmethod_Object instances.
 // throws java exception and returns NULL on error.
@@ -311,22 +310,21 @@ int pyjmethod_init(PyJmethod_Object *self) {
         if(process_java_exception(env))
             goto EXIT_ERROR;
         
-        if(modifierIsStatic == 0) {
-            modClass = (*env)->FindClass(env, "java/lang/reflect/Modifier");
-            if(process_java_exception(env) || !modClass)
-                goto EXIT_ERROR;
-            
-            modifierIsStatic = (*env)->GetStaticMethodID(env,
-                                                         modClass,
-                                                         "isStatic",
-                                                         "(I)Z");
-            if(process_java_exception(env) || !modifierIsStatic)
-                goto EXIT_ERROR;
-        }
+        modClass = (*env)->FindClass(env, "java/lang/reflect/Modifier");
+        if(process_java_exception(env) || !modClass)
+            goto EXIT_ERROR;
+        
+        // caching this methodid caused a crash on the mac
+        methodId = (*env)->GetStaticMethodID(env,
+                                             modClass,
+                                             "isStatic",
+                                             "(I)Z");
+        if(process_java_exception(env) || !methodId)
+            goto EXIT_ERROR;
         
         isStatic = (*env)->CallStaticBooleanMethod(env,
                                                    modClass,
-                                                   modifierIsStatic,
+                                                   methodId,
                                                    modifier);
         if(process_java_exception(env))
             goto EXIT_ERROR;
@@ -431,7 +429,7 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                      self->lenParameters);
         return NULL;
     }
-    
+
     // ------------------------------ build jargs off python values
     for(pos = 0; pos < self->lenParameters; pos++) {
         PyObject *param       = NULL;
@@ -486,7 +484,7 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
         
         if(process_java_exception(env))
             return NULL;
-        
+
         if(jstr == NULL) {
             Py_INCREF(Py_None);
             return Py_None;
