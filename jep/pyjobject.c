@@ -198,7 +198,9 @@ static int pyjobject_init(PyJobject_Object *pyjob) {
         }
         
         Py_DECREF(pymethod);
+        (*env)->DeleteLocalRef(env, rmethod);
     }
+    (*env)->DeleteLocalRef(env, methodArray);
     
     
     // ------------------------------ process fields
