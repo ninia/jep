@@ -122,8 +122,6 @@ void pyembed_startup(void) {
     if(mainThreadState != NULL)
         return;
 
-    printf("Setting up Python interpreter...\n");
-    
     Py_OptimizeFlag = 2;
     
     Py_Initialize();
