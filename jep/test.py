@@ -269,7 +269,7 @@ if(__name__ == '__main__'):
     ar = jarray(20, JBYTE_ID)
     count = fin.read(ar)
 
-    # strip any other lines, just want 1
+    # strip any other lines, just want first
     if(10 in ar):
         count = ar.index(10)
         ar = ar[0:count]
