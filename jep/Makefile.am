@@ -48,21 +48,23 @@ BUILT_SOURCES = jep.jar
 
 CLEANFILES = *.class *.jar
 
+JAVACOPT=-deprecation -classpath ../
+
 Jep.class: Jep.java
-	$(JAVAC) -classpath ../ Jep.java
+	$(JAVAC) ${JAVACOPT} Jep.java
 	$(JAVAH) -o jep.h -classpath ../ jep.Jep
 
 Run.class: Run.java Jep.java
-	$(JAVAC) -classpath ../ Run.java
+	$(JAVAC) ${JAVACOPT} Run.java
 
 BSFJepEngine.class: BSFJepEngine.java Jep.java
-	$(JAVAC) -classpath ../:./ext/bsf.jar BSFJepEngine.java
+	$(JAVAC) ${JAVACOPT}:./ext/bsf.jar BSFJepEngine.java
 
 Test.class: Test.java
-	$(JAVAC) -classpath ../ Test.java
+	$(JAVAC) ${JAVACOPT} Test.java
 
 JepException.class: JepException.java
-	$(JAVAC) -classpath ../ JepException.java
+	$(JAVAC) ${JAVACOPT} JepException.java
 
 jep.jar: Jep.class Test.class JepException.class Run.class
 	./makejar.sh jep/ jep.jar
