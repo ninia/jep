@@ -101,7 +101,7 @@ METASOURCES = AUTO
 #  uncomment the following if jep requires the math library
 #jep_LDADD=-lm
 
-EXTRA_DIST = python.m4 	autogen.sh 	pyembed.h 	util.h 	pyjmethod.h 	pyjobject.h 	pyjclass.h 	pyjfield.h 	Jep.java 	JepException.java 	Test.java 	test.py 	jep.h 	makejar.sh
+EXTRA_DIST = python.m4 	autogen.sh 	pyembed.h 	util.h 	pyjmethod.h 	pyjobject.h 	pyjclass.h 	pyjfield.h 	Jep.java 	Console.java 	JepException.java 	Test.java 	test.py 	jep.h 	makejar.sh
 
 
 #  if you write a self-test script named `chk', uncomment the
@@ -115,7 +115,7 @@ libjep_la_TEXINFOS = gpl.texinfo
 #  install the man pages
 man_MANS = jep.1
 
-BUILT_SOURCES = Jep.class Test.class JepException.class jep.jar
+BUILT_SOURCES = Jep.class Test.class JepException.class jep.jar Console.class
 
 CLEANFILES = *.class *.jar
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -642,6 +642,9 @@ maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 Jep.class: Jep.java
 	$(JAVAC) -classpath ../ Jep.java
 	$(JAVAH) -o jep.h -classpath ../ jep.Jep
+
+Console.class: Console.java
+	$(JAVAC) -classpath ../ Console.java
 
 Test.class: Test.java
 	$(JAVAC) -classpath ../ Test.java
