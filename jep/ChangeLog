@@ -1,3 +1,7 @@
+2004-05-21  0.8.1  Mike Johnson <mrjohnson0@users.sourceforge.net>
+	* fix obvious crash on the Mac.
+	* fix crash related to bug #957106.
+	
 2004-04-29  Mike Johnson  <mrjohnson0@users.sourceforge.net>
 
 	* jep: initial version.
