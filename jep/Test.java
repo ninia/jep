@@ -1,6 +1,7 @@
 package jep;
 
 import java.util.ArrayList;
+import java.io.File;
 
 /**
  * Test.java
@@ -31,7 +32,9 @@ public class Test implements Runnable {
             System.out.println("running i: " + i);
             Jep jep = null;
             try {
-                jep = new Jep();
+                File pwd = new File(".");
+
+                jep = new Jep(false, pwd.getAbsolutePath());
                 jep.set("testo", new Test());
                 jep.set("test", "value from java.");
                 jep.set("testi", i);
