@@ -310,7 +310,6 @@ PyObject* pyjclass_call(PyJclass_Object *self,
                 goto EXIT_ERROR;
                 
             Py_UNBLOCK_THREADS;
-            (*env)->PopLocalFrame(env, NULL);
             obj = (*env)->NewObjectA(env,
                                      ((PyJobject_Object* ) self->pyjobject)->clazz,
                                      methodId,
@@ -321,7 +320,7 @@ PyObject* pyjclass_call(PyJclass_Object *self,
                 
             // finally, make pyjobject and return
             pobj = pyjobject_new(env, obj);
-                
+            
             // we already closed the local frame, so make
             // sure to delete this local ref.
             PyMem_Free(jargs);
@@ -335,6 +334,7 @@ PyObject* pyjclass_call(PyJclass_Object *self,
                 }
             }
             
+            (*env)->PopLocalFrame(env, NULL);
             return pobj;
         }
 
