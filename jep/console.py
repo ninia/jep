@@ -4,7 +4,6 @@ HISTFILE = '.jep'
 import traceback
 import jep
 from jep import *
-from threading import Thread
 
 hasReadline = False
 
@@ -30,29 +29,8 @@ except:
     i.e.: export LD_PRELOAD=/usr/lib/libpython2.3.so.1.0 """
 
 
-# we do the prompting from a non-java thread, that way signals can be ignored
-# this thread must not call any java methods. JNI's env pointer is not to be
-# shared between threads...
-class Prompt(Thread):
-    PS1  = ">>> "
-    PS2  = "... "
-    ran  = True
-    line = None
-    eof  = False
-
-    def __init__(self, ran):
-        Thread.__init__(self)
-        self.ran = ran
-        
-        
-    def run(self):
-        try:
-            if(self.ran):
-                self.line = raw_input(self.PS1)
-            else:
-                self.line = raw_input(self.PS2)
-        except(EOFError):
-            self.eof = True
+PS1  = ">>> "
+PS2  = "... "
 
 
 def prompt(jep):
@@ -67,13 +45,14 @@ def prompt(jep):
             except:
                 traceback.print_exc()
 
-            p = Prompt(ran)
-            p.start()
-            p.join()
-            line = p.line
-
-            if(p.eof):
+            try:
+                if(ran):
+                    line = raw_input(PS1)
+                else:
+                    line = raw_input(PS2)
+            except:
                 break
+
     finally:
         if(hasReadline):
             readline.write_history_file(HISTFILE)
