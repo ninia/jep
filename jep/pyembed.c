@@ -509,14 +509,14 @@ void pyembed_run(JNIEnv *env,
     PyEval_AcquireLock();
     prevThread = PyThreadState_Swap(jepThread->tstate);
     
-    if(file == NULL)
-        goto EXIT;
-
-    if(access(file, R_OK | F_OK) != 0)
-        goto EXIT;
-    else {
+    if(file != NULL) {
         PyObject *main, *locals, *globals;
+        
         FILE *script = fopen(file, "r");
+        if(!script) {
+            THROW_JEP(env, "Couldn't open script file.");
+            goto EXIT;
+        }
         
         // some inspiration from pythonrun.c
         

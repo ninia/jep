@@ -256,8 +256,11 @@ if(__name__ == '__main__'):
     System = findClass('java/lang/System')
     System.out.println("regression test.")
 
-    #Integer.byteValue()
-    raise TypeError, 'test'
+    try:
+        Integer.byteValue()
+    except:
+        print 'regression:       no crash yet'
+    #raise TypeError, 'test'
 
     print """
     ##################################################
