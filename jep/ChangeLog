@@ -1,4 +1,5 @@
-2004-07-26  1.0  Mike Johneon <mrjohnson0@users.sourceforge.net>
+2004-12-13  1.0  Mike Johneon <mrjohnson0@users.sourceforge.net>
+	* fix: pyjmethod.c - throw exception for calling non-static methods
 	* fix: pyembed.c - don't return error state without releasing GIL
 	* fix: util.c - release utf string local references
 	* nit: pyjclass.c - don't close localframe after last EXIT
