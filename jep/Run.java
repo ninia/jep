@@ -35,9 +35,18 @@ public class Run {
      */
     public static void main(String args[]) throws Throwable {
         Jep jep = null;
-        jep = new Jep();
-        jep.runScript(args[0]);
-        
+        try {
+            jep = new Jep();
+            jep.runScript(args[0]);
+        }
+        catch(Throwable t) {
+            t.printStackTrace();
+            jep.close();
+            
+            System.exit(1);
+        }
+
+        jep.close();
         // in case we're run with -Xrs
         System.exit(0);
     }
