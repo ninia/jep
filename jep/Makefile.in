@@ -93,7 +93,7 @@ AM_CPPFLAGS = $(all_includes)
 
 lib_LTLIBRARIES = libjep.la
 libjep_la_LDFLAGS = -version-info 1:0:0 -no-undefined
-libjep_la_SOURCES = jep.c jep.1 system.h aclocal.m4 	pyembed.c 	util.c 	pyjmethod.c 	pyjobject.c 	pyjclass.c 	pyjfield.c
+libjep_la_SOURCES = jep.c jep.1 system.h aclocal.m4 	pyembed.c 	util.c 	pyjmethod.c 	pyjobject.c 	pyjclass.c 	pyjfield.c 	jep.jar
 
 
 METASOURCES = AUTO
@@ -101,7 +101,7 @@ METASOURCES = AUTO
 #  uncomment the following if jep requires the math library
 #jep_LDADD=-lm
 
-EXTRA_DIST = python.m4 	autogen.sh 	pyembed.h 	util.h 	pyjmethod.h 	pyjobject.h 	pyjclass.h 	pyjfield.h 	Jep.java 	JepException.java 	Test.java 	test.py 	jep.h
+EXTRA_DIST = python.m4 	autogen.sh 	pyembed.h 	util.h 	pyjmethod.h 	pyjobject.h 	pyjclass.h 	pyjfield.h 	Jep.java 	JepException.java 	Test.java 	test.py 	jep.h 	makejar.sh
 
 
 #  if you write a self-test script named `chk', uncomment the
