@@ -268,7 +268,12 @@ if(__name__ == '__main__'):
     fin = FileInputStream("configure")
     ar = jarray(20, JBYTE_ID)
     count = fin.read(ar)
-    print '20 bytes of conf ', String(ar, 0, count)
+
+    # strip any other lines, just want 1
+    if(10 in ar):
+        count = ar.index(10)
+        ar = ar[0:count]
+    print 'configure starts ', String(ar, 0, count)
     
     # array handling
     ar = testo.getStringArray()
