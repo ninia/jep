@@ -158,6 +158,7 @@ PyObject* pyjclass_call(PyJclass_Object *self,
     JNIEnv       *env;
     jclass        initClass   = NULL;
     jobject       constructor = NULL;
+    jvalue       *jargs       = NULL;
     
     if(!PyTuple_Check(args)) {
         PyErr_Format(PyExc_RuntimeError, "args is not a valid tuple");
@@ -224,115 +225,112 @@ PyObject* pyjclass_call(PyJclass_Object *self,
         
         // next, find matching constructor for args
         // the counts match but maybe not the args themselves.
-        {
-            jvalue jargs[parmLen];
+        jargs = (jvalue *) PyMem_Malloc(sizeof(jargs) * parmLen);
             
-            for(parmPos = 0; parmPos < parmLen; parmPos++) {
-                PyObject *param       = PyTuple_GetItem(args, parmPos);
-                int       paramTypeId = -1;
-                jclass    pclazz;
-                jobject   paramType   =
-                    (jclass) (*env)->GetObjectArrayElement(env,
-                                                           parmArray,
-                                                           parmPos);
+        for(parmPos = 0; parmPos < parmLen; parmPos++) {
+            PyObject *param       = PyTuple_GetItem(args, parmPos);
+            int       paramTypeId = -1;
+            jclass    pclazz;
+            jobject   paramType   =
+                (jclass) (*env)->GetObjectArrayElement(env,
+                                                       parmArray,
+                                                       parmPos);
                 
-                if(process_java_exception(env) || !paramType) {
-                    (*env)->DeleteLocalRef(env, paramType);
-                    break;
-                }
-                
-                pclazz = (*env)->GetObjectClass(env, paramType);
-                if(process_java_exception(env) || !pclazz)
-                    goto EXIT_ERROR;
-                
-                paramTypeId = get_jtype(env, paramType, pclazz);
-                (*env)->DeleteLocalRef(env, pclazz);
-                
-                // if java and python agree, continue checking
-                if(pyarg_matches_jtype(env, param, paramType, paramTypeId)) {
-                    jargs[parmPos] = convert_pyarg_jvalue(env,
-                                                          param,
-                                                          paramType,
-                                                          paramTypeId,
-                                                          parmPos);
-                    if(PyErr_Occurred() || process_java_exception(env))
-                        goto EXIT_ERROR;
-                    
-                    (*env)->DeleteLocalRef(env, paramType);
-                    continue;
-                }
-                
+            if(process_java_exception(env) || !paramType) {
                 (*env)->DeleteLocalRef(env, paramType);
                 break;
+            }
                 
-            } // for each parameter type
-            
-            (*env)->DeleteLocalRef(env, parmArray);
-            
-            // did they match?
-            if(parmPos == parmLen) {
-                jobject   obj  = NULL;
-                PyObject *pobj = NULL;
+            pclazz = (*env)->GetObjectClass(env, paramType);
+            if(process_java_exception(env) || !pclazz)
+                goto EXIT_ERROR;
                 
+            paramTypeId = get_jtype(env, paramType, pclazz);
+            (*env)->DeleteLocalRef(env, pclazz);
+                
+            // if java and python agree, continue checking
+            if(pyarg_matches_jtype(env, param, paramType, paramTypeId)) {
+                jargs[parmPos] = convert_pyarg_jvalue(env,
+                                                      param,
+                                                      paramType,
+                                                      paramTypeId,
+                                                      parmPos);
                 if(PyErr_Occurred() || process_java_exception(env))
                     goto EXIT_ERROR;
+                    
+                (*env)->DeleteLocalRef(env, paramType);
+                continue;
+            }
                 
-                // get exceptions declared thrown
+            (*env)->DeleteLocalRef(env, paramType);
+            break;
+                
+        } // for each parameter type
+            
+        (*env)->DeleteLocalRef(env, parmArray);
+            
+        // did they match?
+        if(parmPos == parmLen) {
+            jobject   obj  = NULL;
+            PyObject *pobj = NULL;
+                
+            if(PyErr_Occurred() || process_java_exception(env))
+                goto EXIT_ERROR;
+                
+            // get exceptions declared thrown
                 
 #if USE_MAPPED_EXCEPTIONS
                 
-                if(classGetExceptions == 0) {
-                    classGetExceptions = (*env)->GetMethodID(
-                        env,
-                        initClass,
-                        "getExceptionTypes",
-                        "()[Ljava/lang/Class;");
-                    if(process_java_exception(env) || !classGetExceptions)
-                        goto EXIT_ERROR;
-                }
-                
-                exceptions = (jobjectArray) (*env)->CallObjectMethod(
+            if(classGetExceptions == 0) {
+                classGetExceptions = (*env)->GetMethodID(
                     env,
-                    constructor,
-                    classGetExceptions);
-                if(process_java_exception(env) || !exceptions)
+                    initClass,
+                    "getExceptionTypes",
+                    "()[Ljava/lang/Class;");
+                if(process_java_exception(env) || !classGetExceptions)
                     goto EXIT_ERROR;
+            }
+                
+            exceptions = (jobjectArray) (*env)->CallObjectMethod(
+                env,
+                constructor,
+                classGetExceptions);
+            if(process_java_exception(env) || !exceptions)
+                goto EXIT_ERROR;
 
-                if(!register_exceptions(env,
-                                        initClass,
-                                        constructor,
-                                        exceptions))
-                    goto EXIT_ERROR;
+            if(!register_exceptions(env,
+                                    initClass,
+                                    constructor,
+                                    exceptions))
+                goto EXIT_ERROR;
 
 #endif
                 
-                // worked out, create new object
+            // worked out, create new object
                 
-                methodId = (*env)->FromReflectedMethod(env,
-                                                       constructor);
-                if(process_java_exception(env))
-                    goto EXIT_ERROR;
-                (*env)->DeleteLocalRef(env, constructor);
+            methodId = (*env)->FromReflectedMethod(env,
+                                                   constructor);
+            if(process_java_exception(env))
+                goto EXIT_ERROR;
+            (*env)->DeleteLocalRef(env, constructor);
                 
-                (*env)->PopLocalFrame(env, NULL);
-                obj = (*env)->NewObjectA(env,
-                                         ((PyJobject_Object* ) self->pyjobject)->clazz,
-                                         methodId,
-                                         jargs);
-                if(process_java_exception(env) || !obj)
-                    goto EXIT_ERROR;
+            (*env)->PopLocalFrame(env, NULL);
+            obj = (*env)->NewObjectA(env,
+                                     ((PyJobject_Object* ) self->pyjobject)->clazz,
+                                     methodId,
+                                     jargs);
+            if(process_java_exception(env) || !obj)
+                goto EXIT_ERROR;
                 
-                // finally, make pyjobject and return
-                pobj = pyjobject_new(env, obj);
+            // finally, make pyjobject and return
+            pobj = pyjobject_new(env, obj);
                 
-                // we already closed the local frame, so make
-                // sure to delete this local ref.
-                (*env)->DeleteLocalRef(env, obj);
-                return pobj;
-            }
-            
-        } // local scope
-        
+            // we already closed the local frame, so make
+            // sure to delete this local ref.
+            PyMem_Free(jargs);
+            (*env)->DeleteLocalRef(env, obj);
+            return pobj;
+        }
     } // for each constructor
     
     
@@ -342,6 +340,8 @@ PyObject* pyjclass_call(PyJclass_Object *self,
     
     
 EXIT_ERROR:
+    if(jargs)
+        PyMem_Free(jargs);
     if(initClass)
         (*env)->DeleteLocalRef(env, initClass);
     if(parmArray)

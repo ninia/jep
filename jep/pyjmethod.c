@@ -410,12 +410,12 @@ static PyObject* pyjmethod_call(PyJmethod_Object *self,
 // easy. :-)
 PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                                   PyObject *args) {
-    PyObject   *result      = NULL;
-    const char *str, *rtype = NULL;
-    JNIEnv     *env         = NULL;
-    int         pos         = 0;
-    jvalue      jargs[self->lenParameters];
-
+    PyObject   *result = NULL;
+    const char *str    = NULL;
+    JNIEnv     *env    = NULL;
+    int         pos    = 0;
+    jvalue     *jargs  = NULL;
+    
     if(!self->parameters) {
         if(!pyjmethod_init(self) || PyErr_Occurred())
             return NULL;
@@ -423,7 +423,7 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
     }
     
     env = self->env;
-
+    
     // shouldn't happen
     if(self->lenParameters != PyTuple_GET_SIZE(args)) {
         PyErr_Format(PyExc_RuntimeError,
@@ -433,6 +433,8 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
         return NULL;
     }
 
+    jargs = (jvalue *) PyMem_Malloc(sizeof(jvalue) * self->lenParameters);
+    
     // ------------------------------ build jargs off python values
 
     for(pos = 0; pos < self->lenParameters; pos++) {
@@ -445,12 +447,16 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                                                    pos);
 
         param = PyTuple_GetItem(args, pos);                   /* borrowed */
-        if(PyErr_Occurred())                                  /* borrowed */
+        if(PyErr_Occurred()) {                                /* borrowed */
+            PyMem_Free(jargs);
             return NULL;
+        }
         
         pclazz = (*env)->GetObjectClass(env, paramType);
-        if(process_java_exception(env) || !pclazz)
+        if(process_java_exception(env) || !pclazz) {
+            PyMem_Free(jargs);
             return NULL;
+        }
         
         paramTypeId = get_jtype(env, paramType, pclazz);
         (*env)->DeleteLocalRef(env, pclazz);
@@ -460,8 +466,10 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                                           paramType,
                                           paramTypeId,
                                           pos);
-        if(PyErr_Occurred())                                  /* borrowed */
+        if(PyErr_Occurred()) {                                /* borrowed */
+            PyMem_Free(jargs);
             return NULL;
+        }
 
         (*env)->DeleteLocalRef(env, paramType);
     } // for parameters
@@ -486,19 +494,14 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                                                        self->methodId,
                                                        jargs);
         
-        if(process_java_exception(env))
-            return NULL;
-
-        if(jstr == NULL) {
-            Py_INCREF(Py_None);
-            return Py_None;
+        if(!process_java_exception(env) && jstr != NULL) {
+            str    = (*env)->GetStringUTFChars(env, jstr, 0);
+            result = PyString_FromString(str);
+            
+            (*env)->ReleaseStringUTFChars(env, jstr, str);
+            (*env)->DeleteLocalRef(env, jstr);
         }
         
-        str    = (*env)->GetStringUTFChars(env, jstr, 0);
-        result = PyString_FromString(str);
-
-        (*env)->ReleaseStringUTFChars(env, jstr, str);
-        (*env)->DeleteLocalRef(env, jstr);
         break;
     }
 
@@ -517,15 +520,9 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                                             self->methodId,
                                             jargs);
         
-        if(process_java_exception(env))
-            return NULL;
+        if(!process_java_exception(env) && obj != NULL)
+            result = pyjobject_new(env, obj);
         
-        if(obj == NULL) {
-            Py_INCREF(Py_None);
-            return Py_None;
-        }
-        
-        result = pyjobject_new(env, obj);
         break;
     }
 
@@ -544,10 +541,9 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                                          self->methodId,
                                          jargs);
         
-        if(process_java_exception(env))
-            return NULL;
+        if(!process_java_exception(env))
+            result = Py_BuildValue("i", ret);
         
-        result = Py_BuildValue("i", ret);
         break;
     }
 
@@ -566,10 +562,9 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                                            self->methodId,
                                            jargs);
         
-        if(process_java_exception(env))
-            return NULL;
+        if(!process_java_exception(env))
+            result = Py_BuildValue("i", (int) ret);
         
-        result = Py_BuildValue("i", (int) ret);
         break;
     }
 
@@ -588,10 +583,9 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                                             self->methodId,
                                             jargs);
         
-        if(process_java_exception(env))
-            return NULL;
+        if(!process_java_exception(env))
+            result = PyFloat_FromDouble(ret);
         
-        result = PyFloat_FromDouble(ret);
         break;
     }
 
@@ -610,10 +604,9 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                                            self->methodId,
                                            jargs);
         
-        if(process_java_exception(env))
-            return NULL;
+        if(!process_java_exception(env))
+            result = PyFloat_FromDouble((double) ret);
         
-        result = PyFloat_FromDouble((double) ret);
         break;
     }
 
@@ -632,10 +625,9 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                                           self->methodId,
                                           jargs);
         
-        if(process_java_exception(env))
-            return NULL;
+        if(!process_java_exception(env))
+            result = PyLong_FromLongLong(ret);
         
-        result = PyLong_FromLongLong(ret);
         break;
     }
 
@@ -654,10 +646,9 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                                              self->methodId,
                                              jargs);
         
-        if(process_java_exception(env))
-            return NULL;
+        if(!process_java_exception(env))
+            result = Py_BuildValue("i", ret);
         
-        result = Py_BuildValue("i", ret);
         break;
     }
 
@@ -674,15 +665,18 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                                     self->methodId,
                                     jargs);
 
-        if(process_java_exception(env))
-            return NULL;
+        process_java_exception(env);
     }
     
+    PyMem_Free(jargs);
+    
+    if(PyErr_Occurred())
+        return NULL;
     if(result == NULL) {
         Py_INCREF(Py_None);
         return Py_None;
     }
-
+    
     return result;
 }
 

@@ -470,7 +470,6 @@ void pyembed_eval(JNIEnv *env,
                   jobject classLoader) {
     PyThreadState *prevThread, *thread;
     PyObject      *modjep, *main, *dict, *result;
-    jobject        ret = NULL;
     
     thread = get_threadstate(hash);
     if(thread == NULL) {

@@ -349,11 +349,10 @@ PyObject* find_method(PyObject *methodName,
                       int methodCount,
                       PyObject *attr,
                       PyObject *args) {
-    PyThreadState    *_save;
     // all possible method candidates
-    PyJmethod_Object *cand[methodCount];
-    int               pos, i, listSize, argsSize;
-
+    PyJmethod_Object **cand = NULL;
+    int                pos, i, listSize, argsSize;
+    
     pos = i = listSize = argsSize = 0;
 
     // not really likely if we were called from pyjmethod, but hey...
@@ -366,11 +365,14 @@ PyObject* find_method(PyObject *methodName,
         PyErr_Format(PyExc_RuntimeError, "Invalid attr list.");
         return NULL;
     }
-
+    
+    cand = (PyJmethod_Object **)
+        PyMem_Malloc(sizeof(PyJmethod_Object*) * methodCount);
+    
     // just for safety
     for(i = 0; i < methodCount; i++)
         cand[i] = NULL;
-
+    
     listSize = PyList_GET_SIZE(attr);
     for(i = 0; i < listSize; i++) {
         PyObject *tuple = PyList_GetItem(attr, i);               /* borrowed */
@@ -410,7 +412,7 @@ PyObject* find_method(PyObject *methodName,
     }
     
     if(PyErr_Occurred())
-        return NULL;
+        goto EXIT_ERROR;
     
     // makes more sense to work with...
     pos--;
@@ -419,11 +421,13 @@ PyObject* find_method(PyObject *methodName,
         // didn't find a method by that name....
         // that shouldn't happen unless the search above is broken.
         PyErr_Format(PyExc_RuntimeError, "No such method.");
-        return NULL;
+        goto EXIT_ERROR;
     }
     if(pos == 0) {
         // we're done, call that one
-        return pyjmethod_call_internal(cand[0], args);
+        PyObject *ret = pyjmethod_call_internal(cand[0], args);
+        PyMem_Free(cand);
+        return ret;
     }
 
     // first, find out if there's only one method that
@@ -452,8 +456,10 @@ PyObject* find_method(PyObject *methodName,
                 cand[i] = NULL; // eliminate non-matching
         }
         
-        if(matching && count == 1)
+        if(matching && count == 1) {
+            PyMem_Free(cand);
             return pyjmethod_call_internal(matching, args);
+        }
     } // local scope
     
     for(i = 0; i <= pos; i++) {
@@ -498,10 +504,16 @@ PyObject* find_method(PyObject *methodName,
         }
         
         // this method matches?
-        if(parmpos == cand[i]->lenParameters)
-            return pyjmethod_call_internal(cand[i], args);
+        if(parmpos == cand[i]->lenParameters) {
+            PyObject *ret = pyjmethod_call_internal(cand[i], args);
+            PyMem_Free(cand);
+            return ret;
+        }
     }
 
+
+EXIT_ERROR:
+    PyMem_Free(cand);
     if(!PyErr_Occurred())
         PyErr_Format(PyExc_RuntimeError,
                      "Matching overloaded method not found.");
@@ -528,7 +540,6 @@ PyObject* pyjobject_find_method(PyJobject_Object *self,
 // excpected to return new reference.
 static PyObject* pyjobject_str(PyJobject_Object *self) {
     PyObject   *pyres     = NULL;
-    jthrowable  exception = NULL;
     JNIEnv     *env;
 
     env   = self->env;
