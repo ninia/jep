@@ -674,18 +674,19 @@ void pyembed_setparameter_object(JNIEnv *env,
     PyObject      *pyjob, *modjep = NULL;
     PyThreadState *prevThread, *thread;
     
-    if(value == NULL) {
-        THROW_JEP(env, "value is invalid.");
-        return;
-    }
-
     // sets thread, modjep
     GET_COMMON;
     
     PyEval_AcquireLock();
     prevThread = PyThreadState_Swap(thread);
 
-    pyjob   = pyjobject_new(env, value);
+    if(value == NULL) {
+        Py_INCREF(Py_None);
+        pyjob = Py_None;
+    }
+    else
+        pyjob = pyjobject_new(env, value);
+    
     if(pyjob)
         PyModule_AddObject(modjep, (char *) name, pyjob); // steals reference
 
@@ -702,18 +703,19 @@ void pyembed_setparameter_string(JNIEnv *env,
     PyObject      *pyvalue, *modjep = NULL;
     PyThreadState *prevThread, *thread;
     
-    if(value == NULL) {
-        THROW_JEP(env, "value is invalid.");
-        return;
-    }
-
     // sets thread, modjep
     GET_COMMON;
     
     PyEval_AcquireLock();
     prevThread = PyThreadState_Swap(thread);
 
-    pyvalue = PyString_FromString(value);
+    if(value == NULL) {
+        Py_INCREF(Py_None);
+        pyvalue = Py_None;
+    }
+    else
+        pyvalue = PyString_FromString(value);
+    
     PyModule_AddObject(modjep, (char *) name, pyvalue);  // steals reference
 
     PyThreadState_Swap(prevThread);
