@@ -864,7 +864,7 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
     case JSHORT_ID: {
         if(param == Py_None || !PyInt_Check(param)) {
             PyErr_Format(PyExc_ValueError,
-                         "Expected int parameter at %i.",
+                         "Expected short parameter at %i.",
                          pos + 1);
             return ret;
         }
