@@ -296,7 +296,8 @@ static int pyjarray_init(PyJarray_Object *pyarray, int zero, PyObject *value) {
         if(process_java_exception(env) || comp < 0)
             goto EXIT_ERROR;
     
-        pyarray->componentType = comp;
+        pyarray->componentClass = (*env)->NewGlobalRef(env, compClass);
+        pyarray->componentType  = comp;
     }
     
     if(pyarray->length < 0) // may already know that, too
@@ -608,11 +609,6 @@ static int pyjarray_setitem(PyJarray_Object *self,
                 PyErr_SetString(PyExc_TypeError, "Expected instance, not class.");
                 return -1;
             }
-        }
-        
-        if(!(*env)->IsAssignableFrom(env, pyjob->clazz, self->componentClass)) {
-            PyErr_SetString(PyExc_TypeError, "Can't cast to that type.");
-            return -1;
         }
 
         (*env)->SetObjectArrayElement(env,
