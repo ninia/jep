@@ -1625,20 +1625,18 @@ static PyObject *pyjarray_iter(PyObject *seq) {
         PyErr_BadInternalCall();
         return NULL;
     }
-    it = PyObject_GC_New(PyJarrayIterObject, &PyJarrayIter_Type);
+    it = PyObject_New(PyJarrayIterObject, &PyJarrayIter_Type);
     if (it == NULL)
         return NULL;
     it->it_index = 0;
     Py_INCREF(seq);
     it->it_seq = (PyJarray_Object *) seq;
-    _PyObject_GC_TRACK(it);
     return (PyObject *)it;
 }
 
 static void pyjarrayiter_dealloc(PyJarrayIterObject *it) {
-    _PyObject_GC_UNTRACK(it);
     Py_XDECREF(it->it_seq);
-    PyObject_GC_Del(it);
+    PyObject_Del(it);
 }
 
 static int pyjarrayiter_traverse(PyJarrayIterObject *it, visitproc visit, void *arg) {
@@ -1690,7 +1688,7 @@ PyTypeObject PyJarrayIter_Type = {
     sizeof(PyJarrayIterObject),               /* tp_basicsize */
     0,                                        /* tp_itemsize */
     /* methods */
-    (destructor)pyjarrayiter_dealloc,         /* tp_dealloc */
+    (destructor) pyjarrayiter_dealloc,        /* tp_dealloc */
     0,                                        /* tp_print */
     0,                                        /* tp_getattr */
     0,                                        /* tp_setattr */
@@ -1705,14 +1703,14 @@ PyTypeObject PyJarrayIter_Type = {
     (getattrofunc) PyObject_GenericGetAttr,   /* tp_getattro */
     0,                                        /* tp_setattro */
     0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,  /* tp_flags */
+    Py_TPFLAGS_DEFAULT,                       /* tp_flags */
     0,                                        /* tp_doc */
-    (traverseproc)pyjarrayiter_traverse,      /* tp_traverse */
+    (traverseproc) pyjarrayiter_traverse,     /* tp_traverse */
     0,                                        /* tp_clear */
     0,                                        /* tp_richcompare */
     0,                                        /* tp_weaklistoffset */
     PyObject_SelfIter,                        /* tp_iter */
-    (iternextfunc)pyjarrayiter_next,          /* tp_iternext */
+    (iternextfunc) pyjarrayiter_next,         /* tp_iternext */
     0,                                        /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
