@@ -60,6 +60,7 @@ public final class Jep {
     /**
      * Creates a new <code>Jep</code> instance.
      *
+     * @param interactive a <code>boolean</code> value
      * @exception JepException if an error occurs
      */
     public Jep(boolean interactive) throws JepException {
@@ -68,6 +69,28 @@ public final class Jep {
         this.classLoader = this.getClass().getClassLoader();
         this.interactive = interactive;
         init(hash);
+    }
+    
+    
+    /**
+     * Creates a new <code>Jep</code> instance.
+     *
+     * @param interactive a <code>boolean</code> value
+     * @param includePath a ':' delimited <code>String</code> of directories
+     * @exception JepException if an error occurs
+     */
+    public Jep(boolean interactive, String includePath) throws JepException {
+        super();
+        this.hash = String.valueOf(this.hashCode());
+        this.classLoader = this.getClass().getClassLoader();
+        this.interactive = interactive;
+        init(hash);
+        
+        // why write C code if you don't have to? :-)
+        if(includePath != null) {
+            eval("import sys");
+            eval("sys.path += '" + includePath + "'.split(':')");
+        }
     }
 
 
