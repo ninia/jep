@@ -106,7 +106,7 @@ PyObject* pyjarray_new_v(PyObject *isnull, PyObject *args) {
     PyJarray_Object *pyarray;
     jclass           clazz, componentClass;
     JNIEnv          *env       = NULL;
-    PyObject        *_env      = NULL;
+    JepThread       *jepThread;
     jobjectArray     arrayObj  = NULL;
     int              typeId    = -1;
     long             size      = -1;
@@ -117,21 +117,13 @@ PyObject* pyjarray_new_v(PyObject *isnull, PyObject *args) {
     
     if(PyType_Ready(&PyJarray_Type) < 0)
         return NULL;
-    
-    _env = pyembed_getthread_object(LIST_ENV);
-    if(!_env || !PyCObject_Check(_env)) {
-        if(!PyErr_Occurred())
-            PyErr_SetString(PyExc_ValueError, "Invalid env pointer.");
+
+    jepThread = pyembed_get_jepthread();
+    if(!jepThread) {
+        PyErr_SetString(PyExc_RuntimeError, "Invalid JepThread pointer.");
         return NULL;
     }
-    
-    env = (JNIEnv *) PyCObject_AsVoidPtr((PyObject *) _env);
-    if(!env) {
-        if(!PyErr_Occurred())
-            PyErr_SetString(PyExc_ValueError,
-                            "Invalid env pointer, AsVoidPtr returned NULL.");
-        return NULL;
-    }
+    env = jepThread->env;
     
     if(!PyArg_UnpackTuple(args, "ref", 1, 3, &one, &two, &three))
         return NULL;

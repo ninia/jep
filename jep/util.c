@@ -238,6 +238,7 @@ int process_java_exception(JNIEnv *env) {
     PyObject   *pyException  = PyExc_RuntimeError;
     PyObject   *str, *tmp, *texc, *className;
     char       *message;
+    JepThread  *jepThread;
     
     if(!(*env)->ExceptionCheck(env))
         return 0;
@@ -248,6 +249,12 @@ int process_java_exception(JNIEnv *env) {
 /*     (*env)->ExceptionDescribe(env); */
     // we're already processing this one, clear the old
     (*env)->ExceptionClear(env);
+
+    jepThread = pyembed_get_jepthread();
+    if(!jepThread) {
+        printf("Error while processing an exception, invalid JepThread.\n");
+        return 1;
+    }
     
     clazz = (*env)->GetObjectClass(env, exception);
     if((*env)->ExceptionCheck(env) || !clazz) {
@@ -290,7 +297,7 @@ int process_java_exception(JNIEnv *env) {
         return 1;
     }
     
-    if((texc = pyembed_modjep_get(className)) != NULL)
+    if((texc = PyObject_GetAttr(jepThread->modjep, className)) != NULL)
         pyException = texc;
     else
         printf("WARNING, didn't find mapped exception.\n");
@@ -1167,7 +1174,10 @@ int register_exceptions(JNIEnv *env,
                         jobject reflectObj,
                         jobjectArray exceptions) {
 #if USE_MAPPED_EXCEPTIONS
-    int       len, i;
+    int        len, i;
+    JepThread *jepThread;
+    
+    jepThread = pyembed_get_jepthread();
     
     len = (*env)->GetArrayLength(env, exceptions);
     for(i = 0; i < len; i++) {
@@ -1203,7 +1213,7 @@ int register_exceptions(JNIEnv *env,
         Py_DECREF(str);
         
         // don't add more
-        if(pyembed_modjep_has(tmp)) {
+        if(PyObject_HasAttr(jepThread->modjep, tmp)) {
             Py_DECREF(tmp);
             (*env)->DeleteLocalRef(env, exceptionClazz);
             (*env)->DeleteLocalRef(env, exceptionClass);
@@ -1211,13 +1221,15 @@ int register_exceptions(JNIEnv *env,
         }
         
         className = PyString_AsString(tmp);
-        
         _jep = PyString_FromFormat("jep.%s", className);
         jep = PyString_AsString(_jep);
         
         pyexc = PyErr_NewException(jep, NULL, NULL);
-        if(!pyembed_modjep_add(className, pyexc))               /* steals ref */
-            PyErr_Warn(PyExc_Warning, "Failed to add exception.");
+        PyModule_AddObject(jepThread->modjep, className, pyexc); /* steals */
+        if(PyErr_Occurred()) {
+            printf("WARNING: Failed to add exception %s.\n", className);
+            PyErr_Print();
+        }
         
         Py_DECREF(tmp);
         Py_DECREF(_jep);

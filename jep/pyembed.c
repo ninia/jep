@@ -55,20 +55,12 @@
 
 
 static PyThreadState *mainThreadState = NULL;
-static PyObject      *modDict         = NULL;
 
 static PyObject* pyembed_findclass(PyObject*, PyObject*);
 static PyObject* pyembed_forname(PyObject*, PyObject*);
 
 // ClassLoader.loadClass
 static jmethodID loadClassMethod = 0;
-
-
-struct __JepThread {
-    PyObject      *modjep;
-    PyThreadState *tstate;
-};
-typedef struct __JepThread JepThread;
 
 
 static struct PyMethodDef jep_methods[] = {
@@ -137,8 +129,6 @@ void pyembed_startup(void) {
     Py_Initialize();
     PyEval_InitThreads();
 
-    modDict = PyDict_New();
-
     // save a pointer to the main PyThreadState object
     mainThreadState = PyThreadState_Get();
     PyEval_ReleaseLock();
@@ -153,15 +143,22 @@ void pyembed_shutdown(void) {
 }
 
 
-jint pyembed_thread_init(JNIEnv *env) {
+jint pyembed_thread_init(JNIEnv *env, jobject cl) {
     JepThread *jepThread;
-
+    PyObject  *tdict;
+    
+    if(cl == NULL) {
+        THROW_JEP(env, "Invalid Classloader.");
+        return 0;
+    }
+    
     PyEval_AcquireLock();
     Py_NewInterpreter();
-
+    
     jepThread = PyMem_Malloc(sizeof(JepThread));
     if(!jepThread) {
         THROW_JEP(env, "Out of memory.");
+        PyEval_ReleaseLock();
         return 0;
     }
     
@@ -174,7 +171,21 @@ jint pyembed_thread_init(JNIEnv *env) {
         printf("WARNING: failed to get primitive class types.\n");
 
     // init static module
-    jepThread->modjep = initjep();
+    jepThread->modjep      = initjep();
+    jepThread->env         = env;
+    jepThread->classloader = (*env)->NewGlobalRef(env, cl);
+    
+    if((tdict = PyThreadState_GetDict()) != NULL) {
+        PyObject *key, *t;
+        
+        t   = (PyObject *) PyCObject_FromVoidPtr((void *) jepThread, NULL);
+        key = PyString_FromString(DICT_KEY);
+        
+        PyDict_SetItem(tdict, key, t);   /* takes ownership */
+        
+        Py_DECREF(key);
+        Py_DECREF(t);
+    }
     
     PyEval_SaveThread();
     return (jint) jepThread;
@@ -185,11 +196,20 @@ void pyembed_thread_close(jint _jepThread) {
     PyThreadState *prevThread, *thread;
     JepThread     *jepThread;
     PyObject      *tdict, *key;
+    JNIEnv        *env;
 
     jepThread = (JepThread *) _jepThread;
-    if(!jepThread)
+    if(!jepThread) {
+        printf("WARNING: thread_close, invalid JepThread pointer.\n");
         return;
+    }
     
+    env = jepThread->env;
+    if(!env) {
+        printf("WARNING: thread_close, invalid env pointer.\n");
+        return;
+    }
+
     PyEval_AcquireLock();
     prevThread = PyThreadState_Swap(jepThread->tstate);
 
@@ -197,9 +217,11 @@ void pyembed_thread_close(jint _jepThread) {
     if((tdict = PyThreadState_GetDict()) != NULL && key != NULL)
         PyDict_DelItem(tdict, key);
     Py_DECREF(key);
-        
+    
     if(jepThread->modjep)
         Py_DECREF(jepThread->modjep);
+    if(jepThread->classloader)
+        (*env)->DeleteGlobalRef(env, jepThread->classloader);
     
     Py_EndInterpreter(jepThread->tstate);
     
@@ -209,137 +231,97 @@ void pyembed_thread_close(jint _jepThread) {
 }
 
 
-// get object from thread's dictionary. NULL and exception on error.
-// returns borrowed reference.
-PyObject* pyembed_getthread_object(int pos) {
-    PyObject  *tdict, *tlist, *key;
-    tdict = tlist = key = NULL;
+// get thread struct when called from internals.
+// NULL if not found.
+// hold the lock before calling.
+JepThread* pyembed_get_jepthread(void) {
+    PyObject  *tdict, *t, *key;
+    JepThread *ret = NULL;
     
     key = PyString_FromString(DICT_KEY);
-    if((tdict = PyThreadState_GetDict()) == NULL) {
-        if(!PyErr_Occurred()) {
-            PyErr_SetString(PyExc_RuntimeError,
-                            "Couldn't get thread dictionary.");
-        }
-        return NULL;
-    }
-    
-    tlist = PyDict_GetItem(tdict, key);           /* borrowed */
-    if(!tlist || !PyList_Check(tlist)) {
-        if(!PyErr_Occurred()) {
-            PyErr_SetString(PyExc_RuntimeError,
-                            "Couldn't get thread information.");
-        }
-        return NULL;
+    if((tdict = PyThreadState_GetDict()) != NULL && key != NULL) {
+        t = PyDict_GetItem(tdict, key); /* borrowed */
+        if(t != NULL && !PyErr_Occurred())
+            ret = (JepThread*) PyCObject_AsVoidPtr(t);
     }
     
     Py_DECREF(key);
-    return PyList_GetItem(tlist, pos);            /* borrowed */
+    return ret;
 }
 
 
 // true of module has attribute
-int pyembed_modjep_has(PyObject *name) {
-    PyObject *modjep;
+/* int pyembed_modjep_has(JepThread *jepThread, PyObject *name) { */
+/*     if(!jepThread || !jepThread->modjep) */
+/*         return 0; */
     
-    modjep = pyembed_getthread_object(LIST_MOD_JEP);
-    if(PyErr_Occurred()) {
-        PyErr_Print();
-        return 0;
-    }
-    if(!modjep)
-        return 0;
-    
-    if(PyObject_HasAttr(modjep, name))
-        return 1;
-    return 0;
-}
+/*     if(PyObject_HasAttr(jepThread->modjep, name)) */
+/*         return 1; */
+/*     return 0; */
+/* } */
 
 
 // add an object to modjep from caller.
 // steals reference.
 // may set an exception, returns 0 on error.
-int pyembed_modjep_add(char *name, PyObject *obj) {
-    PyObject *modjep;
+/* int pyembed_modjep_add(char *name, PyObject *obj) { */
+/*     PyObject *modjep; */
     
-    modjep = pyembed_getthread_object(LIST_MOD_JEP);
-    if(PyErr_Occurred()) {
-        PyErr_Print();
-        return 0;
-    }
-    if(!modjep)
-        return 0;
+/*     modjep = pyembed_getthread_object(LIST_MOD_JEP); */
+/*     if(PyErr_Occurred()) { */
+/*         PyErr_Print(); */
+/*         return 0; */
+/*     } */
+/*     if(!modjep) */
+/*         return 0; */
     
-    PyModule_AddObject(modjep, name, obj);   /* steals ref */
-    if(PyErr_Occurred()) {
-        PyErr_Print();
-        return 0;
-    }
-    return 1;
-}
+/*     PyModule_AddObject(modjep, name, obj);   /\* steals ref *\/ */
+/*     if(PyErr_Occurred()) { */
+/*         PyErr_Print(); */
+/*         return 0; */
+/*     } */
+/*     return 1; */
+/* } */
 
 
 // get name from modjep.
 // returns new reference.
-PyObject* pyembed_modjep_get(PyObject *name) {
-    PyObject *modjep;
+/* PyObject* pyembed_modjep_get(PyObject *name) { */
+/*     PyObject *modjep; */
     
-    modjep = pyembed_getthread_object(LIST_MOD_JEP);
-    if(PyErr_Occurred()) {
-        PyErr_Print();
-        return NULL;
-    }
-    if(!modjep)
-        return NULL;
+/*     modjep = pyembed_getthread_object(LIST_MOD_JEP); */
+/*     if(PyErr_Occurred()) { */
+/*         PyErr_Print(); */
+/*         return NULL; */
+/*     } */
+/*     if(!modjep) */
+/*         return NULL; */
     
-    return PyObject_GetAttr(modjep, name);
-}
+/*     return PyObject_GetAttr(modjep, name); */
+/* } */
 
 
 static PyObject* pyembed_forname(PyObject *self, PyObject *args) {
     JNIEnv    *env       = NULL;
     char      *name;
-    PyObject  *_env      = NULL;
-    PyObject  *_cl       = NULL;
     jobject    cl;
     jclass     objclazz;
     jstring    jstr;
+    JepThread *jepThread;
 
     if(!PyArg_ParseTuple(args, "s", &name))
         return NULL;
     
-    _env = pyembed_getthread_object(LIST_ENV);
-    if(!_env || !PyCObject_Check(_env)) {
+    jepThread = pyembed_get_jepthread();
+    if(!jepThread) {
         if(!PyErr_Occurred())
-            PyErr_SetString(PyExc_ValueError, "Invalid env pointer.");
+            PyErr_SetString(PyExc_RuntimeError, "Invalid JepThread pointer.");
         return NULL;
     }
     
-    env = (JNIEnv *) PyCObject_AsVoidPtr(_env);
-    if(!env) {
-        if(!PyErr_Occurred())
-            PyErr_SetString(PyExc_ValueError,
-                            "Invalid env pointer, AsVoidPtr returned NULL.");
-        return NULL;
-    }
+    env = jepThread->env;
+    cl  = jepThread->classloader;
     
-    _cl = pyembed_getthread_object(LIST_CL);
-    if(!_cl || !PyCObject_Check(_cl)) {
-        if(!PyErr_Occurred())
-            PyErr_SetString(PyExc_ValueError, "Invalid classloader.");
-        return NULL;
-    }
-    
-    cl = (jobject) PyCObject_AsVoidPtr(_cl);
-    if(!cl) {
-        if(!PyErr_Occurred()) {
-            PyErr_SetString(PyExc_ValueError,
-                            "Invalid classloader, AsVoidPtr returned NULL.");
-        }
-        return NULL;
-    }
-    // return NULL;
-
     if(loadClassMethod == 0) {
         jobject clazz;
         
@@ -379,26 +361,20 @@ static PyObject* pyembed_forname(PyObject *self, PyObject *args) {
 static PyObject* pyembed_findclass(PyObject *self, PyObject *args) {
     JNIEnv    *env       = NULL;
     char      *name, *p;
-    PyObject  *_env      = NULL;
     jclass     clazz;
+    JepThread *jepThread;
     
     if(!PyArg_ParseTuple(args, "s", &name))
         return NULL;
     
-    _env = pyembed_getthread_object(LIST_ENV);
-    if(!_env || !PyCObject_Check(_env)) {
+    jepThread = pyembed_get_jepthread();
+    if(!jepThread) {
         if(!PyErr_Occurred())
-            PyErr_SetString(PyExc_ValueError, "Invalid env pointer.");
+            PyErr_SetString(PyExc_RuntimeError, "Invalid JepThread pointer.");
         return NULL;
     }
     
-    env = (JNIEnv *) PyCObject_AsVoidPtr((PyObject *) _env);
-    if(!env) {
-        if(!PyErr_Occurred())
-            PyErr_SetString(PyExc_ValueError,
-                            "Invalid env pointer, AsVoidPtr returned NULL.");
-        return NULL;
-    }
+    env = jepThread->env;
     
     // replace '.' with '/'
     // i'm told this is okay to do with unicode.
@@ -415,41 +391,9 @@ static PyObject* pyembed_findclass(PyObject *self, PyObject *args) {
 }
 
 
-#define SET_TDICT(env, classLoader)                                             \
-{                                                                               \
-    PyObject *tdict;                                                            \
-    if((tdict = PyThreadState_GetDict()) != NULL) {                             \
-        PyObject *key, *tlist, *pyenv, *pycl;                                   \
-        jobject   cl = NULL;                                                    \
-                                                                                \
-        if(classLoader)                                                         \
-            cl = (*env)->NewGlobalRef(env, classLoader);                        \
-        if(!cl)                                                                 \
-            PyErr_Warn(PyExc_Warning, "No classloader.");                       \
-                                                                                \
-        pyenv = (PyObject *) PyCObject_FromVoidPtr((void *) env, NULL);         \
-        pycl  = (PyObject *) PyCObject_FromVoidPtr(cl, NULL);                   \
-        key   = PyString_FromString(DICT_KEY);                                  \
-        tlist = PyList_New(0);                                                  \
-                                                                                \
-        PyList_Append(tlist, jepThread->modjep);        /* takes ownership */   \
-        PyList_Append(tlist, pyenv);                                            \
-        PyList_Append(tlist, pycl);                                             \
-                                                                                \
-        PyDict_SetItem(tdict, key, tlist);   /* takes key, tlist ownership */   \
-                                                                                \
-        Py_DECREF(key);                                                         \
-        Py_DECREF(pyenv);                                                       \
-        Py_DECREF(tlist);                                                       \
-        Py_DECREF(pycl);                                                        \
-    }                                                                           \
-}
-
-
 void pyembed_eval(JNIEnv *env,
                   jint _jepThread,
-                  char *str,
-                  jobject classLoader) {
+                  char *str) {
     PyThreadState    *prevThread, *thread;
     PyObject         *modjep, *main, *dict, *result;
     JepThread        *jepThread;
@@ -466,9 +410,6 @@ void pyembed_eval(JNIEnv *env,
     if(str == NULL)
         goto EXIT;
 
-    // store thread information in thread's dictionary as a list.
-    SET_TDICT(env, classLoader);
-    
     if(process_py_exception(env, 1))
         goto EXIT;
     
@@ -606,8 +547,7 @@ jobject pyembed_getvalue(JNIEnv *env,
 
 void pyembed_run(JNIEnv *env,
                  jint _jepThread,
-                 char *file,
-                 jobject classLoader) {
+                 char *file) {
     PyThreadState *prevThread;
     JepThread     *jepThread;
     
@@ -620,9 +560,6 @@ void pyembed_run(JNIEnv *env,
     PyEval_AcquireLock();
     prevThread = PyThreadState_Swap(jepThread->tstate);
     
-    // store thread information in thread's dictionary as a list.
-    SET_TDICT(env, classLoader);
-
     if(file == NULL)
         goto EXIT;
 

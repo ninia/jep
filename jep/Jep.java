@@ -46,16 +46,15 @@ public final class Jep {
     private static final String LINE_SEP = "\n";
     
     
+    // -------------------------------------------------- constructors
+    
     /**
      * Creates a new <code>Jep</code> instance.
      *
      * @exception JepException if an error occurs
      */
     public Jep() throws JepException {
-        super();
-        this.classLoader = this.getClass().getClassLoader();
-        this.tstate = init();
-        this.thread = Thread.currentThread();
+        this(false, null, null);
     }
 
     
@@ -66,11 +65,7 @@ public final class Jep {
      * @exception JepException if an error occurs
      */
     public Jep(boolean interactive) throws JepException {
-        super();
-        this.classLoader = this.getClass().getClassLoader();
-        this.interactive = interactive;
-        this.tstate = init();
-        this.thread = Thread.currentThread();
+        this(interactive, null, null);
     }
     
     
@@ -82,10 +77,29 @@ public final class Jep {
      * @exception JepException if an error occurs
      */
     public Jep(boolean interactive, String includePath) throws JepException {
-        super();
-        this.classLoader = this.getClass().getClassLoader();
+        this(interactive, includePath, null);
+    }
+    
+    
+    /**
+     * Creates a new <code>Jep</code> instance.
+     *
+     * @param interactive a <code>boolean</code> value
+     * @param includePath a <code>String</code> value
+     * @param cl a <code>ClassLoader</code> value
+     * @exception JepException if an error occurs
+     */
+    public Jep(boolean interactive,
+               String includePath,
+               ClassLoader cl) throws JepException {
+        
+        if(cl == null)
+            this.classLoader = this.getClass().getClassLoader();
+        else
+            this.classLoader = cl;
+        
         this.interactive = interactive;
-        this.tstate = init();
+        this.tstate = init(this.classLoader);
         this.thread = Thread.currentThread();
         
         // why write C code if you don't have to? :-)
@@ -94,17 +108,17 @@ public final class Jep {
             eval("sys.path += '" + includePath + "'.split(':')");
         }
     }
-
-
+    
+    
     // load shared library
     static {
         System.loadLibrary("jep");
     }
-
-
-    private static native int init() throws JepException;
-
-
+    
+    
+    private static native int init(ClassLoader classloader) throws JepException;
+    
+    
     /**
      * all calls must check thread
      *
@@ -148,15 +162,12 @@ public final class Jep {
         if(!file.exists() || !file.canRead())
             throw new JepException("Invalid file: " + file.getAbsolutePath());
 
-        if(cl == null)
-            cl = this.classLoader;
-        
-        run(this.tstate, cl, script);
+        setClassLoader(cl);
+        run(this.tstate, script);
     }
     
 
     private native void run(int tstate,
-                            ClassLoader cl,
                             String script) throws JepException;
     
 
@@ -203,9 +214,7 @@ public final class Jep {
                     return true; // nothing to eval
 
                 // null means we send lines, whether or not it compiles.
-                eval(this.tstate,
-                     this.classLoader,
-                     this.evalLines.toString());
+                eval(this.tstate, this.evalLines.toString());
                 this.evalLines = null;
                 return true;
             }
@@ -214,9 +223,7 @@ public final class Jep {
                 if(this.evalLines == null &&
                    compileString(this.tstate, str) == 1) {
                     
-                    eval(this.tstate,
-                         this.classLoader,
-                         str);
+                    eval(this.tstate, str);
                     return true;
                 }
                 
@@ -242,7 +249,6 @@ public final class Jep {
 
     
     private native void eval(int tstate,
-                             ClassLoader cl,
                              String str) throws JepException;
 
 
@@ -266,12 +272,11 @@ public final class Jep {
             throw new JepException("Jep has been closed.");
         isValidThread();
         
-        return getValue(this.tstate, this.classLoader, str);
+        return getValue(this.tstate, str);
     }
 
     
     private native Object getValue(int tstate,
-                                   ClassLoader cl,
                                    String str) throws JepException;
     
 
@@ -283,8 +288,10 @@ public final class Jep {
      * @param cl a <code>ClassLoader</code> value
      */
     public void setClassLoader(ClassLoader cl) {
-        if(cl != null)
+        if(cl != null && cl != this.classLoader) {
             this.classLoader = cl;
+            // TODO call native set
+        }
     }
     
     

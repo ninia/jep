@@ -41,27 +41,28 @@
 
 #define DICT_KEY "jep"
 
-// positions in thread dictionary, list value
-#define LIST_MOD_JEP 0
-#define LIST_ENV     1
-#define LIST_CL      2
+struct __JepThread {
+    PyObject      *modjep;
+    PyThreadState *tstate;
+    JNIEnv        *env;
+    jobject        classloader;
+};
+typedef struct __JepThread JepThread;
+
 
 void pyembed_startup(void);
 void pyembed_shutdown(void);
 
-jint pyembed_thread_init(JNIEnv *_env);
+jint pyembed_thread_init(JNIEnv*, jobject);
 void pyembed_thread_close(jint);
 
 void pyembed_close(void);
-void pyembed_run(JNIEnv*, jint, char*, jobject);
-void pyembed_eval(JNIEnv *, jint, char *, jobject);
+void pyembed_run(JNIEnv*, jint, char*);
+void pyembed_eval(JNIEnv *, jint, char*);
 int pyembed_compile_string(JNIEnv*, jint, char*);
 jobject pyembed_getvalue(JNIEnv*, jint, char*);
 
-int pyembed_modjep_has(PyObject*);
-int pyembed_modjep_add(char*, PyObject*);
-PyObject* pyembed_modjep_get(PyObject*);
-PyObject* pyembed_getthread_object(int);
+JepThread* pyembed_get_jepthread(void);
 
 // -------------------------------------------------- set() methods
 

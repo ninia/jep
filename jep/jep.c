@@ -55,27 +55,25 @@ JNI_OnUnload(JavaVM *vm, void *reserved) {
 /*
  * Class:     jep_Jep
  * Method:    init
- * Signature: ()J
+ * Signature: (Ljava/lang/ClassLoader;)I
  */
 JNIEXPORT jint JNICALL Java_jep_Jep_init
-(JNIEnv *env, jclass clazz) {
-    return pyembed_thread_init(env);
+(JNIEnv *env, jclass clazz, jobject cl) {
+    return pyembed_thread_init(env, cl);
 }
 
 
 /*
  * Class:     jep_Jep
  * Method:    run
- * Signature: (Ljava/lang/String;Ljava/lang/ClassLoader;Ljava/lang/String;)V
+ * Signature: (ILjava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_run
-(JNIEnv *env, jobject obj, jint tstate, jobject cl, jstring str) {
+(JNIEnv *env, jobject obj, jint tstate, jstring str) {
     const char *filename;
 
     filename = jstring2char(env, str);
-
-    pyembed_run(env, tstate, (char *) filename, cl);
-
+    pyembed_run(env, tstate, (char *) filename);
     release_utf_char(env, str, filename);
 }
 
@@ -91,9 +89,7 @@ JNIEXPORT jint JNICALL Java_jep_Jep_compileString
     jint ret;
 
     str = jstring2char(env, jstr);
-
     ret = (jint) pyembed_compile_string(env, tstate, (char *) str);
-
     release_utf_char(env, jstr, str);
     return ret;
 }
@@ -102,16 +98,14 @@ JNIEXPORT jint JNICALL Java_jep_Jep_compileString
 /*
  * Class:     jep_Jep
  * Method:    eval
- * Signature: (Ljava/lang/String;Ljava/lang/ClassLoader;Ljava/lang/String;)Ljava/lang/Object;
+ * Signature: (ILjava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_eval
-(JNIEnv *env, jobject obj, jint tstate, jobject cl, jstring jstr) {
+(JNIEnv *env, jobject obj, jint tstate, jstring jstr) {
     const char *str;
 
     str = jstring2char(env, jstr);
-
-    pyembed_eval(env, tstate, (char *) str, cl);
-
+    pyembed_eval(env, tstate, (char *) str);
     release_utf_char(env, jstr, str);
 }
 
@@ -119,17 +113,15 @@ JNIEXPORT void JNICALL Java_jep_Jep_eval
 /*
  * Class:     jep_Jep
  * Method:    getValue
- * Signature: (Ljava/lang/String;Ljava/lang/ClassLoader;Ljava/lang/String;)Ljava/lang/Object;
+ * Signature: (ILjava/lang/String;)Ljava/lang/Object;
  */
 JNIEXPORT jobject JNICALL Java_jep_Jep_getValue
-(JNIEnv *env, jobject obj, jint tstate, jobject cl, jstring jstr) {
+(JNIEnv *env, jobject obj, jint tstate, jstring jstr) {
     const char *str;
     jobject ret;
 
     str = jstring2char(env, jstr);
-
     ret = pyembed_getvalue(env, tstate, (char *) str);
-
     release_utf_char(env, jstr, str);
     return ret;
 }
@@ -156,10 +148,9 @@ JNIEXPORT void JNICALL Java_jep_Jep_close
 JNIEXPORT void JNICALL Java_jep_Jep_set__ILjava_lang_String_2Ljava_lang_Object_2
 (JNIEnv *env, jobject obj, jint tstate, jstring jname, jobject jval) {
     const char *name;
+    
     name = jstring2char(env, jname);
-
     pyembed_setparameter_object(env, tstate, name, jval);
-
     release_utf_char(env, jname, name);
 }
 
@@ -175,9 +166,7 @@ JNIEXPORT void JNICALL Java_jep_Jep_set__ILjava_lang_String_2Ljava_lang_String_2
 
     name  = jstring2char(env, jname);
     value = jstring2char(env, jval);
-
     pyembed_setparameter_string(env, tstate, name, value);
-
     release_utf_char(env, jname, name);
     release_utf_char(env, jval, value);
 }
@@ -193,9 +182,7 @@ JNIEXPORT void JNICALL Java_jep_Jep_set__ILjava_lang_String_2I
     const char *name;
     
     name = jstring2char(env, jname);
-
     pyembed_setparameter_int(env, tstate, name, (int) jval);
-
     release_utf_char(env, jname, name);
 }
 
@@ -210,9 +197,7 @@ JNIEXPORT void JNICALL Java_jep_Jep_set__ILjava_lang_String_2J
     const char *name;
     
     name = jstring2char(env, jname);
-    
     pyembed_setparameter_long(env, tstate, name, (jeplong) jval);
-
     release_utf_char(env, jname, name);
 }
 
@@ -227,9 +212,7 @@ JNIEXPORT void JNICALL Java_jep_Jep_set__ILjava_lang_String_2D
     const char *name;
     
     name = jstring2char(env, jname);
-    
     pyembed_setparameter_double(env, tstate, name, (double) jval);
-    
     release_utf_char(env, jname, name);
 }
 
@@ -244,7 +227,6 @@ JNIEXPORT void JNICALL Java_jep_Jep_set__ILjava_lang_String_2F
     const char *name;
     
     name = jstring2char(env, jname);
-    
     pyembed_setparameter_float(env, tstate, name, (float) jval);
     release_utf_char(env, jname, name);
 }
