@@ -150,16 +150,17 @@ static void pyjclass_dealloc(PyJclass_Object *self) {
 PyObject* pyjclass_call(PyJclass_Object *self,
                         PyObject *args,
                         PyObject *keywords) {
-    int           initPos     = 0;
-    int           parmPos     = 0;
-    int           parmLen     = 0;
-    jobjectArray  parmArray   = NULL;
-    jobjectArray  exceptions  = NULL;
-    JNIEnv       *env;
-    jclass        initClass   = NULL;
-    jobject       constructor = NULL;
-    jvalue       *jargs       = NULL;
-    
+    int            initPos     = 0;
+    int            parmPos     = 0;
+    int            parmLen     = 0;
+    jobjectArray   parmArray   = NULL;
+    jobjectArray   exceptions  = NULL;
+    JNIEnv        *env;
+    jclass         initClass   = NULL;
+    jobject        constructor = NULL;
+    jvalue        *jargs       = NULL;
+    PyThreadState *_save;
+
     if(!PyTuple_Check(args)) {
         PyErr_Format(PyExc_RuntimeError, "args is not a valid tuple");
         return NULL;
@@ -290,11 +291,13 @@ PyObject* pyjclass_call(PyJclass_Object *self,
                 if(process_java_exception(env) || !classGetExceptions)
                     goto EXIT_ERROR;
             }
-                
+            
+            Py_UNBLOCK_THREADS;
             exceptions = (jobjectArray) (*env)->CallObjectMethod(
                 env,
                 constructor,
                 classGetExceptions);
+            Py_BLOCK_THREADS;
             if(process_java_exception(env) || !exceptions)
                 goto EXIT_ERROR;
 
@@ -314,11 +317,13 @@ PyObject* pyjclass_call(PyJclass_Object *self,
                 goto EXIT_ERROR;
             (*env)->DeleteLocalRef(env, constructor);
                 
+            Py_UNBLOCK_THREADS;
             (*env)->PopLocalFrame(env, NULL);
             obj = (*env)->NewObjectA(env,
                                      ((PyJobject_Object* ) self->pyjobject)->clazz,
                                      methodId,
                                      jargs);
+            Py_BLOCK_THREADS;
             if(process_java_exception(env) || !obj)
                 goto EXIT_ERROR;
                 

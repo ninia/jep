@@ -410,11 +410,12 @@ static PyObject* pyjmethod_call(PyJmethod_Object *self,
 // easy. :-)
 PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                                   PyObject *args) {
-    PyObject   *result = NULL;
-    const char *str    = NULL;
-    JNIEnv     *env    = NULL;
-    int         pos    = 0;
-    jvalue     *jargs  = NULL;
+    PyObject      *result = NULL;
+    const char    *str    = NULL;
+    JNIEnv        *env    = NULL;
+    int            pos    = 0;
+    jvalue        *jargs  = NULL;
+    PyThreadState *_save;
     
     if(!self->parameters) {
         if(!pyjmethod_init(self) || PyErr_Occurred())
@@ -481,6 +482,7 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
 
     case JSTRING_ID: {
         jstring jstr;
+        Py_UNBLOCK_THREADS;
         
         if(self->isStatic)
             jstr = (jstring) (*env)->CallStaticObjectMethodA(
@@ -494,6 +496,7 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                                                        self->methodId,
                                                        jargs);
         
+        Py_BLOCK_THREADS;
         if(!process_java_exception(env) && jstr != NULL) {
             str    = (*env)->GetStringUTFChars(env, jstr, 0);
             result = PyString_FromString(str);
@@ -507,6 +510,7 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
 
     case JOBJECT_ID: {
         jobject obj;
+        Py_UNBLOCK_THREADS;
         
         if(self->isStatic)
             obj = (*env)->CallStaticObjectMethodA(
@@ -520,6 +524,7 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                                             self->methodId,
                                             jargs);
         
+        Py_BLOCK_THREADS;
         if(!process_java_exception(env) && obj != NULL)
             result = pyjobject_new(env, obj);
         
@@ -528,6 +533,7 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
 
     case JINT_ID: {
         jint ret;
+        Py_UNBLOCK_THREADS;
         
         if(self->isStatic)
             ret = (*env)->CallStaticIntMethodA(
@@ -541,6 +547,7 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                                          self->methodId,
                                          jargs);
         
+        Py_BLOCK_THREADS;
         if(!process_java_exception(env))
             result = Py_BuildValue("i", ret);
         
@@ -549,6 +556,7 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
 
     case JSHORT_ID: {
         jshort ret;
+        Py_UNBLOCK_THREADS;
         
         if(self->isStatic)
             ret = (*env)->CallStaticShortMethodA(
@@ -562,6 +570,7 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                                            self->methodId,
                                            jargs);
         
+        Py_BLOCK_THREADS;
         if(!process_java_exception(env))
             result = Py_BuildValue("i", (int) ret);
         
@@ -570,6 +579,7 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
 
     case JDOUBLE_ID: {
         jdouble ret;
+        Py_UNBLOCK_THREADS;
         
         if(self->isStatic)
             ret = (*env)->CallStaticDoubleMethodA(
@@ -583,6 +593,7 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                                             self->methodId,
                                             jargs);
         
+        Py_BLOCK_THREADS;
         if(!process_java_exception(env))
             result = PyFloat_FromDouble(ret);
         
@@ -591,6 +602,7 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
 
     case JFLOAT_ID: {
         jfloat ret;
+        Py_UNBLOCK_THREADS;
         
         if(self->isStatic)
             ret = (*env)->CallStaticFloatMethodA(
@@ -604,6 +616,7 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                                            self->methodId,
                                            jargs);
         
+        Py_BLOCK_THREADS;
         if(!process_java_exception(env))
             result = PyFloat_FromDouble((double) ret);
         
@@ -612,6 +625,7 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
 
     case JLONG_ID: {
         jlong ret;
+        Py_UNBLOCK_THREADS;
         
         if(self->isStatic)
             ret = (*env)->CallStaticLongMethodA(
@@ -625,6 +639,7 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                                           self->methodId,
                                           jargs);
         
+        Py_BLOCK_THREADS;
         if(!process_java_exception(env))
             result = PyLong_FromLongLong(ret);
         
@@ -633,6 +648,7 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
 
     case JBOOLEAN_ID: {
         jboolean ret;
+        Py_UNBLOCK_THREADS;
         
         if(self->isStatic)
             ret = (*env)->CallStaticBooleanMethodA(
@@ -646,6 +662,7 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                                              self->methodId,
                                              jargs);
         
+        Py_BLOCK_THREADS;
         if(!process_java_exception(env))
             result = Py_BuildValue("i", ret);
         
@@ -653,6 +670,8 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
     }
 
     default:
+        Py_UNBLOCK_THREADS;
+
         // i hereby anoint thee a void method
         if(self->isStatic)
             (*env)->CallStaticVoidMethodA(env,
@@ -665,6 +684,7 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                                     self->methodId,
                                     jargs);
 
+        Py_BLOCK_THREADS;
         process_java_exception(env);
     }
     
