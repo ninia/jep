@@ -1,0 +1,193 @@
+\input texinfo @c -*-texinfo-*-
+@c This file uses the @command command introduced in Texinfo 4.0.
+@c %**start of header
+@setfilename jep.info
+@settitle Java Embedded Python
+@finalout
+@setchapternewpage odd
+@c %**end of header
+
+@set VERSION 0.1.0
+
+@ifinfo
+This file documents the @command{jep} command which Java Embedded Python
+
+Copyright (C) 2004 Mike Johnson
+
+Permission is granted to make and distribute verbatim copies of
+this manual provided the copyright notice and this permission notice
+are preserved on all copies.
+
+@ignore
+Permission is granted to process this file through TeX and print the
+results, provided the printed document carries copying permission
+notice identical to this one except for the removal of this paragraph
+(this paragraph not being relevant to the printed manual).
+
+@end ignore
+Permission is granted to copy and distribute modified versions of this
+manual under the conditions for verbatim copying, provided that the entire
+resulting derived work is distributed under the terms of a permission
+notice identical to this one.
+
+Permission is granted to copy and distribute translations of this manual
+into another language, under the above conditions for modified versions,
+except that this permission notice may be stated in a translation approved
+by the Foundation.
+@end ifinfo
+
+@titlepage
+@title jep
+@subtitle Java Embedded Python
+@subtitle for jep Version @value{VERSION}
+@author by Mike Johnson
+
+@page
+@vskip 0pt plus 1filll
+Copyright @copyright{} 2004 Mike Johnson
+
+Permission is granted to make and distribute verbatim copies of
+this manual provided the copyright notice and this permission notice
+are preserved on all copies.
+
+Permission is granted to copy and distribute modified versions of this
+manual under the conditions for verbatim copying, provided that the entire
+resulting derived work is distributed under the terms of a permission
+notice identical to this one.
+
+Permission is granted to copy and distribute translations of this manual
+into another language, under the above conditions for modified versions,
+except that this permission notice may be stated in a translation approved
+by the Foundation.
+@end titlepage
+
+@c All the nodes can be updated using the EMACS command
+@c texinfo-every-node-update, which is normally bound to C-c C-u C-e.
+@node Top, Instructions, (dir), (dir)
+
+@ifinfo
+This file documents the @command{jep} command to Java Embedded Python.
+@end ifinfo
+
+@c All the menus can be updated with the EMACS command
+@c texinfo-all-menus-update, which is normally bound to C-c C-u C-a.
+@menu
+* Instructions::                How to read this manual. 
+* Copying::                     How you can copy and share @command{jep}.
+* Overview::                    Preliminary information.
+* Sample::                      Sample output from @command{jep}.
+* Invoking jep::             How to run @command{jep}.
+* Problems::                    Reporting bugs.
+* Concept Index::               Index of concepts.
+@end menu
+
+@node Instructions, Copying, Top, Top
+@chapter How to Read This Manual
+
+@cindex reading
+@cindex manual, how to read
+@cindex how to read
+To read this manual, begin at the beginning, reading from left to right
+and top to bottom, until you get to the end.  Then stop.  You may pause
+for a beer anywhere in the middle as well, if you wish.  (Please note,
+however, that The King strongly advises against heavy use of
+prescription pharmaceuticals, based on his extensive personal and
+professional experience.)
+
+@node Copying, Overview, Instructions, Top
+@include gpl.texinfo
+
+@node Overview, Sample, Copying, Top
+@chapter Overview
+@cindex greetings
+@cindex overview
+
+The GNU @command{jep} program produces a familiar, friendly greeting.
+It allows nonprogrammers to use a classic computer science tool which
+would otherwise be unavailable to them.  Because it is protected by the
+GNU General Public License, users are free to share and change it.
+
+GNU @command{jep} was written by Mike Johnson.
+
+@node Sample, Invoking jep, Overview, Top
+@chapter Sample Output
+@cindex sample
+
+Here are some realistic examples of running @command{jep}.
+
+This is the output of the command @samp{jep}:
+
+@example
+hello, world!
+@end example
+
+This is the output of the command @samp{jep --help}:
+
+@example
+Usage: jep [OPTION...] [FILE...]
+Java Embedded Python
+
+  -?, --help                 Give this help list
+      --usage                Give a short usage message
+  -V, --version              Print program version
+
+Report bugs to <mrjohnson0@@users.sourceforge.net>.
+@end example
+
+@node Invoking jep, Problems, Sample, Top
+@chapter Invoking @command{jep}
+@cindex invoking
+@cindex version
+@cindex options
+@cindex usage
+@cindex help
+@cindex getting help
+
+The format for running the @command{jep} program is:
+
+@example
+jep @var{option} @dots{}
+@end example
+
+@code{jep} supports the following options:
+
+@c Formatting copied from the Texinfo 4.0 manual.
+@table @code
+@item --help
+@itemx -?
+Print an informative help message describing the options and then exit
+successfully.
+
+@item --usage
+Briefly list the options.
+
+@item --version
+@itemx -V
+Print the version number of @command{jep} on the standard output
+and then exit successfully.
+@end table
+
+@node Problems, Concept Index, Invoking jep, Top
+@chapter Reporting Bugs
+@cindex bugs
+@cindex problems
+
+If you find a bug in @command{jep}, please send electronic mail to
+@email{mrjohnson0@@users.sourceforge.net}.  Include the version number, which you can find by
+running @w{@samp{jep --version}}.  Also include in your message the
+output that the program produced and the output you expected.@refill
+
+If you have other questions, comments or suggestions about
+@command{jep}, contact the author via electronic mail to
+@email{mrjohnson0@@users.sourceforge.net}.  The author will try to help you out, although he
+may not have time to fix your problems.
+
+@node Concept Index,  , Problems, Top
+@unnumbered Concept Index
+
+@cindex tail recursion
+@printindex cp
+
+@shortcontents
+@contents
+@bye

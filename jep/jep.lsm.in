@@ -1,0 +1,21 @@
+Begin3
+Title:		jep
+Version:	@VERSION@
+Entered-date:	@ISODATE@
+Description:	Java Embedded Python
+		@configure_input@
+		Please edit jep.lsm.in to fix the Keywords and
+		Primary-site entries, add several more lines of
+		description here if appropriate, and to delete these
+		instructions.
+Keywords:	[substitute your keywords here]
+Author: 	mrjohnson0@users.sourceforge.net (Mike Johnson)
+Maintained-by:	mrjohnson0@users.sourceforge.net (Mike Johnson)
+Primary-site:	metlab.unc.edu pub/Linux/apps/some/directory
+		31k jep-@VERSION@.tar.gz
+		500  jep.lsm
+Alternate-site: 
+Original-site:  
+Platforms:      
+Copying-policy:	GNU copyleft
+End

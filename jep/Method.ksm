@@ -1,0 +1,1026 @@
+// compiler version: 45.3
+
+@source "Method.java"
+@signature "Ljava/lang/reflect/AccessibleObject;Ljava/lang/reflect/Member;"
+public final class java.lang.reflect.Method extends java.lang.reflect.AccessibleObject implements java.lang.reflect.Member {
+    /**
+     * nullArgs
+     */
+    @signature "[Ljava/lang/Object;"
+    private static final java.lang.Object[] nullArgs;
+    /**
+     * clazz
+     */
+    @signature "Ljava/lang/Class;"
+    private java.lang.Class clazz;
+    /**
+     * slot
+     */
+    @signature "I"
+    private int slot;
+    /**
+     * name
+     */
+    @signature "Ljava/lang/String;"
+    private java.lang.String name;
+    /**
+     * returnType
+     */
+    @signature "Ljava/lang/Class;"
+    private java.lang.Class returnType;
+    /**
+     * parameterTypes
+     */
+    @signature "[Ljava/lang/Class;"
+    private java.lang.Class[] parameterTypes;
+    /**
+     * exceptionTypes
+     */
+    @signature "[Ljava/lang/Class;"
+    private java.lang.Class[] exceptionTypes;
+
+    /**
+     * init0
+     *
+     */
+    @signature "()V"
+    private static native void init0();
+
+    /**
+     * <init>
+     *
+     * stack	1
+     * locals	1
+     */
+    @signature "()V"
+    private void <init>() {
+        @line	35
+        	@aload		0
+        	@invokespecial	void java.lang.reflect.AccessibleObject.<init>()
+        	@return		
+    }
+
+    /**
+     * <init>
+     *
+     * stack	2
+     * locals	7
+     */
+    @signature "(Ljava/lang/Class;ILjava/lang/String;Ljava/lang/Class;[Ljava/lang/Class;[Ljava/lang/Class;)V"
+    void <init>(java.lang.Class, int, java.lang.String, java.lang.Class, java.lang.Class[], java.lang.Class[]) {
+        @line	39
+        	@aload		0
+        	@invokespecial	void java.lang.reflect.AccessibleObject.<init>()
+        @line	42
+        	@aload		0
+        	@aload		1
+        	@putfield	java.lang.Class java.lang.reflect.Method.clazz
+        @line	43
+        	@aload		0
+        	@iload		2
+        	@putfield	int java.lang.reflect.Method.slot
+        @line	44
+        	@aload		0
+        	@aload		3
+        	@putfield	java.lang.String java.lang.reflect.Method.name
+        @line	45
+        	@aload		0
+        	@aload		4
+        	@putfield	java.lang.Class java.lang.reflect.Method.returnType
+        @line	46
+        	@aload		0
+        	@aload		5
+        	@putfield	java.lang.Class[] java.lang.reflect.Method.parameterTypes
+        @line	47
+        	@aload		0
+        	@aload		6
+        	@putfield	java.lang.Class[] java.lang.reflect.Method.exceptionTypes
+        	@return		
+    }
+
+    /**
+     * equals
+     *
+     * stack	3
+     * locals	4
+     */
+    @signature "(Ljava/lang/Object;)Z"
+    public boolean equals(java.lang.Object) {
+        @line	52
+        	@aload		0
+        	@aload		1
+        	@if_acmpne	_L5
+        @line	53
+        	@const		1
+        	@ireturn	
+        @line	56
+        _L5:	@aload		1
+        	@instanceof	java.lang.reflect.Method
+        	@ifne		_L10
+        @line	57
+        	@const		0
+        	@ireturn	
+        @line	60
+        _L10:	@aload		1
+        	@checkcast	java.lang.reflect.Method
+        	@astore		2
+        @line	62
+        	@aload		0
+        	@getfield	java.lang.Class java.lang.reflect.Method.clazz
+        	@aload		2
+        	@getfield	java.lang.Class java.lang.reflect.Method.clazz
+        	@if_acmpne	_L36
+        @line	63
+        	@aload		0
+        	@getfield	java.lang.Class java.lang.reflect.Method.returnType
+        	@aload		2
+        	@getfield	java.lang.Class java.lang.reflect.Method.returnType
+        	@if_acmpne	_L36
+        @line	64
+        	@aload		0
+        	@getfield	java.lang.Class[] java.lang.reflect.Method.parameterTypes
+        	@arraylength	
+        	@aload		2
+        	@getfield	java.lang.Class[] java.lang.reflect.Method.parameterTypes
+        	@arraylength	
+        	@if_icmpne	_L36
+        @line	65
+        	@aload		0
+        	@getfield	java.lang.String java.lang.reflect.Method.name
+        	@aload		2
+        	@getfield	java.lang.String java.lang.reflect.Method.name
+        	@invokevirtual	boolean java.lang.String.equals(java.lang.Object)
+        	@ifne		_L38
+        @line	66
+        _L36:	@const		0
+        	@ireturn	
+        @line	69
+        _L38:	@aload		0
+        	@getfield	java.lang.Class[] java.lang.reflect.Method.parameterTypes
+        	@arraylength	
+        	@istore		3
+        	@goto		_L54
+        @line	70
+        _L43:	@aload		0
+        	@getfield	java.lang.Class[] java.lang.reflect.Method.parameterTypes
+        	@iload		3
+        	@aaload		
+        	@aload		2
+        	@getfield	java.lang.Class[] java.lang.reflect.Method.parameterTypes
+        	@iload		3
+        	@aaload		
+        	@if_acmpeq	_L54
+        @line	71
+        	@const		0
+        	@ireturn	
+        @line	69
+        _L54:	@iload		3
+        	@iinc		3 -1
+        	@ifgt		_L43
+        @line	75
+        	@const		1
+        	@ireturn	
+    }
+
+    /**
+     * getDeclaringClass
+     *
+     * stack	1
+     * locals	1
+     */
+    @signature "()Ljava/lang/Class;"
+    public java.lang.Class getDeclaringClass() {
+        @line	79
+        	@aload		0
+        	@getfield	java.lang.Class java.lang.reflect.Method.clazz
+        	@areturn	
+    }
+
+    /**
+     * getExceptionTypes
+     *
+     * stack	1
+     * locals	1
+     */
+    @signature "()[Ljava/lang/Class;"
+    public java.lang.Class[] getExceptionTypes() {
+        @line	83
+        	@aload		0
+        	@getfield	java.lang.Class[] java.lang.reflect.Method.exceptionTypes
+        	@areturn	
+    }
+
+    /**
+     * getModifiers
+     *
+     */
+    @signature "()I"
+    public native int getModifiers();
+
+    /**
+     * getName
+     *
+     * stack	1
+     * locals	1
+     */
+    @signature "()Ljava/lang/String;"
+    public java.lang.String getName() {
+        @line	89
+        	@aload		0
+        	@getfield	java.lang.String java.lang.reflect.Method.name
+        	@areturn	
+    }
+
+    /**
+     * getParameterTypes
+     *
+     * stack	1
+     * locals	1
+     */
+    @signature "()[Ljava/lang/Class;"
+    public java.lang.Class[] getParameterTypes() {
+        @line	93
+        	@aload		0
+        	@getfield	java.lang.Class[] java.lang.reflect.Method.parameterTypes
+        	@areturn	
+    }
+
+    /**
+     * getReturnType
+     *
+     * stack	1
+     * locals	1
+     */
+    @signature "()Ljava/lang/Class;"
+    public java.lang.Class getReturnType() {
+        @line	97
+        	@aload		0
+        	@getfield	java.lang.Class java.lang.reflect.Method.returnType
+        	@areturn	
+    }
+
+    /**
+     * hashCode
+     *
+     * stack	2
+     * locals	1
+     */
+    @signature "()I"
+    public int hashCode() {
+        @line	101
+        	@aload		0
+        	@getfield	java.lang.Class java.lang.reflect.Method.clazz
+        	@invokevirtual	java.lang.String java.lang.Class.getName()
+        	@invokevirtual	int java.lang.String.hashCode()
+        	@aload		0
+        	@getfield	java.lang.String java.lang.reflect.Method.name
+        	@invokevirtual	int java.lang.String.hashCode()
+        	@ixor		
+        	@ireturn	
+    }
+
+    /**
+     * invoke
+     *
+     * stack	6
+     * locals	6
+     */
+    @signature "(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;^Ljava/lang/IllegalAccessException;Ljava/lang/IllegalArgumentException;Ljava/lang/reflect/InvocationTargetException;"
+    public java.lang.Object invoke(java.lang.Object, java.lang.Object[]) throws java.lang.IllegalAccessException, java.lang.IllegalArgumentException, java.lang.reflect.InvocationTargetException {
+        @line	109
+        	@aload		2
+        	@ifnonnull	_L4
+        @line	110
+        	@getstatic	java.lang.Object[] java.lang.reflect.Method.nullArgs
+        	@astore		2
+        @line	113
+        _L4:	@aload		0
+        	@invokevirtual	int java.lang.reflect.Method.getModifiers()
+        	@invokestatic	boolean java.lang.reflect.Modifier.isStatic(int)
+        	@ifne		_L32
+        @line	114
+        	@aload		1
+        	@ifnonnull	_L20
+        	@const		"<init>"
+        	@aload		0
+        	@getfield	java.lang.String java.lang.reflect.Method.name
+        	@invokevirtual	boolean java.lang.String.equals(java.lang.Object)
+        	@ifne		_L20
+        @line	115
+        	@new		java.lang.NullPointerException
+        	@dup		
+        	@const		"Null object pointer"
+        	@invokespecial	void java.lang.NullPointerException.<init>(java.lang.String)
+        	@athrow		
+        @line	118
+        _L20:	@aload		1
+        	@ifnull		_L32
+        	@aload		0
+        	@invokevirtual	java.lang.Class java.lang.reflect.Method.getDeclaringClass()
+        	@aload		1
+        	@invokevirtual	boolean java.lang.Class.isInstance(java.lang.Object)
+        	@ifne		_L32
+        @line	119
+        	@new		java.lang.IllegalArgumentException
+        	@dup		
+        	@const		"Object type doesn\'t match method\'s class"
+        	@invokespecial	void java.lang.IllegalArgumentException.<init>(java.lang.String)
+        	@athrow		
+        @line	123
+        _L32:	@aload		2
+        	@arraylength	
+        	@aload		0
+        	@invokevirtual	java.lang.Class[] java.lang.reflect.Method.getParameterTypes()
+        	@arraylength	
+        	@if_icmpeq	_L43
+        @line	124
+        	@new		java.lang.IllegalArgumentException
+        	@dup		
+        	@const		"wrong number of arguments"
+        	@invokespecial	void java.lang.IllegalArgumentException.<init>(java.lang.String)
+        	@athrow		
+        @line	128
+        _L43:	@const		0
+        	@istore		3
+        	@goto		_L419
+        @line	129
+        _L46:	@aload		0
+        	@getfield	java.lang.Class[] java.lang.reflect.Method.parameterTypes
+        	@iload		3
+        	@aaload		
+        	@astore		4
+        @line	130
+        	@aload		2
+        	@iload		3
+        	@aaload		
+        	@astore		5
+        @line	131
+        	@aload		4
+        	@invokevirtual	boolean java.lang.Class.isPrimitive()
+        	@ifeq		_L406
+        @line	133
+        	@aload		4
+        	@getstatic	java.lang.Class java.lang.Boolean.TYPE
+        	@if_acmpne	_L68
+        @line	134
+        	@aload		5
+        	@instanceof	java.lang.Boolean
+        	@ifne		_L418
+        @line	137
+        	@new		java.lang.IllegalArgumentException
+        	@dup		
+        	@invokespecial	void java.lang.IllegalArgumentException.<init>()
+        	@athrow		
+        @line	140
+        _L68:	@aload		4
+        	@getstatic	java.lang.Class java.lang.Byte.TYPE
+        	@if_acmpne	_L78
+        @line	141
+        	@aload		5
+        	@instanceof	java.lang.Byte
+        	@ifne		_L418
+        @line	144
+        	@new		java.lang.IllegalArgumentException
+        	@dup		
+        	@invokespecial	void java.lang.IllegalArgumentException.<init>()
+        	@athrow		
+        @line	147
+        _L78:	@aload		4
+        	@getstatic	java.lang.Class java.lang.Short.TYPE
+        	@if_acmpne	_L102
+        @line	148
+        	@aload		5
+        	@instanceof	java.lang.Short
+        	@ifne		_L418
+        @line	150
+        	@aload		5
+        	@instanceof	java.lang.Byte
+        	@ifeq		_L98
+        @line	151
+        	@aload		2
+        	@iload		3
+        	@new		java.lang.Short
+        	@dup		
+        	@aload		5
+        	@checkcast	java.lang.Byte
+        	@invokevirtual	byte java.lang.Byte.byteValue()
+        	@i2s		
+        	@invokespecial	void java.lang.Short.<init>(short)
+        	@aastore	
+        	@goto		_L418
+        @line	154
+        _L98:	@new		java.lang.IllegalArgumentException
+        	@dup		
+        	@invokespecial	void java.lang.IllegalArgumentException.<init>()
+        	@athrow		
+        @line	157
+        _L102:	@aload		4
+        	@getstatic	java.lang.Class java.lang.Character.TYPE
+        	@if_acmpne	_L112
+        @line	158
+        	@aload		5
+        	@instanceof	java.lang.Character
+        	@ifne		_L418
+        @line	161
+        	@new		java.lang.IllegalArgumentException
+        	@dup		
+        	@invokespecial	void java.lang.IllegalArgumentException.<init>()
+        	@athrow		
+        @line	164
+        _L112:	@aload		4
+        	@getstatic	java.lang.Class java.lang.Integer.TYPE
+        	@if_acmpne	_L161
+        @line	165
+        	@aload		5
+        	@instanceof	java.lang.Integer
+        	@ifne		_L418
+        @line	167
+        	@aload		5
+        	@instanceof	java.lang.Short
+        	@ifeq		_L131
+        @line	168
+        	@aload		2
+        	@iload		3
+        	@new		java.lang.Integer
+        	@dup		
+        	@aload		5
+        	@checkcast	java.lang.Short
+        	@invokevirtual	short java.lang.Short.shortValue()
+        	@invokespecial	void java.lang.Integer.<init>(int)
+        	@aastore	
+        	@goto		_L418
+        @line	170
+        _L131:	@aload		5
+        	@instanceof	java.lang.Character
+        	@ifeq		_L144
+        @line	171
+        	@aload		2
+        	@iload		3
+        	@new		java.lang.Integer
+        	@dup		
+        	@aload		5
+        	@checkcast	java.lang.Character
+        	@invokevirtual	char java.lang.Character.charValue()
+        	@invokespecial	void java.lang.Integer.<init>(int)
+        	@aastore	
+        	@goto		_L418
+        @line	173
+        _L144:	@aload		5
+        	@instanceof	java.lang.Byte
+        	@ifeq		_L157
+        @line	174
+        	@aload		2
+        	@iload		3
+        	@new		java.lang.Integer
+        	@dup		
+        	@aload		5
+        	@checkcast	java.lang.Byte
+        	@invokevirtual	byte java.lang.Byte.byteValue()
+        	@invokespecial	void java.lang.Integer.<init>(int)
+        	@aastore	
+        	@goto		_L418
+        @line	177
+        _L157:	@new		java.lang.IllegalArgumentException
+        	@dup		
+        	@invokespecial	void java.lang.IllegalArgumentException.<init>()
+        	@athrow		
+        @line	180
+        _L161:	@aload		4
+        	@getstatic	java.lang.Class java.lang.Long.TYPE
+        	@if_acmpne	_L227
+        @line	181
+        	@aload		5
+        	@instanceof	java.lang.Long
+        	@ifne		_L418
+        @line	183
+        	@aload		5
+        	@instanceof	java.lang.Integer
+        	@ifeq		_L181
+        @line	184
+        	@aload		2
+        	@iload		3
+        	@new		java.lang.Long
+        	@dup		
+        	@aload		5
+        	@checkcast	java.lang.Integer
+        	@invokevirtual	int java.lang.Integer.intValue()
+        	@i2l		
+        	@invokespecial	void java.lang.Long.<init>(long)
+        	@aastore	
+        	@goto		_L418
+        @line	186
+        _L181:	@aload		5
+        	@instanceof	java.lang.Short
+        	@ifeq		_L195
+        @line	187
+        	@aload		2
+        	@iload		3
+        	@new		java.lang.Long
+        	@dup		
+        	@aload		5
+        	@checkcast	java.lang.Short
+        	@invokevirtual	short java.lang.Short.shortValue()
+        	@i2l		
+        	@invokespecial	void java.lang.Long.<init>(long)
+        	@aastore	
+        	@goto		_L418
+        @line	189
+        _L195:	@aload		5
+        	@instanceof	java.lang.Character
+        	@ifeq		_L209
+        @line	190
+        	@aload		2
+        	@iload		3
+        	@new		java.lang.Long
+        	@dup		
+        	@aload		5
+        	@checkcast	java.lang.Character
+        	@invokevirtual	char java.lang.Character.charValue()
+        	@i2l		
+        	@invokespecial	void java.lang.Long.<init>(long)
+        	@aastore	
+        	@goto		_L418
+        @line	192
+        _L209:	@aload		5
+        	@instanceof	java.lang.Byte
+        	@ifeq		_L223
+        @line	193
+        	@aload		2
+        	@iload		3
+        	@new		java.lang.Long
+        	@dup		
+        	@aload		5
+        	@checkcast	java.lang.Byte
+        	@invokevirtual	byte java.lang.Byte.byteValue()
+        	@i2l		
+        	@invokespecial	void java.lang.Long.<init>(long)
+        	@aastore	
+        	@goto		_L418
+        @line	196
+        _L223:	@new		java.lang.IllegalArgumentException
+        	@dup		
+        	@invokespecial	void java.lang.IllegalArgumentException.<init>()
+        	@athrow		
+        @line	199
+        _L227:	@aload		4
+        	@getstatic	java.lang.Class java.lang.Float.TYPE
+        	@if_acmpne	_L307
+        @line	200
+        	@aload		5
+        	@instanceof	java.lang.Float
+        	@ifne		_L418
+        @line	202
+        	@aload		5
+        	@instanceof	java.lang.Long
+        	@ifeq		_L247
+        @line	203
+        	@aload		2
+        	@iload		3
+        	@new		java.lang.Float
+        	@dup		
+        	@aload		5
+        	@checkcast	java.lang.Long
+        	@invokevirtual	long java.lang.Long.longValue()
+        	@l2f		
+        	@invokespecial	void java.lang.Float.<init>(float)
+        	@aastore	
+        	@goto		_L418
+        @line	205
+        _L247:	@aload		5
+        	@instanceof	java.lang.Integer
+        	@ifeq		_L261
+        @line	206
+        	@aload		2
+        	@iload		3
+        	@new		java.lang.Float
+        	@dup		
+        	@aload		5
+        	@checkcast	java.lang.Integer
+        	@invokevirtual	int java.lang.Integer.intValue()
+        	@i2f		
+        	@invokespecial	void java.lang.Float.<init>(float)
+        	@aastore	
+        	@goto		_L418
+        @line	208
+        _L261:	@aload		5
+        	@instanceof	java.lang.Short
+        	@ifeq		_L275
+        @line	209
+        	@aload		2
+        	@iload		3
+        	@new		java.lang.Float
+        	@dup		
+        	@aload		5
+        	@checkcast	java.lang.Short
+        	@invokevirtual	short java.lang.Short.shortValue()
+        	@i2f		
+        	@invokespecial	void java.lang.Float.<init>(float)
+        	@aastore	
+        	@goto		_L418
+        @line	211
+        _L275:	@aload		5
+        	@instanceof	java.lang.Character
+        	@ifeq		_L289
+        @line	212
+        	@aload		2
+        	@iload		3
+        	@new		java.lang.Float
+        	@dup		
+        	@aload		5
+        	@checkcast	java.lang.Character
+        	@invokevirtual	char java.lang.Character.charValue()
+        	@i2f		
+        	@invokespecial	void java.lang.Float.<init>(float)
+        	@aastore	
+        	@goto		_L418
+        @line	214
+        _L289:	@aload		5
+        	@instanceof	java.lang.Byte
+        	@ifeq		_L303
+        @line	215
+        	@aload		2
+        	@iload		3
+        	@new		java.lang.Float
+        	@dup		
+        	@aload		5
+        	@checkcast	java.lang.Byte
+        	@invokevirtual	byte java.lang.Byte.byteValue()
+        	@i2f		
+        	@invokespecial	void java.lang.Float.<init>(float)
+        	@aastore	
+        	@goto		_L418
+        @line	218
+        _L303:	@new		java.lang.IllegalArgumentException
+        	@dup		
+        	@invokespecial	void java.lang.IllegalArgumentException.<init>()
+        	@athrow		
+        @line	221
+        _L307:	@aload		4
+        	@getstatic	java.lang.Class java.lang.Double.TYPE
+        	@if_acmpne	_L401
+        @line	222
+        	@aload		5
+        	@instanceof	java.lang.Double
+        	@ifne		_L418
+        @line	224
+        	@aload		5
+        	@instanceof	java.lang.Float
+        	@ifeq		_L327
+        @line	225
+        	@aload		2
+        	@iload		3
+        	@new		java.lang.Double
+        	@dup		
+        	@aload		5
+        	@checkcast	java.lang.Float
+        	@invokevirtual	float java.lang.Float.floatValue()
+        	@f2d		
+        	@invokespecial	void java.lang.Double.<init>(double)
+        	@aastore	
+        	@goto		_L418
+        @line	227
+        _L327:	@aload		5
+        	@instanceof	java.lang.Long
+        	@ifeq		_L341
+        @line	228
+        	@aload		2
+        	@iload		3
+        	@new		java.lang.Double
+        	@dup		
+        	@aload		5
+        	@checkcast	java.lang.Long
+        	@invokevirtual	long java.lang.Long.longValue()
+        	@l2d		
+        	@invokespecial	void java.lang.Double.<init>(double)
+        	@aastore	
+        	@goto		_L418
+        @line	230
+        _L341:	@aload		5
+        	@instanceof	java.lang.Integer
+        	@ifeq		_L355
+        @line	231
+        	@aload		2
+        	@iload		3
+        	@new		java.lang.Double
+        	@dup		
+        	@aload		5
+        	@checkcast	java.lang.Integer
+        	@invokevirtual	int java.lang.Integer.intValue()
+        	@i2d		
+        	@invokespecial	void java.lang.Double.<init>(double)
+        	@aastore	
+        	@goto		_L418
+        @line	233
+        _L355:	@aload		5
+        	@instanceof	java.lang.Short
+        	@ifeq		_L369
+        @line	234
+        	@aload		2
+        	@iload		3
+        	@new		java.lang.Double
+        	@dup		
+        	@aload		5
+        	@checkcast	java.lang.Short
+        	@invokevirtual	short java.lang.Short.shortValue()
+        	@i2d		
+        	@invokespecial	void java.lang.Double.<init>(double)
+        	@aastore	
+        	@goto		_L418
+        @line	236
+        _L369:	@aload		5
+        	@instanceof	java.lang.Character
+        	@ifeq		_L383
+        @line	237
+        	@aload		2
+        	@iload		3
+        	@new		java.lang.Double
+        	@dup		
+        	@aload		5
+        	@checkcast	java.lang.Character
+        	@invokevirtual	char java.lang.Character.charValue()
+        	@i2d		
+        	@invokespecial	void java.lang.Double.<init>(double)
+        	@aastore	
+        	@goto		_L418
+        @line	239
+        _L383:	@aload		5
+        	@instanceof	java.lang.Byte
+        	@ifeq		_L397
+        @line	240
+        	@aload		2
+        	@iload		3
+        	@new		java.lang.Double
+        	@dup		
+        	@aload		5
+        	@checkcast	java.lang.Byte
+        	@invokevirtual	byte java.lang.Byte.byteValue()
+        	@i2d		
+        	@invokespecial	void java.lang.Double.<init>(double)
+        	@aastore	
+        	@goto		_L418
+        @line	243
+        _L397:	@new		java.lang.IllegalArgumentException
+        	@dup		
+        	@invokespecial	void java.lang.IllegalArgumentException.<init>()
+        	@athrow		
+        @line	247
+        _L401:	@new		java.lang.Error
+        	@dup		
+        	@const		"cannot happen"
+        	@invokespecial	void java.lang.Error.<init>(java.lang.String)
+        	@athrow		
+        @line	250
+        _L406:	@aload		5
+        	@ifnull		_L418
+        	@aload		4
+        	@aload		5
+        	@invokevirtual	java.lang.Class java.lang.Object.getClass()
+        	@invokevirtual	boolean java.lang.Class.isAssignableFrom(java.lang.Class)
+        	@ifne		_L418
+        @line	251
+        	@new		java.lang.IllegalArgumentException
+        	@dup		
+        	@const		"incompatible argument"
+        	@invokespecial	void java.lang.IllegalArgumentException.<init>(java.lang.String)
+        	@athrow		
+        @line	128
+        _L418:	@iinc		3 1
+        _L419:	@iload		3
+        	@aload		2
+        	@arraylength	
+        	@if_icmplt	_L46
+        @line	255
+        	@aload		0
+        	@aload		1
+        	@aload		2
+        	@invokevirtual	java.lang.Object java.lang.reflect.Method.invoke0(java.lang.Object, java.lang.Object[])
+        	@areturn	
+    }
+
+    /**
+     * invoke0
+     *
+     */
+    @signature "(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;^Ljava/lang/IllegalAccessException;Ljava/lang/IllegalArgumentException;Ljava/lang/reflect/InvocationTargetException;"
+    native java.lang.Object invoke0(java.lang.Object, java.lang.Object[]) throws java.lang.IllegalAccessException, java.lang.IllegalArgumentException, java.lang.reflect.InvocationTargetException;
+
+    /**
+     * toString
+     *
+     * stack	3
+     * locals	4
+     */
+    @signature "()Ljava/lang/String;"
+    public java.lang.String toString() {
+        @line	261
+        	@new		java.lang.StringBuffer
+        	@dup		
+        	@invokespecial	void java.lang.StringBuffer.<init>()
+        	@astore		1
+        @line	262
+        	@aload		0
+        	@invokevirtual	int java.lang.reflect.Method.getModifiers()
+        	@istore		2
+        @line	265
+        	@iload		2
+        	@ifeq		_L18
+        @line	266
+        	@aload		1
+        	@iload		2
+        	@invokestatic	java.lang.String java.lang.reflect.Modifier.toString(int)
+        	@invokevirtual	java.lang.StringBuffer java.lang.StringBuffer.append(java.lang.String)
+        	@pop		
+        @line	267
+        	@aload		1
+        	@const		32
+        	@invokevirtual	java.lang.StringBuffer java.lang.StringBuffer.append(char)
+        	@pop		
+        @line	271
+        _L18:	@aload		1
+        	@aload		0
+        	@getfield	java.lang.Class java.lang.reflect.Method.returnType
+        	@invokestatic	java.lang.String java.lang.reflect.Method.getPrettyName(java.lang.Class)
+        	@invokevirtual	java.lang.StringBuffer java.lang.StringBuffer.append(java.lang.String)
+        	@pop		
+        @line	272
+        	@aload		1
+        	@const		32
+        	@invokevirtual	java.lang.StringBuffer java.lang.StringBuffer.append(char)
+        	@pop		
+        @line	275
+        	@aload		1
+        	@aload		0
+        	@getfield	java.lang.Class java.lang.reflect.Method.clazz
+        	@invokevirtual	java.lang.String java.lang.Class.getName()
+        	@invokevirtual	java.lang.StringBuffer java.lang.StringBuffer.append(java.lang.String)
+        	@pop		
+        @line	276
+        	@aload		1
+        	@const		46
+        	@invokevirtual	java.lang.StringBuffer java.lang.StringBuffer.append(char)
+        	@pop		
+        @line	279
+        	@aload		1
+        	@aload		0
+        	@getfield	java.lang.String java.lang.reflect.Method.name
+        	@invokevirtual	java.lang.StringBuffer java.lang.StringBuffer.append(java.lang.String)
+        	@pop		
+        @line	280
+        	@aload		1
+        	@const		40
+        	@invokevirtual	java.lang.StringBuffer java.lang.StringBuffer.append(char)
+        	@pop		
+        @line	283
+        	@const		0
+        	@istore		3
+        	@goto		_L70
+        @line	284
+        _L50:	@aload		1
+        	@aload		0
+        	@getfield	java.lang.Class[] java.lang.reflect.Method.parameterTypes
+        	@iload		3
+        	@aaload		
+        	@invokestatic	java.lang.String java.lang.reflect.Method.getPrettyName(java.lang.Class)
+        	@invokevirtual	java.lang.StringBuffer java.lang.StringBuffer.append(java.lang.String)
+        	@pop		
+        @line	285
+        	@iload		3
+        	@const		1
+        	@iadd		
+        	@aload		0
+        	@getfield	java.lang.Class[] java.lang.reflect.Method.parameterTypes
+        	@arraylength	
+        	@if_icmpge	_L69
+        @line	286
+        	@aload		1
+        	@const		44
+        	@invokevirtual	java.lang.StringBuffer java.lang.StringBuffer.append(char)
+        	@pop		
+        @line	283
+        _L69:	@iinc		3 1
+        _L70:	@iload		3
+        	@aload		0
+        	@getfield	java.lang.Class[] java.lang.reflect.Method.parameterTypes
+        	@arraylength	
+        	@if_icmplt	_L50
+        @line	289
+        	@aload		1
+        	@const		41
+        	@invokevirtual	java.lang.StringBuffer java.lang.StringBuffer.append(char)
+        	@pop		
+        @line	291
+        	@aload		0
+        	@getfield	java.lang.Class[] java.lang.reflect.Method.exceptionTypes
+        	@arraylength	
+        	@ifle		_L115
+        @line	292
+        	@aload		1
+        	@const		" throws "
+        	@invokevirtual	java.lang.StringBuffer java.lang.StringBuffer.append(java.lang.String)
+        	@pop		
+        @line	293
+        	@const		0
+        	@istore		3
+        	@goto		_L110
+        @line	294
+        _L90:	@aload		1
+        	@aload		0
+        	@getfield	java.lang.Class[] java.lang.reflect.Method.exceptionTypes
+        	@iload		3
+        	@aaload		
+        	@invokevirtual	java.lang.String java.lang.Class.getName()
+        	@invokevirtual	java.lang.StringBuffer java.lang.StringBuffer.append(java.lang.String)
+        	@pop		
+        @line	295
+        	@iload		3
+        	@const		1
+        	@iadd		
+        	@aload		0
+        	@getfield	java.lang.Class[] java.lang.reflect.Method.exceptionTypes
+        	@arraylength	
+        	@if_icmpge	_L109
+        @line	296
+        	@aload		1
+        	@const		44
+        	@invokevirtual	java.lang.StringBuffer java.lang.StringBuffer.append(char)
+        	@pop		
+        @line	293
+        _L109:	@iinc		3 1
+        _L110:	@iload		3
+        	@aload		0
+        	@getfield	java.lang.Class[] java.lang.reflect.Method.exceptionTypes
+        	@arraylength	
+        	@if_icmplt	_L90
+        @line	301
+        _L115:	@aload		1
+        	@invokevirtual	java.lang.String java.lang.StringBuffer.toString()
+        	@areturn	
+    }
+
+    /**
+     * getPrettyName
+     *
+     * stack	2
+     * locals	3
+     */
+    @signature "(Ljava/lang/Class;)Ljava/lang/String;"
+    static java.lang.String getPrettyName(java.lang.Class) {
+        @line	305
+        	@new		java.lang.StringBuffer
+        	@dup		
+        	@invokespecial	void java.lang.StringBuffer.<init>()
+        	@astore		1
+        @line	306
+        	@const		0
+        	@istore		2
+        @line	307
+        _L6:	@aload		0
+        	@invokevirtual	boolean java.lang.Class.isArray()
+        	@ifne		_L25
+        @line	308
+        	@aload		1
+        	@aload		0
+        	@invokevirtual	java.lang.String java.lang.Class.getName()
+        	@invokevirtual	java.lang.StringBuffer java.lang.StringBuffer.append(java.lang.String)
+        	@pop		
+        @line	309
+        	@goto		_L20
+        @line	310
+        _L15:	@aload		1
+        	@const		"[]"
+        	@invokevirtual	java.lang.StringBuffer java.lang.StringBuffer.append(java.lang.String)
+        	@pop		
+        @line	309
+        	@iinc		2 -1
+        _L20:	@iload		2
+        	@ifgt		_L15
+        @line	312
+        	@aload		1
+        	@invokevirtual	java.lang.String java.lang.StringBuffer.toString()
+        	@areturn	
+        @line	314
+        _L25:	@aload		0
+        	@invokevirtual	java.lang.Class java.lang.Class.getComponentType()
+        	@astore		0
+        @line	306
+        	@iinc		2 1
+        	@goto		_L6
+    }
+
+    /**
+     * <clinit>
+     *
+     * stack	1
+     * locals	1
+     */
+    @signature "()V"
+    private static void <clinit>() {
+        @line	21
+        	@const		0
+        	@anewarray	java.lang.Object
+        	@putstatic	java.lang.Object[] java.lang.reflect.Method.nullArgs
+        @line	30
+        	@invokestatic	void java.lang.reflect.Method.init0()
+        	@return		
+    }
+}
