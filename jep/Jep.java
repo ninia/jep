@@ -1,7 +1,5 @@
 package jep;
 
-import java.io.File;
-
 /**
  * Jep.java
  *
@@ -25,6 +23,9 @@ import java.io.File;
  * @author <a href="mailto:mrjohnson0@sourceforge.net">Mike Johnson</a>
  * @version 1.0
  */
+
+import java.io.File;
+
 public final class Jep {
     
     private String hash = null;
