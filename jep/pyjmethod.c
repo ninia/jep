@@ -48,6 +48,7 @@
 #include "Python.h"
 
 #include "pyjmethod.h"
+#include "pyjarray.h"
 #include "util.h"
 #include "pyembed.h"
 #include "pyjarray.h"
