@@ -241,8 +241,6 @@ PyObject* pyjarray_new_v(PyObject *isnull, PyObject *args) {
         pyjarray_dealloc(pyarray);
         return NULL;
     }
-
-    return NULL;
 }
 
 
@@ -708,6 +706,7 @@ static PyObject* pyjarray_subscript(PyJarray_Object *self, PyObject *item) {
     }
     else if (PySlice_Check(item)) {
         PyErr_SetString(PyExc_RuntimeError, "slices not implemented.");
+        return NULL;
 /*         int start, stop, step, slicelength, cur, i; */
 /*         PyObject* result; */
 /*         PyObject* it; */
