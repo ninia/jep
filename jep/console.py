@@ -44,6 +44,7 @@ if(__name__ == '__main__'):
         prompt(jep)
     except:
         pass
-    
+
+    print ''
     jep.close()
 
