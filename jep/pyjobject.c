@@ -324,6 +324,7 @@ static void pyjobject_addfield(PyJobject_Object *obj, PyObject *name) {
     PyList_Append(obj->fields, name);
 }
 
+
 // find and call a method on this object that matches the python args.
 // typically called by way of pyjmethod when python invokes __call__.
 //
@@ -400,22 +401,24 @@ PyObject* find_method(PyObject *methodName,
         return pyjmethod_call_internal(cand[0], args);
     }
 
-    // first, find out if there's only one method that has the correct number of args
+    // first, find out if there's only one method that
+    // has the correct number of args
     argsSize = PyTuple_Size(args);
     {
         PyJmethod_Object *matching = NULL;
         int               count    = 0;
         
-        for(i = 0; i < pos && cand[i]; i++) {
+        for(i = 0; i <= pos && cand[i]; i++) {
             // make sure method is fully initialized
             if(!cand[i]->parameters) {
                 if(!pyjmethod_init(cand[i])) {
                     // init failed, that's not good.
                     cand[i] = NULL;
+                    PyErr_Warn(PyExc_Warning, "pyjmethod init failed.");
                     continue;
                 }
             }
-               
+
             if(cand[i]->lenParameters == argsSize) {
                 matching = cand[i];
                 count++;
@@ -479,7 +482,6 @@ PyObject* find_method(PyObject *methodName,
                      "Matching overloaded method not found.");
     return NULL;
 }
-
 
 
 // find and call a method on this object that matches the python args.
@@ -619,7 +621,6 @@ static int pyjobject_setattr(PyJobject_Object *obj,
         }
         
         if(!pyjfield_check(cur)) {
-            printf("found a type %s.", cur->ob_type->tp_name);
             PyErr_Format(PyExc_TypeError, "Not a pyjfield object.");
             return -1;
         }
