@@ -91,7 +91,7 @@ JNIEXPORT void JNICALL Java_jep_Jep_run
 /*
  * Class:     jep_Jep
  * Method:    eval
- * Signature: (Ljava/lang/String;Ljava/lang/ClassLoader;Ljava/lang/String;)V
+ * Signature: (Ljava/lang/String;Ljava/lang/ClassLoader;Ljava/lang/String;)Ljava/lang/Object;
  */
 JNIEXPORT void JNICALL Java_jep_Jep_eval
 (JNIEnv *env, jobject obj, jstring _hash, jobject cl, jstring jstr) {
@@ -104,6 +104,27 @@ JNIEXPORT void JNICALL Java_jep_Jep_eval
 
     release_utf_char(env, jstr, str);
     release_utf_char(env, _hash, hash);
+}
+
+
+/*
+ * Class:     jep_Jep
+ * Method:    getValue
+ * Signature: (Ljava/lang/String;Ljava/lang/ClassLoader;Ljava/lang/String;)Ljava/lang/Object;
+ */
+JNIEXPORT jobject JNICALL Java_jep_Jep_getValue
+(JNIEnv *env, jobject obj, jstring _hash, jobject cl, jstring jstr) {
+    const char *str, *hash;
+    jobject ret;
+
+    str = jstring2char(env, jstr);
+    hash     = jstring2char(env, _hash);
+
+    ret = pyembed_getvalue(env, hash, (char *) str);
+
+    release_utf_char(env, jstr, str);
+    release_utf_char(env, _hash, hash);
+    return ret;
 }
 
 

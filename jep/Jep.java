@@ -31,7 +31,10 @@ public final class Jep {
     
     // used by default if not passed/set by caller
     private ClassLoader classLoader = null;
-
+    
+    // eval() storage.
+    private StringBuffer evalLines = null;
+    
     
     /**
      * Creates a new <code>Jep</code> instance.
@@ -74,7 +77,6 @@ public final class Jep {
      * @exception JepException if an error occurs
      */
     public void runScript(String script, ClassLoader cl) throws JepException {
-
         if(script == null)
             throw new JepException("Script filename cannot be null.");
         
@@ -85,7 +87,7 @@ public final class Jep {
         if(cl == null)
             cl = this.classLoader;
         
-        run(hash, cl, script);
+        run(this.hash, cl, script);
     }
     
 
@@ -96,13 +98,39 @@ public final class Jep {
 
 
     /**
-     * evaluate a python statement
+     * evaluate python statements
      *
      * @param str a <code>String</code> value
      * @exception JepException if an error occurs
      */
     public void eval(String str) throws JepException {
-        eval(hash, this.classLoader, str);
+        char last = str.charAt(str.length() - 1);
+        boolean finished = true;
+        
+        // trim comments
+        int pos = str.indexOf("#");
+        if(pos > -1)
+            str = str.substring(0, pos);
+        
+        if(last == '\\' || last == ':')
+            finished = false;
+        else if(Character.isWhitespace(str.charAt(0)))
+            finished = false;
+        
+        if(!finished) {
+            if(this.evalLines == null)
+                this.evalLines = new StringBuffer();
+            evalLines.append(str + "\n");
+            return;
+        }
+        
+        // may need to run previous lines
+        if(this.evalLines != null) {
+            eval(this.hash, this.classLoader, this.evalLines.toString());
+            this.evalLines = null;
+        }
+        
+        eval(this.hash, this.classLoader, str);
     }
 
     
@@ -111,6 +139,25 @@ public final class Jep {
                                           String str)
         throws JepException;
 
+
+    /**
+     * retrieve a value from python. if the result is not a java object,
+     * implementation currently returns a String
+     *
+     * @param str a <code>String</code> value
+     * @return an <code>Object</code> value
+     * @exception JepException if an error occurs
+     */
+    public Object getValue(String str) throws JepException {
+        return getValue(this.hash, this.classLoader, str);
+    }
+
+    
+    private synchronized native Object getValue(String hash,
+                                                ClassLoader cl,
+                                                String str)
+        throws JepException;
+    
 
     // -------------------------------------------------- set things
     

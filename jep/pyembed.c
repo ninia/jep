@@ -469,8 +469,8 @@ void pyembed_eval(JNIEnv *env,
                   char *str,
                   jobject classLoader) {
     PyThreadState *prevThread, *thread;
-    PyObject      *modjep;
-    PyObject *main, *dict;
+    PyObject      *modjep, *main, *dict, *result;
+    jobject        ret = NULL;
     
     thread = get_threadstate(hash);
     if(thread == NULL) {
@@ -491,14 +491,12 @@ void pyembed_eval(JNIEnv *env,
     prevThread = PyThreadState_Swap(thread);
     
     // store thread information in thread's dictionary as a list.
-/*     if(pyembed_getthread_object(LIST_ENV) == NULL) */
-/*     if(PyThreadState_GetDict() == NULL) */
     SET_TDICT(env, classLoader);
     
     if(process_py_exception(env, 1))
         return;
     
-    main = PyImport_AddModule("__main__");    /* borrowed */
+    main = PyImport_AddModule("__main__");                      /* borrowed */
     if(main == NULL) {
         THROW_JEP(env, "Couldn't add module __main__.");
         return;
@@ -507,12 +505,82 @@ void pyembed_eval(JNIEnv *env,
     dict = PyModule_GetDict(main);
     Py_INCREF(dict);
     
-    PyRun_String(str, Py_single_input, dict, dict);
+    result = PyRun_String(str, Py_single_input, dict, dict);    /* new ref */
     
     process_py_exception(env, 1);
     Py_DECREF(dict);
     PyThreadState_Swap(prevThread);
     PyEval_ReleaseLock();
+    
+    if(result == NULL)
+        return;
+    if(result == Py_None) {
+        Py_DECREF(Py_None);
+        return;
+    }
+}
+
+
+jobject pyembed_getvalue(JNIEnv *env,
+                         const char *hash,
+                         char *str) {
+    PyThreadState *prevThread, *thread;
+    PyObject      *main, *dict, *result;
+    jobject        ret = NULL;
+    
+    thread = get_threadstate(hash);
+    if(thread == NULL) {
+        PyErr_Clear();
+        THROW_JEP(env, "Couldn't get threadstate.");
+        return NULL;
+    }
+    if(str == NULL)
+        return NULL;
+    
+    PyEval_AcquireLock();
+    prevThread = PyThreadState_Swap(thread);
+    
+    if(process_py_exception(env, 1))
+        return NULL;
+    
+    main = PyImport_AddModule("__main__");                      /* borrowed */
+    if(main == NULL) {
+        THROW_JEP(env, "Couldn't add module __main__.");
+        return NULL;
+    }
+    
+    dict = PyModule_GetDict(main);
+    Py_INCREF(dict);
+    
+    result = PyRun_String(str, Py_eval_input, dict, dict);      /* new ref */
+    
+    process_py_exception(env, 1);
+    Py_DECREF(dict);
+    PyThreadState_Swap(prevThread);
+    PyEval_ReleaseLock();
+    
+    if(result == NULL)
+        return NULL;
+    if(result == Py_None) {
+        Py_DECREF(Py_None);
+        return NULL;
+    }
+    
+    // convert result to jobject
+    if(pyjobject_check(result))
+        ret = ((PyJobject_Object *) result)->object;
+    else {
+        char *tt;
+        // i'm lazy, just convert everything else to strings.
+        // otherwise we'd have to box primitives...
+        PyObject *t = PyObject_Str(result);
+        tt = PyString_AsString(t);
+        ret = (jobject) (*env)->NewStringUTF(env, (const char *) tt);
+        Py_DECREF(t);
+    }
+
+    Py_DECREF(result);
+    return ret;
 }
 
 
