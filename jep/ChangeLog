@@ -1,3 +1,6 @@
+2004-07-26  0.9.11  Mike Johnson <mrjohnson0@users.sourceforge.net>
+	* fix: pyjobject.c - fix circular reference memory leak
+	
 2004-06-24  0.9.10  Mike Johnson <mrjohnson0@users.sourceforge.net>
 	* fix: Jep.java - throw exception if calls not from original, python thread
 	* fix: pyjmethod.c - check if method should be called on class, not obj
