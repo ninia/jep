@@ -163,13 +163,15 @@ public final class Jep {
      */
     public boolean eval(String str) throws JepException {
         try {
-            if(str == null || str.equals("")) {
+            if(str == null || str.trim().equals("")) {
                 str = null;
                 if(!this.interactive)
                     return false;
                 else {
                     if(this.evalLines == null)
                         return true; // nothing to eval
+                    else if(str == null || compileString(this.tstate, str) == 0)
+                        return false;
                 }
             }
             else {
