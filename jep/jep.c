@@ -24,8 +24,6 @@
 */
 
 #include <stdio.h>
-#include <sys/types.h>
-#include "system.h"
 
 #include "util.h"
 #include "jep.h"
