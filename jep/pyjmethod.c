@@ -360,7 +360,6 @@ EXIT_ERROR:
 
 static void pyjmethod_dealloc(PyJmethod_Object *self) {
 #if USE_DEALLOC
-    printf("pyjmethod dealloc\n");
     JNIEnv *env  = self->env;
     if(env) {
         if(self->parameters)

@@ -265,7 +265,6 @@ EXIT_ERROR:
 
 static void pyjobject_dealloc(PyJobject_Object *self) {
 #if USE_DEALLOC
-    printf("pyjobject dealloc\n");
     JNIEnv *env = self->env;
     if(env) {
         if(self->object)
@@ -309,7 +308,6 @@ static void pyjobject_addmethod(PyJobject_Object *obj, PyObject *name) {
     if(!PyList_Check(obj->methods))
         return;
 
-/*     Py_INCREF(name); */
     PyList_Append(obj->methods, name);
 }
 
@@ -320,7 +318,6 @@ static void pyjobject_addfield(PyJobject_Object *obj, PyObject *name) {
     if(!PyList_Check(obj->fields))
         return;
     
-/*     Py_INCREF(name); */
     PyList_Append(obj->fields, name);
 }
 
@@ -370,25 +367,18 @@ PyObject* find_method(JNIEnv *env,
 
         if(PyTuple_Size(tuple) == 2) {
             PyObject *key = PyTuple_GetItem(tuple, 0);           /* borrowed */
-            Py_INCREF(key);
             
-            if(PyErr_Occurred()) {
-                Py_DECREF(key);
+            if(PyErr_Occurred())
                 break;
-            }
             
-            if(!key || !PyString_Check(key)) {
-                Py_DECREF(key);
+            if(!key || !PyString_Check(key))
                 continue;
-            }
             
             if(PyObject_Compare(key, methodName) == 0) {
                 PyObject *method = PyTuple_GetItem(tuple, 1);    /* borrowed */
                 if(pyjmethod_check(method))
                     cand[pos++] = (PyJmethod_Object *) method;
             }
-            
-            Py_DECREF(key);
         }
     }
     
@@ -667,7 +657,10 @@ static int pyjobject_setattr(PyJobject_Object *obj,
     // the docs don't mention this, but the source INCREFs tuple
     // ...
     // after much printf'ing. uhm. must decref it somewhere.
-    Py_INCREF(tuple);
+    // ...
+    // doh. the docs suck.
+    
+    // Py_INCREF(tuple);
     
     PyList_Append(obj->attr, tuple);
     

@@ -6,8 +6,6 @@ print "Hello world using Jep."
 import jep
 from jep import *
 
-assert(0)
-
 #for i in (range(0, 10)):
 if(__name__ == '__main__'):
     i = 0
