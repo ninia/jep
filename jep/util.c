@@ -19,6 +19,10 @@
    Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  
 */ 	
 
+#ifdef WIN32
+# include "winconfig.h"
+#endif
+
 #if HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -237,8 +241,7 @@ int process_java_exception(JNIEnv *env) {
     jthrowable  exception    = NULL;
     jclass      clazz;
     PyObject   *pyException = PyExc_RuntimeError;
-    PyObject   *str, *tmp, *jep, *texc, *className;
-    int         len;
+    PyObject   *str, *tmp, *texc, *className;
     char       *message;
     
     if(!(*env)->ExceptionCheck(env))

@@ -35,12 +35,19 @@
 
 #define JEPEXCEPTION "jep/JepException"
 
-#define THROW_JEP(env, msg) ({                      \
+#define THROW_JEP(env, msg)                         \
+{                                                   \
     jclass clazz = (*env)->FindClass(env,           \
                                      JEPEXCEPTION); \
     if(clazz != NULL)                               \
         (*env)->ThrowNew(env, clazz, msg);          \
-})
+}
+
+#ifdef WIN32
+typedef __int64 jeplong;
+#else
+typedef long long jeplong;
+#endif
 
 // was added in python 2.2
 #ifndef PyObject_TypeCheck

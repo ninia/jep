@@ -31,6 +31,10 @@
    *****************************************************************************
 */ 	
 
+#ifdef WIN32
+# include "winconfig.h"
+#endif
+
 #if HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -92,8 +96,8 @@ static struct PyMethodDef jep_methods[] = {
 
 
 PyThreadState* get_threadstate(const char *hash) {
-    PyObject      *pyhash, *pylong, *str;
-    PyThreadState *tstate;
+    PyObject      *pyhash, *pylong;
+    PyThreadState *tstate = NULL;
     
     if(!hash)
         return NULL;
@@ -311,9 +315,8 @@ PyObject* pyembed_modjep_get(PyObject *name) {
 
 
 static PyObject* pyembed_forname(PyObject *self, PyObject *args) {
-    PyObject  *ret       = NULL;
     JNIEnv    *env       = NULL;
-    char      *name, *p;
+    char      *name;
     PyObject  *_env      = NULL;
     PyObject  *_cl       = NULL;
     jobject    cl;
@@ -392,7 +395,6 @@ static PyObject* pyembed_forname(PyObject *self, PyObject *args) {
 
 
 static PyObject* pyembed_findclass(PyObject *self, PyObject *args) {
-    PyObject  *ret       = NULL;
     JNIEnv    *env       = NULL;
     char      *name, *p;
     PyObject  *_env      = NULL;
@@ -431,7 +433,8 @@ static PyObject* pyembed_findclass(PyObject *self, PyObject *args) {
 }
 
 
-#define SET_TDICT(env, classLoader) ({                                          \
+#define SET_TDICT(env, classLoader)                                             \
+{                                                                               \
     PyObject *tdict;                                                            \
     if((tdict = PyThreadState_GetDict()) != NULL) {                             \
         PyObject *key, *tlist, *pyenv, *pycl;                                   \
@@ -442,7 +445,7 @@ static PyObject* pyembed_findclass(PyObject *self, PyObject *args) {
         if(!cl)                                                                 \
             PyErr_Warn(PyExc_Warning, "No classloader.");                       \
                                                                                 \
-        pyenv = (PyObject *) PyCObject_FromVoidPtr(env, NULL);                  \
+        pyenv = (PyObject *) PyCObject_FromVoidPtr((void *) env, NULL);                  \
         pycl  = (PyObject *) PyCObject_FromVoidPtr(cl, NULL);                   \
         key   = PyString_FromString(DICT_KEY);                                  \
         tlist = PyList_New(0);                                                  \
@@ -458,7 +461,7 @@ static PyObject* pyembed_findclass(PyObject *self, PyObject *args) {
         Py_DECREF(tlist);                                                       \
         Py_DECREF(pycl);                                                        \
     }                                                                           \
-})
+}
 
 
 void pyembed_eval(JNIEnv *env,
@@ -679,9 +682,9 @@ void pyembed_setparameter_int(JNIEnv *env,
 
 
 void pyembed_setparameter_long(JNIEnv *env,
-                              const char *hash,
-                              const char *name,
-                              long long value) {
+                               const char *hash,
+                               const char *name,
+                               jeplong value) {
     PyObject      *pyvalue, *modjep = NULL;
     PyThreadState *prevThread, *thread;
     

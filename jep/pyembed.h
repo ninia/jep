@@ -49,7 +49,7 @@ PyObject* pyembed_modjep_get(PyObject*);
 void pyembed_setparameter_object(JNIEnv*, const char*, const char*, jobject);
 void pyembed_setparameter_string(JNIEnv*, const char*, const char*, const char*);
 void pyembed_setparameter_int(JNIEnv*, const char*, const char*, int);
-void pyembed_setparameter_long(JNIEnv*, const char*, const char*, long long);
+void pyembed_setparameter_long(JNIEnv*, const char*, const char*, jeplong);
 void pyembed_setparameter_double(JNIEnv*, const char*, const char*, double);
 void pyembed_setparameter_float(JNIEnv*, const char*, const char*, float);
 

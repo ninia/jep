@@ -19,6 +19,10 @@
    Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  
 */ 	
 
+#ifdef WIN32
+# include "winconfig.h"
+#endif
+
 #if HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -47,8 +51,8 @@
 #include "util.h"
 #include "pyembed.h"
 
-staticforward PyTypeObject PyJmethod_Type;
-staticforward PyMethodDef  pyjmethod_methods[];
+extern PyTypeObject PyJmethod_Type;
+extern PyMethodDef  pyjmethod_methods[];
 
 static void pyjmethod_dealloc(PyJmethod_Object *self);
 
@@ -68,6 +72,11 @@ PyJmethod_Object* pyjmethod_new(JNIEnv *env,
     jclass            rmethodClass = NULL;
     const char       *methodName   = NULL;
     jstring           jstr         = NULL;
+
+    if(PyType_Ready(&PyJmethod_Type) < 0) {
+        PyErr_SetString(PyExc_RuntimeError, "pyjmethod type not ready.");
+        return NULL;
+    }
 
     pym                = PyObject_NEW(PyJmethod_Object, &PyJmethod_Type);
     pym->rmethod       = (*env)->NewGlobalRef(env, rmethod);
@@ -683,13 +692,13 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
 }
 
 
-static PyMethodDef pyjmethod_methods[] = {
+PyMethodDef pyjmethod_methods[] = {
     {NULL, NULL, 0, NULL}
 };
 
 
-static PyTypeObject PyJmethod_Type = {
-    PyObject_HEAD_INIT(&PyType_Type)
+PyTypeObject PyJmethod_Type = {
+    PyObject_HEAD_INIT(0)
     0,
     "jep.PyJmethod",
     sizeof(PyJmethod_Object),

@@ -25,6 +25,10 @@
    to cast to PyObject.
 */ 	
 
+#ifdef WIN32
+# include "winconfig.h"
+#endif
+
 #if HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -36,7 +40,7 @@
 
 // shut up the compiler
 #ifdef _POSIX_C_SOURCE
-#  undef _POSIX_C_SOURCE
+# undef _POSIX_C_SOURCE
 #endif
 #ifdef _FILE_OFFSET_BITS
 # undef _FILE_OFFSET_BITS
@@ -45,7 +49,7 @@
 
 // shut up the compiler
 #ifdef _POSIX_C_SOURCE
-#  undef _POSIX_C_SOURCE
+# undef _POSIX_C_SOURCE
 #endif
 #include "Python.h"
 
@@ -54,8 +58,8 @@
 #include "pyjclass.h"
 #include "util.h"
 
-staticforward PyTypeObject PyJfield_Type;
-staticforward PyMethodDef  pyjfield_methods[];
+extern PyTypeObject PyJfield_Type;
+extern PyMethodDef  pyjfield_methods[];
 
 static void pyjfield_dealloc(PyJfield_Object *self);
 
@@ -71,6 +75,11 @@ PyJfield_Object* pyjfield_new(JNIEnv *env,
     jclass           rfieldClass = NULL;
     jstring          jstr        = NULL;
     const char      *fieldName   = NULL;
+
+    if(PyType_Ready(&PyJfield_Type) < 0) {
+        PyErr_SetString(PyExc_RuntimeError, "pyjfield type not ready.");
+        return NULL;
+    }
     
     pyf              = PyObject_NEW(PyJfield_Object, &PyJfield_Type);
     pyf->rfield      = (*env)->NewGlobalRef(env, rfield);
@@ -428,7 +437,7 @@ PyObject* pyjfield_get(PyJfield_Object *self) {
         if(process_java_exception(env))
             return NULL;
         
-        result = PyLong_FromLongLong((long long) ret);
+        result = PyLong_FromLongLong((jeplong) ret);
         break;
     }
 
@@ -469,7 +478,6 @@ PyObject* pyjfield_get(PyJfield_Object *self) {
 
 
 int pyjfield_set(PyJfield_Object *self, PyObject *value) {
-    PyObject *result = NULL;
     JNIEnv   *env;
     jvalue    jarg;
     
@@ -743,13 +751,13 @@ int pyjfield_set(PyJfield_Object *self, PyObject *value) {
 }
 
 
-static PyMethodDef pyjfield_methods[] = {
+PyMethodDef pyjfield_methods[] = {
     {NULL, NULL, 0, NULL}
 };
 
 
-static PyTypeObject PyJfield_Type = {
-    PyObject_HEAD_INIT(&PyType_Type)
+PyTypeObject PyJfield_Type = {
+    PyObject_HEAD_INIT(0)
     0,
     "PyJfield",
     sizeof(PyJfield_Object),

@@ -212,4 +212,7 @@ if(__name__ == '__main__'):
     except(jep.FileNotFoundException):
         print 'parseInt:        caught FileNotFoundException'
     
+    System = findClass('java/lang/System')
+    #System.out.println("regression test.")
+
     print 'python loop %i finished.' % (i)

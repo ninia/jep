@@ -19,6 +19,10 @@
    Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  
 */ 	
 
+#ifdef WIN32
+# include "winconfig.h"
+#endif
+
 #if HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -49,8 +53,8 @@
 #include "pyjclass.h"
 #include "util.h"
 
-staticforward PyTypeObject PyJobject_Type;
-staticforward PyMethodDef  pyjobject_methods[];
+extern PyTypeObject PyJobject_Type;
+extern PyMethodDef  pyjobject_methods[];
 
 static int pyjobject_init(PyJobject_Object*);
 static int pyjobject_setattr(PyJobject_Object*, char*, PyObject*);
@@ -66,6 +70,10 @@ static jmethodID classGetFields  = 0;
 PyObject* pyjobject_new(JNIEnv *env, jobject obj) {
     PyJobject_Object *pyjob;
     
+    if(PyType_Ready(&PyJobject_Type) < 0) {
+        PyErr_SetString(PyExc_RuntimeError, "pyjobject type not ready.");
+        return NULL;
+    }
     if(!obj) {
         PyErr_Format(PyExc_RuntimeError, "Invalid object.");
         return NULL;
@@ -655,13 +663,13 @@ static int pyjobject_setattr(PyJobject_Object *obj,
 }
 
 
-static PyMethodDef pyjobject_methods[] = {
+PyMethodDef pyjobject_methods[] = {
     {NULL, NULL, 0, NULL}
 };
 
 
-static PyTypeObject PyJobject_Type = {
-    PyObject_HEAD_INIT(&PyType_Type)
+PyTypeObject PyJobject_Type = {
+    PyObject_HEAD_INIT(0)
     0,                                        /* ob_size */
     "PyJobject",                              /* tp_name */
     sizeof(PyJobject_Object),                 /* tp_basicsize */

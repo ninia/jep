@@ -19,6 +19,10 @@
    Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  
 */ 	
 
+#ifdef WIN32
+# include "winconfig.h"
+#endif
+
 #if HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -49,8 +53,8 @@
 #include "pyjmethod.h"
 #include "util.h"
 
-staticforward PyTypeObject PyJclass_Type;
-staticforward PyMethodDef  pyjclass_methods[];
+extern PyTypeObject PyJclass_Type;
+extern PyMethodDef  pyjclass_methods[];
 
 static void pyjclass_addmethod(PyJclass_Object*, PyObject*);
 static void pyjclass_addfield(PyJclass_Object*, PyObject*);
@@ -65,8 +69,12 @@ PyJclass_Object* pyjclass_new(JNIEnv *env, PyObject *pyjob) {
     PyJclass_Object  *pyc         = NULL;
     jobject           langClass   = NULL;
     jobjectArray      initArray   = NULL;
-    int               i, len;
     PyJobject_Object *pyjobject  = NULL;
+
+    if(PyType_Ready(&PyJclass_Type) < 0) {
+        PyErr_SetString(PyExc_RuntimeError, "pyjclass type not ready.");
+        return NULL;
+    }
 
     pyc             = PyObject_NEW(PyJclass_Object, &PyJclass_Type);
     pyc->env        = env;
@@ -349,13 +357,13 @@ EXIT_ERROR:
 }
 
 
-static PyMethodDef pyjclass_methods[] = {
+PyMethodDef pyjclass_methods[] = {
     {NULL, NULL, 0, NULL}
 };
 
 
-static PyTypeObject PyJclass_Type = {
-    PyObject_HEAD_INIT(&PyType_Type)
+PyTypeObject PyJclass_Type = {
+    PyObject_HEAD_INIT(0)
     0,
     "PyJclass",
     sizeof(PyJclass_Object),

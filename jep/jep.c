@@ -25,16 +25,29 @@
 #include "pyembed.h"
 
 
+#ifdef WIN32
+# include "winconfig.h"
+
+BOOL APIENTRY DllMain(HANDLE hModule,
+                      DWORD  ul_reason_for_call,
+                      LPVOID lpReserved) {
+	return TRUE;
+}
+#endif
+
+
 // -------------------------------------------------- jni functions
 
 
-JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
+JNIEXPORT jint JNICALL
+JNI_OnLoad(JavaVM *vm, void *reserved) {
     pyembed_startup();
     return JNI_VERSION_1_2;
 }
 
 
-JNIEXPORT void JNI_OnUnload(JavaVM *vm, void *reserved) {
+JNIEXPORT void JNICALL
+JNI_OnUnload(JavaVM *vm, void *reserved) {
     pyembed_shutdown();
 }
 
@@ -63,7 +76,6 @@ JNIEXPORT void JNICALL Java_jep_Jep_init
  */
 JNIEXPORT void JNICALL Java_jep_Jep_run
 (JNIEnv *env, jobject obj, jstring _hash, jobject cl, jstring str) {
-    jint        ret = -1;
     const char *filename, *hash;
 
     filename = jstring2char(env, str);
@@ -83,7 +95,6 @@ JNIEXPORT void JNICALL Java_jep_Jep_run
  */
 JNIEXPORT void JNICALL Java_jep_Jep_eval
 (JNIEnv *env, jobject obj, jstring _hash, jobject cl, jstring jstr) {
-    jint        ret = -1;
     const char *str, *hash;
 
     str = jstring2char(env, jstr);
@@ -182,7 +193,7 @@ JNIEXPORT void JNICALL Java_jep_Jep_set__Ljava_lang_String_2Ljava_lang_String_2J
     name = jstring2char(env, jname);
     hash = jstring2char(env, _hash);
     
-    pyembed_setparameter_long(env, hash, name, (long long) jval);
+    pyembed_setparameter_long(env, hash, name, (jeplong) jval);
 
     release_utf_char(env, jname, name);
     release_utf_char(env, _hash, hash);
