@@ -451,20 +451,14 @@ void pyembed_run(JNIEnv *env,
     if(thread == NULL) {
         PyErr_Clear();
 
-        jclass clazz = (*env)->FindClass(env,
-                                         JEPEXCEPTION);
-        if(clazz != NULL)
-            (*env)->ThrowNew(env, clazz, "Couldn't get threadstate.");
+        THROW_JEP(env, "Couldn't get threadstate.");
         return;
     }
     modjep = get_modjep(hash);
     if(modjep == NULL) {
         PyErr_Clear();
         
-        jclass clazz = (*env)->FindClass(env,
-                                         JEPEXCEPTION);
-        if(clazz != NULL)
-            (*env)->ThrowNew(env, clazz, "Couldn't find modjep object.");
+        THROW_JEP(env, "Couldn't find modjep object.");
         return;
     }
     
@@ -541,34 +535,25 @@ void pyembed_run(JNIEnv *env,
 
 // -------------------------------------------------- set() things
 
-#define GET_COMMON                                                          \
-    if(name == NULL) {                                                      \
-        jclass clazz = (*env)->FindClass(env,                               \
-                                         JEPEXCEPTION);                     \
-        if(clazz != NULL)                                                   \
-            (*env)->ThrowNew(env, clazz, "name is invalid.");               \
-        return;                                                             \
-    }                                                                       \
-    thread = get_threadstate(hash);                                         \
-    if(thread == NULL) {                                                    \
-        PyErr_Clear();                                                      \
-                                                                            \
-        jclass clazz = (*env)->FindClass(env,                               \
-                                         JEPEXCEPTION);                     \
-        if(clazz != NULL)                                                   \
-            (*env)->ThrowNew(env, clazz, "Couldn't get threadstate.");      \
-        return;                                                             \
-    }                                                                       \
-                                                                            \
-    modjep = get_modjep(hash);                                              \
-    if(modjep == NULL) {                                                    \
-        PyErr_Clear();                                                      \
-                                                                            \
-        jclass clazz = (*env)->FindClass(env,                               \
-                                         JEPEXCEPTION);                     \
-        if(clazz != NULL)                                                   \
-            (*env)->ThrowNew(env, clazz, "Couldn't find modjep object.");   \
-        return;                                                             \
+#define GET_COMMON                                      \
+    if(name == NULL) {                                  \
+        THROW_JEP(env, "name is invalid.");             \
+        return;                                         \
+    }                                                   \
+    thread = get_threadstate(hash);                     \
+    if(thread == NULL) {                                \
+        PyErr_Clear();                                  \
+                                                        \
+        THROW_JEP(env, "Couldn't get threadstate.");    \
+        return;                                         \
+    }                                                   \
+                                                        \
+    modjep = get_modjep(hash);                          \
+    if(modjep == NULL) {                                \
+        PyErr_Clear();                                  \
+                                                        \
+        THROW_JEP(env, "Couldn't find modjep object."); \
+        return;                                         \
     }
 
 
@@ -580,10 +565,7 @@ void pyembed_setparameter_object(JNIEnv *env,
     PyThreadState *prevThread, *thread;
     
     if(value == NULL) {
-        jclass clazz = (*env)->FindClass(env,
-                                         JEPEXCEPTION);
-        if(clazz != NULL)
-            (*env)->ThrowNew(env, clazz, "value is invalid.");
+        THROW_JEP(env, "value is invalid.");
         return;
     }
 
@@ -611,10 +593,7 @@ void pyembed_setparameter_string(JNIEnv *env,
     PyThreadState *prevThread, *thread;
     
     if(value == NULL) {
-        jclass clazz = (*env)->FindClass(env,
-                                         JEPEXCEPTION);
-        if(clazz != NULL)
-            (*env)->ThrowNew(env, clazz, "value is invalid.");
+        THROW_JEP(env, "value is invalid.");
         return;
     }
 
