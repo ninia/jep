@@ -221,7 +221,7 @@ PyObject* pyjclass_call(PyJclass_Object *self,
         
         // next, find matching constructor for args
         // the counts match but maybe not the args themselves.
-        jargs = (jvalue *) PyMem_Malloc(sizeof(jargs) * parmLen);
+        jargs = (jvalue *) PyMem_Malloc(sizeof(jvalue) * parmLen);
         
         for(parmPos = 0; parmPos < parmLen; parmPos++) {
             PyObject *param       = PyTuple_GetItem(args, parmPos);
@@ -240,6 +240,8 @@ PyObject* pyjclass_call(PyJclass_Object *self,
                 goto EXIT_ERROR;
             
             paramTypeId = get_jtype(env, paramType, pclazz);
+            if(PyErr_Occurred() || process_java_exception(env))
+                goto EXIT_ERROR;
             
             // if java and python agree, continue checking
             if(pyarg_matches_jtype(env, param, paramType, paramTypeId)) {
