@@ -1639,12 +1639,6 @@ static void pyjarrayiter_dealloc(PyJarrayIterObject *it) {
     PyObject_Del(it);
 }
 
-static int pyjarrayiter_traverse(PyJarrayIterObject *it, visitproc visit, void *arg) {
-    if (it->it_seq == NULL)
-        return 0;
-    return visit((PyObject *)it->it_seq, arg);
-}
-
 static PyObject *pyjarrayiter_next(PyJarrayIterObject *it) {
     PyJarray_Object *seq;
     PyObject *item;
@@ -1705,7 +1699,7 @@ PyTypeObject PyJarrayIter_Type = {
     0,                                        /* tp_as_buffer */
     Py_TPFLAGS_DEFAULT,                       /* tp_flags */
     0,                                        /* tp_doc */
-    (traverseproc) pyjarrayiter_traverse,     /* tp_traverse */
+    0,                                        /* tp_traverse */
     0,                                        /* tp_clear */
     0,                                        /* tp_richcompare */
     0,                                        /* tp_weaklistoffset */
