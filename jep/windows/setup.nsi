@@ -32,6 +32,7 @@ SectionIn 2
 	
 	SetOutPath $INSTDIR
 	File ..\jep.jar
+	File ..\README
 	WriteUninstaller $INSTDIR\uninstall.exe
         
 SectionEnd
