@@ -1,4 +1,5 @@
-2004-07-26  0.9.12  Mike Johneon <mrjohnson0@users.sourceforge.net>
+2004-07-26  1.0  Mike Johneon <mrjohnson0@users.sourceforge.net>
+	* fix: pyembed.c - don't return error state without releasing GIL
 	* nit: pyjclass.c - don't close localframe after last EXIT
 	* nit: pyjobject.c - delete local method refs instead of filling localframe
 	* fix: pyjembed.c - flush stdout and stderr after script run
