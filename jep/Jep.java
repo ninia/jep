@@ -174,8 +174,6 @@ public final class Jep {
             }
             
             if(str == null || str.trim().equals("")) {
-                str = null;
-                
                 if(!this.interactive)
                     return false;
                 if(this.evalLines == null)
