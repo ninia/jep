@@ -31,8 +31,7 @@ public class Run {
     
     private final static String USAGE =
     "  Run.java [-i] [-x] file\n" +
-    "-i    Run script interactively\n" +
-    "-d    Echo statements before running them.";
+    "-i    Run script interactively";
     
     
     /**
@@ -46,14 +45,11 @@ public class Run {
         Jep jep = null;
         
         boolean interactive = false;
-        boolean debug       = false;
         String  file        = null;
 
         for(int i = 0; i < args.length; i++) {
             if(args[i].equals("-i"))
                 interactive = true;
-            else if(args[i].equals("-d"))
-                debug = true;
             else if(args[i].equals("-h")) {
                 System.out.println(USAGE);
                 System.exit(1);
@@ -68,27 +64,8 @@ public class Run {
         file = args[args.length - 1];
 
         try {
-            if(debug) {
-                jep = new Jep(true, ".");
-                jep.eval("__name__ = '__main__'");
-                
-                BufferedReader in = new BufferedReader(new FileReader(file));
-                String line = in.readLine();
-                
-                while(line != null) {
-                    System.out.println("# " + line);
-                    jep.eval(line); // jep adds newline
-                    
-                    line = in.readLine();
-                }
-                
-                jep.eval(null);
-                in.close();
-            }
-            else {
-                jep = new Jep(false, ".");
-                jep.runScript(file);
-            }
+            jep = new Jep(false, ".");
+            jep.runScript(file);
         }
         catch(Throwable t) {
             t.printStackTrace();
