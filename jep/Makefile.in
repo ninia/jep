@@ -101,21 +101,17 @@ METASOURCES = AUTO
 #  uncomment the following if jep requires the math library
 #jep_LDADD=-lm
 
-EXTRA_DIST = python.m4 	autogen.sh 	pyembed.h 	util.h 	pyjmethod.h 	pyjobject.h 	pyjclass.h 	pyjfield.h 	Jep.java 	Console.java 	BSFJepEngine.java 	JepException.java 	Test.java 	test.py 	jep.h 	makejar.sh 	ext/bsf.jar
+EXTRA_DIST = python.m4 	autogen.sh 	pyembed.h 	util.h 	pyjmethod.h 	pyjobject.h 	pyjclass.h 	pyjfield.h 	Jep.java 	Console.java 	BSFJepEngine.java 	JepException.java 	Test.java 	test.py 	jep.h 	makejar.sh 	jep.jar 	ext/bsf.jar
 
 
 #  if you write a self-test script named `chk', uncomment the
 #  following and add `chk' to the EXTRA_DIST list
 #TESTS=chk
 
-#  build and install the .info pages
-info_TEXINFOS = jep.texinfo
-libjep_la_TEXINFOS = gpl.texinfo
-
 #  install the man pages
 man_MANS = jep.1
 
-BUILT_SOURCES = Jep.class Test.class JepException.class jep.jar Console.class BSFJepEngine.class
+BUILT_SOURCES = jep.jar
 
 CLEANFILES = *.class *.jar
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -137,10 +133,6 @@ COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CF
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
-TEXI2DVI = texi2dvi
-INFO_DEPS = jep.info
-DVIS = jep.dvi
-TEXINFOS = jep.texinfo
 man1dir = $(mandir)/man1
 MANS = $(man_MANS)
 
@@ -162,7 +154,7 @@ OBJECTS = $(libjep_la_OBJECTS)
 
 all: all-redirect
 .SUFFIXES:
-.SUFFIXES: .S .c .dvi .info .lo .o .obj .ps .s .texi .texinfo .txi
+.SUFFIXES: .S .c .lo .o .obj .s
 $(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
 	cd $(top_srcdir) && $(AUTOMAKE) --gnu Makefile
 
@@ -275,122 +267,6 @@ maintainer-clean-libtool:
 
 libjep.la: $(libjep_la_OBJECTS) $(libjep_la_DEPENDENCIES)
 	$(LINK) -rpath $(libdir) $(libjep_la_LDFLAGS) $(libjep_la_OBJECTS) $(libjep_la_LIBADD) $(LIBS)
-
-jep.info: jep.texinfo
-jep.dvi: jep.texinfo
-
-
-DVIPS = dvips
-
-.texi.info:
-	@cd $(srcdir) && rm -f $@ $@-[0-9] $@-[0-9][0-9]
-	cd $(srcdir) \
-	  && $(MAKEINFO) `echo $< | sed 's,.*/,,'`
-
-.texi.dvi:
-	TEXINPUTS=.:$$TEXINPUTS \
-	  MAKEINFO='$(MAKEINFO) -I $(srcdir)' $(TEXI2DVI) $<
-
-.texi:
-	@cd $(srcdir) && rm -f $@ $@-[0-9] $@-[0-9][0-9]
-	cd $(srcdir) \
-	  && $(MAKEINFO) `echo $< | sed 's,.*/,,'`
-
-.texinfo.info:
-	@cd $(srcdir) && rm -f $@ $@-[0-9] $@-[0-9][0-9]
-	cd $(srcdir) \
-	  && $(MAKEINFO) `echo $< | sed 's,.*/,,'`
-
-.texinfo:
-	@cd $(srcdir) && rm -f $@ $@-[0-9] $@-[0-9][0-9]
-	cd $(srcdir) \
-	  && $(MAKEINFO) `echo $< | sed 's,.*/,,'`
-
-.texinfo.dvi:
-	TEXINPUTS=.:$$TEXINPUTS \
-	  MAKEINFO='$(MAKEINFO) -I $(srcdir)' $(TEXI2DVI) $<
-
-.txi.info:
-	@cd $(srcdir) && rm -f $@ $@-[0-9] $@-[0-9][0-9]
-	cd $(srcdir) \
-	  && $(MAKEINFO) `echo $< | sed 's,.*/,,'`
-
-.txi.dvi:
-	TEXINPUTS=.:$$TEXINPUTS \
-	  MAKEINFO='$(MAKEINFO) -I $(srcdir)' $(TEXI2DVI) $<
-
-.txi:
-	@cd $(srcdir) && rm -f $@ $@-[0-9] $@-[0-9][0-9]
-	cd $(srcdir) \
-	  && $(MAKEINFO) `echo $< | sed 's,.*/,,'`
-.dvi.ps:
-	$(DVIPS) $< -o $@
-
-install-info-am: $(INFO_DEPS)
-	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(DESTDIR)$(infodir)
-	@list='$(INFO_DEPS)'; \
-	for file in $$list; do \
-	  d=$(srcdir); \
-	  for ifile in `cd $$d && echo $$file $$file-[0-9] $$file-[0-9][0-9]`; do \
-	    if test -f $$d/$$ifile; then \
-	      echo " $(INSTALL_DATA) $$d/$$ifile $(DESTDIR)$(infodir)/$$ifile"; \
-	      $(INSTALL_DATA) $$d/$$ifile $(DESTDIR)$(infodir)/$$ifile; \
-	    else : ; fi; \
-	  done; \
-	done
-	@$(POST_INSTALL)
-	@if $(SHELL) -c 'install-info --version | sed 1q | fgrep -s -v -i debian' >/dev/null 2>&1; then \
-	  list='$(INFO_DEPS)'; \
-	  for file in $$list; do \
-	    echo " install-info --info-dir=$(DESTDIR)$(infodir) $(DESTDIR)$(infodir)/$$file";\
-	    install-info --info-dir=$(DESTDIR)$(infodir) $(DESTDIR)$(infodir)/$$file || :;\
-	  done; \
-	else : ; fi
-
-uninstall-info:
-	$(PRE_UNINSTALL)
-	@if $(SHELL) -c 'install-info --version | sed 1q | fgrep -s -v -i debian' >/dev/null 2>&1; then \
-	  ii=yes; \
-	else ii=; fi; \
-	list='$(INFO_DEPS)'; \
-	for file in $$list; do \
-	  test -z "$$ii" \
-	    || install-info --info-dir=$(DESTDIR)$(infodir) --remove $$file; \
-	done
-	@$(NORMAL_UNINSTALL)
-	list='$(INFO_DEPS)'; \
-	for file in $$list; do \
-	  (cd $(DESTDIR)$(infodir) && rm -f $$file $$file-[0-9] $$file-[0-9][0-9]); \
-	done
-
-dist-info: $(INFO_DEPS)
-	list='$(INFO_DEPS)'; \
-	for base in $$list; do \
-	  d=$(srcdir); \
-	  for file in `cd $$d && eval echo $$base*`; do \
-	    test -f $(distdir)/$$file \
-	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
-	    || cp -p $$d/$$file $(distdir)/$$file; \
-	  done; \
-	done
-
-mostlyclean-aminfo:
-	-rm -f jep.aux jep.cp jep.cps jep.dvi jep.fn jep.fns jep.ky jep.kys \
-	  jep.ps jep.log jep.pg jep.toc jep.tp jep.tps jep.vr jep.vrs \
-	  jep.op jep.tr jep.cv jep.cn
-
-clean-aminfo:
-
-distclean-aminfo:
-
-maintainer-clean-aminfo:
-	cd $(srcdir) && for i in $(INFO_DEPS); do \
-	  rm -f $$i; \
-	  if test "`echo $$i-[0-9]*`" != "$$i-[0-9]*"; then \
-	    rm -f $$i-[0-9]*; \
-	  fi; \
-	done
 
 install-man1:
 	$(mkinstalldirs) $(DESTDIR)$(man1dir)
@@ -514,7 +390,6 @@ distdir: $(DISTFILES)
 	    || cp -p $$d/$$file $(distdir)/$$file || :; \
 	  fi; \
 	done
-	$(MAKE) $(AM_MAKEFLAGS) top_distdir="$(top_distdir)" distdir="$(distdir)" dist-info
 
 DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 
@@ -547,9 +422,9 @@ maintainer-clean-depend:
 	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
 	    >> .deps/$(*F).P; \
 	rm -f .deps/$(*F).pp
-info-am: $(INFO_DEPS)
+info-am:
 info: info-am
-dvi-am: $(DVIS)
+dvi-am:
 dvi: dvi-am
 check-am: all-am
 check: check-am
@@ -561,21 +436,20 @@ all-recursive-am: config.h
 install-exec-am: install-libLTLIBRARIES
 install-exec: install-exec-am
 
-install-data-am: install-info-am install-man
+install-data-am: install-man
 install-data: install-data-am
 
 install-am: all-am
 	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
 install: install-am
-uninstall-am: uninstall-libLTLIBRARIES uninstall-info uninstall-man
+uninstall-am: uninstall-libLTLIBRARIES uninstall-man
 uninstall: uninstall-am
-all-am: Makefile $(INFO_DEPS) $(LTLIBRARIES) $(MANS) config.h
+all-am: Makefile $(LTLIBRARIES) $(MANS) config.h
 all-redirect: all-am
 install-strip:
 	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
 installdirs:
-	$(mkinstalldirs)  $(DESTDIR)$(libdir) $(DESTDIR)$(infodir) \
-		$(DESTDIR)$(mandir)/man1
+	$(mkinstalldirs)  $(DESTDIR)$(libdir) $(DESTDIR)$(mandir)/man1
 
 
 mostlyclean-generic:
@@ -591,20 +465,18 @@ maintainer-clean-generic:
 	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 mostlyclean-am:  mostlyclean-hdr mostlyclean-libLTLIBRARIES \
 		mostlyclean-compile mostlyclean-libtool \
-		mostlyclean-aminfo mostlyclean-tags mostlyclean-depend \
-		mostlyclean-generic
+		mostlyclean-tags mostlyclean-depend mostlyclean-generic
 
 mostlyclean: mostlyclean-am
 
 clean-am:  clean-hdr clean-libLTLIBRARIES clean-compile clean-libtool \
-		clean-aminfo clean-tags clean-depend clean-generic \
-		mostlyclean-am
+		clean-tags clean-depend clean-generic mostlyclean-am
 
 clean: clean-am
 
 distclean-am:  distclean-hdr distclean-libLTLIBRARIES distclean-compile \
-		distclean-libtool distclean-aminfo distclean-tags \
-		distclean-depend distclean-generic clean-am
+		distclean-libtool distclean-tags distclean-depend \
+		distclean-generic clean-am
 	-rm -f libtool
 
 distclean: distclean-am
@@ -613,9 +485,8 @@ distclean: distclean-am
 maintainer-clean-am:  maintainer-clean-hdr \
 		maintainer-clean-libLTLIBRARIES \
 		maintainer-clean-compile maintainer-clean-libtool \
-		maintainer-clean-aminfo maintainer-clean-tags \
-		maintainer-clean-depend maintainer-clean-generic \
-		distclean-am
+		maintainer-clean-tags maintainer-clean-depend \
+		maintainer-clean-generic distclean-am
 	@echo "This command is intended for maintainers to use;"
 	@echo "it deletes files that may require special tools to rebuild."
 
@@ -628,9 +499,7 @@ clean-libLTLIBRARIES maintainer-clean-libLTLIBRARIES \
 uninstall-libLTLIBRARIES install-libLTLIBRARIES mostlyclean-compile \
 distclean-compile clean-compile maintainer-clean-compile \
 mostlyclean-libtool distclean-libtool clean-libtool \
-maintainer-clean-libtool install-info-am uninstall-info \
-mostlyclean-aminfo distclean-aminfo clean-aminfo \
-maintainer-clean-aminfo install-man1 uninstall-man1 install-man \
+maintainer-clean-libtool install-man1 uninstall-man1 install-man \
 uninstall-man tags mostlyclean-tags distclean-tags clean-tags \
 maintainer-clean-tags distdir mostlyclean-depend distclean-depend \
 clean-depend maintainer-clean-depend info-am info dvi-am dvi check \
@@ -639,6 +508,7 @@ install-exec install-data-am install-data install-am install \
 uninstall-am uninstall all-redirect all-am all installdirs \
 mostlyclean-generic distclean-generic clean-generic \
 maintainer-clean-generic clean mostlyclean distclean maintainer-clean
+
 
 Jep.class: Jep.java
 	$(JAVAC) -classpath ../ Jep.java
