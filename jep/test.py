@@ -6,6 +6,9 @@ print "Hello world using Jep."
 import jep
 from jep import *
 
+## import os
+## raw_input('gdb --pid=%s' % os.getpid())
+
 #for i in (range(0, 10)):
 if(__name__ == '__main__'):
     i = 0
@@ -252,6 +255,9 @@ if(__name__ == '__main__'):
     print 'Integer =        ', Integer.toString()
     System = findClass('java/lang/System')
     System.out.println("regression test.")
+
+    #Integer.byteValue()
+    raise TypeError, 'test'
 
     print """
     ##################################################

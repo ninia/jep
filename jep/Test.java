@@ -43,12 +43,14 @@ public class Test implements Runnable {
                 jep.runScript("test.py");
             }
             catch(Throwable t) {
+                System.out.println("Java caught error:");
                 t.printStackTrace();
                 break;
             }
-            
-            System.out.println("**** close me");
-            jep.close();
+            finally {
+                System.out.println("**** close me");
+                jep.close();
+            }
         }
     }
 
