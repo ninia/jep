@@ -265,6 +265,7 @@ EXIT_ERROR:
 
 static void pyjobject_dealloc(PyJobject_Object *self) {
 #if USE_DEALLOC
+    printf("pyjobject dealloc\n");
     JNIEnv *env = self->env;
     if(env) {
         if(self->object)
@@ -595,6 +596,8 @@ static PyObject* pyjobject_getattr(PyJobject_Object *obj,
     
     if(pyjfield_check(ret))
         return pyjfield_get((PyJfield_Object *) ret);
+    if(pyjmethod_check(ret))
+        Py_INCREF(obj);
     
     return ret;
 }

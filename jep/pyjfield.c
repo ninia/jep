@@ -88,8 +88,6 @@ PyJfield_Object* pyjfield_new(JNIEnv *env,
     pyf->isStatic    = -1;
     pyf->init        = 0;
     
-    Py_INCREF(pyjobject);
-    
     // ------------------------------ get field name
     
     rfieldClass = (*env)->GetObjectClass(env, rfield);
@@ -256,8 +254,6 @@ static void pyjfield_dealloc(PyJfield_Object *self) {
     if(env) {
         if(self->rfield)
             (*env)->DeleteGlobalRef(env, self->rfield);
-        if(self->pyjobject)
-            Py_DECREF(self->pyjobject);
     }
     
     if(self->pyFieldName)

@@ -87,9 +87,6 @@ PyJmethod_Object* pyjmethod_new(JNIEnv *env,
     pym->isStatic      = -1;
     pym->returnTypeId  = -1;
     
-    // we reference it. make sure it doesn't go away.
-    Py_INCREF(pyjobject);
-    
     // ------------------------------ get method name
     
     rmethodClass = (*env)->GetObjectClass(env, rmethod);
@@ -363,6 +360,7 @@ EXIT_ERROR:
 
 static void pyjmethod_dealloc(PyJmethod_Object *self) {
 #if USE_DEALLOC
+    printf("pyjmethod dealloc\n");
     JNIEnv *env  = self->env;
     if(env) {
         if(self->parameters)
@@ -372,8 +370,6 @@ static void pyjmethod_dealloc(PyJmethod_Object *self) {
         
         if(self->pyMethodName)
             Py_DECREF(self->pyMethodName);
-        if(self->pyjobject)
-            Py_DECREF(self->pyjobject);
     }
     
     PyObject_Del(self);
@@ -394,6 +390,7 @@ int pyjmethod_check(PyObject *obj) {
 static PyObject* pyjmethod_call(PyJmethod_Object *self,
                                 PyObject *args,
                                 PyObject *keywords) {
+    PyObject *ret;
     
     if(!PyTuple_Check(args)) {
         PyErr_Format(PyExc_RuntimeError, "args is not a valid tuple");
@@ -405,7 +402,9 @@ static PyObject* pyjmethod_call(PyJmethod_Object *self,
         return NULL;
     }
     
-    return pyjobject_find_method(self->pyjobject, self->pyMethodName, args);
+    ret = pyjobject_find_method(self->pyjobject, self->pyMethodName, args);
+    Py_XDECREF(self->pyjobject);
+    return ret;
 }
 
 
