@@ -31,7 +31,7 @@
 #define _Included_util
 
 #ifndef JEPEXCEPTION
-#  define JEPEXCEPTION "com/trinitycapital/jep/JepException"
+#  define JEPEXCEPTION "jep/JepException"
 #endif
 
 
