@@ -1,7 +1,7 @@
 package jep;
 
 /**
- * Console.java
+ * Run.java
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,7 +25,7 @@ package jep;
 
 import java.io.*;
 
-public class Console {
+public class Run {
     
     /**
      * Describe <code>main</code> method here.
@@ -36,7 +36,7 @@ public class Console {
     public static void main(String args[]) throws Throwable {
         Jep jep = null;
         jep = new Jep();
-        jep.runScript("console.py");
+        jep.runScript(args[0]);
         
         // in case we're run with -Xrs
         System.exit(0);
@@ -44,10 +44,10 @@ public class Console {
     
     
     /**
-     * Creates a new <code>Console</code> instance.
+     * Creates a new <code>Run</code> instance.
      *
      */
-    public Console() {
-    } // Console constructor
+    public Run() {
+    } // Run constructor
     
-} // Console
+} // Run

@@ -51,8 +51,8 @@ Jep.class: Jep.java
 	$(JAVAC) -classpath ../ Jep.java
 	$(JAVAH) -o jep.h -classpath ../ jep.Jep
 
-Console.class: Console.java Jep.java
-	$(JAVAC) -classpath ../ Console.java
+Run.class: Run.java Jep.java
+	$(JAVAC) -classpath ../ Run.java
 
 BSFJepEngine.class: BSFJepEngine.java Jep.java
 	$(JAVAC) -classpath ../:./ext/bsf.jar BSFJepEngine.java
@@ -63,5 +63,5 @@ Test.class: Test.java
 JepException.class: JepException.java
 	$(JAVAC) -classpath ../ JepException.java
 
-jep.jar: Jep.class Test.class JepException.class Console.class
+jep.jar: Jep.class Test.class JepException.class Run.class
 	./makejar.sh jep/ jep.jar
