@@ -39,7 +39,7 @@
 {                                                   \
     jclass clazz = (*env)->FindClass(env,           \
                                      JEPEXCEPTION); \
-    if(clazz != NULL)                               \
+    if(clazz)                                       \
         (*env)->ThrowNew(env, clazz, msg);          \
 }
 
@@ -54,7 +54,7 @@
         goto EXIT_ERROR;                        \
     }                                           \
 }
-    
+
 
 #ifdef WIN32
 typedef __int64 jeplong;
