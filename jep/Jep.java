@@ -201,14 +201,14 @@ public final class Jep {
                     this.evalLines = new StringBuffer();
                 else
                     evalLines.append(LINE_SEP);
-                
                 evalLines.append(str);
             }
             
             return false;
         }
-        finally {
+        catch(JepException e) {
             this.evalLines = null;
+            throw new JepException(e);
         }
     }
 
