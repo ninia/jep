@@ -247,7 +247,9 @@ static int pyjobject_init(PyJobject_Object *pyjob) {
         }
         
         Py_DECREF(pyjfield);
+        (*env)->DeleteLocalRef(env, rfield);
     }
+    (*env)->DeleteLocalRef(env, fieldArray);
     
     // we've finished the object.
     pyjob->finishAttr = 1;
@@ -584,8 +586,11 @@ static PyObject* pyjobject_getattr(PyJobject_Object *obj,
         return NULL;
     }
     
-    if(pyjfield_check(ret))
-        return pyjfield_get((PyJfield_Object *) ret);
+    if(pyjfield_check(ret)) {
+        PyObject *t = pyjfield_get((PyJfield_Object *) ret);
+        Py_DECREF(ret);
+        return t;
+    }
     if(pyjmethod_check(ret))
         Py_INCREF(obj);
     
