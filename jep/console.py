@@ -1,6 +1,22 @@
 
+HISTFILE = '.jep'
+
+import traceback
+import jep
+from jep import *
+
 try:
     import readline
+
+    try:
+        import os
+        HISTFILE = '%s/.jep' % (os.environ['HOME'])
+        if(not os.access(HISTFILE, os.W_OK)):
+            os.open(HISTFILE, os.O_CREAT)
+        readline.read_history_file(HISTFILE)
+    except:
+        traceback.print_exc()
+        pass
 except:
     print """
     No readline available.
@@ -9,9 +25,6 @@ except:
 
     i.e.: export LD_PRELOAD=/usr/lib/libpython2.3.so.1.0 """
 
-import traceback
-import jep
-from jep import *
 
 PS1 = ">>> "
 PS2 = "... "
@@ -47,3 +60,5 @@ if(__name__ == '__main__'):
     print ''
     jep.close()
 
+    if('readline' in dir()):
+        readline.write_history_file(HISTFILE)
