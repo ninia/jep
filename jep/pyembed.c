@@ -44,6 +44,10 @@
 # include <unistd.h>
 #endif
 
+#if STDC_HEADERS
+# include <stdio.h>
+#endif
+
 #include "pyembed.h"
 #include "pyjobject.h"
 #include "pyjarray.h"
@@ -625,6 +629,10 @@ void pyembed_run(JNIEnv *env,
         Py_INCREF(globals);
 
         PyRun_File(script, file, Py_file_input, globals, locals);
+        
+        // c programs inside some java environments may get buffered output
+        fflush(stdout);
+        fflush(stderr);
         
         fclose(script);
         process_py_exception(env, 1);
