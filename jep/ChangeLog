@@ -5,6 +5,7 @@
 	* compiler fixes, project file for windows
 	* finally fixed bug 957106
 	* added BSFJepEngine
+	* added a simple windows installer
 	
 2004-05-21  0.8.1  Mike Johnson <mrjohnson0@users.sourceforge.net>
 	* fix obvious crash on the Mac.
