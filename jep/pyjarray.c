@@ -1082,6 +1082,7 @@ static PyObject* pyjarray_slice(PyJarray_Object *self, int ilow, int ihigh) {
             ar[i] = src[ilow++];
         
         ret = (PyObject *) pyarray;
+        break;
     }
         
     case JLONG_ID: {
@@ -1097,6 +1098,7 @@ static PyObject* pyjarray_slice(PyJarray_Object *self, int ilow, int ihigh) {
             ar[i] = src[ilow++];
         
         ret = (PyObject *) pyarray;
+        break;
     }
         
     case JBOOLEAN_ID: {
@@ -1127,6 +1129,7 @@ static PyObject* pyjarray_slice(PyJarray_Object *self, int ilow, int ihigh) {
             ar[i] = src[ilow++];
         
         ret = (PyObject *) pyarray;
+        break;
     }
         
     case JSHORT_ID: {
@@ -1157,6 +1160,7 @@ static PyObject* pyjarray_slice(PyJarray_Object *self, int ilow, int ihigh) {
             ar[i] = src[ilow++];
         
         ret = (PyObject *) pyarray;
+        break;
     }
 
     } // switch
