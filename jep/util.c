@@ -199,7 +199,8 @@ int process_py_exception(JNIEnv *env, int printTrace) {
             v = PyObject_Str(pvalue);
             if(PyString_Check(v)) {
                 PyObject *t;
-                t = PyString_FromFormat("%s",
+                t = PyString_FromFormat("%s: %s",
+                                        m,
                                         PyString_AsString(v));
                 
                 Py_DECREF(v);

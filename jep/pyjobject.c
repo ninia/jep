@@ -404,7 +404,7 @@ PyObject* find_method(JNIEnv *env,
     if(pos < 0) {
         // didn't find a method by that name....
         // that shouldn't happen unless the search above is broken.
-        PyErr_Format(PyExc_RuntimeError, "No such method.");
+        PyErr_Format(PyExc_NameError, "No such method.");
         goto EXIT_ERROR;
     }
     if(pos == 0) {
@@ -497,7 +497,7 @@ PyObject* find_method(JNIEnv *env,
 EXIT_ERROR:
     PyMem_Free(cand);
     if(!PyErr_Occurred())
-        PyErr_Format(PyExc_RuntimeError,
+        PyErr_Format(PyExc_NameError,
                      "Matching overloaded method not found.");
     return NULL;
 }
@@ -589,7 +589,7 @@ static PyObject* pyjobject_getattr(PyJobject_Object *obj,
     Py_DECREF(pyname);
     
     if(PyErr_Occurred() || ret == Py_None) {
-        PyErr_SetString(PyExc_RuntimeError, name);
+        PyErr_Format(PyExc_NameError, "Method not found %s", name);
         return NULL;
     }
     
