@@ -541,11 +541,10 @@ static int pyjarray_setitem(PyJarray_Object *self,
             return -1;
         }
         
-        jint *ar = (jint *) self->pinnedArray;
         if(PyInt_AS_LONG(newitem))
-            ar[pos] = JNI_TRUE;
+            ((jint *) self->pinnedArray)[pos] = JNI_TRUE;
         else
-            ar[pos] = JNI_FALSE;
+            ((jint *) self->pinnedArray)[pos] = JNI_FALSE;
         
         pyjarray_release_pinned(self, JNI_COMMIT);
         return 0; /* success */
