@@ -24,6 +24,7 @@ if(__name__ == '__main__'):
     print 'test long param: ', testl
     print 'double param:    ', testd
     print 'float param:     ', testf
+    print 'test null obj:   ', testn
 
     print """
     ##################################################
