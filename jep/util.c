@@ -209,25 +209,16 @@ int process_py_exception(JNIEnv *env, int printTrace) {
         }
     }
 
-    // disabled, caused a crash
-/*     if(printTrace) { */
-/*         PyErr_Restore(ptype, pvalue, ptrace); */
-/*         PyErr_Print(); */
-/*         PyErr_Clear(); */
-/*     } */
-/*     else { */
-        if(ptype)
-            Py_DECREF(ptype);
-        if(pvalue)
-            Py_DECREF(pvalue);
-        if(ptrace)
-            Py_DECREF(ptrace);
-/*     } */
+    if(ptype)
+        Py_DECREF(ptype);
+    if(pvalue)
+        Py_DECREF(pvalue);
+    if(ptrace)
+        Py_DECREF(ptrace);
     
-    clazz = (*env)->FindClass(env, JEPEXCEPTION);
-    if(clazz && message && PyString_Check(message)) {
+    if(PyString_Check(message)) {
         m = PyString_AsString(message);
-        (*env)->ThrowNew(env, clazz, m);
+        THROW_JEP(env, m);
     }
     
     return 1;
@@ -298,7 +289,7 @@ int process_java_exception(JNIEnv *env) {
     if((texc = pyembed_modjep_get(className)) != NULL)
         pyException = texc;
     else
-        printf("WARNING, didn't find mapped exception\n.");
+        printf("WARNING, didn't find mapped exception.\n");
 
     Py_DECREF(str);
     Py_DECREF(tmp);
