@@ -3,6 +3,7 @@
 	* Run.java: a class to run python scripts
 	* console.py: a python-based interactive console, with readline
 	* Jep.java: added constructor to append to sys.path
+	* Makefile: added javadoc support, javadoc included in CVS
 
 2004-06-17  0.9.1  Mike Johnson <mrjohnson0@users.sourceforge.net>
 	* util.c: check string before converting. fixes crash if you used
