@@ -880,7 +880,6 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
             return ret;
         }
         
-        // precision loss...
         ret.i = (jint) PyInt_AsLong(param);
         return ret;
     }
