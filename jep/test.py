@@ -6,6 +6,8 @@ print "Hello world using Jep."
 import jep
 from jep import *
 
+assert(0)
+
 #for i in (range(0, 10)):
 if(__name__ == '__main__'):
     i = 0
@@ -237,7 +239,7 @@ if(__name__ == '__main__'):
     # exceptions are *slow*... you wouldn't want to do much of this
     # in a real environment.
     try:
-        print '957106:          ', Integer(12).intValue()
+        print '12:              ', Integer(12).intValue()
         Integer.parseInt('asdf')
     except(jep.NumberFormatException):
         print 'parseInt:         caught NumberFormatException'
@@ -249,12 +251,7 @@ if(__name__ == '__main__'):
     except(jep.FileNotFoundException):
         print 'inputStream:      caught FileNotFoundException'
     
-    # broken
-    try:
-        print 'Integer = ', Integer.toString()
-    except:
-        print 'nope, still busted.'
-    
+    print 'Integer =        ', Integer.toString()
     System = findClass('java/lang/System')
     System.out.println("regression test.")
 
