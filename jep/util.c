@@ -1019,7 +1019,7 @@ PyObject* tuplelist_getitem(PyObject *list, PyObject *pyname) {
     
     listSize = PyList_GET_SIZE(list);
     for(i = 0; i < listSize; i++) {
-        PyObject *tuple = PyList_GetItem(list, i);   /* borrowed */
+        PyObject *tuple = PyList_GetItem(list, i);        /* borrowed */
         
         if(!tuple || !PyTuple_Check(tuple))
             continue;
