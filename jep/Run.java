@@ -30,7 +30,7 @@ import java.io.*;
 public class Run {
     
     private final static String USAGE =
-    "  Run.java [-i] [-x] file\n" +
+    "  Run.java [-i] [-x] file [script args]\n" +
     "-i    Run script interactively";
     
     
@@ -44,11 +44,15 @@ public class Run {
     public static void main(String args[]) throws Throwable {
         Jep jep = null;
         
-        boolean interactive = false;
-        String  file        = null;
-
+        boolean interactive  = false;
+        String  file         = null;
+        String  scriptArgs[] = new String[args.length];
+        int     argsi        = 0;
+        
         for(int i = 0; i < args.length; i++) {
-            if(args[i].equals("-i"))
+            if(file != null)
+                scriptArgs[argsi++] = args[i];
+            else if(args[i].equals("-i"))
                 interactive = true;
             else if(args[i].equals("-h")) {
                 System.out.println(USAGE);
@@ -59,12 +63,30 @@ public class Run {
                 System.out.println(USAGE);
                 System.exit(1);
             }
+            else if(!args[i].startsWith("-"))
+                file = args[i];
         }
         
-        file = args[args.length - 1];
-
+        if(file == null) {
+            System.out.println("Run: Invaid file, null");
+            System.out.println(USAGE);
+            System.exit(1);
+        }
+        
         try {
             jep = new Jep(false, ".");
+            
+            // setup argv
+            StringBuffer b = new StringBuffer("[");
+            // always the first arg
+            b.append("'" + file + "',");
+            // trailing comma is okay
+            for(int i = 0; i < argsi; i++)
+                b.append("'" + scriptArgs[i] + "',");
+            b.append("]");
+            
+            // "set" by eval'ing it
+            jep.eval("argv = " + b);
             jep.runScript(file);
         }
         catch(Throwable t) {
