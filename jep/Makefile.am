@@ -24,7 +24,7 @@ EXTRA_DIST=python.m4 \
 	pyjclass.h \
 	pyjfield.h \
 	Jep.java \
-	Console.java \
+	Run.java \
 	BSFJepEngine.java \
 	JepException.java \
 	Test.java \

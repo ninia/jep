@@ -101,7 +101,7 @@ METASOURCES = AUTO
 #  uncomment the following if jep requires the math library
 #jep_LDADD=-lm
 
-EXTRA_DIST = python.m4 	autogen.sh 	pyembed.h 	util.h 	pyjmethod.h 	pyjobject.h 	pyjclass.h 	pyjfield.h 	Jep.java 	Console.java 	BSFJepEngine.java 	JepException.java 	Test.java 	test.py 	jep.h 	makejar.sh 	jep.jar 	ext/bsf.jar 	windows/jep.dsp 	windows/setup.nsi
+EXTRA_DIST = python.m4 	autogen.sh 	pyembed.h 	util.h 	pyjmethod.h 	pyjobject.h 	pyjclass.h 	pyjfield.h 	Jep.java 	Run.java 	BSFJepEngine.java 	JepException.java 	Test.java 	test.py 	jep.h 	makejar.sh 	jep.jar 	ext/bsf.jar 	windows/jep.dsp 	windows/setup.nsi
 
 
 #  if you write a self-test script named `chk', uncomment the
