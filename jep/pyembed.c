@@ -253,7 +253,7 @@ static PyObject* pyembed_getthread_object(int pos) {
     }
     
     Py_DECREF(key);
-    return PyList_GetItem(tlist, pos);           /* borrowed */
+    return PyList_GetItem(tlist, pos);            /* borrowed */
 }
 
 
@@ -533,19 +533,6 @@ void pyembed_run(JNIEnv *env,
     // PyEval_SaveThread();
     PyThreadState_Swap(prevThread);
     PyEval_ReleaseLock();
-}
-
-
-// create a new object on the main interpreter so i can be
-// shared between threads/calls/sub-interpreters.
-// you should hold the interpreter lock before calling.
-PyThreadState* pyembed_mainthread_swap(void) {
-    return PyThreadState_Swap(mainThreadState);
-}
-
-
-PyThreadState* pyembed_swap_thread(PyThreadState *tstate) {
-    return PyThreadState_Swap(tstate);
 }
 
 

@@ -39,9 +39,6 @@ void pyembed_thread_close(const char*);
 void pyembed_close(void);
 void pyembed_run(JNIEnv*, const char*, char*, jobject);
 
-PyThreadState* pyembed_mainthread_swap(void);
-PyThreadState* pyembed_swap_thread(PyThreadState*);
-
 int pyembed_modjep_has(PyObject*);
 int pyembed_modjep_add(char*, PyObject*);
 PyObject* pyembed_modjep_get(PyObject*);
