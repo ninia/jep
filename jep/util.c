@@ -859,8 +859,7 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
         return ret;
     }
 
-    case JSHORT_ID:
-    case JINT_ID: {
+    case JSHORT_ID: {
         if(param == Py_None || !PyInt_Check(param)) {
             PyErr_Format(PyExc_ValueError,
                          "Expected int parameter at %i.",
@@ -870,6 +869,19 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
         
         // precision loss...
         ret.s = (jshort) PyInt_AsLong(param);
+        return ret;
+    }
+
+    case JINT_ID: {
+        if(param == Py_None || !PyInt_Check(param)) {
+            PyErr_Format(PyExc_ValueError,
+                         "Expected int parameter at %i.",
+                         pos + 1);
+            return ret;
+        }
+        
+        // precision loss...
+        ret.i = (jint) PyInt_AsLong(param);
         return ret;
     }
 
