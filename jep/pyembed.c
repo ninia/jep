@@ -51,8 +51,6 @@
 
 
 static PyThreadState *mainThreadState = NULL;
-
-static PyObject      *threadDict      = NULL;
 static PyObject      *modDict         = NULL;
 
 static PyObject* pyembed_findclass(PyObject*, PyObject*);
@@ -108,48 +106,17 @@ static PyObject* initjep(void) {
 }
 
 
-PyThreadState* get_threadstate(const char *hash) {
-    PyObject      *pyhash, *pylong;
-    PyThreadState *tstate = NULL;
-    
-    if(!hash)
-        return NULL;
-    
-    // need to syncronize this method
-    PyEval_AcquireLock();
-    
-    pyhash = PyString_FromString(hash);
-    pylong = PyDict_GetItem(threadDict, pyhash);
-    
-    if(!pylong || pylong == Py_None)
-        return NULL;
-    
-    Py_INCREF(pylong);
-    
-    if(PyLong_Check(pylong))
-        tstate = (PyThreadState *) PyLong_AsLong(pylong);
-    
-    Py_DECREF(pylong);
-    Py_DECREF(pyhash);
-    PyEval_ReleaseLock();
-    return tstate;
-}
-
-
-// you should *not* hold the global interpreter lock in python before
+// you should hold the global interpreter lock in python before
 // calling this function.
 // return new reference to modjep
-PyObject* get_modjep(const char *hash) {
+PyObject* get_modjep(jint tstate) {
     PyObject *pyhash, *modjep = NULL;
     
-    PyEval_AcquireLock();
-
-    pyhash = PyString_FromString(hash);
+    pyhash = PyLong_FromLong(tstate);
     modjep = PyDict_GetItem(modDict, pyhash);
 
     Py_INCREF(modjep);
     Py_DECREF(pyhash);
-    PyEval_ReleaseLock();
     return modjep;
 }
 
@@ -165,12 +132,10 @@ void pyembed_startup(void) {
     Py_Initialize();
     PyEval_InitThreads();
 
-    threadDict = PyDict_New();
-    modDict    = PyDict_New();
+    modDict = PyDict_New();
 
     // save a pointer to the main PyThreadState object
     mainThreadState = PyThreadState_Get();
-
     PyEval_ReleaseLock();
 }
 
@@ -183,9 +148,9 @@ void pyembed_shutdown(void) {
 }
 
 
-void pyembed_thread_init(JNIEnv *env, const char *hash) {
+jint pyembed_thread_init(JNIEnv *env) {
     PyThreadState *tstate;
-    PyObject      *pyhash, *pytstate, *modjep;
+    PyObject      *modjep;
 
     PyEval_AcquireLock();
     Py_NewInterpreter();
@@ -198,32 +163,25 @@ void pyembed_thread_init(JNIEnv *env, const char *hash) {
     if(!cache_primitive_classes(env))
         printf("WARNING: failed to get primitive class types.\n");
 
-    // store to dictionary with thread's hashcode
-    pytstate = PyLong_FromLong((long) tstate);
-    pyhash   = PyString_FromString(hash);
-    PyDict_SetItem(threadDict, pyhash, pytstate);
-    
     // init static module
     modjep = initjep();
     
     // keep modjep in dictionary, too
-    if(modjep)
+    if(modjep) {
+        PyObject *pyhash = PyLong_FromLong((long) tstate);
         PyDict_SetItem(modDict, pyhash, modjep);
+        Py_DECREF(pyhash);
+    }
     
-    Py_DECREF(pyhash);
-    Py_DECREF(pytstate);
     PyEval_SaveThread();
+    return (jint) tstate;
 }
 
 
-void pyembed_thread_close(const char *hash) {
+void pyembed_thread_close(jint tstate) {
     PyThreadState *prevThread, *thread;
-    PyObject      *pyhash;
 
-    thread = get_threadstate(hash);
-    if(thread == NULL)
-        return;
-
+    thread = (PyThreadState *) tstate;
     PyEval_AcquireLock();
     prevThread = PyThreadState_Swap(thread);
     
@@ -232,11 +190,6 @@ void pyembed_thread_close(const char *hash) {
     else
         printf("WARNING: didn't EndInterpreter, thread still has frame.\n");
     
-    pyhash = PyString_FromString(hash);
-    PyDict_DelItem(threadDict, pyhash);
-    PyDict_DelItem(modDict, pyhash);
-    Py_DECREF(pyhash);
-
     PyThreadState_Swap(prevThread);
     PyEval_ReleaseLock();
 }
@@ -456,7 +409,7 @@ static PyObject* pyembed_findclass(PyObject *self, PyObject *args) {
         if(!cl)                                                                 \
             PyErr_Warn(PyExc_Warning, "No classloader.");                       \
                                                                                 \
-        pyenv = (PyObject *) PyCObject_FromVoidPtr((void *) env, NULL);                  \
+        pyenv = (PyObject *) PyCObject_FromVoidPtr((void *) env, NULL);         \
         pycl  = (PyObject *) PyCObject_FromVoidPtr(cl, NULL);                   \
         key   = PyString_FromString(DICT_KEY);                                  \
         tlist = PyList_New(0);                                                  \
@@ -476,40 +429,36 @@ static PyObject* pyembed_findclass(PyObject *self, PyObject *args) {
 
 
 void pyembed_eval(JNIEnv *env,
-                  const char *hash,
+                  jint tstate,
                   char *str,
                   jobject classLoader) {
     PyThreadState *prevThread, *thread;
     PyObject      *modjep, *main, *dict, *result;
     
-    thread = get_threadstate(hash);
-    if(thread == NULL) {
-        PyErr_Clear();
-        THROW_JEP(env, "Couldn't get threadstate.");
-        return;
-    }
-    modjep = get_modjep(hash);
-    if(modjep == NULL) {
-        PyErr_Clear();
-        THROW_JEP(env, "Couldn't find modjep object.");
-        return;
-    }
-    if(str == NULL)
-        return;
-    
+    thread = (PyThreadState *) tstate;
+
     PyEval_AcquireLock();
     prevThread = PyThreadState_Swap(thread);
     
+    modjep = get_modjep(tstate);
+    if(modjep == NULL) {
+        PyErr_Clear();
+        THROW_JEP(env, "Couldn't find modjep object.");
+        goto EXIT;
+    }
+    if(str == NULL)
+        goto EXIT;
+
     // store thread information in thread's dictionary as a list.
     SET_TDICT(env, classLoader);
     
     if(process_py_exception(env, 1))
-        return;
+        goto EXIT;
     
     main = PyImport_AddModule("__main__");                      /* borrowed */
     if(main == NULL) {
         THROW_JEP(env, "Couldn't add module __main__.");
-        return;
+        goto EXIT;
     }
     
     dict = PyModule_GetDict(main);
@@ -519,31 +468,24 @@ void pyembed_eval(JNIEnv *env,
     
     process_py_exception(env, 1);
     Py_DECREF(dict);
+    
+    if(result != NULL)
+        Py_DECREF(result);
+
+EXIT:
     PyThreadState_Swap(prevThread);
     PyEval_ReleaseLock();
-    
-    if(result == NULL)
-        return;
-    if(result == Py_None) {
-        Py_DECREF(Py_None);
-        return;
-    }
 }
 
 
 jobject pyembed_getvalue(JNIEnv *env,
-                         const char *hash,
+                         jint tstate,
                          char *str) {
     PyThreadState *prevThread, *thread;
     PyObject      *main, *dict, *result;
     jobject        ret = NULL;
     
-    thread = get_threadstate(hash);
-    if(thread == NULL) {
-        PyErr_Clear();
-        THROW_JEP(env, "Couldn't get threadstate.");
-        return NULL;
-    }
+    thread = (PyThreadState *) tstate;
     if(str == NULL)
         return NULL;
     
@@ -595,36 +537,32 @@ jobject pyembed_getvalue(JNIEnv *env,
 
 
 void pyembed_run(JNIEnv *env,
-                 const char *hash,
+                 jint tstate,
                  char *file,
                  jobject classLoader) {
     PyThreadState *prevThread, *thread;
     PyObject      *modjep;
 
-    thread = get_threadstate(hash);
-    if(thread == NULL) {
-        PyErr_Clear();
-        THROW_JEP(env, "Couldn't get threadstate.");
-        return;
-    }
-    modjep = get_modjep(hash);
+    thread = (PyThreadState *) tstate;
+
+    PyEval_AcquireLock();
+    prevThread = PyThreadState_Swap(thread);
+
+    modjep = get_modjep(tstate);
     if(modjep == NULL) {
         PyErr_Clear();
         THROW_JEP(env, "Couldn't find modjep object.");
-        return;
+        goto EXIT;
     }
-    
-    PyEval_AcquireLock();
-    prevThread = PyThreadState_Swap(thread);
     
     // store thread information in thread's dictionary as a list.
     SET_TDICT(env, classLoader);
 
     if(file == NULL)
-        return;
+        goto EXIT;
 
     if(access(file, R_OK | F_OK) != 0)
-        return;
+        goto EXIT;
     else {
         PyObject *main, *locals, *globals;
         FILE *script = fopen(file, "r");
@@ -634,7 +572,7 @@ void pyembed_run(JNIEnv *env,
         main = PyImport_AddModule("__main__");    /* borrowed */
         if(main == NULL) {
             THROW_JEP(env, "Couldn't add module __main__.");
-            return;
+            goto EXIT;
         }
         
         globals = PyModule_GetDict(main);
@@ -649,6 +587,7 @@ void pyembed_run(JNIEnv *env,
         Py_DECREF(globals);
     }
 
+EXIT:
     PyThreadState_Swap(prevThread);
     PyEval_ReleaseLock();
 }
@@ -661,15 +600,12 @@ void pyembed_run(JNIEnv *env,
         THROW_JEP(env, "name is invalid.");             \
         return;                                         \
     }                                                   \
-    thread = get_threadstate(hash);                     \
-    if(thread == NULL) {                                \
-        PyErr_Clear();                                  \
+    thread = (PyThreadState *) tstate;                  \
                                                         \
-        THROW_JEP(env, "Couldn't get threadstate.");    \
-        return;                                         \
-    }                                                   \
+    PyEval_AcquireLock();                               \
+    prevThread = PyThreadState_Swap(thread);            \
                                                         \
-    modjep = get_modjep(hash);                          \
+    modjep = get_modjep(tstate);                        \
     if(modjep == NULL) {                                \
         PyErr_Clear();                                  \
                                                         \
@@ -679,7 +615,7 @@ void pyembed_run(JNIEnv *env,
 
 
 void pyembed_setparameter_object(JNIEnv *env,
-                                 const char *hash,
+                                 jint tstate,
                                  const char *name,
                                  jobject value) {
     PyObject      *pyjob, *modjep = NULL;
@@ -688,9 +624,6 @@ void pyembed_setparameter_object(JNIEnv *env,
     // sets thread, modjep
     GET_COMMON;
     
-    PyEval_AcquireLock();
-    prevThread = PyThreadState_Swap(thread);
-
     if(value == NULL) {
         Py_INCREF(Py_None);
         pyjob = Py_None;
@@ -708,7 +641,7 @@ void pyembed_setparameter_object(JNIEnv *env,
 
 
 void pyembed_setparameter_string(JNIEnv *env,
-                                 const char *hash,
+                                 jint tstate,
                                  const char *name,
                                  const char *value) {
     PyObject      *pyvalue, *modjep = NULL;
@@ -717,9 +650,6 @@ void pyembed_setparameter_string(JNIEnv *env,
     // sets thread, modjep
     GET_COMMON;
     
-    PyEval_AcquireLock();
-    prevThread = PyThreadState_Swap(thread);
-
     if(value == NULL) {
         Py_INCREF(Py_None);
         pyvalue = Py_None;
@@ -736,7 +666,7 @@ void pyembed_setparameter_string(JNIEnv *env,
 
 
 void pyembed_setparameter_int(JNIEnv *env,
-                              const char *hash,
+                              jint tstate,
                               const char *name,
                               int value) {
     PyObject      *pyvalue, *modjep = NULL;
@@ -745,9 +675,6 @@ void pyembed_setparameter_int(JNIEnv *env,
     // sets thread, modjep
     GET_COMMON;
     
-    PyEval_AcquireLock();
-    prevThread = PyThreadState_Swap(thread);
-
     if((pyvalue = Py_BuildValue("i", value)) == NULL) {
         PyErr_SetString(PyExc_MemoryError, "Out of memory.");
         return;
@@ -762,7 +689,7 @@ void pyembed_setparameter_int(JNIEnv *env,
 
 
 void pyembed_setparameter_long(JNIEnv *env,
-                               const char *hash,
+                               jint tstate,
                                const char *name,
                                jeplong value) {
     PyObject      *pyvalue, *modjep = NULL;
@@ -771,9 +698,6 @@ void pyembed_setparameter_long(JNIEnv *env,
     // sets thread, modjep
     GET_COMMON;
     
-    PyEval_AcquireLock();
-    prevThread = PyThreadState_Swap(thread);
-
     if((pyvalue = PyLong_FromLongLong(value)) == NULL) {
         PyErr_SetString(PyExc_MemoryError, "Out of memory.");
         return;
@@ -788,7 +712,7 @@ void pyembed_setparameter_long(JNIEnv *env,
 
 
 void pyembed_setparameter_double(JNIEnv *env,
-                                 const char *hash,
+                                 jint tstate,
                                  const char *name,
                                  double value) {
     PyObject      *pyvalue, *modjep = NULL;
@@ -797,9 +721,6 @@ void pyembed_setparameter_double(JNIEnv *env,
     // sets thread, modjep
     GET_COMMON;
     
-    PyEval_AcquireLock();
-    prevThread = PyThreadState_Swap(thread);
-
     if((pyvalue = PyFloat_FromDouble(value)) == NULL) {
         PyErr_SetString(PyExc_MemoryError, "Out of memory.");
         return;
@@ -814,7 +735,7 @@ void pyembed_setparameter_double(JNIEnv *env,
 
 
 void pyembed_setparameter_float(JNIEnv *env,
-                                const char *hash,
+                                jint tstate,
                                 const char *name,
                                 float value) {
     PyObject      *pyvalue, *modjep = NULL;
@@ -823,9 +744,6 @@ void pyembed_setparameter_float(JNIEnv *env,
     // sets thread, modjep
     GET_COMMON;
     
-    PyEval_AcquireLock();
-    prevThread = PyThreadState_Swap(thread);
-
     if((pyvalue = PyFloat_FromDouble((double) value)) == NULL) {
         PyErr_SetString(PyExc_MemoryError, "Out of memory.");
         return;

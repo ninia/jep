@@ -55,17 +55,11 @@ JNI_OnUnload(JavaVM *vm, void *reserved) {
 /*
  * Class:     jep_Jep
  * Method:    init
- * Signature: (Ljava/lang/String;)V
+ * Signature: ()J
  */
-JNIEXPORT void JNICALL Java_jep_Jep_init
-(JNIEnv *env, jobject obj, jstring _hash) {
-    const char *hash;
-    
-    hash = jstring2char(env, _hash);
-
-    pyembed_thread_init(env, hash);
-
-    release_utf_char(env, _hash, hash);
+JNIEXPORT jint JNICALL Java_jep_Jep_init
+(JNIEnv *env, jclass clazz) {
+    return pyembed_thread_init(env);
 }
 
 
@@ -75,16 +69,14 @@ JNIEXPORT void JNICALL Java_jep_Jep_init
  * Signature: (Ljava/lang/String;Ljava/lang/ClassLoader;Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_run
-(JNIEnv *env, jobject obj, jstring _hash, jobject cl, jstring str) {
-    const char *filename, *hash;
+(JNIEnv *env, jobject obj, jint tstate, jobject cl, jstring str) {
+    const char *filename;
 
     filename = jstring2char(env, str);
-    hash     = jstring2char(env, _hash);
 
-    pyembed_run(env, hash, (char *) filename, cl);
+    pyembed_run(env, tstate, (char *) filename, cl);
 
     release_utf_char(env, str, filename);
-    release_utf_char(env, _hash, hash);
 }
 
 
@@ -94,16 +86,14 @@ JNIEXPORT void JNICALL Java_jep_Jep_run
  * Signature: (Ljava/lang/String;Ljava/lang/ClassLoader;Ljava/lang/String;)Ljava/lang/Object;
  */
 JNIEXPORT void JNICALL Java_jep_Jep_eval
-(JNIEnv *env, jobject obj, jstring _hash, jobject cl, jstring jstr) {
-    const char *str, *hash;
+(JNIEnv *env, jobject obj, jint tstate, jobject cl, jstring jstr) {
+    const char *str;
 
     str = jstring2char(env, jstr);
-    hash     = jstring2char(env, _hash);
 
-    pyembed_eval(env, hash, (char *) str, cl);
+    pyembed_eval(env, tstate, (char *) str, cl);
 
     release_utf_char(env, jstr, str);
-    release_utf_char(env, _hash, hash);
 }
 
 
@@ -113,17 +103,15 @@ JNIEXPORT void JNICALL Java_jep_Jep_eval
  * Signature: (Ljava/lang/String;Ljava/lang/ClassLoader;Ljava/lang/String;)Ljava/lang/Object;
  */
 JNIEXPORT jobject JNICALL Java_jep_Jep_getValue
-(JNIEnv *env, jobject obj, jstring _hash, jobject cl, jstring jstr) {
-    const char *str, *hash;
+(JNIEnv *env, jobject obj, jint tstate, jobject cl, jstring jstr) {
+    const char *str;
     jobject ret;
 
     str = jstring2char(env, jstr);
-    hash     = jstring2char(env, _hash);
 
-    ret = pyembed_getvalue(env, hash, (char *) str);
+    ret = pyembed_getvalue(env, tstate, (char *) str);
 
     release_utf_char(env, jstr, str);
-    release_utf_char(env, _hash, hash);
     return ret;
 }
 
@@ -134,10 +122,8 @@ JNIEXPORT jobject JNICALL Java_jep_Jep_getValue
  * Signature: (Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_close
-(JNIEnv *env, jobject obj, jstring _hash) {
-    const char *hash = jstring2char(env, _hash);
-    pyembed_thread_close(hash);
-    release_utf_char(env, _hash, hash);
+(JNIEnv *env, jobject obj, jint tstate) {
+    pyembed_thread_close(tstate);
 }
 
 
@@ -146,114 +132,100 @@ JNIEXPORT void JNICALL Java_jep_Jep_close
 /*
  * Class:     jep_Jep
  * Method:    set
- * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;)V
+ * Signature: (ILjava/lang/String;Ljava/lang/Object;)V
  */
-JNIEXPORT void JNICALL Java_jep_Jep_set__Ljava_lang_String_2Ljava_lang_String_2Ljava_lang_Object_2
-(JNIEnv *env, jobject obj, jstring _hash, jstring jname, jobject jval) {
-    const char *name, *hash;
+JNIEXPORT void JNICALL Java_jep_Jep_set__ILjava_lang_String_2Ljava_lang_Object_2
+(JNIEnv *env, jobject obj, jint tstate, jstring jname, jobject jval) {
+    const char *name;
     name = jstring2char(env, jname);
-    hash = jstring2char(env, _hash);
 
-    pyembed_setparameter_object(env, hash, name, jval);
+    pyembed_setparameter_object(env, tstate, name, jval);
 
     release_utf_char(env, jname, name);
-    release_utf_char(env, _hash, hash);
-    return;
 }
 
 
 /*
  * Class:     jep_Jep
  * Method:    set
- * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+ * Signature: (ILjava/lang/String;Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_jep_Jep_set__Ljava_lang_String_2Ljava_lang_String_2Ljava_lang_String_2
-(JNIEnv *env, jobject boj, jstring _hash, jstring jname, jstring jval) {
-    const char *name, *value, *hash;
+JNIEXPORT void JNICALL Java_jep_Jep_set__ILjava_lang_String_2Ljava_lang_String_2
+(JNIEnv *env, jobject obj, jint tstate, jstring jname, jstring jval) {
+    const char *name, *value;
 
     name  = jstring2char(env, jname);
     value = jstring2char(env, jval);
-    hash  = jstring2char(env, _hash);
 
-    pyembed_setparameter_string(env, hash, name, value);
+    pyembed_setparameter_string(env, tstate, name, value);
 
     release_utf_char(env, jname, name);
     release_utf_char(env, jval, value);
-    release_utf_char(env, _hash, hash);
 }
 
 
 /*
  * Class:     jep_Jep
  * Method:    set
- * Signature: (Ljava/lang/String;Ljava/lang/String;I)V
+ * Signature: (ILjava/lang/String;I)V
  */
-JNIEXPORT void JNICALL Java_jep_Jep_set__Ljava_lang_String_2Ljava_lang_String_2I
-(JNIEnv *env, jobject obj, jstring _hash, jstring jname, jint jval) {
-    const char *name, *hash;
+JNIEXPORT void JNICALL Java_jep_Jep_set__ILjava_lang_String_2I
+(JNIEnv *env, jobject obj, jint tstate, jstring jname, jint jval) {
+    const char *name;
     
     name = jstring2char(env, jname);
-    hash = jstring2char(env, _hash);
 
-    pyembed_setparameter_int(env, hash, name, (int) jval);
+    pyembed_setparameter_int(env, tstate, name, (int) jval);
 
     release_utf_char(env, jname, name);
-    release_utf_char(env, _hash, hash);
 }
 
 
 /*
  * Class:     jep_Jep
  * Method:    set
- * Signature: (Ljava/lang/String;Ljava/lang/String;J)V
+ * Signature: (ILjava/lang/String;J)V
  */
-JNIEXPORT void JNICALL Java_jep_Jep_set__Ljava_lang_String_2Ljava_lang_String_2J
-(JNIEnv *env, jobject obj, jstring _hash, jstring jname, jlong jval) {
-    const char *name, *hash;
+JNIEXPORT void JNICALL Java_jep_Jep_set__ILjava_lang_String_2J
+(JNIEnv *env, jobject obj, jint tstate, jstring jname, jlong jval) {
+    const char *name;
     
     name = jstring2char(env, jname);
-    hash = jstring2char(env, _hash);
     
-    pyembed_setparameter_long(env, hash, name, (jeplong) jval);
+    pyembed_setparameter_long(env, tstate, name, (jeplong) jval);
 
     release_utf_char(env, jname, name);
-    release_utf_char(env, _hash, hash);
 }
 
 
 /*
  * Class:     jep_Jep
  * Method:    set
- * Signature: (Ljava/lang/String;Ljava/lang/String;D)V
+ * Signature: (ILjava/lang/String;D)V
  */
-JNIEXPORT void JNICALL Java_jep_Jep_set__Ljava_lang_String_2Ljava_lang_String_2D
-(JNIEnv *env, jobject obj, jstring _hash, jstring jname, jdouble jval) {
-    const char *name, *hash;
+JNIEXPORT void JNICALL Java_jep_Jep_set__ILjava_lang_String_2D
+(JNIEnv *env, jobject obj, jint tstate, jstring jname, jdouble jval) {
+    const char *name;
     
     name = jstring2char(env, jname);
-    hash = jstring2char(env, _hash);
     
-    pyembed_setparameter_double(env, hash, name, (double) jval);
+    pyembed_setparameter_double(env, tstate, name, (double) jval);
     
     release_utf_char(env, jname, name);
-    release_utf_char(env, _hash, hash);
 }
 
 
 /*
  * Class:     jep_Jep
  * Method:    set
- * Signature: (Ljava/lang/String;Ljava/lang/String;F)V
+ * Signature: (ILjava/lang/String;F)V
  */
-JNIEXPORT void JNICALL Java_jep_Jep_set__Ljava_lang_String_2Ljava_lang_String_2F
-(JNIEnv *env, jobject obj, jstring _hash, jstring jname, jfloat jval) {
-    const char *name, *hash;
+JNIEXPORT void JNICALL Java_jep_Jep_set__ILjava_lang_String_2F
+(JNIEnv *env, jobject obj, jint tstate, jstring jname, jfloat jval) {
+    const char *name;
     
     name = jstring2char(env, jname);
-    hash = jstring2char(env, _hash);
     
-    pyembed_setparameter_float(env, hash, name, (float) jval);
-    
+    pyembed_setparameter_float(env, tstate, name, (float) jval);
     release_utf_char(env, jname, name);
-    release_utf_char(env, _hash, hash);
 }

@@ -30,15 +30,15 @@ import java.io.File;
  */
 public final class Jep {
     
-    private String hash = null;
+    private int tstate = -1;
     
     // used by default if not passed/set by caller
     private ClassLoader classLoader = null;
     
     // eval() storage.
-    private StringBuffer evalLines = null;
+    private StringBuffer evalLines   = null;
+    private boolean      interactive = false;
     
-    private boolean interactive = false;
     
     /**
      * Creates a new <code>Jep</code> instance.
@@ -47,9 +47,8 @@ public final class Jep {
      */
     public Jep() throws JepException {
         super();
-        this.hash = String.valueOf(this.hashCode());
         this.classLoader = this.getClass().getClassLoader();
-        init(hash);
+        this.tstate = init();
     }
 
     
@@ -61,10 +60,9 @@ public final class Jep {
      */
     public Jep(boolean interactive) throws JepException {
         super();
-        this.hash = String.valueOf(this.hashCode());
         this.classLoader = this.getClass().getClassLoader();
         this.interactive = interactive;
-        init(hash);
+        this.tstate = init();
     }
     
     
@@ -77,10 +75,9 @@ public final class Jep {
      */
     public Jep(boolean interactive, String includePath) throws JepException {
         super();
-        this.hash = String.valueOf(this.hashCode());
         this.classLoader = this.getClass().getClassLoader();
         this.interactive = interactive;
-        init(hash);
+        this.tstate = init();
         
         // why write C code if you don't have to? :-)
         if(includePath != null) {
@@ -96,7 +93,7 @@ public final class Jep {
     }
 
 
-    private static synchronized native void init(String hash) throws JepException;
+    private static synchronized native int init() throws JepException;
 
 
     /**
@@ -128,11 +125,11 @@ public final class Jep {
         if(cl == null)
             cl = this.classLoader;
         
-        run(this.hash, cl, script);
+        run(this.tstate, cl, script);
     }
     
 
-    private native void run(String hash,
+    private native void run(int tstate,
                             ClassLoader cl,
                             String script) throws JepException;
     
@@ -180,7 +177,7 @@ public final class Jep {
         
             // may need to run previous lines
             if(this.evalLines != null) {
-                eval(this.hash,
+                eval(this.tstate,
                      this.classLoader,
                      this.evalLines.toString());
                 this.evalLines = null;
@@ -190,7 +187,7 @@ public final class Jep {
             }
         
             if(str != null) {
-                eval(this.hash, this.classLoader, str);
+                eval(this.tstate, this.classLoader, str);
                 return true;
             }
         }
@@ -203,7 +200,7 @@ public final class Jep {
     }
 
     
-    private native void eval(String hash,
+    private native void eval(int tstate,
                              ClassLoader cl,
                              String str) throws JepException;
 
@@ -217,11 +214,11 @@ public final class Jep {
      * @exception JepException if an error occurs
      */
     public Object getValue(String str) throws JepException {
-        return getValue(this.hash, this.classLoader, str);
+        return getValue(this.tstate, this.classLoader, str);
     }
 
     
-    private native Object getValue(String hash,
+    private native Object getValue(int tstate,
                                    ClassLoader cl,
                                    String str) throws JepException;
     
@@ -248,10 +245,10 @@ public final class Jep {
      */
     public void set(String name, Object v)
         throws JepException {
-        set(hash, name, v);
+        set(tstate, name, v);
     }
 
-    private native void set(String hash, String name, Object v)
+    private native void set(int tstate, String name, Object v)
         throws JepException;
 
 
@@ -264,10 +261,10 @@ public final class Jep {
      */
     public void set(String name, String v)
         throws JepException {
-        set(hash, name, v);
+        set(tstate, name, v);
     }
 
-    private native void set(String hash, String name, String v)
+    private native void set(int tstate, String name, String v)
         throws JepException;
 
 
@@ -284,9 +281,9 @@ public final class Jep {
 
         // there's essentially no difference between int and bool...
         if(v)
-            set(hash, name, 1);
+            set(tstate, name, 1);
         else
-            set(hash, name, 0);
+            set(tstate, name, 0);
     }
 
 
@@ -299,7 +296,7 @@ public final class Jep {
      */
     public void set(String name, int v)
         throws JepException {
-        set(hash, name, v);
+        set(tstate, name, v);
     }
     
     /**
@@ -311,10 +308,10 @@ public final class Jep {
      */
     public void set(String name, short v)
         throws JepException {
-        set(hash, name, (int) v);
+        set(tstate, name, (int) v);
     }
     
-    private native void set(String hash, String name, int v)
+    private native void set(int tstate, String name, int v)
         throws JepException;
 
     
@@ -325,9 +322,9 @@ public final class Jep {
      * @param v a <code>char[]</code> value
      * @exception JepException if an error occurs
      */
-    private void set(String hash, String name, char[] v)
+    private void set(int tstate, String name, char[] v)
         throws JepException {
-        set(hash, name, new String(v));
+        set(tstate, name, new String(v));
     }
 
     
@@ -340,10 +337,10 @@ public final class Jep {
      */
     public void set(String name, long v)
         throws JepException {
-        set(hash, name, v);
+        set(tstate, name, v);
     }
     
-    private native void set(String hash, String name, long v)
+    private native void set(int tstate, String name, long v)
         throws JepException;
     
     
@@ -356,10 +353,10 @@ public final class Jep {
      */
     public void set(String name, double v)
         throws JepException {
-        set(hash, name, v);
+        set(tstate, name, v);
     }
     
-    private native void set(String hash, String name, double v)
+    private native void set(int tstate, String name, double v)
         throws JepException;
 
 
@@ -372,10 +369,10 @@ public final class Jep {
      */
     public void set(String name, float v)
         throws JepException {
-        set(hash, name, v);
+        set(tstate, name, v);
     }
     
-    private native void set(String hash, String name, float v)
+    private native void set(int tstate, String name, float v)
         throws JepException;
 
     // -------------------------------------------------- close me
@@ -385,14 +382,14 @@ public final class Jep {
      *
      */
     public void close() {
-        if(this.hash == null)
+        if(this.tstate == -1)
             return;
         
-        this.close(hash);
-        this.hash = null;
+        this.close(tstate);
+        this.tstate = -1;
     }
 
-    private native void close(String hash);
+    private native void close(int tstate);
     
     
     /**
