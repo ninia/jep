@@ -789,7 +789,7 @@ static PyObject* pyjarray_item(PyJarray_Object *self, int pos) {
         break;
         
     default:
-        PyErr_Format(PyExc_RuntimeError, "Unknown type %i.",
+        PyErr_Format(PyExc_TypeError, "Unknown type %i.",
                      self->componentType);
     }
 
