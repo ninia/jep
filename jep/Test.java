@@ -115,6 +115,37 @@ public class Test implements Runnable {
         return ret;
     }
 
+    public String[] getStringArray() {
+        return new String[] { "one", "two" };
+    }
+
+    public String[][] getStringStringArray() {
+        return new String[][] {
+            new String[] { "one", "two" },
+            new String[] { "one", "two" }
+        };
+    }
+
+    public int[] getIntArray() {
+        return new int[] { 1, 2 };
+    }
+
+    public boolean[] getBooleanArray() {
+        return new boolean[] { false, true };
+    }
+
+    public short[] getShortArray() {
+        return new short[] { 123, 123 };
+    }
+
+    public float[] getFloatArray() {
+        return new float[] { 123.123F, 123.123F };
+    }
+
+    public Test[] getObjectArray() {
+        return new Test[] { new Test(), new Test() };
+    }
+
     public void sendMeSomeStuff(String v, ArrayList a) {
         System.out.println("got some stuff:   v = " + v + " and a = " + a);
     }

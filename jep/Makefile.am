@@ -8,7 +8,8 @@ libjep_la_SOURCES = jep.c jep.1 system.h aclocal.m4 \
 	pyjmethod.c \
 	pyjobject.c \
 	pyjclass.c \
-	pyjfield.c
+	pyjfield.c \
+	pyjarray.c
 
 METASOURCES = AUTO
 

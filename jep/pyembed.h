@@ -19,16 +19,32 @@
    Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  
 */ 	
 
+#ifndef _Included_pyembed
+#define _Included_pyembed
 
 // shut up the compiler
 #ifdef _POSIX_C_SOURCE
-#  undef _POSIX_C_SOURCE
+# undef _POSIX_C_SOURCE
 #endif
 #include <jni.h>
-#include <Python.h>
 
-#ifndef _Included_pyembed
-#define _Included_pyembed
+// shut up the compiler
+#ifdef _POSIX_C_SOURCE
+# undef _POSIX_C_SOURCE
+#endif
+#ifdef _FILE_OFFSET_BITS
+# undef _FILE_OFFSET_BITS
+#endif
+#include "Python.h"
+
+#include "util.h"
+
+#define DICT_KEY "jep"
+
+// positions in thread dictionary, list value
+#define LIST_MOD_JEP 0
+#define LIST_ENV     1
+#define LIST_CL      2
 
 void pyembed_startup(void);
 void pyembed_shutdown(void);
@@ -44,6 +60,7 @@ jobject pyembed_getvalue(JNIEnv*, const char*, char*);
 int pyembed_modjep_has(PyObject*);
 int pyembed_modjep_add(char*, PyObject*);
 PyObject* pyembed_modjep_get(PyObject*);
+PyObject* pyembed_getthread_object(int);
 
 // -------------------------------------------------- set() methods
 

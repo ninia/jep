@@ -44,22 +44,9 @@
 # include <unistd.h>
 #endif
 
-// shut up the compiler
-#ifdef _POSIX_C_SOURCE
-# undef _POSIX_C_SOURCE
-#endif
-#include <jni.h>
-
-// shut up the compiler
-#ifdef _POSIX_C_SOURCE
-# undef _POSIX_C_SOURCE
-#endif
-#ifdef _FILE_OFFSET_BITS
-# undef _FILE_OFFSET_BITS
-#endif
-#include "Python.h"
-
+#include "pyembed.h"
 #include "pyjobject.h"
+#include "pyjarray.h"
 #include "util.h"
 
 
@@ -67,12 +54,6 @@ static PyThreadState *mainThreadState = NULL;
 
 static PyObject      *threadDict      = NULL;
 static PyObject      *modDict         = NULL;
-
-static const char *DICT_KEY = "jep";
-// positions in thread dictionary, list value
-static const LIST_MOD_JEP = 0;
-static const LIST_ENV     = 1;
-static const LIST_CL      = 2;
 
 static PyObject* pyembed_findclass(PyObject*, PyObject*);
 static PyObject* pyembed_forname(PyObject*, PyObject*);
@@ -84,15 +65,47 @@ static struct PyMethodDef jep_methods[] = {
     { "findClass",
       pyembed_findclass,
       METH_VARARGS,
-      "Find and instantiate a system class, faster than forName." },
+      "Find and instantiate a system class, somewhat faster than forName." },
     
     { "forName",
       pyembed_forname,
       METH_VARARGS,
       "Find and return a jclass object using the supplied ClassLoader." },
+
+    { "jarray",
+      pyjarray_new_v,
+      METH_VARARGS,
+      "Create a new primitive array in Java." },
     
     { NULL, NULL }
 };
+
+
+static PyObject* initjep(void) {
+    PyObject *modjep;
+    
+    PyImport_AddModule("jep");
+    Py_InitModule((char *) "jep", jep_methods);
+    modjep = PyImport_ImportModule("jep");
+    if(modjep == NULL)
+        printf("WARNING: couldn't import module jep.\n");
+    else {
+#ifdef VERSION
+        PyModule_AddStringConstant(modjep, "VERSION", VERSION);
+#endif
+        
+        // stuff for making new pyjarray objects
+        PyModule_AddIntConstant(modjep, "JBOOLEAN_ID", JBOOLEAN_ID);
+        PyModule_AddIntConstant(modjep, "JINT_ID", JINT_ID);
+        PyModule_AddIntConstant(modjep, "JLONG_ID", JLONG_ID);
+        PyModule_AddIntConstant(modjep, "JSTRING_ID", JSTRING_ID);
+        PyModule_AddIntConstant(modjep, "JDOUBLE_ID", JDOUBLE_ID);
+        PyModule_AddIntConstant(modjep, "JSHORT_ID", JSHORT_ID);
+        PyModule_AddIntConstant(modjep, "JFLOAT_ID", JFLOAT_ID);
+    }
+
+    return modjep;
+}
 
 
 PyThreadState* get_threadstate(const char *hash) {
@@ -189,14 +202,12 @@ void pyembed_thread_init(JNIEnv *env, const char *hash) {
     pytstate = PyLong_FromLong((long) tstate);
     pyhash   = PyString_FromString(hash);
     PyDict_SetItem(threadDict, pyhash, pytstate);
-
+    
+    // init static module
+    modjep = initjep();
+    
     // keep modjep in dictionary, too
-    PyImport_AddModule("jep");
-    Py_InitModule((char *) "jep", jep_methods);
-    modjep = PyImport_ImportModule("jep");
-    if(modjep == NULL)
-        printf("WARNING: couldn't import module jep.\n");
-    else
+    if(modjep)
         PyDict_SetItem(modDict, pyhash, modjep);
     
     Py_DECREF(pyhash);
@@ -233,7 +244,7 @@ void pyembed_thread_close(const char *hash) {
 
 // get object from thread's dictionary. NULL and exception on error.
 // returns borrowed reference.
-static PyObject* pyembed_getthread_object(int pos) {
+PyObject* pyembed_getthread_object(int pos) {
     PyObject  *tdict, *tlist, *key;
     tdict = tlist = key = NULL;
     

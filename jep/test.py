@@ -83,6 +83,8 @@ if(__name__ == '__main__'):
     String = findClass('java.lang.String')
     s = String('tested new string')
     print 'make jstring:    ', s
+    #s2 = String(s.getBytes())
+    #print 'another string:  ', s2
 
     Long = findClass('java.lang.Long')
     l = Long(123123123123123)
@@ -224,5 +226,41 @@ if(__name__ == '__main__'):
     
     System = findClass('java/lang/System')
     System.out.println("regression test.")
+
+    print """
+    ##################################################
+    # array handling
+    ##################################################
+    """
+    
+    # array handling
+    ar = testo.getStringArray()
+    print 'string[] len:    ', len(ar)
+    print '[0], [1], [2]:   ', ar[0], ar[1], ar[2]
+    ar[0] = "new"
+    ar[1] = None
+    print '[0], [1]:        ', ar[0], ar[1]
+
+    ar = testo.getStringStringArray()
+    print 'string[][]:      ', len(ar)
+    print '[0], [0][1]:     ', ar[0], ar[0][1]
+
+    ar = testo.getObjectArray()
+    print 'object array:    ', len(ar)
+    print '[0], [1]:        ', ar[0], ar[1]
+    ar[1] = None
+    print '[0], [1]:        ', ar[0], ar[1]
+    
+    ar = testo.getIntArray()
+    print 'int array[0]:    ', ar[0]
+
+    ar = testo.getBooleanArray()
+    print 'bool array[1]:   ', ar[1]
+
+    ar = testo.getShortArray()
+    print 'short [1]:       ', ar[1]
+
+    ar = testo.getFloatArray()
+    print 'float[0]:        ', ar[0]
 
     print 'python loop %i finished.' % (i)

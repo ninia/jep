@@ -70,6 +70,7 @@ jclass JFLOAT_TYPE   = NULL;
 // cached methodids
 jmethodID objectToString     = 0;
 jmethodID objectEquals       = 0;
+jmethodID objectIsArray      = 0;
 
 
 // call toString() on jobject, make a python string and return
@@ -606,9 +607,10 @@ void unref_cache_primitive_classes(JNIEnv *env) {
 // doesn't process errors!
 int get_jtype(JNIEnv *env, jobject obj, jclass clazz) {
     jboolean equals = JNI_FALSE;
+    jboolean array  = JNI_FALSE;
 
     // have to find the equals() method.
-    if(objectEquals == 0) {
+    if(objectEquals == 0 || objectIsArray == 0) {
         jobject super = NULL;
 
         super = (*env)->GetSuperclass(env, clazz);
@@ -623,6 +625,13 @@ int get_jtype(JNIEnv *env, jobject obj, jclass clazz) {
                                            "(Ljava/lang/Object;)Z");
         (*env)->DeleteLocalRef(env, super);
         if((*env)->ExceptionCheck(env) || !objectEquals)
+            return -1;
+
+        objectIsArray = (*env)->GetMethodID(env,
+                                            clazz,
+                                            "isArray",
+                                            "()Z");
+        if((*env)->ExceptionCheck(env) || !objectIsArray)
             return -1;
     }
 
@@ -683,6 +692,15 @@ int get_jtype(JNIEnv *env, jobject obj, jclass clazz) {
         return JVOID_ID;
     
     // object
+    
+    // check if it's an array first
+    array = (*env)->CallBooleanMethod(env, obj, objectIsArray);
+    if((*env)->ExceptionCheck(env))
+        return -1;
+    
+    if(array)
+        return JARRAY_ID;
+    
     if((*env)->IsAssignableFrom(env, clazz, JOBJECT_TYPE))
         return JOBJECT_ID;
     

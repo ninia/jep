@@ -50,6 +50,7 @@
 #include "pyjmethod.h"
 #include "util.h"
 #include "pyembed.h"
+#include "pyjarray.h"
 
 extern PyTypeObject PyJmethod_Type;
 extern PyMethodDef  pyjmethod_methods[];
@@ -504,6 +505,30 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
             (*env)->ReleaseStringUTFChars(env, jstr, str);
             (*env)->DeleteLocalRef(env, jstr);
         }
+        
+        break;
+    }
+
+    case JARRAY_ID: {
+        jobjectArray obj;
+        Py_UNBLOCK_THREADS;
+        
+        if(self->isStatic)
+            obj = (jobjectArray) (*env)->CallStaticObjectMethodA(
+                env,
+                self->pyjobject->clazz,
+                self->methodId,
+                jargs);
+        else
+            obj = (jobjectArray) (*env)->CallObjectMethodA(
+                env,
+                self->pyjobject->object,
+                self->methodId,
+                jargs);
+        
+        Py_BLOCK_THREADS;
+        if(!process_java_exception(env) && obj != NULL)
+            result = pyjarray_new(env, obj);
         
         break;
     }
