@@ -502,11 +502,21 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                 self->pyjobject->clazz,
                 self->methodId,
                 jargs);
-        else
-            jstr = (jstring) (*env)->CallObjectMethodA(env,
-                                                       self->pyjobject->object,
-                                                       self->methodId,
-                                                       jargs);
+        else {
+            // not static, a method on class then.
+            if(!self->pyjobject->object)
+                jstr = (jstring) (*env)->CallObjectMethodA(
+                    env,
+                    self->pyjobject->clazz,
+                    self->methodId,
+                    jargs);
+            else
+                jstr = (jstring) (*env)->CallObjectMethodA(
+                    env,
+                    self->pyjobject->object,
+                    self->methodId,
+                    jargs);
+        }
         
         Py_BLOCK_THREADS;
         if(!process_java_exception(env) && jstr != NULL) {
@@ -530,12 +540,20 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                 self->pyjobject->clazz,
                 self->methodId,
                 jargs);
-        else
-            obj = (jobjectArray) (*env)->CallObjectMethodA(
-                env,
-                self->pyjobject->object,
-                self->methodId,
-                jargs);
+        else {
+            if(!self->pyjobject->object)
+                obj = (jobjectArray) (*env)->CallObjectMethodA(
+                    env,
+                    self->pyjobject->clazz,
+                    self->methodId,
+                    jargs);
+            else
+                obj = (jobjectArray) (*env)->CallObjectMethodA(
+                    env,
+                    self->pyjobject->object,
+                    self->methodId,
+                    jargs);
+        }
         
         Py_BLOCK_THREADS;
         if(!process_java_exception(env) && obj != NULL)
@@ -554,11 +572,18 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                 self->pyjobject->clazz,
                 self->methodId,
                 jargs);
-        else
-            obj = (*env)->CallObjectMethodA(env,
-                                            self->pyjobject->object,
-                                            self->methodId,
-                                            jargs);
+        else {
+            if(!self->pyjobject->object)
+                obj = (*env)->CallObjectMethodA(env,
+                                                self->pyjobject->clazz,
+                                                self->methodId,
+                                                jargs);
+            else
+                obj = (*env)->CallObjectMethodA(env,
+                                                self->pyjobject->object,
+                                                self->methodId,
+                                                jargs);
+        }
         
         Py_BLOCK_THREADS;
         if(!process_java_exception(env) && obj != NULL)
@@ -577,11 +602,18 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                 self->pyjobject->clazz,
                 self->methodId,
                 jargs);
-        else
-            ret = (*env)->CallIntMethodA(env,
-                                         self->pyjobject->object,
-                                         self->methodId,
-                                         jargs);
+        else {
+            if(!self->pyjobject->object)
+                ret = (*env)->CallIntMethodA(env,
+                                             self->pyjobject->clazz,
+                                             self->methodId,
+                                             jargs);
+            else
+                ret = (*env)->CallIntMethodA(env,
+                                             self->pyjobject->object,
+                                             self->methodId,
+                                             jargs);
+        }
         
         Py_BLOCK_THREADS;
         if(!process_java_exception(env))
@@ -600,11 +632,18 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                 self->pyjobject->clazz,
                 self->methodId,
                 jargs);
-        else
-            ret = (*env)->CallByteMethodA(env,
-                                         self->pyjobject->object,
-                                         self->methodId,
-                                         jargs);
+        else {
+            if(!self->pyjobject->object)
+                ret = (*env)->CallByteMethodA(env,
+                                              self->pyjobject->clazz,
+                                              self->methodId,
+                                              jargs);
+            else
+                ret = (*env)->CallByteMethodA(env,
+                                              self->pyjobject->object,
+                                              self->methodId,
+                                              jargs);
+        }
         
         Py_BLOCK_THREADS;
         if(!process_java_exception(env))
@@ -624,11 +663,18 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                 self->pyjobject->clazz,
                 self->methodId,
                 jargs);
-        else
-            ret = (*env)->CallCharMethodA(env,
-                                         self->pyjobject->object,
-                                         self->methodId,
-                                         jargs);
+        else {
+            if(!self->pyjobject->object)
+                ret = (*env)->CallCharMethodA(env,
+                                              self->pyjobject->clazz,
+                                              self->methodId,
+                                              jargs);
+            else
+                ret = (*env)->CallCharMethodA(env,
+                                              self->pyjobject->object,
+                                              self->methodId,
+                                              jargs);
+        }
         
         Py_BLOCK_THREADS;
         if(!process_java_exception(env)) {
@@ -649,11 +695,18 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                 self->pyjobject->clazz,
                 self->methodId,
                 jargs);
-        else
-            ret = (*env)->CallShortMethodA(env,
-                                           self->pyjobject->object,
-                                           self->methodId,
-                                           jargs);
+        else {
+            if(!self->pyjobject->object)
+                ret = (*env)->CallShortMethodA(env,
+                                               self->pyjobject->clazz,
+                                               self->methodId,
+                                               jargs);
+            else
+                ret = (*env)->CallShortMethodA(env,
+                                               self->pyjobject->object,
+                                               self->methodId,
+                                               jargs);
+        }
         
         Py_BLOCK_THREADS;
         if(!process_java_exception(env))
@@ -672,11 +725,18 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                 self->pyjobject->clazz,
                 self->methodId,
                 jargs);
-        else
-            ret = (*env)->CallDoubleMethodA(env,
-                                            self->pyjobject->object,
-                                            self->methodId,
-                                            jargs);
+        else {
+            if(!self->pyjobject->object)
+                ret = (*env)->CallDoubleMethodA(env,
+                                                self->pyjobject->clazz,
+                                                self->methodId,
+                                                jargs);
+            else
+                ret = (*env)->CallDoubleMethodA(env,
+                                                self->pyjobject->object,
+                                                self->methodId,
+                                                jargs);
+        }
         
         Py_BLOCK_THREADS;
         if(!process_java_exception(env))
@@ -695,11 +755,18 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                 self->pyjobject->clazz,
                 self->methodId,
                 jargs);
-        else
-            ret = (*env)->CallFloatMethodA(env,
-                                           self->pyjobject->object,
-                                           self->methodId,
-                                           jargs);
+        else {
+            if(!self->pyjobject->object)
+                ret = (*env)->CallFloatMethodA(env,
+                                               self->pyjobject->clazz,
+                                               self->methodId,
+                                               jargs);
+            else
+                ret = (*env)->CallFloatMethodA(env,
+                                               self->pyjobject->object,
+                                               self->methodId,
+                                               jargs);
+        }
         
         Py_BLOCK_THREADS;
         if(!process_java_exception(env))
@@ -718,11 +785,18 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                 self->pyjobject->clazz,
                 self->methodId,
                 jargs);
-        else
-            ret = (*env)->CallLongMethodA(env,
-                                          self->pyjobject->object,
-                                          self->methodId,
-                                          jargs);
+        else {
+            if(!self->pyjobject->object)
+                ret = (*env)->CallLongMethodA(env,
+                                              self->pyjobject->clazz,
+                                              self->methodId,
+                                              jargs);
+            else
+                ret = (*env)->CallLongMethodA(env,
+                                              self->pyjobject->object,
+                                              self->methodId,
+                                              jargs);
+        }
         
         Py_BLOCK_THREADS;
         if(!process_java_exception(env))
@@ -741,11 +815,18 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                 self->pyjobject->clazz,
                 self->methodId,
                 jargs);
-        else
-            ret = (*env)->CallBooleanMethodA(env,
-                                             self->pyjobject->object,
-                                             self->methodId,
-                                             jargs);
+        else {
+            if(!self->pyjobject->object)
+                ret = (*env)->CallBooleanMethodA(env,
+                                                 self->pyjobject->clazz,
+                                                 self->methodId,
+                                                 jargs);
+            else
+                ret = (*env)->CallBooleanMethodA(env,
+                                                 self->pyjobject->object,
+                                                 self->methodId,
+                                                 jargs);
+        }
         
         Py_BLOCK_THREADS;
         if(!process_java_exception(env))
