@@ -191,48 +191,50 @@ static int pyjfield_init(PyJfield_Object *self) {
     
     // ------------------------------ get isStatic
     
-    if(self->isStatic != 1) {
-        // call getModifers()
-        if(classGetMod == 0) {
-            classGetMod = (*env)->GetMethodID(env,
-                                              rfieldClass,
-                                              "getModifiers",
-                                              "()I");
-            if(process_java_exception(env) || !classGetMod)
-                goto EXIT_ERROR;
-        }
-        
-        modifier = (*env)->CallIntMethod(env,
-                                         self->rfield,
-                                         classGetMod);
-        if(process_java_exception(env))
+    // call getModifers()
+    if(classGetMod == 0) {
+        classGetMod = (*env)->GetMethodID(env,
+                                          rfieldClass,
+                                          "getModifiers",
+                                          "()I");
+        if(process_java_exception(env) || !classGetMod)
             goto EXIT_ERROR;
+    }
     
-        modClass = (*env)->FindClass(env, "java/lang/reflect/Modifier");
-        if(process_java_exception(env) || !modClass)
+    modifier = (*env)->CallIntMethod(env,
+                                     self->rfield,
+                                     classGetMod);
+    if(process_java_exception(env))
+        goto EXIT_ERROR;
+    
+    modClass = (*env)->FindClass(env, "java/lang/reflect/Modifier");
+    if(process_java_exception(env) || !modClass)
+        goto EXIT_ERROR;
+    
+    if(modIsStatic == 0) {
+        modIsStatic = (*env)->GetStaticMethodID(env,
+                                                modClass,
+                                                "isStatic",
+                                                "(I)Z");
+        if(process_java_exception(env) || !modIsStatic)
             goto EXIT_ERROR;
-        
-        if(modIsStatic == 0) {
-            modIsStatic = (*env)->GetStaticMethodID(env,
-                                                    modClass,
-                                                    "isStatic",
-                                                    "(I)Z");
-            if(process_java_exception(env) || !modIsStatic)
-                goto EXIT_ERROR;
-        }
-        
-        isStatic = (*env)->CallStaticBooleanMethod(env,
-                                                   modClass,
-                                                   modIsStatic,
-                                                   modifier);
-        if(process_java_exception(env))
-            goto EXIT_ERROR;
-
-        if(isStatic == JNI_TRUE)
-            self->isStatic = 1;
-        else
-            self->isStatic = 0;
-    }    
+    }
+    
+    isStatic = (*env)->CallStaticBooleanMethod(env,
+                                               modClass,
+                                               modIsStatic,
+                                               modifier);
+    if(process_java_exception(env))
+        goto EXIT_ERROR;
+    
+    if(self->isStatic && !isStatic) {
+        PyErr_SetString(PyExc_TypeError, "Field is not static.");
+        goto EXIT_ERROR;
+    }
+    if(isStatic)
+        self->isStatic = 1;
+    else
+        self->isStatic = 0;
     
     (*env)->PopLocalFrame(env, NULL);
     self->init = 1;
