@@ -202,6 +202,7 @@ if(__name__ == '__main__'):
     # exceptions are *slow*... you wouldn't want to do much of this
     # in a real environment.
     try:
+        print '957106:          ', Integer(12).intValue()
         Integer.parseInt('asdf')
     except(jep.NumberFormatException):
         print 'parseInt:         caught NumberFormatException'
