@@ -38,7 +38,8 @@ EXTRA_DIST=python.m4 \
 	windows/jep.dsp \
 	windows/setup.nsi \
 	javadoc/ \
-	console.py
+	console.py \
+	memtest.py
 
 dist-hook:
 	rm -rf `find $(distdir)/javadoc -name CVS`

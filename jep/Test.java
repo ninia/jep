@@ -14,6 +14,8 @@ import java.io.File;
  */
 public class Test implements Runnable {
 
+    private static ArrayList instances = new ArrayList();
+
     public Test() {
     } // Test constructor
 
@@ -54,9 +56,11 @@ public class Test implements Runnable {
                 break;
             }
             finally {
-                if(jep != null)
-                    jep.close();
+//                 if(jep != null)
+//                     jep.close();
             }
+            
+            instances.add(jep);
         }
 
 //         try {
