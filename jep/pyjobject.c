@@ -182,7 +182,10 @@ static int pyjobject_init(PyJobject_Object *pyjob) {
                                                 i);
 
         // make new PyJmethod_Object, linked to pyjob
-        pymethod = pyjmethod_new(env, rmethod, pyjob);
+        if(pyjob->object)
+            pymethod = pyjmethod_new(env, rmethod, pyjob);
+        else
+            pymethod = pyjmethod_new_static(env, rmethod, pyjob);
 
         if(!pymethod)
             continue;

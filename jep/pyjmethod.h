@@ -54,7 +54,7 @@ typedef struct {
 PyJmethod_Object* pyjmethod_new(JNIEnv*,
                                 jobject,
                                 PyJobject_Object*);
-PyJmethod_Object* pyjmethod_new_static(JNIEnv*, jobject, PyJclass_Object*);
+PyJmethod_Object* pyjmethod_new_static(JNIEnv*, jobject, PyJobject_Object*);
 int pyjmethod_init(PyJmethod_Object *self);
 
 PyObject* pyjmethod_call_internal(PyJmethod_Object*, PyObject*);

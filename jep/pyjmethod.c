@@ -131,7 +131,7 @@ EXIT_ERROR:
 // throws java exception and returns NULL on error.
 PyJmethod_Object* pyjmethod_new_static(JNIEnv *env,
                                        jobject rmethod,
-                                       PyJclass_Object *pyjclass) {
+                                       PyJobject_Object *pyjobject) {
     PyJmethod_Object *pym          = NULL;
     jclass            rmethodClass = NULL;
     const char       *methodName   = NULL;
@@ -139,12 +139,12 @@ PyJmethod_Object* pyjmethod_new_static(JNIEnv *env,
 
     pym                = PyObject_NEW(PyJmethod_Object, &PyJmethod_Type);
     pym->rmethod       = (*env)->NewGlobalRef(env, rmethod);
-    pym->pyjobject     = NULL;
+    pym->pyjobject     = pyjobject;
     pym->env           = env;
     pym->parameters    = NULL;
     pym->lenParameters = 0;
     pym->pyMethodName  = NULL;
-    pym->isStatic      = 1;
+    pym->isStatic      = -1;
     pym->returnTypeId  = -1;
 
     // ------------------------------ get method name
@@ -431,6 +431,14 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
     }
     
     env = self->env;
+    
+    // validate we can call this method
+    if(!self->pyjobject->object && self->isStatic != JNI_TRUE) {
+        PyErr_Format(PyExc_RuntimeError,
+                     "Instantiate this class before "
+                     "calling an object method.");
+        return NULL;
+    }
     
     // shouldn't happen
     if(self->lenParameters != PyTuple_GET_SIZE(args)) {

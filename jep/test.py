@@ -251,8 +251,12 @@ if(__name__ == '__main__'):
         fin.close()
     except(jep.FileNotFoundException):
         print 'inputStream:      caught FileNotFoundException'
+
+    try:
+        print 'Integer =        ', Integer.toString()
+    except:
+        print 'fixed'
     
-    print 'Integer =        ', Integer.toString()
     System = findClass('java/lang/System')
     System.out.println("regression test.")
 
