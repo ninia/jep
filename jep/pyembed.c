@@ -40,6 +40,14 @@
 # include <unistd.h>
 #endif
 
+#if HAVE_STDLIB_H
+# include <stdlib.h>
+#else
+int putenv(char *string) {
+    return -1;
+}
+#endif
+
 // shut up the compiler
 #ifdef _POSIX_C_SOURCE
 #  undef _POSIX_C_SOURCE
@@ -139,6 +147,9 @@ void pyembed_startup(void) {
         return;
 
     printf("Setting up Python interpreter...\n");
+    
+    putenv("PYTHONOPTIMIZE=1");
+    
     Py_Initialize();
     PyEval_InitThreads();
 
