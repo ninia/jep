@@ -39,7 +39,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "JEP_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /MD /W4 /WX /Gi /GX /O2 /I "C:\j2sdk1.4.2_04\include" /I "C:\j2sdk1.4.2_04\include\win32" /I "C:\Python23\include" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "JEP_EXPORTS" /YX /FD /c
+# ADD CPP /nologo /MD /W2 /WX /Gi /GX /O2 /I "C:\j2sdk1.4.2_04\include" /I "C:\j2sdk1.4.2_04\include\win32" /I "C:\Python23\include" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "JEP_EXPORTS" /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /I "C:\j2sdk1.4.2_04\include" /I "C:\j2sdk1.4.2_04\include\win32" /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
