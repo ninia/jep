@@ -26,9 +26,9 @@ cd ..
 
 files=`find $1 -name "*.class"`
 
-if test -e ${1}jarfiles; then
+if test "-e ${1}jarfiles"; then
     echo "Using jarfiles...."
-    for f in `cat $1/jarfiles`; do
+    for f in `cat ${1}jarfiles`; do
         # without newlines, probably overly paranoid
         files="$files $f"
     done
@@ -38,7 +38,7 @@ echo $JAR $OPTS ${1}${2} $files
 $JAR $OPTS ${1}${2} $files
 ret=$?
 
-if test "$ret" == "0" -a -e ${1}manifest; then
+if test "$ret" = "0" -a -e ${1}manifest; then
     echo "Adding manifest information...."
     $JAR -umf ${1}manifest ${1}${2}
 fi
