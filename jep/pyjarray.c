@@ -62,7 +62,6 @@ jmethodID objectComponentType = 0;
 static void pyjarray_dealloc(PyJarray_Object *self);
 static int pyjarray_init(PyJarray_Object*, int, PyObject*);
 static int pyjarray_length(PyJarray_Object *self);
-static void pyjarray_release_pinned(PyJarray_Object *self, jint mode);
 
 
 // called internally to make new PyJarray_Object instances
@@ -482,7 +481,7 @@ static void pyjarray_dealloc(PyJarray_Object *self) {
 
 
 // used to either release pinned memory, commit, or abort.
-static void pyjarray_release_pinned(PyJarray_Object *self, jint mode) {
+void pyjarray_release_pinned(PyJarray_Object *self, jint mode) {
     JNIEnv *env = self->env;
 
     if(!self->pinnedArray)
@@ -628,7 +627,6 @@ static int pyjarray_setitem(PyJarray_Object *self,
         }
         
         ((jint *) self->pinnedArray)[pos] = (jint) PyInt_AS_LONG(newitem);
-        pyjarray_release_pinned(self, JNI_COMMIT);
         return 0; /* success */
         
     case JLONG_ID:
@@ -638,7 +636,6 @@ static int pyjarray_setitem(PyJarray_Object *self,
         }
         
         ((jlong *) self->pinnedArray)[pos] = (jlong) PyLong_AsLongLong(newitem);
-        pyjarray_release_pinned(self, JNI_COMMIT);
         return 0; /* success */
         
     case JBOOLEAN_ID:
@@ -652,7 +649,6 @@ static int pyjarray_setitem(PyJarray_Object *self,
         else
             ((jint *) self->pinnedArray)[pos] = JNI_FALSE;
         
-        pyjarray_release_pinned(self, JNI_COMMIT);
         return 0; /* success */
         
     case JDOUBLE_ID:
@@ -663,7 +659,6 @@ static int pyjarray_setitem(PyJarray_Object *self,
         
         ((jdouble *) self->pinnedArray)[pos] =
             (jdouble) PyFloat_AS_DOUBLE(newitem);
-        pyjarray_release_pinned(self, JNI_COMMIT);
         return 0; /* success */
         
     case JSHORT_ID:
@@ -674,7 +669,6 @@ static int pyjarray_setitem(PyJarray_Object *self,
         
         ((jshort *) self->pinnedArray)[pos] =
             (jshort) PyInt_AS_LONG(newitem);
-        pyjarray_release_pinned(self, JNI_COMMIT);
         return 0; /* success */
         
     case JFLOAT_ID:
@@ -685,8 +679,6 @@ static int pyjarray_setitem(PyJarray_Object *self,
         
         ((jfloat *) self->pinnedArray)[pos] =
             (jfloat) PyFloat_AS_DOUBLE(newitem);
-        pyjarray_release_pinned(self, JNI_COMMIT);
-        pyjarray_release_pinned(self, JNI_COMMIT);
         return 0; /* success */
 
     } // switch
