@@ -224,6 +224,10 @@ PyObject* pyjclass_call(PyJclass_Object *self,
         // next, find matching constructor for args
         // the counts match but maybe not the args themselves.
         jargs = (jvalue *) PyMem_Malloc(sizeof(jvalue) * parmLen);
+        if(!jargs) {
+            THROW_JEP(env, "Out of memory.");
+            goto EXIT_ERROR;
+        }
         
         for(parmPos = 0; parmPos < parmLen; parmPos++) {
             PyObject *param       = PyTuple_GetItem(args, parmPos);

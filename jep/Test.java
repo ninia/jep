@@ -14,25 +14,16 @@ import java.io.File;
  */
 public class Test implements Runnable {
 
-    private static ArrayList instances = new ArrayList();
-
     public Test() {
     } // Test constructor
 
     
     public void run() {
 
-//         Jep jep = null;
-//         try {
-//             jep = new Jep();
-//         }
-//         catch(Exception e) {
-//             ;
-//         }
-
         for(int i = 0; i < 1; i++) {
             System.out.println("running i: " + i);
             Jep jep = null;
+            
             try {
                 File pwd = new File(".");
 
@@ -55,21 +46,10 @@ public class Test implements Runnable {
                 t.printStackTrace();
                 break;
             }
-            finally {
-//                 if(jep != null)
-//                     jep.close();
-            }
             
-            instances.add(jep);
+            System.out.println("**** close me");
+            jep.close();
         }
-
-//         try {
-//             while(true)
-//                 Thread.sleep(100);
-//         }
-//         catch(Exception e) {
-//         }
-
     }
 
     protected void finalize() {

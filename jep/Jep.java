@@ -31,7 +31,7 @@ import java.io.File;
 public final class Jep {
     
     private boolean closed = false;
-    private int     tstate = -1;
+    private int     tstate = 0;
     // all calls must originate from same thread
     private Thread thread = null;
     
@@ -113,6 +113,8 @@ public final class Jep {
     private void isValidThread() throws JepException {
         if(this.thread != Thread.currentThread())
             throw new JepException("Invalid thread access.");
+        if(this.tstate == 0)
+            throw new JepException("Initialization failed.");
     }
 
 
@@ -191,11 +193,8 @@ public final class Jep {
         
         try {
             // trim windows \r\n
-            if(str != null) {
-                int p = str.indexOf("\r");
-                if(p >= 0)
-                    str = str.substring(0, p);
-            }
+            if(str != null)
+                str = str.replaceAll("\r", "");
             
             if(str == null || str.trim().equals("")) {
                 if(!this.interactive)
@@ -512,13 +511,12 @@ public final class Jep {
      *
      */
     public synchronized void close() {
-        this.closed = true;
-        
         if(this.closed)
             return;
         
+        this.closed = true;
         this.close(tstate);
-        this.tstate = -1;
+        this.tstate = 0;
     }
 
     private native void close(int tstate);
