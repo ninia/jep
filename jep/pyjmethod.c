@@ -586,6 +586,55 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
         break;
     }
 
+    case JBYTE_ID: {
+        jbyte ret;
+        Py_UNBLOCK_THREADS;
+        
+        if(self->isStatic)
+            ret = (*env)->CallStaticByteMethodA(
+                env,
+                self->pyjobject->clazz,
+                self->methodId,
+                jargs);
+        else
+            ret = (*env)->CallByteMethodA(env,
+                                         self->pyjobject->object,
+                                         self->methodId,
+                                         jargs);
+        
+        Py_BLOCK_THREADS;
+        if(!process_java_exception(env))
+            result = Py_BuildValue("i", ret);
+        
+        break;
+    }
+
+    case JCHAR_ID: {
+        jchar ret;
+        char  val[2];
+        Py_UNBLOCK_THREADS;
+        
+        if(self->isStatic)
+            ret = (*env)->CallStaticCharMethodA(
+                env,
+                self->pyjobject->clazz,
+                self->methodId,
+                jargs);
+        else
+            ret = (*env)->CallCharMethodA(env,
+                                         self->pyjobject->object,
+                                         self->methodId,
+                                         jargs);
+        
+        Py_BLOCK_THREADS;
+        if(!process_java_exception(env)) {
+            val[0] = (char) ret;
+            val[1] = '\0';
+            result = PyString_FromString(val);
+        }
+        break;
+    }
+
     case JSHORT_ID: {
         jshort ret;
         Py_UNBLOCK_THREADS;

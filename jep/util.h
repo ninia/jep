@@ -116,6 +116,8 @@ int register_exceptions(JNIEnv*, jobject, jobject, jobjectArray);
 #define JSHORT_ID   7
 #define JFLOAT_ID   8
 #define JARRAY_ID   9
+#define JCHAR_ID    10
+#define JBYTE_ID    11
 
 extern jclass JINT_TYPE;
 extern jclass JLONG_TYPE;
@@ -126,5 +128,7 @@ extern jclass JVOID_TYPE;
 extern jclass JDOUBLE_TYPE;
 extern jclass JSHORT_TYPE;
 extern jclass JFLOAT_TYPE;
+extern jclass JCHAR_TYPE;
+extern jclass JBYTE_TYPE;
 
 #endif // ifndef _Included_util

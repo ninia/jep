@@ -106,6 +106,8 @@ static PyObject* initjep(void) {
         PyModule_AddIntConstant(modjep, "JDOUBLE_ID", JDOUBLE_ID);
         PyModule_AddIntConstant(modjep, "JSHORT_ID", JSHORT_ID);
         PyModule_AddIntConstant(modjep, "JFLOAT_ID", JFLOAT_ID);
+        PyModule_AddIntConstant(modjep, "JCHAR_ID", JCHAR_ID);
+        PyModule_AddIntConstant(modjep, "JBYTE_ID", JBYTE_ID);
     }
 
     return modjep;

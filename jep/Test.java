@@ -44,6 +44,8 @@ public class Test implements Runnable {
                 jep.set("testl", 123123122112L);
                 jep.set("testd", 123.123D);
                 jep.set("testf", 12312.123123F);
+                jep.set("testy", 127);
+                jep.set("testc", 't');
                 jep.set("testn", (String) null);
                 jep.set("testn", (Object) null);
 
@@ -80,6 +82,14 @@ public class Test implements Runnable {
     
     public int getInt() {
         return 2147483647;
+    }
+
+    public byte getByte() {
+        return 123;
+    }
+
+    public char getChar() {
+        return 'c';
     }
 
     public short getShort() {
@@ -185,6 +195,8 @@ public class Test implements Runnable {
     public long longField = 9223372036854775807L;
     public double doubleField = 123.123D;
     public float floatField = 3.4028235E38F;
+    public byte byteField = 43;
+    public char charField = 'c';
     
     
     // -------------------------------------------------- static fields
@@ -196,6 +208,8 @@ public class Test implements Runnable {
     public static long staticLong = 9223372036854775807L;
     public static double staticDouble = 123.123D;
     public static float staticFloat = 3.4028235E38F;
+    public static byte staticByte = 125;
+    public static char staticChar = 'j';
 
     
     // -------------------------------------------------- static methods
@@ -234,6 +248,14 @@ public class Test implements Runnable {
     
     public static void callStaticVoid() {
         return;
+    }
+
+    public static byte getStaticByte() {
+        return 23;
+    }
+
+    public static char getStaticChar() {
+        return 'b';
     }
     
     

@@ -368,6 +368,47 @@ PyObject* pyjfield_get(PyJfield_Object *self) {
         break;
     }
 
+    case JBYTE_ID: {
+        jbyte ret;
+        
+        if(self->isStatic)
+            ret = (*env)->GetStaticByteField(env,
+                                             self->pyjobject->clazz,
+                                             self->fieldId);
+        else
+            ret = (*env)->GetByteField(env,
+                                       self->pyjobject->object,
+                                       self->fieldId);
+
+        if(process_java_exception(env))
+            return NULL;
+        
+        result = Py_BuildValue("i", ret);
+        break;
+    }
+
+    case JCHAR_ID: {
+        jchar ret;
+        char  val[2];
+        
+        if(self->isStatic)
+            ret = (*env)->GetStaticCharField(env,
+                                             self->pyjobject->clazz,
+                                             self->fieldId);
+        else
+            ret = (*env)->GetCharField(env,
+                                       self->pyjobject->object,
+                                       self->fieldId);
+
+        if(process_java_exception(env))
+            return NULL;
+
+        val[0] = (char) ret;
+        val[1] = '\0';
+        result = PyString_FromString(val);
+        break;
+    }
+
     case JSHORT_ID: {
         jshort ret;
         
@@ -590,6 +631,68 @@ int pyjfield_set(PyJfield_Object *self, PyObject *value) {
         
         return 0; // success
 
+
+    case JCHAR_ID:
+        if(!pyarg_matches_jtype(env, value, JCHAR_TYPE, self->fieldTypeId)) {
+            PyErr_Format(PyExc_RuntimeError, "Expected char.");
+            return -1;
+        }
+        
+        jarg = convert_pyarg_jvalue(env,
+                                    value,
+                                    JCHAR_TYPE,
+                                    self->fieldTypeId,
+                                    1);
+        if(PyErr_Occurred())
+            return -1;
+        
+        if(self->isStatic)
+            (*env)->SetStaticCharField(env,
+                                      self->pyjobject->clazz,
+                                      self->fieldId,
+                                      jarg.c);
+        else
+            (*env)->SetCharField(env,
+                                self->pyjobject->object,
+                                self->fieldId,
+                                jarg.c);
+
+        if(process_java_exception(env))
+            return -1;
+        
+        return 0; // success
+
+        
+    case JBYTE_ID:
+        if(!pyarg_matches_jtype(env, value, JBYTE_TYPE, self->fieldTypeId)) {
+            PyErr_Format(PyExc_RuntimeError, "Expected byte.");
+            return -1;
+        }
+        
+        jarg = convert_pyarg_jvalue(env,
+                                    value,
+                                    JBYTE_TYPE,
+                                    self->fieldTypeId,
+                                    1);
+        if(PyErr_Occurred())
+            return -1;
+        
+        if(self->isStatic)
+            (*env)->SetStaticByteField(env,
+                                      self->pyjobject->clazz,
+                                      self->fieldId,
+                                      jarg.b);
+        else
+            (*env)->SetByteField(env,
+                                self->pyjobject->object,
+                                self->fieldId,
+                                jarg.b);
+
+        if(process_java_exception(env))
+            return -1;
+        
+        return 0; // success
+        
         
     case JSHORT_ID:
         if(!pyarg_matches_jtype(env, value, JSHORT_TYPE, self->fieldTypeId)) {

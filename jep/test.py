@@ -25,6 +25,8 @@ if(__name__ == '__main__'):
     print 'test long param: ', testl
     print 'double param:    ', testd
     print 'float param:     ', testf
+    print 'test byte:       ', testy
+    print 'test char:       ', testc
     print 'test null obj:   ', testn
 
     print """
@@ -39,6 +41,8 @@ if(__name__ == '__main__'):
     print 'test getLong:    ', testo.getLong()
     print 'test getDouble:  ', testo.getDouble()
     print 'test getFloat:   ', testo.getFloat()
+    print 'test getByte:    ', testo.getByte()
+    print 'test getChar:    ', testo.getChar()
     integer = testo.getInteger()
     print 'dir getInteger:  ', dir(integer)
     l = testo.getClassLong()
@@ -98,6 +102,14 @@ if(__name__ == '__main__'):
     Float = findClass('java.lang.Float')
     f = Float(123.123)
     print 'make float:      ', f
+
+    Char = findClass("java.lang.Character")
+    c = Char('j')
+    print 'make char:       ', c
+
+    Byte = findClass('java.lang.Byte')
+    b = Byte(123)
+    print 'make byte:       ', b
     
     # *shrugs*
     
@@ -113,6 +125,8 @@ if(__name__ == '__main__'):
     print 'longField:       ', testo.longField
     print 'doubleField:     ', testo.doubleField
     print 'floatField:      ', testo.floatField
+    print 'byteField:       ', testo.byteField
+    print 'charField:       ', testo.charField
 
     testo.stringField = 'a new string for loop: %i' % (i)
     testo.intField = i
@@ -121,6 +135,8 @@ if(__name__ == '__main__'):
     testo.longField = testo.longField * -1
     testo.doubleField = 1223123.123
     testo.floatField = 12312.122
+    testo.charField = 'j'
+    testo.byteField = 2
     
     print 'stringField:     ', testo.stringField
     print 'intField:        ', testo.intField
@@ -129,6 +145,8 @@ if(__name__ == '__main__'):
     print 'longField:       ', testo.longField
     print 'doubleField:     ', testo.doubleField
     print 'floatField:      ', testo.floatField
+    print 'byteField:       ', testo.byteField
+    print 'charField:       ', testo.charField
     
     print """
     ##################################################
@@ -142,6 +160,8 @@ if(__name__ == '__main__'):
     print 'staticLong:      ', testo.staticLong
     print 'staticDouble:    ', testo.staticDouble
     print 'staticFloat:     ', testo.staticFloat
+    print 'staticChar:      ', testo.staticChar
+    print 'staticByte:      ', testo.staticByte
 
     print ""
     testo.staticString = 'a new string for loop: %i' % (i)
@@ -151,6 +171,8 @@ if(__name__ == '__main__'):
     testo.staticLong = testo.staticLong * -1
     testo.staticDouble = 123.12
     testo.staticFloat = 123.123
+    testo.staticByte = testo.staticByte * 10
+    testo.staticChar = 'z'
     
     Test = findClass('jep.Test')
     print 'staticShort:     ', Test.staticShort
@@ -160,6 +182,8 @@ if(__name__ == '__main__'):
     print 'staticLong:      ', Test.staticLong
     print 'staticDouble:    ', Test.staticDouble
     print 'staticFloat:     ', Test.staticFloat
+    print 'staticChar:      ', Test.staticChar
+    print 'staticByte:      ', Test.staticByte
     
     Test.staticString = 'a new string for loop: %i' % (i)
     Test.staticInt = i
@@ -168,6 +192,8 @@ if(__name__ == '__main__'):
     Test.staticLong = Test.staticLong * -1
     Test.staticDouble = 213239.990921221221
     Test.staticFloat = 3.2121231
+    testo.staticByte = testo.staticByte * 10
+    testo.staticChar = 'a'
     
     print 'staticString:    ', Test.staticString
     print 'staticInt:       ', Test.staticInt
@@ -176,6 +202,8 @@ if(__name__ == '__main__'):
     print 'staticLong:      ', Test.staticLong
     print 'staticDouble:    ', Test.staticDouble
     print 'staticFloat:     ', Test.staticFloat
+    print 'staticChar:      ', Test.staticChar
+    print 'staticByte:      ', Test.staticByte
 
     ii = Integer(12)
     print 'int min value:   ', ii.MIN_VALUE
@@ -198,6 +226,8 @@ if(__name__ == '__main__'):
     print 'staticLong:      ', testo.getStaticLong()
     print 'staticDouble:    ', testo.getStaticDouble()
     print 'staticFloat:     ', testo.getStaticFloat()
+    print 'staticByte:      ', testo.getStaticByte()
+    print 'staticChar:      ', testo.getStaticChar()
 
     print """
     ##################################################

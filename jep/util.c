@@ -66,6 +66,8 @@ jclass JVOID_TYPE    = NULL;
 jclass JDOUBLE_TYPE  = NULL;
 jclass JSHORT_TYPE   = NULL;
 jclass JFLOAT_TYPE   = NULL;
+jclass JCHAR_TYPE   = NULL;
+jclass JBYTE_TYPE   = NULL;
 
 
 // cached methodids
@@ -539,6 +541,54 @@ int cache_primitive_classes(JNIEnv *env) {
         (*env)->DeleteLocalRef(env, clazz);
     }
 
+    if(JBYTE_TYPE == NULL) {
+        clazz = (*env)->FindClass(env, "java/lang/Byte");
+        if((*env)->ExceptionOccurred(env))
+            return 0;
+        
+        fieldId = (*env)->GetStaticFieldID(env,
+                                           clazz,
+                                           "TYPE",
+                                           "Ljava/lang/Class;");
+        if((*env)->ExceptionOccurred(env))
+            return 0;
+        
+        tmpclazz = (jclass) (*env)->GetStaticObjectField(env,
+                                                         clazz,
+                                                         fieldId);
+        if((*env)->ExceptionOccurred(env))
+            return 0;
+        
+        JBYTE_TYPE = (*env)->NewGlobalRef(env, tmpclazz);
+        (*env)->DeleteLocalRef(env, tmpclazz);
+        (*env)->DeleteLocalRef(env, tmpobj);
+        (*env)->DeleteLocalRef(env, clazz);
+    }
+
+    if(JCHAR_TYPE == NULL) {
+        clazz = (*env)->FindClass(env, "java/lang/Character");
+        if((*env)->ExceptionOccurred(env))
+            return 0;
+        
+        fieldId = (*env)->GetStaticFieldID(env,
+                                           clazz,
+                                           "TYPE",
+                                           "Ljava/lang/Class;");
+        if((*env)->ExceptionOccurred(env))
+            return 0;
+        
+        tmpclazz = (jclass) (*env)->GetStaticObjectField(env,
+                                                         clazz,
+                                                         fieldId);
+        if((*env)->ExceptionOccurred(env))
+            return 0;
+        
+        JCHAR_TYPE = (*env)->NewGlobalRef(env, tmpclazz);
+        (*env)->DeleteLocalRef(env, tmpclazz);
+        (*env)->DeleteLocalRef(env, tmpobj);
+        (*env)->DeleteLocalRef(env, clazz);
+    }
+
     if(JOBJECT_TYPE == NULL) {
         clazz = (*env)->FindClass(env, "java/lang/Object");
         if((*env)->ExceptionOccurred(env))
@@ -598,6 +648,14 @@ void unref_cache_primitive_classes(JNIEnv *env) {
     if(JVOID_TYPE != NULL) {
         (*env)->DeleteGlobalRef(env, JVOID_TYPE);
         JVOID_TYPE = NULL;
+    }
+    if(JCHAR_TYPE != NULL) {
+        (*env)->DeleteGlobalRef(env, JCHAR_TYPE);
+        JCHAR_TYPE = NULL;
+    }
+    if(JBYTE_TYPE != NULL) {
+        (*env)->DeleteGlobalRef(env, JBYTE_TYPE);
+        JBYTE_TYPE = NULL;
     }
 }
 
@@ -691,6 +749,20 @@ int get_jtype(JNIEnv *env, jobject obj, jclass clazz) {
     if(equals)
         return JVOID_ID;
     
+    // char
+    equals = (*env)->CallBooleanMethod(env, obj, objectEquals, JCHAR_TYPE);
+    if((*env)->ExceptionCheck(env))
+        return -1;
+    if(equals)
+        return JCHAR_ID;
+
+    // byte
+    equals = (*env)->CallBooleanMethod(env, obj, objectEquals, JBYTE_TYPE);
+    if((*env)->ExceptionCheck(env))
+        return -1;
+    if(equals)
+        return JBYTE_ID;
+
     // object
     
     // check if it's an array first
@@ -716,7 +788,14 @@ int pyarg_matches_jtype(JNIEnv *env,
     
     switch(paramTypeId) {
         
+    case JCHAR_ID:
+        // must not be null...
+        if(PyString_Check(param) && PyString_GET_SIZE(param) == 1)
+            return 1;
+        return 0;
+        
     case JSTRING_ID:
+
         if(param == Py_None)
             return 1;
 
@@ -768,6 +847,7 @@ int pyarg_matches_jtype(JNIEnv *env,
         
         break;
 
+    case JBYTE_ID:
     case JSHORT_ID:
     case JINT_ID:
         if(PyInt_Check(param))
@@ -811,6 +891,24 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
     
     switch(paramTypeId) {
 
+    case JCHAR_ID: {
+        char *val;
+
+        if(param == Py_None ||
+           !PyString_Check(param) ||
+           PyString_GET_SIZE(param) != 1) {
+            
+            PyErr_Format(PyExc_TypeError,
+                         "Expected char parameter at %i",
+                         pos + 1);
+            return ret;
+        }
+
+        val = PyString_AsString(param);
+        ret.c = (jchar) val[0];
+        return ret;
+    }
+
     case JSTRING_ID: {
         jstring   jstr;
         char     *val;
@@ -821,7 +919,7 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
         else {
             // we could just convert it to a string...
             if(!PyString_Check(param)) {
-                PyErr_Format(PyExc_ValueError,
+                PyErr_Format(PyExc_TypeError,
                              "Expected string parameter at %i.",
                              pos + 1);
                 return ret;
@@ -845,7 +943,7 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
             PyJarray_Object *ar;
             
             if(!pyjarray_check(param)) {
-                PyErr_Format(PyExc_ValueError,
+                PyErr_Format(PyExc_TypeError,
                              "Expected jarray parameter at %i.",
                              pos + 1);
                 return ret;
@@ -856,7 +954,7 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
             if(!(*env)->IsAssignableFrom(env,
                                          ar->clazz,
                                          paramType)) {
-                PyErr_Format(PyExc_ValueError,
+                PyErr_Format(PyExc_TypeError,
                              "Incompatible array type at parameter %i.",
                              pos + 1);
                 return ret;
@@ -885,7 +983,7 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
                                          JSTRING_TYPE,
                                          paramType)) {
                 PyErr_Format(
-                    PyExc_ValueError,
+                    PyExc_TypeError,
                     "Tried to set a string on an incomparable parameter %i.",
                     pos + 1);
                 return ret;
@@ -896,7 +994,7 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
         }
         else {
             if(!pyjobject_check(param)) {
-                PyErr_Format(PyExc_ValueError,
+                PyErr_Format(PyExc_TypeError,
                              "Expected object parameter at %i.",
                              pos + 1);
                 return ret;
@@ -906,7 +1004,7 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
             if(!(*env)->IsAssignableFrom(env,
                                          ((PyJobject_Object *) param)->clazz,
                                          paramType)) {
-                PyErr_Format(PyExc_ValueError,
+                PyErr_Format(PyExc_TypeError,
                              "Incorrect object type at %i.",
                              pos + 1);
                 return ret;
@@ -921,7 +1019,7 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
 
     case JSHORT_ID: {
         if(param == Py_None || !PyInt_Check(param)) {
-            PyErr_Format(PyExc_ValueError,
+            PyErr_Format(PyExc_TypeError,
                          "Expected short parameter at %i.",
                          pos + 1);
             return ret;
@@ -934,7 +1032,7 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
 
     case JINT_ID: {
         if(param == Py_None || !PyInt_Check(param)) {
-            PyErr_Format(PyExc_ValueError,
+            PyErr_Format(PyExc_TypeError,
                          "Expected int parameter at %i.",
                          pos + 1);
             return ret;
@@ -944,9 +1042,21 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
         return ret;
     }
 
+    case JBYTE_ID: {
+        if(param == Py_None || !PyInt_Check(param)) {
+            PyErr_Format(PyExc_TypeError,
+                         "Expected byte parameter at %i.",
+                         pos + 1);
+            return ret;
+        }
+
+        ret.b = (jbyte) PyInt_AS_LONG(param);
+        return ret;
+    }
+
     case JDOUBLE_ID: {
         if(param == Py_None || !PyFloat_Check(param)) {
-            PyErr_Format(PyExc_ValueError,
+            PyErr_Format(PyExc_TypeError,
                          "Expected double parameter at %i.",
                          pos + 1);
             return ret;
@@ -958,7 +1068,7 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
 
     case JFLOAT_ID: {
         if(param == Py_None || !PyFloat_Check(param)) {
-            PyErr_Format(PyExc_ValueError,
+            PyErr_Format(PyExc_TypeError,
                          "Expected float parameter at %i.",
                          pos + 1);
             return ret;
@@ -975,7 +1085,7 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
         else if(PyLong_Check(param))
             ret.j = (jlong) PyLong_AsLongLong(param);
         else {
-            PyErr_Format(PyExc_ValueError,
+            PyErr_Format(PyExc_TypeError,
                          "Expected long parameter at %i.",
                          pos + 1);
             return ret;
@@ -988,7 +1098,7 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
         long bvalue;
         
         if(param == Py_None || !PyInt_Check(param)) {
-            PyErr_Format(PyExc_ValueError,
+            PyErr_Format(PyExc_TypeError,
                          "Expected boolean parameter at %i.",
                          pos + 1);
             return ret;

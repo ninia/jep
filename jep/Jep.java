@@ -322,9 +322,32 @@ public final class Jep {
      * @param v a <code>char[]</code> value
      * @exception JepException if an error occurs
      */
-    private void set(int tstate, String name, char[] v)
-        throws JepException {
+    public void set(String name, char[] v) throws JepException {
         set(tstate, name, new String(v));
+    }
+
+
+    /**
+     * Describe <code>set</code> method here.
+     *
+     * @param name a <code>String</code> value
+     * @param v a <code>char</code> value
+     * @exception JepException if an error occurs
+     */
+    public void set(String name, char v) throws JepException {
+        set(tstate, name, new String(new char[] { v }));
+    }
+
+
+    /**
+     * Describe <code>set</code> method here.
+     *
+     * @param name a <code>String</code> value
+     * @param b a <code>byte</code> value
+     * @exception JepException if an error occurs
+     */
+    public void set(String name, byte b) throws JepException {
+        set(tstate, name, (int) b);
     }
 
     

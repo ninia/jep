@@ -177,6 +177,14 @@ PyObject* pyjarray_new_v(PyObject *isnull, PyObject *args) {
             case JFLOAT_ID:
                 arrayObj = (*env)->NewFloatArray(env, (jsize) size);
                 break;
+
+            case JBYTE_ID:
+                arrayObj = (*env)->NewByteArray(env, (jsize) size);
+                break;
+
+            case JCHAR_ID:
+                arrayObj = (*env)->NewCharArray(env, (jsize) size);
+                break;
             } // switch
             
         } // if int(two)
@@ -329,7 +337,60 @@ static int pyjarray_init(PyJarray_Object *pyarray, int zero, PyObject *value) {
         
         break;
     }
+
+    case JCHAR_ID: {
+        int   i;
+        long  v = 0;
+        jchar *ar;
+        char  *val;
+
+        ar = pyarray->pinnedArray = (*env)->GetCharArrayElements(
+            env,
+            pyarray->object,
+            &(pyarray->isCopy));
+
+        if(zero) {
+            if(!value || !PyString_Check(value)) {
+                if(value && PyInt_Check(value))
+                    v = PyInt_AS_LONG(value);
+                
+                for(i = 0; i < pyarray->length; i++)
+                    ar[i] = (jchar) v;
+            }
+            else {
+                // it's a string, set the elements
+                // we won't throw an error for index, length problems. just deal...
+                
+                val = PyString_AS_STRING(value);
+                for(i = 0; i < pyarray->length && val[i] != '\0'; i++)
+                    ar[i] = (jchar) val[i];
+            }
+        }
         
+        break;
+    }
+        
+    case JBYTE_ID: {
+        int   i;
+        long  v = 0;
+        jbyte *ar;
+
+        ar = pyarray->pinnedArray = (*env)->GetByteArrayElements(
+            env,
+            pyarray->object,
+            &(pyarray->isCopy));
+
+        if(zero) {
+            if(value && PyInt_Check(value))
+                v = PyInt_AS_LONG(value);
+            
+            for(i = 0; i < pyarray->length; i++)
+                ar[i] = (jbyte) v;
+        }
+        
+        break;
+    }
+
     case JLONG_ID: {
         int      i;
         jeplong  v = 0;
@@ -351,7 +412,7 @@ static int pyjarray_init(PyJarray_Object *pyarray, int zero, PyObject *value) {
             }
             
             for(i = 0; i < pyarray->length; i++)
-                ar[i] = v;
+                ar[i] = (jlong) v;
         }
         
         break;
@@ -503,6 +564,20 @@ void pyjarray_release_pinned(PyJarray_Object *self, jint mode) {
                                         mode);
         break;
                 
+    case JCHAR_ID:
+        (*env)->ReleaseCharArrayElements(env,
+                                         self->object,
+                                         (jchar *) self->pinnedArray,
+                                         mode);
+        break;
+
+    case JBYTE_ID:
+        (*env)->ReleaseByteArrayElements(env,
+                                         self->object,
+                                         (jbyte *) self->pinnedArray,
+                                         mode);
+        break;
+
     case JLONG_ID:
         (*env)->ReleaseLongArrayElements(env,
                                          self->object,
@@ -577,7 +652,7 @@ static int pyjarray_setitem(PyJarray_Object *self,
                 return -1;
             }
         
-            val  = PyString_AsString(newitem);
+            val  = PyString_AS_STRING(newitem);
             jstr = (*env)->NewStringUTF(env, (const char *) val);
         }
         
@@ -640,6 +715,29 @@ static int pyjarray_setitem(PyJarray_Object *self,
         ((jint *) self->pinnedArray)[pos] = (jint) PyInt_AS_LONG(newitem);
         return 0; /* success */
         
+    case JBYTE_ID:
+        if(!PyInt_Check(newitem)) {
+            PyErr_SetString(PyExc_TypeError, "Expected byte.");
+            return -1;
+        }
+        
+        ((jbyte *) self->pinnedArray)[pos] = (jbyte) PyInt_AS_LONG(newitem);
+        return 0; /* success */
+        
+    case JCHAR_ID:
+        if(PyInt_Check(newitem))
+            ((jchar *) self->pinnedArray)[pos] = (jchar) PyInt_AS_LONG(newitem);
+        else if(PyString_Check(newitem) && PyString_GET_SIZE(newitem) == 1) {
+            char *val = PyString_AS_STRING(newitem);
+            ((jchar *) self->pinnedArray)[pos] = (jchar) val[0];
+        }
+        else {
+            PyErr_SetString(PyExc_TypeError, "Expected char.");
+            return -1;
+        }
+        
+        return 0; /* success */
+
     case JLONG_ID:
         if(!PyLong_Check(newitem)) {
             PyErr_SetString(PyExc_TypeError, "Expected long.");
@@ -792,6 +890,18 @@ static PyObject* pyjarray_item(PyJarray_Object *self, int pos) {
     case JINT_ID:
         ret = Py_BuildValue("i", ((jint *) self->pinnedArray)[pos]);
         break;
+
+    case JBYTE_ID:
+        ret = Py_BuildValue("i", ((jbyte *) self->pinnedArray)[pos]);
+        break;
+
+    case JCHAR_ID: {
+        char val[2];
+        val[0] = ((jchar *) self->pinnedArray)[pos];
+        val[1] = '\0';
+        ret = PyString_FromString(val);
+        break;
+    }
 
     case JLONG_ID:
         ret = PyLong_FromLongLong(((jlong *) self->pinnedArray)[pos]);
@@ -961,6 +1071,49 @@ static int pyjarray_contains(PyJarray_Object *self, PyObject *el) {
         return 0;
     }
 
+    case JBYTE_ID: {
+        jbyte *ar = (jbyte *) self->pinnedArray;
+        int    i;
+        jbyte  v;
+        
+        if(!PyInt_Check(el)) {
+            PyErr_SetString(PyExc_TypeError, "Expected byte.");
+            return -1;
+        }
+        
+        v = (jbyte) PyInt_AS_LONG(el);
+        for(i = 0; i < self->length; i++) {
+            if(v == ar[i])
+                return 1;
+        }
+        
+        return 0;
+    }
+
+    case JCHAR_ID: {
+        jchar *ar = (jchar *) self->pinnedArray;
+        int    i;
+        jchar  v;
+
+        if(PyInt_Check(el))
+            v = (jchar) PyInt_AS_LONG(el);
+        else if(PyString_Check(el) && PyString_GET_SIZE(el) == 1) {
+            char *val = PyString_AS_STRING(el);
+            v = (jchar) val[0];
+        }
+        else {
+            PyErr_SetString(PyExc_TypeError, "Expected char.");
+            return -1;
+        }
+        
+        for(i = 0; i < self->length; i++) {
+            if(v == ar[i])
+                return 1;
+        }
+        
+        return 0;
+    }
+
     case JLONG_ID: {
         jlong *ar = (jlong *) self->pinnedArray;
         int    i;
@@ -1085,6 +1238,38 @@ static PyObject* pyjarray_slice(PyJarray_Object *self, int ilow, int ihigh) {
         break;
     }
         
+    case JBYTE_ID: {
+        jbyte *ar, *src;
+        arrayObj = (*env)->NewByteArray(env, (jsize) len);
+        pyarray  = (PyJarray_Object *) pyjarray_new(env, arrayObj);
+        if(PyErr_Occurred())
+            break;
+        
+        ar  = (jbyte *) pyarray->pinnedArray;
+        src = (jbyte *) self->pinnedArray;
+        for(i = 0; i < len; i++)
+            ar[i] = src[ilow++];
+        
+        ret = (PyObject *) pyarray;
+        break;
+    }
+
+    case JCHAR_ID: {
+        jchar *ar, *src;
+        arrayObj = (*env)->NewCharArray(env, (jsize) len);
+        pyarray  = (PyJarray_Object *) pyjarray_new(env, arrayObj);
+        if(PyErr_Occurred())
+            break;
+        
+        ar  = (jchar *) pyarray->pinnedArray;
+        src = (jchar *) self->pinnedArray;
+        for(i = 0; i < len; i++)
+            ar[i] = src[ilow++];
+        
+        ret = (PyObject *) pyarray;
+        break;
+    }
+
     case JLONG_ID: {
         jlong *ar, *src;
         arrayObj = (*env)->NewLongArray(env, (jsize) len);
