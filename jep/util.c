@@ -733,6 +733,20 @@ int pyarg_matches_jtype(JNIEnv *env,
         }
         
         break;
+
+    case JARRAY_ID:
+        if(param == Py_None)
+            return 1;
+        
+        if(pyjarray_check(param)) {
+            // check if the object itself can cast to parameter type.
+            if((*env)->IsAssignableFrom(env,
+                                        ((PyJarray_Object *) param)->clazz,
+                                        paramType))
+                return 1;
+        }
+
+        break;
         
     case JOBJECT_ID:
         if(param == Py_None)
