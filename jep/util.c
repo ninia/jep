@@ -173,7 +173,6 @@ PyObject* pystring_split_last(PyObject *str, char *split) {
 
 // convert python exception to java.
 int process_py_exception(JNIEnv *env, int printTrace) {
-    jclass clazz;
     PyObject *ptype, *pvalue, *ptrace, *message = NULL;
     char *m;
     
