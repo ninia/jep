@@ -709,7 +709,6 @@ int pyarg_matches_jtype(JNIEnv *env,
     switch(paramTypeId) {
         
     case JSTRING_ID:
-        
         if(param == Py_None)
             return 1;
 
@@ -727,7 +726,6 @@ int pyarg_matches_jtype(JNIEnv *env,
         break;
         
     case JOBJECT_ID:
-        
         if(param == Py_None)
             return 1;
         
