@@ -450,12 +450,12 @@ jobject pyembed_getvalue(JNIEnv *env,
     prevThread = PyThreadState_Swap(jepThread->tstate);
     
     if(process_py_exception(env, 1))
-        return NULL;
+        goto EXIT;
     
     main = PyImport_AddModule("__main__");                      /* borrowed */
     if(main == NULL) {
         THROW_JEP(env, "Couldn't add module __main__.");
-        return NULL;
+        goto EXIT;
     }
     
     dict = PyModule_GetDict(main);
@@ -467,10 +467,10 @@ jobject pyembed_getvalue(JNIEnv *env,
     Py_DECREF(dict);
     
     if(result == NULL)
-        return NULL;
+        goto EXIT;              /* don't return, need to release GIL */
     if(result == Py_None) {
         Py_DECREF(Py_None);
-        return NULL;
+        goto EXIT;
     }
     
     // convert result to jobject
@@ -486,6 +486,7 @@ jobject pyembed_getvalue(JNIEnv *env,
         Py_DECREF(t);
     }
     
+EXIT:
     PyThreadState_Swap(prevThread);
     PyEval_ReleaseLock();
     
