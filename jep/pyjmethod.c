@@ -392,9 +392,6 @@ static PyObject* pyjmethod_call(PyJmethod_Object *self,
     }
     
     return pyjobject_find_method(self->pyjobject, self->pyMethodName, args);
-    
-    // oops.
-    return NULL;
 }
 
 
