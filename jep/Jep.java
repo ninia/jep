@@ -30,7 +30,8 @@ import java.io.File;
  */
 public final class Jep {
     
-    private int    tstate = -1;
+    private boolean closed = false;
+    private int     tstate = -1;
     // all calls must originate from same thread
     private Thread thread = null;
     
@@ -134,7 +135,7 @@ public final class Jep {
      * @exception JepException if an error occurs
      */
     public void runScript(String script, ClassLoader cl) throws JepException {
-        if(tstate < 1)
+        if(this.closed)
             throw new JepException("Jep has been closed.");
         isValidThread();
         
@@ -184,7 +185,7 @@ public final class Jep {
      * @exception JepException if an error occurs
      */
     public boolean eval(String str) throws JepException {
-        if(tstate < 1)
+        if(this.closed)
             throw new JepException("Jep has been closed.");
         isValidThread();
         
@@ -262,7 +263,7 @@ public final class Jep {
      * @exception JepException if an error occurs
      */
     public Object getValue(String str) throws JepException {
-        if(tstate < 1)
+        if(this.closed)
             throw new JepException("Jep has been closed.");
         isValidThread();
         
@@ -316,7 +317,7 @@ public final class Jep {
      * @exception JepException if an error occurs
      */
     public void set(String name, Object v) throws JepException {
-        if(tstate < 1)
+        if(this.closed)
             throw new JepException("Jep has been closed.");
         isValidThread();
         
@@ -335,7 +336,7 @@ public final class Jep {
      * @exception JepException if an error occurs
      */
     public void set(String name, String v) throws JepException {
-        if(tstate < 1)
+        if(this.closed)
             throw new JepException("Jep has been closed.");
         isValidThread();
         
@@ -355,7 +356,7 @@ public final class Jep {
      * @exception JepException if an error occurs
      */
     public void set(String name, boolean v) throws JepException {
-        if(tstate < 1)
+        if(this.closed)
             throw new JepException("Jep has been closed.");
         
         // there's essentially no difference between int and bool...
@@ -374,7 +375,7 @@ public final class Jep {
      * @exception JepException if an error occurs
      */
     public void set(String name, int v) throws JepException {
-        if(tstate < 1)
+        if(this.closed)
             throw new JepException("Jep has been closed.");
         isValidThread();
         
@@ -389,7 +390,7 @@ public final class Jep {
      * @exception JepException if an error occurs
      */
     public void set(String name, short v) throws JepException {
-        if(tstate < 1)
+        if(this.closed)
             throw new JepException("Jep has been closed.");
         isValidThread();
         
@@ -408,7 +409,7 @@ public final class Jep {
      * @exception JepException if an error occurs
      */
     public void set(String name, char[] v) throws JepException {
-        if(tstate < 1)
+        if(this.closed)
             throw new JepException("Jep has been closed.");
         isValidThread();
         
@@ -424,7 +425,7 @@ public final class Jep {
      * @exception JepException if an error occurs
      */
     public void set(String name, char v) throws JepException {
-        if(tstate < 1)
+        if(this.closed)
             throw new JepException("Jep has been closed.");
         isValidThread();
         
@@ -440,7 +441,7 @@ public final class Jep {
      * @exception JepException if an error occurs
      */
     public void set(String name, byte b) throws JepException {
-        if(tstate < 1)
+        if(this.closed)
             throw new JepException("Jep has been closed.");
         isValidThread();
         
@@ -456,7 +457,7 @@ public final class Jep {
      * @exception JepException if an error occurs
      */
     public void set(String name, long v) throws JepException {
-        if(tstate < 1)
+        if(this.closed)
             throw new JepException("Jep has been closed.");
         isValidThread();
 
@@ -475,7 +476,7 @@ public final class Jep {
      * @exception JepException if an error occurs
      */
     public void set(String name, double v) throws JepException {
-        if(tstate < 1)
+        if(this.closed)
             throw new JepException("Jep has been closed.");
         isValidThread();
 
@@ -494,7 +495,7 @@ public final class Jep {
      * @exception JepException if an error occurs
      */
     public void set(String name, float v) throws JepException {
-        if(tstate < 1)
+        if(this.closed)
             throw new JepException("Jep has been closed.");
         isValidThread();
         
@@ -510,8 +511,10 @@ public final class Jep {
      * Shutdown python interpreter. Make sure you call this.
      *
      */
-    public void close() {
-        if(this.tstate == -1)
+    public synchronized void close() {
+        this.closed = true;
+        
+        if(this.closed)
             return;
         
         this.close(tstate);
