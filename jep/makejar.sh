@@ -24,7 +24,7 @@ fi
 echo "cd .."
 cd ..
 
-files=`find $1 -name "*.class" -maxdepth 1`
+files=`find $1 -name "*.class"`
 
 if test -e ${1}jarfiles; then
     echo "Using jarfiles...."
