@@ -145,6 +145,22 @@ public class Test implements Runnable {
     public Test[] getObjectArray() {
         return new Test[] { new Test(), new Test() };
     }
+    
+    public void sendObjectArray(Object p[]) {
+        if(p == null)
+            throw new NullPointerException("p is null?");
+        for(int i = 0; i < p.length; i++)
+            System.out.println("                  " +
+                               "array[" + i + "] = " + p[i]);
+    }
+
+    public void sendIntArray(int p[]) {
+        if(p == null)
+            throw new NullPointerException("p is null?");
+        for(int i = 0; i < p.length; i++)
+            System.out.println("                  " +
+                               "array[" + i + "] = " + p[i]);
+    }
 
     public void sendMeSomeStuff(String v, ArrayList a) {
         System.out.println("got some stuff:   v = " + v + " and a = " + a);

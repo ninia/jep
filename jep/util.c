@@ -49,6 +49,7 @@
 
 #include "util.h"
 #include "pyjobject.h"
+#include "pyjarray.h"
 #include "pyjmethod.h"
 #include "pyjclass.h"
 #include "pyembed.h"
@@ -817,6 +818,39 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
             ret.l = jstr;
         }
         
+        return ret;
+    }
+
+    case JARRAY_ID: {
+        jobjectArray obj = NULL;
+        
+        if(param == Py_None)
+            ;
+        else {
+            PyJarray_Object *ar;
+            
+            if(!pyjarray_check(param)) {
+                PyErr_Format(PyExc_ValueError,
+                             "Expected jarray parameter at %i.",
+                             pos + 1);
+                return ret;
+            }
+            
+            ar = (PyJarray_Object *) param;
+            
+            if(!(*env)->IsAssignableFrom(env,
+                                         ar->clazz,
+                                         paramType)) {
+                PyErr_Format(PyExc_ValueError,
+                             "Incompatible array type at parameter %i.",
+                             pos + 1);
+                return ret;
+            }
+
+            obj = ((PyJarray_Object *) param)->object;
+        }
+        
+        ret.l = obj;
         return ret;
     }
 

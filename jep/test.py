@@ -241,6 +241,9 @@ if(__name__ == '__main__'):
     ar[1] = None
     print '[0], [1]:        ', ar[0], ar[1]
 
+    print 'sending:         '
+    testo.sendObjectArray(ar)
+
     ar = testo.getStringStringArray()
     print 'string[][]:      ', len(ar)
     print '[0], [0][1]:     ', ar[0], ar[0][1]
@@ -253,6 +256,9 @@ if(__name__ == '__main__'):
     
     ar = testo.getIntArray()
     print 'int array[0]:    ', ar[0]
+    ar[0] -= 100
+    print 'sending:         ', ar
+    testo.sendIntArray(ar)
 
     ar = testo.getBooleanArray()
     print 'bool array[1]:   ', ar[1]
