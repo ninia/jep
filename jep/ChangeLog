@@ -1,4 +1,5 @@
 2005-2-15 Mike Johnson <mrjohnson0@users.sourceforge.net>
+	* pyembed.c: remove debug printf
 	* pyjobject.c: decref fields list in dealloc
 	* Jep.java, Run.java, BSFJepEngine.java: set license information
 	to libpng. it's the closest to what i wanted. really, i don't care
