@@ -2,7 +2,6 @@
 import sys
 
 print "Hello world using Jep."
-#print 'path: ', sys.path
 
 import jep
 from jep import *
