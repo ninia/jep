@@ -153,8 +153,7 @@ public final class Jep {
      * Non-interactive mode is faster, but code blocks must be complete.
      *
      * For Example:
-     * <code>eval("if(Test):\n\tprint 'w00t'")</code>
-     *
+     * <blockquote>eval("if(Test):\n\tprint 'w00t'")</blockquote>
      * This is a limitation on the Python interpreter and unlikely to change.
      *
      * Also, Python does not readly return object values from eval(). Use
