@@ -1,4 +1,4 @@
-#as
+#asd
 import sys
 
 print "Hello world using Jep."
