@@ -133,7 +133,7 @@ static int pyjfield_init(PyJfield_Object *self) {
     jobject          fieldType   = NULL;
     jclass           modClass    = NULL;
     jint             modifier    = -1;
-    jboolean         isStatic    = JNI_FALSE;
+    jboolean         isStatic    = JNI_TRUE;
     JNIEnv          *env;
     
     env = self->env;
@@ -227,11 +227,11 @@ static int pyjfield_init(PyJfield_Object *self) {
     if(process_java_exception(env))
         goto EXIT_ERROR;
     
-    if(self->isStatic && !isStatic) {
+    if(self->isStatic == JNI_TRUE && !isStatic) {
         PyErr_SetString(PyExc_TypeError, "Field is not static.");
         goto EXIT_ERROR;
     }
-    if(isStatic)
+    if(isStatic == JNI_TRUE)
         self->isStatic = 1;
     else
         self->isStatic = 0;
