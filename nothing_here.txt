@@ -1,0 +1,3 @@
+CVS services have moved to here:
+
+http://www.miketec.org/cgi-bin/viewcvs.cgi/#dirlist
