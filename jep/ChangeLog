@@ -1,33 +1,34 @@
 2004-06-24  0.9.10  Mike Johnson <mrjohnson0@users.sourceforge.net>
-	* ltmain.sh: a couple fixes for broken redhat boxen
-	* pyembed.c: fclose script file.
-	* pyembed.c: cleanup tstate, remove hashcode
-	* pyjclass.c: fixed typo in malloc call
-	* pyjarray.c: added support for java primitive arrays
-	* Run.java: a class to run python scripts
-	* console.py: a python-based interactive console, with readline
-	* Jep.java: added constructor to append to sys.path
-	* Makefile: added javadoc support, javadoc included in CVS
+	* fix: pyjmethod.c - check if method should be called on class, not obj
+	* fix: ltmain.sh - a couple fixes for broken redhat boxen
+	* fix: pyembed.c - fclose script file.
+	* cleanup: - pyembed.c, cleanup tstate, remove hashcode
+	* fix: pyjclass.c - fixed typo in malloc call
+	* add: pyjarray.c - added support for java primitive arrays
+	* add: Run.java - a class to run python scripts
+	* add: console.py - a python-based interactive console, with readline
+	* add: Jep.java - added constructor to append to sys.path
+	* add: Makefile - added javadoc support, javadoc included in CVS
 
 2004-06-17  0.9.1  Mike Johnson <mrjohnson0@users.sourceforge.net>
-	* util.c: check string before converting. fixes crash if you used
-	Jep.set(String, (String) null).
-	* Console.java: some work here, pretty functional. basically acts
+	* fix: util.c - check string before converting. fixes crash if you used
+	Jep.set(String - (String) null).
+	* add: Console.java - some work here, pretty functional. basically acts
 	like python interactive prompt compiled without readline.
-	* Jep.java: some changes to eval() support.
+	* cleanup: Jep.java - some changes to eval() support.
 	
 2004-06-14  0.9.0  Mike Johnson <mrjohnson0@users.sourceforge.net>
-	* many cleanups for older autotools
-	* fixes for gcc 2.95
-	* pyjobject.c - fixed bug in method search
-	* compiler fixes, project file for windows
-	* finally fixed bug 957106
-	* added BSFJepEngine
-	* added a simple windows installer
+	* cleanup: for older autotools
+	* fix: for gcc 2.95
+	* fix: pyjobject.c - fixed bug in method search
+	* fix: compiler fixes, project file for windows
+	* fix: finally fixed bug 957106
+	* add: BSFJepEngine
+	* add: a simple windows installer
 	
 2004-05-21  0.8.1  Mike Johnson <mrjohnson0@users.sourceforge.net>
-	* fix obvious crash on the Mac.
-	* fix crash related to bug #957106.
+	* fix: obvious crash on the Mac.
+	* fix: crash related to bug #957106.
 	
 2004-04-29  Mike Johnson  <mrjohnson0@users.sourceforge.net>
 
