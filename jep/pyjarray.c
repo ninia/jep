@@ -315,41 +315,32 @@ static int pyjarray_init(PyJarray_Object *pyarray, int zero, PyObject *value) {
     // now, for primitive arrays we have to Release() the
     // array when we're done with it.
 
-    switch(pyarray->componentType) {
+    pyjarray_pin(pyarray);
 
-    case JINT_ID: {
-        int   i;
-        long  v = 0;
-        jint *ar;
-
-        ar = pyarray->pinnedArray = (*env)->GetIntArrayElements(
-            env,
-            pyarray->object,
-            &(pyarray->isCopy));
-
-        if(zero) {
+    if(zero && !PyErr_Occurred()) { // skip if we're not nulling the array
+        
+        switch(pyarray->componentType) {
+            
+        case JINT_ID: {
+            int   i;
+            long  v  = 0;
+            jint *ar = (jint *) pyarray->pinnedArray;
+            
             if(value && PyInt_Check(value))
                 v = PyInt_AS_LONG(value);
             
             for(i = 0; i < pyarray->length; i++)
                 ar[i] = v;
+
+            break;
         }
-        
-        break;
-    }
 
-    case JCHAR_ID: {
-        int   i;
-        long  v = 0;
-        jchar *ar;
-        char  *val;
-
-        ar = pyarray->pinnedArray = (*env)->GetCharArrayElements(
-            env,
-            pyarray->object,
-            &(pyarray->isCopy));
-
-        if(zero) {
+        case JCHAR_ID: {
+            int   i;
+            long  v = 0;
+            char  *val;
+            jchar *ar = (jchar *) pyarray->pinnedArray;
+            
             if(!value || !PyString_Check(value)) {
                 if(value && PyInt_Check(value))
                     v = PyInt_AS_LONG(value);
@@ -365,43 +356,29 @@ static int pyjarray_init(PyJarray_Object *pyarray, int zero, PyObject *value) {
                 for(i = 0; i < pyarray->length && val[i] != '\0'; i++)
                     ar[i] = (jchar) val[i];
             }
+
+            break;
         }
-        
-        break;
-    }
-        
-    case JBYTE_ID: {
-        int   i;
-        long  v = 0;
-        jbyte *ar;
-
-        ar = pyarray->pinnedArray = (*env)->GetByteArrayElements(
-            env,
-            pyarray->object,
-            &(pyarray->isCopy));
-
-        if(zero) {
+            
+        case JBYTE_ID: {
+            int    i;
+            long   v  = 0;
+            jbyte *ar = (jbyte *) pyarray->pinnedArray;
+            
             if(value && PyInt_Check(value))
                 v = PyInt_AS_LONG(value);
             
             for(i = 0; i < pyarray->length; i++)
                 ar[i] = (jbyte) v;
+            
+            break;
         }
-        
-        break;
-    }
 
-    case JLONG_ID: {
-        int      i;
-        jeplong  v = 0;
-        jlong   *ar;
-        
-        ar = pyarray->pinnedArray = (*env)->GetLongArrayElements(
-            env,
-            pyarray->object,
-            &(pyarray->isCopy));
-        
-        if(zero) {
+        case JLONG_ID: {
+            int      i;
+            jeplong  v  = 0;
+            jlong   *ar = (jlong *) pyarray->pinnedArray;
+
             if(!value)
                 ;
             else {
@@ -413,22 +390,15 @@ static int pyjarray_init(PyJarray_Object *pyarray, int zero, PyObject *value) {
             
             for(i = 0; i < pyarray->length; i++)
                 ar[i] = (jlong) v;
+            
+            break;
         }
-        
-        break;
-    }
-        
-    case JBOOLEAN_ID: {
-        int       i;
-        long      v = 0;
-        jboolean *ar;
-
-        ar = pyarray->pinnedArray = (*env)->GetBooleanArrayElements(
-            env,
-            pyarray->object,
-            &(pyarray->isCopy));
-        
-        if(zero) {
+            
+        case JBOOLEAN_ID: {
+            int       i;
+            long      v  = 0;
+            jboolean *ar = (jboolean *) pyarray->pinnedArray;
+            
             if(value && PyInt_Check(value))
                 v = PyInt_AS_LONG(value);
             
@@ -438,75 +408,54 @@ static int pyjarray_init(PyJarray_Object *pyarray, int zero, PyObject *value) {
                 else
                     ar[i] = JNI_FALSE;
             }
+            
+            break;
         }
         
-        break;
-    }
-        
-    case JDOUBLE_ID: {
-        int      i;
-        double   v = 0;
-        jdouble *ar;
-
-        ar = pyarray->pinnedArray = (*env)->GetDoubleArrayElements(
-            env,
-            pyarray->object,
-            &(pyarray->isCopy));
-
-        if(zero) {
+        case JDOUBLE_ID: {
+            int      i;
+            double   v  = 0;
+            jdouble *ar = (jdouble *) pyarray->pinnedArray;
+            
             if(value && PyFloat_Check(value))
                 v = PyFloat_AS_DOUBLE(value);
             
             for(i = 0; i < pyarray->length; i++)
                 ar[i] = (jdouble) v;
+            
+            break;
         }
-        
-        break;
-    }
-        
-    case JSHORT_ID: {
-        int     i;
-        long    v = 0;
-        jshort *ar;
-
-        ar = pyarray->pinnedArray = (*env)->GetShortArrayElements(
-            env,
-            pyarray->object,
-            &(pyarray->isCopy));
-
-        if(zero) {
+            
+        case JSHORT_ID: {
+            int     i;
+            long    v  = 0;
+            jshort *ar = (jshort *) pyarray->pinnedArray;
+            
             if(value && PyInt_Check(value))
                 v  = PyInt_AS_LONG(value);
             
             for(i = 0; i < pyarray->length; i++)
                 ar[i] = (jshort) v;
+            
+            break;
         }
-
-        break;
-    }
-        
-    case JFLOAT_ID: {
-        int      i;
-        double   v = 0;
-        jfloat *ar;
-
-        ar = pyarray->pinnedArray = (*env)->GetFloatArrayElements(
-            env,
-            pyarray->object,
-            &(pyarray->isCopy));
-        
-        if(zero) {
+            
+        case JFLOAT_ID: {
+            int     i;
+            double  v  = 0;
+            jfloat *ar = (jfloat *) pyarray->pinnedArray;
+            
             if(value && PyFloat_Check(value))
                 v = PyFloat_AS_DOUBLE(value);
             
             for(i = 0; i < pyarray->length; i++)
                 ar[i] = (jfloat) v;
+            
+            break;
         }
-        
-        break;
-    }
-
-    } // switch
+            
+        } // switch
+    } // if zero
 
     (*env)->DeleteLocalRef(env, compType);
     (*env)->DeleteLocalRef(env, compClass);
@@ -522,6 +471,74 @@ EXIT_ERROR:
         (*env)->DeleteLocalRef(env, compClass);
 
     return -1;
+}
+
+
+// pin primitive array memory. NOOP for object arrays.
+void pyjarray_pin(PyJarray_Object *self) {
+    JNIEnv *env = self->env;
+    
+    switch(self->componentType) {
+
+    case JINT_ID:
+        self->pinnedArray = (*env)->GetIntArrayElements(
+            env,
+            self->object,
+            &(self->isCopy));
+        break;
+
+    case JCHAR_ID:
+        self->pinnedArray = (*env)->GetCharArrayElements(
+            env,
+            self->object,
+            &(self->isCopy));
+        break;
+        
+    case JBYTE_ID:
+        self->pinnedArray = (*env)->GetByteArrayElements(
+            env,
+            self->object,
+            &(self->isCopy));
+        break;
+
+    case JLONG_ID:
+        self->pinnedArray = (*env)->GetLongArrayElements(
+            env,
+            self->object,
+            &(self->isCopy));
+        break;
+        
+    case JBOOLEAN_ID:
+        self->pinnedArray = (*env)->GetBooleanArrayElements(
+            env,
+            self->object,
+            &(self->isCopy));
+        break;
+        
+    case JDOUBLE_ID:
+        self->pinnedArray = (*env)->GetDoubleArrayElements(
+            env,
+            self->object,
+            &(self->isCopy));
+        break;
+        
+    case JSHORT_ID:
+        self->pinnedArray = (*env)->GetShortArrayElements(
+            env,
+            self->object,
+            &(self->isCopy));
+        break;
+        
+    case JFLOAT_ID:
+        self->pinnedArray = (*env)->GetFloatArrayElements(
+            env,
+            self->object,
+            &(self->isCopy));
+        break;
+
+    } // switch
+
+    process_java_exception(env);
 }
 
 

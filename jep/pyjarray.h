@@ -45,6 +45,7 @@ typedef struct {
 PyObject* pyjarray_new(JNIEnv*, jobjectArray);
 PyObject* pyjarray_new_v(PyObject*, PyObject*);
 int pyjarray_check(PyObject*);
-void pyjarray_release_pinned(PyJarray_Object *self, jint mode);
+void pyjarray_release_pinned(PyJarray_Object*, jint);
+void pyjarray_pin(PyJarray_Object*);
 
 #endif // ndef pyjarray

@@ -242,8 +242,8 @@ if(__name__ == '__main__'):
     except(jep.NumberFormatException):
         print 'parseInt:         caught NumberFormatException'
 
+    FileInputStream = findClass('java.io.FileInputStream')
     try:
-        FileInputStream = findClass('java.io.FileInputStream')
         fin = FileInputStream('asdf')
         fin.close()
     except(jep.FileNotFoundException):
@@ -263,6 +263,12 @@ if(__name__ == '__main__'):
     # array handling
     ##################################################
     """
+
+    # just for fun
+    fin = FileInputStream("configure")
+    ar = jarray(20, JBYTE_ID)
+    count = fin.read(ar)
+    print '20 bytes of conf ', String(ar, 0, count)
     
     # array handling
     ar = testo.getStringArray()

@@ -962,7 +962,7 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
 
             // since this method is called before the value is used,
             // release the pinned array from here.
-            pyjarray_release_pinned((PyJarray_Object *) param, JNI_COMMIT);
+            pyjarray_release_pinned((PyJarray_Object *) param, 0);
             obj = ((PyJarray_Object *) param)->object;
         }
         

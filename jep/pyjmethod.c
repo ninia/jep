@@ -418,11 +418,12 @@ static PyObject* pyjmethod_call(PyJmethod_Object *self,
 // easy. :-)
 PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                                   PyObject *args) {
-    PyObject      *result = NULL;
-    const char    *str    = NULL;
-    JNIEnv        *env    = NULL;
-    int            pos    = 0;
-    jvalue        *jargs  = NULL;
+    PyObject      *result     = NULL;
+    const char    *str        = NULL;
+    JNIEnv        *env        = NULL;
+    int            pos        = 0;
+    jvalue        *jargs      = NULL;
+    int            foundArray = 0;   /* if params includes pyjarray instance */
     PyThreadState *_save;
     
     if(!self->parameters) {
@@ -469,6 +470,9 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
         
         paramTypeId = get_jtype(env, paramType, pclazz);
         (*env)->DeleteLocalRef(env, pclazz);
+
+        if(paramTypeId == JARRAY_ID)
+            foundArray = 1;
         
         jargs[pos] = convert_pyarg_jvalue(env,
                                           param,
@@ -773,6 +777,16 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
     
     if(PyErr_Occurred())
         return NULL;
+    
+    // re pin array objects if needed
+    if(foundArray) {
+        for(pos = 0; pos < self->lenParameters; pos++) {
+            PyObject *param = PyTuple_GetItem(args, pos);     /* borrowed */
+            if(param && pyjarray_check(param))
+                pyjarray_pin((PyJarray_Object *) param);
+        }
+    }
+    
     if(result == NULL) {
         Py_INCREF(Py_None);
         return Py_None;

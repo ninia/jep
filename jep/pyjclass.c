@@ -51,6 +51,7 @@
 #include "pyjclass.h"
 #include "pyjobject.h"
 #include "pyjmethod.h"
+#include "pyjarray.h"
 #include "util.h"
 
 extern PyTypeObject PyJclass_Type;
@@ -158,6 +159,7 @@ PyObject* pyjclass_call(PyJclass_Object *self,
     jclass         initClass   = NULL;
     jobject        constructor = NULL;
     jvalue        *jargs       = NULL;
+    int            foundArray  = 0;
     PyThreadState *_save;
 
     if(!PyTuple_Check(args)) {
@@ -243,6 +245,9 @@ PyObject* pyjclass_call(PyJclass_Object *self,
             if(PyErr_Occurred() || process_java_exception(env))
                 goto EXIT_ERROR;
             
+            if(paramTypeId == JARRAY_ID)
+                foundArray = 1;
+            
             // if java and python agree, continue checking
             if(pyarg_matches_jtype(env, param, paramType, paramTypeId)) {
                 jargs[parmPos] = convert_pyarg_jvalue(env,
@@ -320,8 +325,20 @@ PyObject* pyjclass_call(PyJclass_Object *self,
             // we already closed the local frame, so make
             // sure to delete this local ref.
             PyMem_Free(jargs);
+            
+            // re pin array if needed
+            if(foundArray) {
+                for(parmPos = 0; parmPos < parmLen; parmPos++) {
+                    PyObject *param = PyTuple_GetItem(args, parmPos);
+                    if(param && pyjarray_check(param))
+                        pyjarray_pin((PyJarray_Object *) param);
+                }
+            }
+            
             return pobj;
         }
+
+        foundArray = 0;
     } // for each constructor
     
     
