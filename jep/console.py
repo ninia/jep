@@ -25,7 +25,6 @@ def prompt(jep):
             ran = jep.eval(line)
         except:
             traceback.print_exc()
-            pass
 
         try:
             if(ran):
