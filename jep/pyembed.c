@@ -556,8 +556,6 @@ jobject pyembed_getvalue(JNIEnv *env,
     
     process_py_exception(env, 1);
     Py_DECREF(dict);
-    PyThreadState_Swap(prevThread);
-    PyEval_ReleaseLock();
     
     if(result == NULL)
         return NULL;
@@ -578,7 +576,10 @@ jobject pyembed_getvalue(JNIEnv *env,
         ret = (jobject) (*env)->NewStringUTF(env, (const char *) tt);
         Py_DECREF(t);
     }
-
+    
+    PyThreadState_Swap(prevThread);
+    PyEval_ReleaseLock();
+    
     Py_DECREF(result);
     return ret;
 }
