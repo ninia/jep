@@ -39,6 +39,9 @@ public final class Jep {
     private StringBuffer evalLines   = null;
     private boolean      interactive = false;
     
+    // windows requires this as unix newline...
+    private static final String LINE_SEP = "\n";
+    
     
     /**
      * Creates a new <code>Jep</code> instance.
@@ -163,49 +166,54 @@ public final class Jep {
      */
     public boolean eval(String str) throws JepException {
         try {
+            // trim windows \r\n
+            if(str != null) {
+                int p = str.indexOf("\r");
+                if(p >= 0)
+                    str = str.substring(0, p);
+            }
+            
             if(str == null || str.trim().equals("")) {
                 str = null;
+                
                 if(!this.interactive)
                     return false;
-                else {
-                    if(this.evalLines == null)
-                        return true; // nothing to eval
-                    else if(str == null || compileString(this.tstate, str) == 0)
-                        return false;
-                }
-            }
-            else {
-                // try to compile string. if successful, input is finished.
-                if(compileString(this.tstate, str) == 0) {
-                    if(this.evalLines == null)
-                        this.evalLines = new StringBuffer();
-                    evalLines.append(str + "\n");
-                    return false;
-                }
-            }
+                if(this.evalLines == null)
+                    return true; // nothing to eval
 
-            // may need to run previous lines
-            if(this.evalLines != null) {
+                // null means we send lines, whether or not it compiles.
                 eval(this.tstate,
                      this.classLoader,
                      this.evalLines.toString());
                 this.evalLines = null;
-            
-                if(str == null)
-                    return true;
-            }
-        
-            if(str != null) {
-                eval(this.tstate, this.classLoader, str);
                 return true;
             }
+            else {
+                // first check if it compiles by itself
+                if(this.evalLines == null &&
+                   compileString(this.tstate, str) == 1) {
+                    
+                    eval(this.tstate,
+                         this.classLoader,
+                         str);
+                    return true;
+                }
+                
+                // doesn't compile on it's own, append to eval
+                if(this.evalLines == null)
+                    this.evalLines = new StringBuffer();
+                else
+                    evalLines.append(LINE_SEP);
+                
+                evalLines.append(str);
+            }
+            
+            return false;
         }
         catch(JepException e) {
             this.evalLines = null;
             throw new JepException(e);
         }
-        
-        return false;
     }
 
 
