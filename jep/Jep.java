@@ -208,9 +208,8 @@ public final class Jep {
             
             return false;
         }
-        catch(JepException e) {
+        finally {
             this.evalLines = null;
-            throw new JepException(e);
         }
     }
 
