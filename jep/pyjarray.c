@@ -22,7 +22,7 @@
    pyjarray is a python object for using java arrays within the interpreter.
    i got a lot of inspiration from listobject.c in the Objects/ folder
    of the python distribution.
-*/ 	
+*/     
 
 #ifdef WIN32
 # include "winconfig.h"
@@ -447,9 +447,9 @@ static int pyjarray_setitem(PyJarray_Object *self,
     JNIEnv *env = self->env;
     
     if(pos < 0 || pos >= self->length) {
-		PyErr_Format(PyExc_IndexError,
+        PyErr_Format(PyExc_IndexError,
                      "array assignment index out of range: %i", pos);
-		return -1;
+        return -1;
     }
 
     // first, do the object types.
@@ -693,56 +693,56 @@ static PyObject* pyjarray_item(PyJarray_Object *self, int pos) {
 
 // shamelessly taken from listobject.c
 static PyObject* pyjarray_subscript(PyJarray_Object *self, PyObject *item) {
-	if (PyInt_Check(item)) {
-		long i = PyInt_AS_LONG(item);
-		if (i < 0)
-			i += self->length;
-		return pyjarray_item(self, i);
-	}
-	else if (PyLong_Check(item)) {
-		long i = PyLong_AsLong(item);
-		if (i == -1 && PyErr_Occurred())
-			return NULL;
-		if (i < 0)
-			i += self->length;
-		return pyjarray_item(self, i);
-	}
-	else if (PySlice_Check(item)) {
+    if (PyInt_Check(item)) {
+        long i = PyInt_AS_LONG(item);
+        if (i < 0)
+            i += self->length;
+        return pyjarray_item(self, i);
+    }
+    else if (PyLong_Check(item)) {
+        long i = PyLong_AsLong(item);
+        if (i == -1 && PyErr_Occurred())
+            return NULL;
+        if (i < 0)
+            i += self->length;
+        return pyjarray_item(self, i);
+    }
+    else if (PySlice_Check(item)) {
         PyErr_SetString(PyExc_RuntimeError, "slices not implemented.");
-/* 		int start, stop, step, slicelength, cur, i; */
-/* 		PyObject* result; */
-/* 		PyObject* it; */
-/* 		PyObject **src, **dest; */
+/*         int start, stop, step, slicelength, cur, i; */
+/*         PyObject* result; */
+/*         PyObject* it; */
+/*         PyObject **src, **dest; */
 
-/* 		if (PySlice_GetIndicesEx((PySliceObject*)item, self->ob_size, */
+/*         if (PySlice_GetIndicesEx((PySliceObject*)item, self->ob_size, */
 /*                                  &start, &stop, &step, &slicelength) < 0) { */
-/* 			return NULL; */
-/* 		} */
+/*             return NULL; */
+/*         } */
 
-/* 		if (slicelength <= 0) { */
-/* 			return PyList_New(0); */
-/* 		} */
-/* 		else { */
-/* 			result = PyList_New(slicelength); */
-/* 			if (!result) return NULL; */
+/*         if (slicelength <= 0) { */
+/*             return PyList_New(0); */
+/*         } */
+/*         else { */
+/*             result = PyList_New(slicelength); */
+/*             if (!result) return NULL; */
 
-/* 			src = self->ob_item; */
-/* 			dest = ((PyListObject *)result)->ob_item; */
-/* 			for (cur = start, i = 0; i < slicelength; */
-/* 			     cur += step, i++) { */
-/* 				it = src[cur]; */
-/* 				Py_INCREF(it); */
-/* 				dest[i] = it; */
-/* 			} */
+/*             src = self->ob_item; */
+/*             dest = ((PyListObject *)result)->ob_item; */
+/*             for (cur = start, i = 0; i < slicelength; */
+/*                  cur += step, i++) { */
+/*                 it = src[cur]; */
+/*                 Py_INCREF(it); */
+/*                 dest[i] = it; */
+/*             } */
 
-/* 			return result; */
-/* 		} */
-	}
-	else {
-		PyErr_SetString(PyExc_TypeError,
+/*             return result; */
+/*         } */
+    }
+    else {
+        PyErr_SetString(PyExc_TypeError,
                         "list indices must be integers");
-		return NULL;
-	}
+        return NULL;
+    }
 }
 
 
@@ -769,17 +769,17 @@ PyMethodDef pyjarray_methods[] = {
 
 
 static PySequenceMethods list_as_sequence = {
-	(inquiry) pyjarray_length,                /* sq_length */
+    (inquiry) pyjarray_length,                /* sq_length */
     (binaryfunc) 0,                           /* sq_concat */
     (intargfunc) 0,                           /* sq_repeat */
-	(intargfunc) pyjarray_item,               /* sq_item */
+    (intargfunc) pyjarray_item,               /* sq_item */
     0,                                        /* sq_slice */
-	(intobjargproc) pyjarray_setitem,         /* sq_ass_item */
+    (intobjargproc) pyjarray_setitem,         /* sq_ass_item */
     0,
-/* 	(intintobjargproc) list_ass_slice,        /\* sq_ass_slice *\/ */
-/* 	(objobjproc) list_contains,               /\* sq_contains *\/ */
-/* 	(binaryfunc) list_inplace_concat,         /\* sq_inplace_concat *\/ */
-/* 	(intargfunc) list_inplace_repeat,         /\* sq_inplace_repeat *\/ */
+/*     (intintobjargproc) list_ass_slice,        /\* sq_ass_slice *\/ */
+/*     (objobjproc) list_contains,               /\* sq_contains *\/ */
+/*     (binaryfunc) list_inplace_concat,         /\* sq_inplace_concat *\/ */
+/*     (intargfunc) list_inplace_repeat,         /\* sq_inplace_repeat *\/ */
 };
 
 
