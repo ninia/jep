@@ -70,11 +70,19 @@ fi])
 dnl shutup the compiler, long double is from Python.h
 AC_DEFUN([AC_CHECK_LONG_DOUBLE], [
 AC_REQUIRE([AC_PROG_CPP])
+AC_MSG_CHECKING([how to disable long double warning])
 ac_save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="$CPPFLAGS -Wno-long-double"
-AC_TRY_CPP([int main(int argc, char **argv) {}],
-    CPPFLAGS="$CPPFLAGS",
-    CPPFLAGS="$ac_save_CPPFLAGS")
+AC_TRY_COMPILE([int main(int argc, char **argv) {return 0;}],
+    ac_long=0,
+    ac_long=1
+)
+if test "$ac_long" == "0"; then
+    AC_MSG_RESULT([-Wno-long-double])
+else
+    AC_MSG_RESULT([ignored])
+    CPPFLAGS="$ac_save_CPPFLAGS"
+fi
 ])
 
 dnl --------------------------------------------------
