@@ -227,7 +227,7 @@ static int pyjfield_init(PyJfield_Object *self) {
     if(process_java_exception(env))
         goto EXIT_ERROR;
     
-    if(self->isStatic == JNI_TRUE && !isStatic) {
+    if(!self->pyjobject->object && !isStatic) {
         PyErr_SetString(PyExc_TypeError, "Field is not static.");
         goto EXIT_ERROR;
     }
