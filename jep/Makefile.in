@@ -92,7 +92,7 @@ VERSION = @VERSION@
 AM_CPPFLAGS = $(all_includes)
 
 lib_LTLIBRARIES = libjep.la
-libjep_la_LDFLAGS = -version-info 1:0:0 -no-undefined
+libjep_la_LDFLAGS = -version-info 1:1:0 -no-undefined
 libjep_la_SOURCES = jep.c jep.1 system.h aclocal.m4 	pyembed.c 	util.c 	pyjmethod.c 	pyjobject.c 	pyjclass.c 	pyjfield.c 	pyjarray.c
 
 
@@ -101,7 +101,7 @@ METASOURCES = AUTO
 #  uncomment the following if jep requires the math library
 #jep_LDADD=-lm
 
-EXTRA_DIST = python.m4 	autogen.sh 	pyembed.h 	util.h 	pyjmethod.h 	pyjobject.h 	pyjarray.h 	pyjclass.h 	pyjfield.h 	Jep.java 	Run.java 	BSFJepEngine.java 	JepException.java 	Test.java 	test.py 	jep.h 	makejar.sh 	jep.jar 	ext/bsf.jar 	windows/jep.dsp 	windows/setup.nsi 	javadoc/ 	console.py 	memtest.py
+EXTRA_DIST = python.m4 	autogen.sh 	pyembed.h 	util.h 	pyjmethod.h 	pyjobject.h 	pyjarray.h 	pyjclass.h 	pyjfield.h 	Jep.java 	Run.java 	BSFJepEngine.java 	JepException.java 	Test.java 	test.py 	jep.h 	makejar.sh 	jep.jar 	ext/bsf.jar 	windows/jep.dsp 	windows/setup.nsi 	javadoc/ 	console.py 	memtest.py 	winconfig.h
 
 
 #  if you write a self-test script named `chk', uncomment the

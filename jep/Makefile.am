@@ -1,7 +1,7 @@
 AM_CPPFLAGS = $(all_includes)
 
 lib_LTLIBRARIES = libjep.la
-libjep_la_LDFLAGS = -version-info 1:0:0 -no-undefined
+libjep_la_LDFLAGS = -version-info 1:1:0 -no-undefined
 libjep_la_SOURCES = jep.c jep.1 system.h aclocal.m4 \
 	pyembed.c \
 	util.c \
@@ -39,7 +39,8 @@ EXTRA_DIST=python.m4 \
 	windows/setup.nsi \
 	javadoc/ \
 	console.py \
-	memtest.py
+	memtest.py \
+	winconfig.h
 
 dist-hook:
 	rm -rf `find $(distdir)/javadoc -name CVS`

@@ -17,4 +17,4 @@
 #define USE_MAPPED_EXCEPTIONS 1
 
 /* Version number of package */
-#define VERSION "0.9.11"
+#define VERSION "1.1"
