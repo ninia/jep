@@ -92,6 +92,7 @@ PyObject* jobject_topystring(JNIEnv *env, jobject obj, jclass clazz) {
     result = (*env)->GetStringUTFChars(env, jstr, 0);
     pyres  = PyString_FromString(result);
     (*env)->ReleaseStringUTFChars(env, jstr, result);
+    (*env)->DeleteLocalRef(env, jstr);
     
     // method returns new reference.
     return pyres;
@@ -351,8 +352,10 @@ const char* jstring2char(JNIEnv *env, jstring str) {
 
 // release memory allocated by jstring2char
 void release_utf_char(JNIEnv *env, jstring str, const char *v) {
-    if(v != NULL && str != NULL)
+    if(v != NULL && str != NULL) {
         (*env)->ReleaseStringUTFChars(env, str, v);
+        (*env)->DeleteLocalRef(env, str);
+    }
 }
 
 
