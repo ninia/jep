@@ -432,6 +432,7 @@ PyObject* find_method(PyObject *methodName,
         if(!cand[i])
             continue;
         
+        // check if argument types match
         for(parmpos = 0; parmpos < cand[i]->lenParameters; parmpos++) {
             PyObject *param       = PyTuple_GetItem(args, parmpos);
             JNIEnv   *env         = cand[i]->env;
@@ -453,14 +454,13 @@ PyObject* find_method(PyObject *methodName,
             (*env)->DeleteLocalRef(env, pclazz);
             
             if(pyarg_matches_jtype(env, param, paramType, paramTypeId)) {
-                jstring s;
-                const char *utf;
+                (*env)->DeleteLocalRef(env, paramType);
                 
                 if(PyErr_Occurred())
                     break;
-                
                 continue;
             }
+            (*env)->DeleteLocalRef(env, paramType);
             
             // args don't match
             break;
