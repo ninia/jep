@@ -1,3 +1,7 @@
+2004-06-01  0.9.0  Mike Johnson <mrjohnson0@users.sourceforge.net>
+	* many cleanups for older autotools
+	* fixes for gcc 2.95
+	
 2004-05-21  0.8.1  Mike Johnson <mrjohnson0@users.sourceforge.net>
 	* fix obvious crash on the Mac.
 	* fix crash related to bug #957106.
