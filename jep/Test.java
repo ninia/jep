@@ -35,9 +35,7 @@ public class Test implements Runnable {
                 File pwd = new File(".");
 
                 jep = new Jep(false, pwd.getAbsolutePath());
-                System.out.println("obj");
                 jep.set("testo", new Test());
-                System.out.println("string");
                 jep.set("test", "value from java.");
                 jep.set("testi", i);
                 jep.set("testb", true);
