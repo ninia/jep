@@ -25,6 +25,9 @@
 #  undef _POSIX_C_SOURCE
 #endif
 #include <jni.h>
+#ifdef _FILE_OFFSET_BITS
+# undef _FILE_OFFSET_BITS
+#endif
 #include <Python.h>
 
 #ifndef _Included_util
