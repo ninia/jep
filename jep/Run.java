@@ -1,7 +1,11 @@
 package jep;
 
+
+import java.io.*;
+
 /**
- * Run.java
+ * <pre>
+ * Run.java - Execute a Python script.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,19 +22,18 @@ package jep;
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * Created: Sun Jun  6 15:06:34 2004
+ * </pre>
  *
  * @author <a href="mailto:mrjohnson0@users.sourceforge.net">Mike Johnson</a>
  * @version 1.0
  */
-
-import java.io.*;
-
 public class Run {
     
     /**
      * Describe <code>main</code> method here.
      *
      * @param args[] a <code>String</code> value
+     * @exception Throwable if an error occurs
      * @exception Exception if an error occurs
      */
     public static void main(String args[]) throws Throwable {
@@ -52,11 +55,7 @@ public class Run {
     }
     
     
-    /**
-     * Creates a new <code>Run</code> instance.
-     *
-     */
-    public Run() {
-    } // Run constructor
+    private Run() {
+    }
     
 } // Run

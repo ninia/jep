@@ -44,7 +44,7 @@ public class BSFJepEngine extends BSFEngineImpl {
     /**
      * for testing.
      *
-     * @param args[] a <code>String</code> value
+     * @param args a <code>String[]</code> value
      * @exception Exception if an error occurs
      */
     public static void main(String args[]) throws Exception {
@@ -104,6 +104,11 @@ public class BSFJepEngine extends BSFEngineImpl {
     }
     
     
+    /**
+     * Describe <code>propertyChange</code> method here.
+     *
+     * @param e a <code>java.beans.PropertyChangeEvent</code> value
+     */
     public void propertyChange(java.beans.PropertyChangeEvent e) {
         super.propertyChange(e);
     }

@@ -1,7 +1,10 @@
 package jep;
 
+import java.io.File;
+
 /**
- * Jep.java
+ * <pre>
+ * Jep.java - Embeds CPython in Java.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,16 +23,9 @@ package jep;
  *
  * Created: Fri Apr 30 10:35:03 2004
  *
- * @author <a href="mailto:mrjohnson0@sourceforge.net">Mike Johnson</a>
- * @version 1.0
- */
-
-import java.io.File;
-
-/**
- * Describe class <code>Jep</code> here.
+ * </pre>
  *
- * @author <a href="mailto:mrjohnson@trinitycapital.com">Mike Johnson</a>
+ * @author <a href="mailto:mrjohnson0@sourceforge.net">Mike Johnson</a>
  * @version 1.0
  */
 public final class Jep {
@@ -106,7 +102,7 @@ public final class Jep {
     /**
      * run a python script.
      *
-     * @param script a <code>String</code> value
+     * @param script a <code>String</code> absolute path to script file.
      * @exception JepException if an error occurs
      */
     public void runScript(String script) throws JepException {
@@ -117,7 +113,7 @@ public final class Jep {
     /**
      * run a python script.
      *
-     * @param script a <code>String</code> value
+     * @param script a <code>String</code> absolute path to script file.
      * @param cl a <code>ClassLoader</code> value, may be null.
      * @exception JepException if an error occurs
      */
@@ -213,8 +209,8 @@ public final class Jep {
 
 
     /**
-     * retrieve a value from python. if the result is not a java object,
-     * implementation currently returns a String
+     * Retrieves a value from python. If the result is not a java object,
+     * the implementation currently returns a String
      *
      * @param str a <code>String</code> value
      * @return an <code>Object</code> value

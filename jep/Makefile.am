@@ -36,7 +36,11 @@ EXTRA_DIST=python.m4 \
 	jep.jar \
 	ext/bsf.jar \
 	windows/jep.dsp \
-	windows/setup.nsi
+	windows/setup.nsi \
+	javadoc/
+
+dist-hook:
+	rm -rf `find $(distdir)/javadoc -name CVS`
 
 #  if you write a self-test script named `chk', uncomment the
 #  following and add `chk' to the EXTRA_DIST list
@@ -69,3 +73,6 @@ JepException.class: JepException.java
 
 jep.jar: Jep.class Test.class JepException.class Run.class
 	./makejar.sh jep/ jep.jar
+
+javadoc: jep.jar
+	${JAVA_HOME}/bin/javadoc -breakiterator -classpath ../:ext/bsf.jar jep -d javadoc/

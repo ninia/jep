@@ -101,7 +101,7 @@ METASOURCES = AUTO
 #  uncomment the following if jep requires the math library
 #jep_LDADD=-lm
 
-EXTRA_DIST = python.m4 	autogen.sh 	pyembed.h 	util.h 	pyjmethod.h 	pyjobject.h 	pyjarray.h 	pyjclass.h 	pyjfield.h 	Jep.java 	Run.java 	BSFJepEngine.java 	JepException.java 	Test.java 	test.py 	jep.h 	makejar.sh 	jep.jar 	ext/bsf.jar 	windows/jep.dsp 	windows/setup.nsi
+EXTRA_DIST = python.m4 	autogen.sh 	pyembed.h 	util.h 	pyjmethod.h 	pyjobject.h 	pyjarray.h 	pyjclass.h 	pyjfield.h 	Jep.java 	Run.java 	BSFJepEngine.java 	JepException.java 	Test.java 	test.py 	jep.h 	makejar.sh 	jep.jar 	ext/bsf.jar 	windows/jep.dsp 	windows/setup.nsi 	javadoc/
 
 
 #  if you write a self-test script named `chk', uncomment the
@@ -393,6 +393,7 @@ distdir: $(DISTFILES)
 	    || cp -p $$d/$$file $(distdir)/$$file || :; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) top_distdir="$(top_distdir)" distdir="$(distdir)" dist-hook
 
 DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 
@@ -513,6 +514,9 @@ mostlyclean-generic distclean-generic clean-generic \
 maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
 
+dist-hook:
+	rm -rf `find $(distdir)/javadoc -name CVS`
+
 Jep.class: Jep.java
 	$(JAVAC) ${JAVACOPT} Jep.java
 	$(JAVAH) -o jep.h -classpath ../ jep.Jep
@@ -531,6 +535,9 @@ JepException.class: JepException.java
 
 jep.jar: Jep.class Test.class JepException.class Run.class
 	./makejar.sh jep/ jep.jar
+
+javadoc: jep.jar
+	${JAVA_HOME}/bin/javadoc -breakiterator -classpath ../:ext/bsf.jar jep -d javadoc/
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
