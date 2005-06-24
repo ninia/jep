@@ -297,8 +297,10 @@ static PyObject* pyjobject_call(PyJobject_Object *self,
                                 PyObject *args,
                                 PyObject *keywords) {
     
-    if(!self->pyjclass)
+    if(!self->pyjclass) {
+        PyErr_Format(PyExc_RuntimeError, "Not a class.");
         return NULL;
+    }
     
     return pyjclass_call(self->pyjclass, args, keywords);
 }
