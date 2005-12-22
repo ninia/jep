@@ -79,3 +79,6 @@ jep.jar: Jep.class Test.class JepException.class Run.class
 
 javadoc: jep.jar
 	${JAVA_HOME}/bin/javadoc -version -windowtitle 'Java Embedded Python' -author -breakiterator -classpath ../:ext/bsf.jar jep -d javadoc/
+
+jclean:
+	rm -f *.class *.jar
