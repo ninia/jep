@@ -53,8 +53,8 @@
 #include "pyjclass.h"
 #include "util.h"
 
-extern PyTypeObject PyJobject_Type;
-extern PyMethodDef  pyjobject_methods[];
+staticforward PyTypeObject PyJobject_Type;
+staticforward PyMethodDef  pyjobject_methods[];
 
 static int pyjobject_init(PyJobject_Object*);
 static int pyjobject_setattr(PyJobject_Object*, char*, PyObject*);

@@ -52,7 +52,7 @@
 #include "pyembed.h"
 #include "util.h"
 
-extern PyTypeObject PyJarray_Type;
+staticforward PyTypeObject PyJarray_Type;
 extern PyMethodDef  pyjarray_methods[];
 
 

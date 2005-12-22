@@ -54,8 +54,8 @@
 #include "pyjarray.h"
 #include "util.h"
 
-extern PyTypeObject PyJclass_Type;
-extern PyMethodDef  pyjclass_methods[];
+staticforward PyTypeObject PyJclass_Type;
+staticforward PyMethodDef  pyjclass_methods[];
 
 static void pyjclass_addmethod(PyJclass_Object*, PyObject*);
 static void pyjclass_addfield(PyJclass_Object*, PyObject*);

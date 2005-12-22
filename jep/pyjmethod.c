@@ -52,8 +52,8 @@
 #include "util.h"
 #include "pyembed.h"
 
-extern PyTypeObject PyJmethod_Type;
-extern PyMethodDef  pyjmethod_methods[];
+staticforward PyTypeObject PyJmethod_Type;
+staticforward PyMethodDef  pyjmethod_methods[];
 
 static void pyjmethod_dealloc(PyJmethod_Object *self);
 

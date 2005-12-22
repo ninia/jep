@@ -58,8 +58,8 @@
 #include "pyjclass.h"
 #include "util.h"
 
-extern PyTypeObject PyJfield_Type;
-extern PyMethodDef  pyjfield_methods[];
+staticforward PyTypeObject PyJfield_Type;
+staticforward PyMethodDef  pyjfield_methods[];
 
 static void pyjfield_dealloc(PyJfield_Object *self);
 
