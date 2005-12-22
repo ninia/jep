@@ -141,7 +141,7 @@ void pyembed_shutdown(void) {
 }
 
 
-jint pyembed_thread_init(JNIEnv *env, jobject cl) {
+jlong pyembed_thread_init(JNIEnv *env, jobject cl) {
     JepThread *jepThread;
     PyObject  *tdict;
     
@@ -186,11 +186,11 @@ jint pyembed_thread_init(JNIEnv *env, jobject cl) {
     }
     
     PyEval_SaveThread();
-    return (jint) jepThread;
+    return (jlong) jepThread;
 }
 
 
-void pyembed_thread_close(jint _jepThread) {
+void pyembed_thread_close(jlong _jepThread) {
     PyThreadState *prevThread, *thread;
     JepThread     *jepThread;
     PyObject      *tdict, *key;
@@ -339,7 +339,7 @@ static PyObject* pyembed_findclass(PyObject *self, PyObject *args) {
 
 
 void pyembed_eval(JNIEnv *env,
-                  jint _jepThread,
+                  jlong _jepThread,
                   char *str) {
     PyThreadState    *prevThread, *thread;
     PyObject         *modjep, *main, *dict, *result;
@@ -389,7 +389,7 @@ EXIT:
 
 // returns 1 if finished, 0 if not, throws exception otherwise
 int pyembed_compile_string(JNIEnv *env,
-                           jint _jepThread,
+                           jlong _jepThread,
                            char *str) {
     PyThreadState  *prevThread;
     PyObject       *code;
@@ -427,7 +427,7 @@ int pyembed_compile_string(JNIEnv *env,
 }
 
 
-void pyembed_setloader(JNIEnv *env, jint _jepThread, jobject cl) {
+void pyembed_setloader(JNIEnv *env, jlong _jepThread, jobject cl) {
     jobject    oldLoader = NULL;
     JepThread *jepThread = (JepThread *) _jepThread;
     if(!jepThread) {
@@ -446,7 +446,7 @@ void pyembed_setloader(JNIEnv *env, jint _jepThread, jobject cl) {
 }
 
 
-jobject pyembed_getvalue(JNIEnv *env, jint _jepThread, char *str) {
+jobject pyembed_getvalue(JNIEnv *env, jlong _jepThread, char *str) {
     PyThreadState  *prevThread;
     PyObject       *main, *dict, *result;
     jobject         ret = NULL;
@@ -511,7 +511,7 @@ EXIT:
 
 
 void pyembed_run(JNIEnv *env,
-                 jint _jepThread,
+                 jlong _jepThread,
                  char *file) {
     PyThreadState *prevThread;
     JepThread     *jepThread;
@@ -586,7 +586,7 @@ EXIT:
 
 
 void pyembed_setparameter_object(JNIEnv *env,
-                                 jint _jepThread,
+                                 jlong _jepThread,
                                  const char *name,
                                  jobject value) {
     PyObject      *pyjob;
@@ -615,7 +615,7 @@ void pyembed_setparameter_object(JNIEnv *env,
 
 
 void pyembed_setparameter_string(JNIEnv *env,
-                                 jint _jepThread,
+                                 jlong _jepThread,
                                  const char *name,
                                  const char *value) {
     PyObject      *pyvalue;
@@ -642,7 +642,7 @@ void pyembed_setparameter_string(JNIEnv *env,
 
 
 void pyembed_setparameter_int(JNIEnv *env,
-                              jint _jepThread,
+                              jlong _jepThread,
                               const char *name,
                               int value) {
     PyObject      *pyvalue;
@@ -667,7 +667,7 @@ void pyembed_setparameter_int(JNIEnv *env,
 
 
 void pyembed_setparameter_long(JNIEnv *env,
-                               jint _jepThread,
+                               jlong _jepThread,
                                const char *name,
                                jeplong value) {
     PyObject      *pyvalue;
@@ -692,7 +692,7 @@ void pyembed_setparameter_long(JNIEnv *env,
 
 
 void pyembed_setparameter_double(JNIEnv *env,
-                                 jint _jepThread,
+                                 jlong _jepThread,
                                  const char *name,
                                  double value) {
     PyObject      *pyvalue;
@@ -717,7 +717,7 @@ void pyembed_setparameter_double(JNIEnv *env,
 
 
 void pyembed_setparameter_float(JNIEnv *env,
-                                jint _jepThread,
+                                jlong _jepThread,
                                 const char *name,
                                 float value) {
     PyObject      *pyvalue;

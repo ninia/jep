@@ -39,7 +39,7 @@ import java.io.File;
 public final class Jep {
     
     private boolean closed = false;
-    private int     tstate = 0;
+    private long    tstate = 0;
     // all calls must originate from same thread
     private Thread thread = null;
     
@@ -124,7 +124,7 @@ public final class Jep {
     }
     
     
-    private static native int init(ClassLoader classloader) throws JepException;
+    private static native long init(ClassLoader classloader) throws JepException;
     
     
     /**
@@ -175,7 +175,7 @@ public final class Jep {
     }
     
 
-    private native void run(int tstate,
+    private native void run(long tstate,
                             String script) throws JepException;
     
 
@@ -252,11 +252,11 @@ public final class Jep {
     }
 
 
-    private native int compileString(int tstate,
+    private native int compileString(long tstate,
                                      String str) throws JepException;
 
     
-    private native void eval(int tstate,
+    private native void eval(long tstate,
                              String str) throws JepException;
 
 
@@ -284,7 +284,7 @@ public final class Jep {
     }
 
     
-    private native Object getValue(int tstate,
+    private native Object getValue(long tstate,
                                    String str) throws JepException;
     
 
@@ -304,7 +304,7 @@ public final class Jep {
     }
     
     
-    private native void setClassLoader(int tstate, ClassLoader cl);
+    private native void setClassLoader(long tstate, ClassLoader cl);
     
     
     /**
@@ -342,7 +342,7 @@ public final class Jep {
         set(tstate, name, v);
     }
 
-    private native void set(int tstate, String name, Object v)
+    private native void set(long tstate, String name, Object v)
         throws JepException;
 
 
@@ -361,7 +361,7 @@ public final class Jep {
         set(tstate, name, v);
     }
 
-    private native void set(int tstate, String name, String v)
+    private native void set(long tstate, String name, String v)
         throws JepException;
 
 
@@ -415,7 +415,7 @@ public final class Jep {
         set(tstate, name, (int) v);
     }
     
-    private native void set(int tstate, String name, int v)
+    private native void set(long tstate, String name, int v)
         throws JepException;
 
     
@@ -482,7 +482,7 @@ public final class Jep {
         set(tstate, name, v);
     }
     
-    private native void set(int tstate, String name, long v)
+    private native void set(long tstate, String name, long v)
         throws JepException;
     
     
@@ -501,7 +501,7 @@ public final class Jep {
         set(tstate, name, v);
     }
     
-    private native void set(int tstate, String name, double v)
+    private native void set(long tstate, String name, double v)
         throws JepException;
 
 
@@ -520,7 +520,7 @@ public final class Jep {
         set(tstate, name, v);
     }
     
-    private native void set(int tstate, String name, float v)
+    private native void set(long tstate, String name, float v)
         throws JepException;
 
     // -------------------------------------------------- close me
@@ -538,7 +538,7 @@ public final class Jep {
         this.tstate = 0;
     }
 
-    private native void close(int tstate);
+    private native void close(long tstate);
     
     
     /**
