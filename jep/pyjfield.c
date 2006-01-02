@@ -53,6 +53,7 @@
 #endif
 #include "Python.h"
 
+#include "pyembed.h"
 #include "pyjfield.h"
 #include "pyjobject.h"
 #include "pyjclass.h"
@@ -82,7 +83,6 @@ PyJfield_Object* pyjfield_new(JNIEnv *env,
     pyf              = PyObject_NEW(PyJfield_Object, &PyJfield_Type);
     pyf->rfield      = (*env)->NewGlobalRef(env, rfield);
     pyf->pyjobject   = pyjobject;
-    pyf->env         = env;
     pyf->pyFieldName = NULL;
     pyf->fieldTypeId = -1;
     pyf->isStatic    = -1;
@@ -125,16 +125,13 @@ EXIT_ERROR:
 }
 
 
-static int pyjfield_init(PyJfield_Object *self) {
+static int pyjfield_init(JNIEnv *env, PyJfield_Object *self) {
     jfieldID         fieldId;
     jclass           rfieldClass = NULL;
     jobject          fieldType   = NULL;
     jclass           modClass    = NULL;
     jint             modifier    = -1;
     jboolean         isStatic    = JNI_TRUE;
-    JNIEnv          *env;
-    
-    env = self->env;
 
     // use a local frame so we don't have to worry too much about local refs.
     // make sure if this method errors out, that this is poped off again
@@ -250,7 +247,7 @@ EXIT_ERROR:
 
 static void pyjfield_dealloc(PyJfield_Object *self) {
 #if USE_DEALLOC
-    JNIEnv *env  = self->env;
+    JNIEnv *env  = pyembed_get_env();
     if(env) {
         if(self->rfield)
             (*env)->DeleteGlobalRef(env, self->rfield);
@@ -277,17 +274,17 @@ PyObject* pyjfield_get(PyJfield_Object *self) {
     PyObject *result = NULL;
     JNIEnv   *env;
     
+    env = pyembed_get_env();
+    
     if(!self) {
         PyErr_Format(PyExc_RuntimeError, "Invalid self object.");
         return NULL;
     }
     
     if(!self->init) {
-        if(!pyjfield_init(self) || PyErr_Occurred())
+        if(!pyjfield_init(env, self) || PyErr_Occurred())
             return NULL;
     }
-    
-    env = self->env;
     
     switch(self->fieldTypeId) {
 
@@ -521,17 +518,17 @@ int pyjfield_set(PyJfield_Object *self, PyObject *value) {
     JNIEnv   *env;
     jvalue    jarg;
     
+    env = pyembed_get_env();
+    
     if(!self) {
         PyErr_Format(PyExc_RuntimeError, "Invalid self object.");
         return -1;
     }
     
     if(!self->init) {
-        if(!pyjfield_init(self) || PyErr_Occurred())
+        if(!pyjfield_init(env, self) || PyErr_Occurred())
             return -1;
     }
-    
-    env = self->env;
     
     switch(self->fieldTypeId) {
 

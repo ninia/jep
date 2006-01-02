@@ -47,6 +47,7 @@
 #endif
 #include "Python.h"
 
+#include "pyembed.h"
 #include "pyjfield.h"
 #include "pyjclass.h"
 #include "pyjobject.h"
@@ -76,7 +77,6 @@ PyJclass_Object* pyjclass_new(JNIEnv *env, PyObject *pyjob) {
         return NULL;
 
     pyc             = PyObject_NEW(PyJclass_Object, &PyJclass_Type);
-    pyc->env        = env;
     pyc->initArray  = NULL;
     pyc->pyjobject  = pyjob;
     
@@ -137,7 +137,7 @@ EXIT_ERROR:
 
 static void pyjclass_dealloc(PyJclass_Object *self) {
 #if USE_DEALLOC
-    JNIEnv *env = self->env;
+    JNIEnv *env = pyembed_get_env();
     if(self->initArray)
         (*env)->DeleteGlobalRef(env, self->initArray);
 
@@ -172,7 +172,7 @@ PyObject* pyjclass_call(PyJclass_Object *self,
         return NULL;
     }
 
-    env = self->env;
+    env = pyembed_get_env();
     
     // use a local frame so we don't have to worry too much about references.
     // make sure if this method errors out, that this is poped off again

@@ -44,7 +44,6 @@ typedef struct {
     PyJobject_Object *pyjobject;           /* parent, should point to
                                               PyJObject_Object */
     int               fieldTypeId;         /* field's typeid */
-    JNIEnv           *env;                 /* keep pointer to env */
     PyObject         *pyFieldName;         /* python name... :-) */
     int               isStatic;            /* -1 if not known,
                                               otherwise 1 or 0 */

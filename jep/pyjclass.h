@@ -31,7 +31,6 @@
 
 typedef struct {
     PyObject_HEAD
-    JNIEnv           *env;          /* java env */
     jobjectArray      initArray;    /* constructor array */
     int               initLen;      /* length of initArray */
     PyObject         *pyjobject;    /* pointer to parent */

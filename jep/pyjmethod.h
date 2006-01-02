@@ -44,7 +44,6 @@ typedef struct {
     PyJobject_Object *pyjobject;           /* parent, should point to
                                               PyJObject_Object */
     int               returnTypeId;        /* type id of return */
-    JNIEnv           *env;                 /* keep pointer to env */
     PyObject         *pyMethodName;        /* python name... :-) */
     jobjectArray      parameters;          /* array of jclass parameter types */
     int               lenParameters;       /* length of parameters above */
@@ -55,7 +54,7 @@ PyJmethod_Object* pyjmethod_new(JNIEnv*,
                                 jobject,
                                 PyJobject_Object*);
 PyJmethod_Object* pyjmethod_new_static(JNIEnv*, jobject, PyJobject_Object*);
-int pyjmethod_init(PyJmethod_Object *self);
+int pyjmethod_init(JNIEnv*, PyJmethod_Object*);
 
 PyObject* pyjmethod_call_internal(PyJmethod_Object*, PyObject*);
 int pyjmethod_check(PyObject *obj);

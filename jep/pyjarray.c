@@ -60,7 +60,7 @@ jmethodID objectComponentType = 0;
 
 
 static void pyjarray_dealloc(PyJarray_Object *self);
-static int pyjarray_init(PyJarray_Object*, int, PyObject*);
+static int pyjarray_init(JNIEnv*, PyJarray_Object*, int, PyObject*);
 static int pyjarray_length(PyJarray_Object *self);
 
 
@@ -83,13 +83,12 @@ PyObject* pyjarray_new(JNIEnv *env, jobjectArray obj) {
     pyarray                 = PyObject_NEW(PyJarray_Object, &PyJarray_Type);
     pyarray->object         = (*env)->NewGlobalRef(env, obj);
     pyarray->clazz          = (*env)->NewGlobalRef(env, clazz);
-    pyarray->env            = env;
     pyarray->componentType  = -1;
     pyarray->componentClass = NULL;
     pyarray->length         = -1;
     pyarray->pinnedArray    = NULL;
     
-    if(pyjarray_init(pyarray, 0, NULL))
+    if(pyjarray_init(env, pyarray, 0, NULL))
         return (PyObject *) pyarray;
     else {
         pyjarray_dealloc(pyarray);
@@ -106,7 +105,6 @@ PyObject* pyjarray_new_v(PyObject *isnull, PyObject *args) {
     PyJarray_Object *pyarray;
     jclass           clazz, componentClass;
     JNIEnv          *env       = NULL;
-    JepThread       *jepThread;
     jobjectArray     arrayObj  = NULL;
     int              typeId    = -1;
     long             size      = -1;
@@ -118,12 +116,7 @@ PyObject* pyjarray_new_v(PyObject *isnull, PyObject *args) {
     if(PyType_Ready(&PyJarray_Type) < 0)
         return NULL;
 
-    jepThread = pyembed_get_jepthread();
-    if(!jepThread) {
-        PyErr_SetString(PyExc_RuntimeError, "Invalid JepThread pointer.");
-        return NULL;
-    }
-    env = jepThread->env;
+    env = pyembed_get_env();
     
     if(!PyArg_UnpackTuple(args, "ref", 1, 3, &one, &two, &three))
         return NULL;
@@ -226,7 +219,6 @@ PyObject* pyjarray_new_v(PyObject *isnull, PyObject *args) {
     pyarray                 = PyObject_NEW(PyJarray_Object, &PyJarray_Type);
     pyarray->object         = (*env)->NewGlobalRef(env, arrayObj);
     pyarray->clazz          = (*env)->NewGlobalRef(env, clazz);
-    pyarray->env            = env;
     pyarray->componentType  = typeId;
     pyarray->componentClass = NULL;
     pyarray->length         = -1;
@@ -238,7 +230,7 @@ PyObject* pyjarray_new_v(PyObject *isnull, PyObject *args) {
     (*env)->DeleteLocalRef(env, arrayObj);
     (*env)->DeleteLocalRef(env, clazz);
 
-    if(pyjarray_init(pyarray, 1, three))
+    if(pyjarray_init(env, pyarray, 1, three))
         return (PyObject *) pyarray;
     else {
         pyjarray_dealloc(pyarray);
@@ -247,12 +239,13 @@ PyObject* pyjarray_new_v(PyObject *isnull, PyObject *args) {
 }
 
 
-static int pyjarray_init(PyJarray_Object *pyarray, int zero, PyObject *value) {
+static int pyjarray_init(JNIEnv *env,
+                         PyJarray_Object *pyarray,
+                         int zero,
+                         PyObject *value) {
     jobject compType  = NULL;
     jclass  compClass = NULL;
     int     comp;
-
-    JNIEnv *env = pyarray->env;
 
     // ------------------------------ first, get the array's type
 
@@ -468,7 +461,7 @@ EXIT_ERROR:
 
 // pin primitive array memory. NOOP for object arrays.
 void pyjarray_pin(PyJarray_Object *self) {
-    JNIEnv *env = self->env;
+    JNIEnv *env = pyembed_get_env();
     
     switch(self->componentType) {
 
@@ -536,7 +529,7 @@ void pyjarray_pin(PyJarray_Object *self) {
 
 static void pyjarray_dealloc(PyJarray_Object *self) {
 #if USE_DEALLOC
-    JNIEnv *env = self->env;
+    JNIEnv *env = pyembed_get_env();
     if(env) {
         if(self->object)
             (*env)->DeleteGlobalRef(env, self->object);
@@ -556,7 +549,7 @@ static void pyjarray_dealloc(PyJarray_Object *self) {
 
 // used to either release pinned memory, commit, or abort.
 void pyjarray_release_pinned(PyJarray_Object *self, jint mode) {
-    JNIEnv *env = self->env;
+    JNIEnv *env = pyembed_get_env();
 
     if(!self->pinnedArray)
         return;
@@ -637,7 +630,7 @@ static int pyjarray_setitem(PyJarray_Object *self,
                             int pos,
                             PyObject *newitem) {
     
-    JNIEnv *env = self->env;
+    JNIEnv *env = pyembed_get_env();
     
     if(pos < 0 || pos >= self->length || self->length < 1) {
         PyErr_Format(PyExc_IndexError,
@@ -833,7 +826,7 @@ static int pyjarray_setitem(PyJarray_Object *self,
 
 static PyObject* pyjarray_item(PyJarray_Object *self, int pos) {
     PyObject *ret = NULL;
-    JNIEnv   *env = self->env;
+    JNIEnv   *env = pyembed_get_env();
     
     if(self->length < 1) {
         PyErr_Format(PyExc_IndexError,
@@ -959,7 +952,7 @@ static PyObject* pyjarray_item(PyJarray_Object *self, int pos) {
 
 
 static int pyjarray_index(PyJarray_Object *self, PyObject *el) {
-    JNIEnv *env = self->env;
+    JNIEnv *env = pyembed_get_env();
 
     switch(self->componentType) {
 
@@ -1007,7 +1000,7 @@ static int pyjarray_index(PyJarray_Object *self, PyObject *el) {
         PyJarray_Object *obj;
         int i, ret = 0;
 
-        JNIEnv *env = self->env;
+        JNIEnv *env = pyembed_get_env();
         
         if(el != Py_None && !pyjarray_check(el)) {
             PyErr_SetString(PyExc_TypeError, "Expected jarray.");
@@ -1043,7 +1036,7 @@ static int pyjarray_index(PyJarray_Object *self, PyObject *el) {
         PyJobject_Object *obj;
         int i, ret = 0;
 
-        JNIEnv *env = self->env;
+        JNIEnv *env = pyembed_get_env();
         
         if(el != Py_None && !pyjobject_check(el)) {
             PyErr_SetString(PyExc_TypeError, "Expected jobject.");
@@ -1266,7 +1259,7 @@ static PyObject* listindex(PyJarray_Object *self, PyObject *args) {
 
 
 static int pyjarray_contains(PyJarray_Object *self, PyObject *el) {
-    JNIEnv *env = self->env;
+    JNIEnv *env = pyembed_get_env();
     
     int pos = pyjarray_index(self, el);
     if(PyErr_Occurred())
@@ -1285,7 +1278,7 @@ static PyObject* pyjarray_slice(PyJarray_Object *self, int ilow, int ihigh) {
     PyObject        *ret      = NULL;
     
     int len, i;
-    JNIEnv *env = self->env;
+    JNIEnv *env = pyembed_get_env();
     
     if(ilow < 0)
         ilow = 0;
@@ -1483,7 +1476,7 @@ static PyObject* pyjarray_slice(PyJarray_Object *self, int ilow, int ihigh) {
 
 // shamelessly taken from listobject.c
 static PyObject* pyjarray_subscript(PyJarray_Object *self, PyObject *item) {
-    JNIEnv *env = self->env;
+    JNIEnv *env = pyembed_get_env();
     
     if(PyInt_Check(item)) {
         long i = PyInt_AS_LONG(item);

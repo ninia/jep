@@ -37,7 +37,6 @@
 // a jobject reference.
 typedef struct {
     PyObject_HEAD
-    JNIEnv          *env;         /* keep pointer to environment */
     jobject          object;      /* the jni object */
     PyJclass_Object *pyjclass;    /* pointer to pyjclass if this
                                      object represents a type */

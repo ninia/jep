@@ -34,7 +34,6 @@ typedef struct {
     PyObject_HEAD
     jobjectArray     object;         /* array object */
     jclass           clazz;          /* useful for later calls */
-    JNIEnv          *env;            /* keep pointer to environment */
     int              componentType;  /* type of array elements */
     jclass           componentClass; /* component type of object arrays, but not strings */
     int              length;         /* better than querying all the time */

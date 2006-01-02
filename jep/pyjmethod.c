@@ -47,6 +47,7 @@
 #endif
 #include "Python.h"
 
+#include "pyembed.h"
 #include "pyjmethod.h"
 #include "pyjarray.h"
 #include "util.h"
@@ -80,7 +81,6 @@ PyJmethod_Object* pyjmethod_new(JNIEnv *env,
     pym                = PyObject_NEW(PyJmethod_Object, &PyJmethod_Type);
     pym->rmethod       = (*env)->NewGlobalRef(env, rmethod);
     pym->pyjobject     = pyjobject;
-    pym->env           = env;
     pym->parameters    = NULL;
     pym->lenParameters = 0;
     pym->pyMethodName  = NULL;
@@ -140,7 +140,6 @@ PyJmethod_Object* pyjmethod_new_static(JNIEnv *env,
     pym                = PyObject_NEW(PyJmethod_Object, &PyJmethod_Type);
     pym->rmethod       = (*env)->NewGlobalRef(env, rmethod);
     pym->pyjobject     = pyjobject;
-    pym->env           = env;
     pym->parameters    = NULL;
     pym->lenParameters = 0;
     pym->pyMethodName  = NULL;
@@ -188,7 +187,7 @@ EXIT_ERROR:
 
 
 // 1 if successful, 0 if failed.
-int pyjmethod_init(PyJmethod_Object *self) {
+int pyjmethod_init(JNIEnv *env, PyJmethod_Object *self) {
     jmethodID         methodId;
     jobject           returnType             = NULL;
     jobjectArray      paramArray             = NULL;
@@ -197,9 +196,6 @@ int pyjmethod_init(PyJmethod_Object *self) {
     jint              modifier               = -1;
     jboolean          isStatic               = JNI_FALSE;
     jclass            rmethodClass           = NULL;
-    JNIEnv           *env;
-    
-    env = self->env;
     
     // use a local frame so we don't have to worry too much about local refs.
     // make sure if this method errors out, that this is poped off again
@@ -360,7 +356,7 @@ EXIT_ERROR:
 
 static void pyjmethod_dealloc(PyJmethod_Object *self) {
 #if USE_DEALLOC
-    JNIEnv *env  = self->env;
+    JNIEnv *env  = pyembed_get_env();
     if(env) {
         if(self->parameters)
             (*env)->DeleteGlobalRef(env, self->parameters);
@@ -424,13 +420,13 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
     int            foundArray = 0;   /* if params includes pyjarray instance */
     PyThreadState *_save;
     
+    env = pyembed_get_env();
+    
     if(!self->parameters) {
-        if(!pyjmethod_init(self) || PyErr_Occurred())
+        if(!pyjmethod_init(env, self) || PyErr_Occurred())
             return NULL;
         return pyjmethod_call_internal(self, args);
     }
-    
-    env = self->env;
     
     // validate we can call this method
     if(!self->pyjobject->object && self->isStatic != JNI_TRUE) {

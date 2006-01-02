@@ -47,6 +47,7 @@
 #endif
 #include "Python.h"
 
+#include "pyembed.h"
 #include "pyjobject.h"
 #include "pyjmethod.h"
 #include "pyjfield.h"
@@ -56,7 +57,7 @@
 staticforward PyTypeObject PyJobject_Type;
 staticforward PyMethodDef  pyjobject_methods[];
 
-static int pyjobject_init(PyJobject_Object*);
+static int pyjobject_init(JNIEnv *env, PyJobject_Object*);
 static int pyjobject_setattr(PyJobject_Object*, char*, PyObject*);
 static void pyjobject_addmethod(PyJobject_Object*, PyObject*);
 static void pyjobject_addfield(PyJobject_Object*, PyObject*);
@@ -84,10 +85,9 @@ PyObject* pyjobject_new(JNIEnv *env, jobject obj) {
     pyjob->attr        = PyList_New(0);
     pyjob->methods     = PyList_New(0);
     pyjob->fields      = PyList_New(0);
-    pyjob->env         = env;
     pyjob->finishAttr  = 0;
     
-    if(pyjobject_init(pyjob))
+    if(pyjobject_init(env, pyjob))
         return (PyObject *) pyjob;
     return NULL;
 }
@@ -107,25 +107,21 @@ PyObject* pyjobject_new_class(JNIEnv *env, jclass clazz) {
     pyjob->attr        = PyList_New(0);
     pyjob->methods     = PyList_New(0);
     pyjob->fields      = PyList_New(0);
-    pyjob->env         = env;
     pyjob->finishAttr  = 0;
 
     pyjob->pyjclass    = pyjclass_new(env, (PyObject *) pyjob);
     
-    if(pyjobject_init(pyjob))
+    if(pyjobject_init(env, pyjob))
         return (PyObject *) pyjob;
     return NULL;
 }
 
 
-static int pyjobject_init(PyJobject_Object *pyjob) {
+static int pyjobject_init(JNIEnv *env, PyJobject_Object *pyjob) {
     jobjectArray      methodArray = NULL;
     jobjectArray      fieldArray  = NULL;
     int               i, len = 0;
     jobject           langClass   = NULL;
-    JNIEnv           *env;
-    
-    env = pyjob->env;
 
     (*env)->PushLocalFrame(env, 20);
     // ------------------------------ call Class.getMethods()
@@ -274,7 +270,7 @@ EXIT_ERROR:
 
 static void pyjobject_dealloc(PyJobject_Object *self) {
 #if USE_DEALLOC
-    JNIEnv *env = self->env;
+    JNIEnv *env = pyembed_get_env();
     if(env) {
         if(self->object)
             (*env)->DeleteGlobalRef(env, self->object);
@@ -423,7 +419,7 @@ PyObject* find_method(JNIEnv *env,
         for(i = 0; i <= pos && cand[i]; i++) {
             // make sure method is fully initialized
             if(!cand[i]->parameters) {
-                if(!pyjmethod_init(cand[i])) {
+                if(!pyjmethod_init(env, cand[i])) {
                     // init failed, that's not good.
                     cand[i] = NULL;
                     PyErr_Warn(PyExc_Warning, "pyjmethod init failed.");
@@ -456,7 +452,6 @@ PyObject* find_method(JNIEnv *env,
         (*env)->PushLocalFrame(env, 20);
         for(parmpos = 0; parmpos < cand[i]->lenParameters; parmpos++) {
             PyObject *param       = PyTuple_GetItem(args, parmpos);
-            JNIEnv   *env         = cand[i]->env;
             int       paramTypeId = -1;
             jclass    pclazz;
             jclass    paramType =
@@ -510,7 +505,7 @@ PyObject* pyjobject_find_method(PyJobject_Object *self,
                                 PyObject *methodName,
                                 PyObject *args) {
     // util method does this for us
-    return find_method(self->env,
+    return find_method(pyembed_get_env(),
                        methodName,
                        PyList_Size(self->methods),
                        self->attr,
@@ -524,7 +519,7 @@ static PyObject* pyjobject_str(PyJobject_Object *self) {
     PyObject   *pyres     = NULL;
     JNIEnv     *env;
 
-    env   = self->env;
+    env   = pyembed_get_env();
     pyres = jobject_topystring(env, self->object, self->clazz);
 
     if(process_java_exception(env))

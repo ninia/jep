@@ -229,6 +229,17 @@ void pyembed_thread_close(intptr_t _jepThread) {
 }
 
 
+JNIEnv* pyembed_get_env(void) {
+    JavaVM *jvm;
+    JNIEnv *env;
+
+    JNI_GetCreatedJavaVMs(&jvm, 1, NULL);
+    (*jvm)->AttachCurrentThread(jvm, (void**) &env, NULL);
+
+    return env;
+}
+
+
 // get thread struct when called from internals.
 // NULL if not found.
 // hold the lock before calling.
