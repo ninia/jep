@@ -55,7 +55,6 @@
 #include "util.h"
 
 staticforward PyTypeObject PyJobject_Type;
-staticforward PyMethodDef  pyjobject_methods[];
 
 static int pyjobject_init(JNIEnv *env, PyJobject_Object*);
 static int pyjobject_setattr(PyJobject_Object*, char*, PyObject*);

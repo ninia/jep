@@ -56,7 +56,6 @@
 #include "util.h"
 
 staticforward PyTypeObject PyJclass_Type;
-staticforward PyMethodDef  pyjclass_methods[];
 
 static void pyjclass_addmethod(PyJclass_Object*, PyObject*);
 static void pyjclass_addfield(PyJclass_Object*, PyObject*);

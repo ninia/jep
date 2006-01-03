@@ -60,7 +60,6 @@
 #include "util.h"
 
 staticforward PyTypeObject PyJfield_Type;
-staticforward PyMethodDef  pyjfield_methods[];
 
 static void pyjfield_dealloc(PyJfield_Object *self);
 
