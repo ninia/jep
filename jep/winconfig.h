@@ -5,6 +5,9 @@
 // If we are on MSVC, disable some stupid MSVC warnings
 #ifdef _MSC_VER
 # pragma warning (disable:4100)
+
+// MSVC 6 doesn't have
+typedef jlong intptr_t;
 #endif
 
 #define R_OK 4
