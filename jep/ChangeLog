@@ -1,3 +1,7 @@
+2006-4-24 Mike Johnson <mrjohnson0@users.sourceforge.ner>
+	* makefilecrap: updated
+	* pyjarray.c: pyjarrayiter_getattr added for Windows crappiness.
+
 2005-2-15 Mike Johnson <mrjohnson0@users.sourceforge.net>
 	* pyembed.c: remove debug printf
 	* pyjobject.c: decref fields list in dealloc

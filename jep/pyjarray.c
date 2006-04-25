@@ -1660,6 +1660,10 @@ static PySequenceMethods pyjarrayiter_as_sequence = {
     0,                                        /* sq_concat */
 };
 
+PyObject* pyjarrayiter_getattr(PyObject *one, PyObject *two) {
+    return PyObject_GenericGetAttr(one, two);
+}
+
 PyTypeObject PyJarrayIter_Type = {
     PyObject_HEAD_INIT(0)
     0,                                        /* ob_size */
@@ -1679,7 +1683,7 @@ PyTypeObject PyJarrayIter_Type = {
     0,                                        /* tp_hash */
     0,                                        /* tp_call */
     0,                                        /* tp_str */
-    (getattrofunc) PyObject_GenericGetAttr,   /* tp_getattro */
+    (getattrofunc) pyjarrayiter_dealloc,      /* tp_getattro */
     0,                                        /* tp_setattro */
     0,                                        /* tp_as_buffer */
     Py_TPFLAGS_DEFAULT,                       /* tp_flags */
