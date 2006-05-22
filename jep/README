@@ -40,6 +40,9 @@ Comments are welcome.
             - make a symlink from libjep.dynlib to /Library/Java/Extentions, like:
                 sudo ln -s `pwd`/.libs/libjep.dylib \
                     /Library/Java/Extensions/libjep.jnilib
+
+                *** Make sure to use '.jnilib' for the symlink. ***
+
               (This will get added to the install script Very Soon Now.)
 
 
