@@ -494,10 +494,8 @@ jobject pyembed_getvalue(JNIEnv *env, intptr_t _jepThread, char *str) {
     
     if(result == NULL)
         goto EXIT;              /* don't return, need to release GIL */
-    if(result == Py_None) {
-        Py_DECREF(Py_None);
+    if(result == Py_None)
         goto EXIT;
-    }
     
     // convert result to jobject
     if(pyjobject_check(result))
@@ -515,8 +513,9 @@ jobject pyembed_getvalue(JNIEnv *env, intptr_t _jepThread, char *str) {
 EXIT:
     PyThreadState_Swap(prevThread);
     PyEval_ReleaseLock();
-    
-    Py_DECREF(result);
+
+    if(result != NULL)
+        Py_DECREF(result);
     return ret;
 }
 
