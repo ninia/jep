@@ -1,5 +1,27 @@
 #serial 3
 
+dnl find libjvm, if needed
+AC_DEFUN(AC_JAVA_LIBJVM,
+[
+  AC_MSG_CHECKING([for libjvm])
+
+  java_libs=
+  java_ldflags=
+
+  case $host_os in
+    darwin*)
+      java_ldflags="-Xlinker -framework -Xlinker JavaVM"
+      AC_MSG_RESULT([$java_ldflags])
+      ;;
+    *)
+      AC_MSG_RESULT([not needed])
+      ;;
+  esac
+
+  AC_SUBST(JAVA_LIBS, $java_libs)
+  AC_SUBST(JAVA_LDFLAGS, $java_ldflags)
+])
+
 dnl From Jim Meyering
 
 dnl Define HAVE_STRUCT_UTIMBUF if `struct utimbuf' is declared --

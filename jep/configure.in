@@ -29,6 +29,7 @@ dnl mrj - check JAVA_HOME, set path
 AC_CHECK_JAVA_HOME
 AC_PROG_JAVAC
 AC_PROG_JAVAH
+AC_JAVA_LIBJVM
 
 dnl mrj - disable long double warning
 AC_CHECK_LONG_DOUBLE

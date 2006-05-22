@@ -1,7 +1,7 @@
 AM_CPPFLAGS = $(all_includes)
 
 lib_LTLIBRARIES = libjep.la
-libjep_la_LDFLAGS = -version-info 1:1:0 -no-undefined
+libjep_la_LDFLAGS = -version-info 1:1:0 -no-undefined $(JAVA_LDFLAGS)
 libjep_la_SOURCES = jep.c jep.1 system.h aclocal.m4 \
 	pyembed.c \
 	util.c \
@@ -14,7 +14,7 @@ libjep_la_SOURCES = jep.c jep.1 system.h aclocal.m4 \
 METASOURCES = AUTO
 
 #  uncomment the following if jep requires the math library
-#jep_LDADD=-lm
+libjep_la_LIBADD=$(JAVA_LIBS)
 
 EXTRA_DIST=python.m4 \
 	autogen.sh \
