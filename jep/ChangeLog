@@ -1,4 +1,5 @@
 2006-4-24 Mike Johnson <mrjohnson0@users.sourceforge.ner>
+	* makefilecrap: add -framework JavaVM so the mac can link against libjvm
 	* makefilecrap: updated
 	* pyjarray.c: pyjarrayiter_getattr added for Windows crappiness.
 
