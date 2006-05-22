@@ -41,6 +41,9 @@ public class Test implements Runnable {
                 jep.set("testn", (Object) null);
 
                 jep.runScript("test.py");
+
+                System.out.print("get unknown val:  ");
+                System.out.println(jep.getValue("_asdf"));
             }
             catch(Throwable t) {
                 System.out.println("Java caught error:");
