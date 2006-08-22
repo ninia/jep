@@ -52,7 +52,8 @@ public class Test implements Runnable {
             }
             finally {
                 System.out.println("**** close me");
-                jep.close();
+                if(jep != null)
+                    jep.close();
             }
         }
     }
