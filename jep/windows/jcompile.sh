@@ -8,7 +8,7 @@ echo $PATH
 JAVAH=javah
 JAVAC=javac
 CLASSPATH=../
-JAVACOPT='-deprecation -classpath ../:./ext/bsf.jar'
+JAVACOPT='-deprecation -classpath .\ext\bsf.jar'
 
 run() {
     echo $*
@@ -25,9 +25,6 @@ pushd ../ >/dev/null
 if [ "$1" == "clean" ]; then
     run rm -f *.class *.jar
 else
-#    for j in `ls *.java`; do
-#        run $JAVAC $JAVACOPT $j
-#    done
     run $JAVAC $JAVACOPT *.java
     run $JAVAH -o jep.h -classpath ../ jep.Jep
     ./makejar.sh jep/ jep.jar
