@@ -144,7 +144,7 @@ public class BSFJepEngine extends BSFEngineImpl {
      */
     public void undeclareBean(BSFDeclaredBean bean) throws BSFException {
         try {
-            jep.set(bean.name, null);
+            jep.set(bean.name, (String) null);
         }
         catch(JepException e) {
             throw new BSFException(BSFException.REASON_EXECUTION_ERROR,
