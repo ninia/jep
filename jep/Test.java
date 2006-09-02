@@ -113,7 +113,7 @@ public class Test implements Runnable {
     }
 
     public ArrayList getObject() {
-        ArrayList ret = new ArrayList();
+        ArrayList<String> ret = new ArrayList<String>();
         ret.add("list 0");
         return ret;
     }
