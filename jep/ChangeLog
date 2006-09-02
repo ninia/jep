@@ -1,4 +1,5 @@
 2006-4-24 Mike Johnson <mrjohnson0@users.sourceforge.ner>
+	* windows/: added vs2003 project file
 	* pyembed.c: fixed decref of NULL reported by jkiter
 	* makefilecrap: add -framework JavaVM so the mac can link against libjvm
 	* makefilecrap: updated
