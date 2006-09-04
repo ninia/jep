@@ -83,6 +83,7 @@ if(__name__ == '__main__'):
     ##################################################
     """
     print 'new Integer:     ', Integer(12)
+    h = HashMap()
     h.put('test', 'w00t')
     print 'new HashMap:     ', h
     
@@ -103,7 +104,7 @@ if(__name__ == '__main__'):
     f = Float(123.123)
     print 'make float:      ', f
 
-    c = Char('j')
+    c = Character('j')
     print 'make char:       ', c
 
     b = Byte(123)
