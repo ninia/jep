@@ -58,10 +58,14 @@ static PyThreadState *mainThreadState = NULL;
 
 static PyObject* pyembed_findclass(PyObject*, PyObject*);
 static PyObject* pyembed_forname(PyObject*, PyObject*);
+static PyObject* pyembed_jimport(PyObject*, PyObject*);
+
 
 // ClassLoader.loadClass
 static jmethodID loadClassMethod = 0;
 
+// jep.ClassList.get()
+static jmethodID getClassListMethod = 0;
 
 static struct PyMethodDef jep_methods[] = {
     { "findClass",
@@ -84,7 +88,12 @@ static struct PyMethodDef jep_methods[] = {
       "(size, jobject) || "
       "(size, str) || "
       "(size, jarray)" },
-    
+
+    { "jimport",
+      pyembed_jimport,
+      METH_VARARGS,
+      "Same definition as the standard __import__." },
+
     { NULL, NULL }
 };
 
@@ -172,7 +181,16 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl) {
     jepThread->modjep      = initjep();
     jepThread->env         = env;
     jepThread->classloader = (*env)->NewGlobalRef(env, cl);
-    
+
+    // now, add custom import function to builtin module
+
+    // i did have a whole crap load of code to do this from C but it
+    // didn't work. i found a PEP that said it wasn't possible, then
+    // Guido said they were wrong. *shrug*. this is my work-around.
+
+    PyRun_SimpleString("import jep\n");
+    PyRun_SimpleString("__builtins__.__import__ = jep.jimport\n");
+
     if((tdict = PyThreadState_GetDict()) != NULL) {
         PyObject *key, *t;
         
@@ -259,6 +277,197 @@ JepThread* pyembed_get_jepthread(void) {
 }
 
 
+// used by _jimport and _forname
+#define LOAD_CLASS_METHOD(env, cl)                                          \
+{                                                                           \
+    if(loadClassMethod == 0) {                                              \
+        jobject clazz;                                                      \
+                                                                            \
+        clazz = (*env)->GetObjectClass(env, cl);                            \
+        if(process_java_exception(env) || !clazz)                           \
+            return NULL;                                                    \
+                                                                            \
+        loadClassMethod =                                                   \
+            (*env)->GetMethodID(env,                                        \
+                                clazz,                                      \
+                                "loadClass",                                \
+                                "(Ljava/lang/String;)Ljava/lang/Class;");   \
+                                                                            \
+        if(process_java_exception(env) || !loadClassMethod) {               \
+            (*env)->DeleteLocalRef(env, clazz);                             \
+            return NULL;                                                    \
+        }                                                                   \
+                                                                            \
+        (*env)->DeleteLocalRef(env, clazz);                                 \
+    }                                                                       \
+}
+
+
+static PyObject* pyembed_jimport(PyObject *self, PyObject *args) {
+    JNIEnv       *env        = NULL;
+    jstring       jname;
+    jclass        clazz;
+    jobject       cl;
+    JepThread    *jepThread;
+    int           len, i;
+    jobjectArray  jar;
+
+	char         *name;
+    PyObject     *module     = NULL;
+	PyObject     *globals    = NULL;
+	PyObject     *locals     = NULL;
+	PyObject     *fromlist   = NULL;
+    PyObject     *ret        = NULL;
+
+	if(!PyArg_ParseTuple(args,
+                         "s|OOO:__import__",
+                         &name, &globals, &locals, &fromlist))
+		return NULL;
+
+    // try to let python handle first
+    ret = PyImport_ImportModuleEx(name, globals, locals, fromlist);
+    if(ret != NULL)
+        return ret;
+    PyErr_Clear();
+
+    jepThread = pyembed_get_jepthread();
+    if(!jepThread) {
+        if(!PyErr_Occurred())
+            PyErr_SetString(PyExc_RuntimeError, "Invalid JepThread pointer.");
+        return NULL;
+    }
+    
+    env = jepThread->env;
+    cl  = jepThread->classloader;
+
+    LOAD_CLASS_METHOD(env, cl);
+
+    clazz = (*env)->FindClass(env, "jep/ClassList");
+    if(process_java_exception(env) || !clazz)
+        return NULL;
+
+    if(getClassListMethod == 0) {
+        getClassListMethod =
+            (*env)->GetStaticMethodID(env,
+                                      clazz,
+                                      "get",
+                                      "(Ljava/lang/String;)[Ljava/lang/String;");
+        
+        if(process_java_exception(env) || !getClassListMethod)
+            return NULL;
+    }
+
+    jname = (*env)->NewStringUTF(env, name);
+    jar = (jobjectArray) (*env)->CallStaticObjectMethod(
+        env,
+        clazz,
+        getClassListMethod,
+        jname);
+    (*env)->ReleaseStringUTFChars(env, jname, name);
+
+    if(process_java_exception(env) || !jar)
+        return NULL;
+
+    len = (*env)->GetArrayLength(env, jar);
+
+    // it doesn't really matter what the module is named, python will
+    // use it as it wants.
+    if(len > 0)
+            module = PyImport_AddModule(name);
+
+    for(i = 0; i < len; i++) {
+        jstring   member     = NULL;
+        jclass    objclazz   = NULL;
+        PyObject *pclass     = NULL;
+        PyObject *memberList = NULL;
+
+        member = (*env)->GetObjectArrayElement(env, jar, i);
+        if(process_java_exception(env) || !member) {
+            (*env)->DeleteLocalRef(env, member);
+            continue;
+        }
+
+        // split member into list, member looks like "java.lang.System"
+        {
+            const char *cmember;
+            PyObject   *pymember;
+            
+            cmember    = jstring2char(env, member);
+            pymember   = PyString_FromString(cmember);
+            memberList = PyObject_CallMethod(pymember, "split", "s", ".");
+
+            Py_DECREF(pymember);
+            (*env)->ReleaseStringUTFChars(env, member, cmember);
+
+            if(!PyList_Check(memberList) || PyErr_Occurred()) {
+                THROW_JEP(env, "Couldn't split member name");
+                (*env)->DeleteLocalRef(env, member);
+                continue;
+            }
+        }
+
+        // make sure our class name is in the fromlist (a tuple, oddly)
+        if(PyTuple_Check(fromlist) &&
+           PyString_AsString(PyTuple_GET_ITEM(fromlist, 0))[0] != '*') {
+
+            PyObject   *pymember;
+            int         found, i, len;
+
+            pymember = PyList_GET_ITEM(
+                memberList,
+                PyList_GET_SIZE(memberList) - 1); /* last one */
+
+            found = 0;
+            len   = PyTuple_GET_SIZE(fromlist);
+            for(i = 0; i < len && found == 0; i++) {
+                PyObject *el = PyTuple_GET_ITEM(fromlist, i);
+                if(PyObject_Compare(pymember, el) == 0)
+                    found = 1;
+            }
+
+            if(found == 0) {
+                (*env)->DeleteLocalRef(env, member);
+                Py_DECREF(memberList);
+                continue;          /* don't process this class name */
+            }
+        }
+
+        objclazz = (jclass) (*env)->CallObjectMethod(env,
+                                                     cl,
+                                                     loadClassMethod,
+                                                     member);
+        if((*env)->ExceptionOccurred(env) != NULL || !objclazz) {
+            // this error we ignore
+            Py_DECREF(memberList);
+            (*env)->DeleteLocalRef(env, member);
+            (*env)->ExceptionClear(env);
+            continue;
+        }
+
+        // make a new class object
+        pclass = (PyObject *) pyjobject_new_class(env, objclazz);
+        if(pclass) {
+            PyModule_AddObject(
+                module,
+                PyString_AsString(
+                    PyList_GET_ITEM(
+                        memberList,
+                        PyList_GET_SIZE(memberList) - 1)), /* classname */
+                pclass);                                   /* steals ref */
+        }
+
+        Py_DECREF(memberList);
+        (*env)->DeleteLocalRef(env, member);
+    }
+
+    if(module == NULL)
+        PyErr_Format(PyExc_ImportError, "No module %s found", name);
+    else
+        Py_INCREF(module);
+    return module;
+}
+
+
 static PyObject* pyembed_forname(PyObject *self, PyObject *args) {
     JNIEnv    *env       = NULL;
     char      *name;
@@ -280,26 +489,7 @@ static PyObject* pyembed_forname(PyObject *self, PyObject *args) {
     env = jepThread->env;
     cl  = jepThread->classloader;
     
-    if(loadClassMethod == 0) {
-        jobject clazz;
-        
-        clazz = (*env)->GetObjectClass(env, cl);
-        if(process_java_exception(env) || !clazz)
-            return NULL;
-
-        loadClassMethod =
-            (*env)->GetMethodID(env,
-                                clazz,
-                                "loadClass",
-                                "(Ljava/lang/String;)Ljava/lang/Class;");
-        
-        if(process_java_exception(env) || !loadClassMethod) {
-            (*env)->DeleteLocalRef(env, clazz);
-            return NULL;
-        }
-
-        (*env)->DeleteLocalRef(env, clazz);
-    }
+    LOAD_CLASS_METHOD(env, cl);
     
     jstr = (*env)->NewStringUTF(env, (const char *) name);
     if(process_java_exception(env) || !jstr)
