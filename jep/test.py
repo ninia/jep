@@ -3,8 +3,12 @@ import sys
 
 print "Hello world using Jep."
 
-import jep
 from jep import *
+from java.lang import *
+
+from java.util import HashMap
+
+from java.io import FileInputStream
 
 ## import os
 ## raw_input('gdb --pid=%s' % os.getpid())
@@ -14,6 +18,7 @@ if(__name__ == '__main__'):
     i = 0
 
     print 'sys.path:        ', sys.path
+    print 'dir(jep):        ', dir(jep)
     
     print """
     ##################################################
@@ -77,40 +82,30 @@ if(__name__ == '__main__'):
     # test constructors
     ##################################################
     """
-    Integer = findClass('java.lang.Integer')
     print 'new Integer:     ', Integer(12)
-    h = findClass('java.util.HashMap')()
     h.put('test', 'w00t')
     print 'new HashMap:     ', h
     
-    Boolean = findClass('java.lang.Boolean')
     print 'new Boolean:     ', Boolean(False)
-    
     print repr(Boolean)
     
-    String = findClass('java.lang.String')
     s = String('tested new string')
     print 'make jstring:    ', s
     #s2 = String(s.getBytes())
     #print 'another string:  ', s2
 
-    Long = findClass('java.lang.Long')
     l = Long(123123123123123)
     print 'make long:       ', l
 
-    Double = findClass('java.lang.Double')
     d = Double(132123.123123)
     print 'make double:     ', d
 
-    Float = findClass('java.lang.Float')
     f = Float(123.123)
     print 'make float:      ', f
 
-    Char = findClass("java.lang.Character")
     c = Char('j')
     print 'make char:       ', c
 
-    Byte = findClass('java.lang.Byte')
     b = Byte(123)
     print 'make byte:       ', b
     
@@ -245,7 +240,6 @@ if(__name__ == '__main__'):
     except(jep.NumberFormatException):
         print 'parseInt:         caught NumberFormatException'
 
-    FileInputStream = findClass('java.io.FileInputStream')
     try:
         fin = FileInputStream('asdf')
         fin.close()
@@ -257,7 +251,6 @@ if(__name__ == '__main__'):
     except:
         print 'fixed'
     
-    System = findClass('java/lang/System')
     System.out.println("regression test.")
 
     try:
