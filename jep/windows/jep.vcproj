@@ -23,7 +23,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="&quot;C:\Program Files\Java\jdk1.5.0_08\include&quot;;&quot;C:\Program Files\Java\jdk1.5.0_08\include\win32&quot;;C:\Python24\include"
+				AdditionalIncludeDirectories="&quot;C:\Program Files\Java\jdk1.6.0\include&quot;;&quot;C:\Program Files\Java\jdk1.6.0\include\win32&quot;;C:\Python24\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;JEP_EXPORTS"
 				StringPooling="TRUE"
 				RuntimeLibrary="2"
@@ -44,7 +44,7 @@
 				OutputFile=".\Release/jep.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
-				AdditionalLibraryDirectories="&quot;C:\Program Files\Java\jdk1.5.0_08\lib&quot;;c:\Python24\libs"
+				AdditionalLibraryDirectories="&quot;C:\Program Files\Java\jdk1.6.0\lib&quot;;c:\Python24\libs"
 				ProgramDatabaseFile=".\Release/jep.pdb"
 				ImportLibrary=".\Release/jep.lib"
 				TargetMachine="1"/>
