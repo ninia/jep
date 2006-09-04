@@ -8,7 +8,7 @@ echo $PATH
 JAVAH=javah
 JAVAC=javac
 CLASSPATH=../
-JAVACOPT='-deprecation -classpath .\ext\bsf.jar'
+JAVACOPT='-Xlint:unchecked -deprecation -classpath .\ext\bsf.jar'
 
 run() {
     echo $*
