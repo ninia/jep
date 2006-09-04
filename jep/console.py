@@ -24,9 +24,13 @@ except:
     print """
     No readline available.
     You may want to set the LD_PRELOAD environment variable, see the
-    README file for details. Ignore this if you're running on Windows.
+    README file for details.
 
-    i.e.: export LD_PRELOAD=/usr/lib/libpython2.3.so.1.0 """
+
+    i.e.: export LD_PRELOAD=/usr/lib/libpython2.3.so.1.0
+
+    If your platform really doesn't have readline, try this:
+    http://newcenturycomputers.net/projects/readline.html """
 
 
 PS1  = ">>> "
