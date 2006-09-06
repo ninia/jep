@@ -363,7 +363,6 @@ static PyObject* pyembed_jimport(PyObject *self, PyObject *args) {
         clazz,
         getClassListMethod,
         jname);
-    (*env)->ReleaseStringUTFChars(env, jname, name);
 
     if(process_java_exception(env) || !jar)
         return NULL;
