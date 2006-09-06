@@ -30,6 +30,7 @@ EXTRA_DIST=python.m4 \
 	BSFJepEngine.java \
 	JepException.java \
 	Test.java \
+	ClassList.java \
 	test.py \
 	jep.h \
 	makejar.sh \
@@ -74,7 +75,10 @@ Test.class: Test.java
 JepException.class: JepException.java
 	$(JAVAC) ${JAVACOPT} JepException.java
 
-jep.jar: Jep.class Test.class JepException.class Run.class
+ClassList.class: ClassList.java
+	$(JAVAC) ${JAVACOPT} ClassList.java
+
+jep.jar: Jep.class Test.class JepException.class Run.class ClassList.class
 	./makejar.sh jep/ jep.jar
 
 javadoc: jep.jar
