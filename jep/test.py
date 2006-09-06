@@ -3,15 +3,15 @@ import sys
 
 print "Hello world using Jep."
 
-from jep import *
-from java.lang import *
-
-from java.util import HashMap
-
-from java.io import FileInputStream
-
 ## import os
 ## raw_input('gdb --pid=%s' % os.getpid())
+
+from jep import *
+
+from java.lang import *
+from java.util import HashMap
+from java.io import FileInputStream
+
 
 #for i in (range(0, 10)):
 if(__name__ == '__main__'):
