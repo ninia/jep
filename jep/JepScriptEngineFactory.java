@@ -62,7 +62,6 @@ public class JepScriptEngineFactory implements ScriptEngineFactory {
 	 * @see javax.script.ScriptEngineFactory#getExtensions()
 	 */
 	public List<String> getExtensions() {
-		// TODO Auto-generated method stub
         List<String> l = new ArrayList<String>();
         l.add(".py");
 		return l;
@@ -179,7 +178,9 @@ public class JepScriptEngineFactory implements ScriptEngineFactory {
 	 */
 	public ScriptEngine getScriptEngine() {
         try {
-            return new JepScriptEngine();
+            JepScriptEngine e = new JepScriptEngine();
+            e.setFactory(this);
+            return e;
         }
         catch(ScriptException e) {
             // can't throw it in method. this is another fucking

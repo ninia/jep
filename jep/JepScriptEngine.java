@@ -4,6 +4,7 @@ import java.io.Reader;
 import java.io.File;
 import java.io.IOException;
 import java.io.FileWriter;
+import java.io.StringReader;
 
 import javax.script.*;
 
@@ -42,18 +43,22 @@ import javax.script.*;
  * @author [mrjohnson0 at sourceforge.net] Mike Johnson
  * @version $Id$
  */
-public class JepScriptEngine implements ScriptEngine {
+public class JepScriptEngine implements ScriptEngine, Compilable {
     private Jep inter = null;
 
-    private Bindings bindings       = null;
-    private Bindings globalBindings = null;
+    private Bindings bindings       = new SimpleBindings();
+    private Bindings globalBindings = new SimpleBindings();
 
     private ScriptContext context = null;
 
     private ScriptEngineFactory factory = null;
 
 
-    protected JepScriptEngine() throws ScriptException {
+    /**
+     * Make a new JepScriptEngine
+     *
+     */
+    public JepScriptEngine() throws ScriptException {
         try {
             this.inter = new Jep(true); // make interactive because javax.script sucks
             this.inter.setClassLoader(Thread.currentThread().getContextClassLoader());
@@ -72,59 +77,78 @@ public class JepScriptEngine implements ScriptEngine {
 	}
 
 
+    // me: lazy
+    private void _setContext(ScriptContext c) throws ScriptException {
+        try {
+            this.inter.set("context", c);
+        }
+        catch(JepException e) {
+            throw new ScriptException(e.getMessage());
+        }
+    }
+
+
+    // write temp file from Reader
+    private File writeTemp(Reader reader) throws IOException {
+        File       temp = File.createTempFile("jep", ".py");
+        FileWriter fout = new FileWriter(temp);
+
+        char[] buf = new char[1024];
+        int count;
+
+        while((count = reader.read(buf)) > 0)
+            fout.write(buf, 0, count);
+
+        fout.close();
+        return temp;
+    }
+
+
+    public CompiledScript compile(String script) throws ScriptException {
+        File f = null;
+
+        try{
+            f = writeTemp(new StringReader(script));
+        }
+        catch(IOException e) {
+            throw new ScriptException("IOException: " + e.getMessage());
+        }
+
+        return new JepCompiledScript(f);
+    }
+
+
+    public CompiledScript compile(Reader script) throws ScriptException {
+        File f = null;
+
+        try{
+            f = writeTemp(script);
+        }
+        catch(IOException e) {
+            throw new ScriptException("IOException: " + e.getMessage());
+        }
+
+        return new JepCompiledScript(f);
+    }
+
+
 	/*
      * <pre>
      * Run script from reader.
      *
      * Performance of this method will suck compared to using
-     * Jep.runScript(). If you care, read the rant in the source of
-     * this method. Or, just don't use javax.script.
+     * Jep.runScript(). Use the compiled interface or something.
      *
      * </pre>
      *
 	 * @see javax.script.ScriptEngine#eval(java.io.Reader)
 	 */
 	public Object eval(Reader reader) throws ScriptException {
-
-        /**
-         * thanks to javax.script's fucking retard stupidity, i don't
-         * have a goddamn file name. every fucking script engine works
-         * off a filename, so why i have to read the file my own self
-         * when python could do it (oh, and byte compile the damn
-         * thing) i don't fucking know. not that the jsr people would
-         * know how much this sucks for me, because it's too damned
-         * complicated to send a simple "you're making my life
-         * difficult, here's why..." comment. comments are closed.
-         *
-         * so yeah, performance with this will suck compared to just
-         * sending a damned file name. maybe you should just use
-         * Jep.runScript and forget about this bullshit.
-         *
-         */
-
-        // turn off interactive mode
-        this.inter.setInteractive(false);
-
-        FileWriter fout = null;
-        File       temp = null;
-
         try {
-            temp = File.createTempFile("jep", ".py");
-            fout = new FileWriter(temp);
-        }
-        catch(IOException e) {
-            throw new ScriptException("Couldn't create temp file: " +
-                                      e.getMessage());
-        }
+            // turn off interactive mode
+            this.inter.setInteractive(false);
 
-        try {
-            char[] buf = new char[1024];
-            int count;
-
-            while((count = reader.read(buf)) > 0)
-                fout.write(buf, 0, count);
-
-            fout.close();
+            File temp = writeTemp(reader);
 
             // okay sic jep on it
             this.inter.runScript(temp.getAbsolutePath());
@@ -135,14 +159,6 @@ public class JepScriptEngine implements ScriptEngine {
         }
         catch(JepException e) {
             throw new ScriptException(e.getMessage());
-        }
-        finally {
-            try {
-                temp.delete();
-            }
-            catch(SecurityException e) {
-                ;                   // jre will delete it, anyhow
-            }
         }
 
         return null;
@@ -157,7 +173,9 @@ public class JepScriptEngine implements ScriptEngine {
 	 */
 	public Object eval(Reader reader,
                        ScriptContext context) throws ScriptException {
-        this.context = context;
+        // the spec says don't do this:
+        // this.context = context;
+        _setContext(context);
 		return eval(reader);
 	}
 
@@ -170,7 +188,8 @@ public class JepScriptEngine implements ScriptEngine {
 	 */
 	public Object eval(Reader reader,
                        Bindings bindings) throws ScriptException {
-        this.bindings = bindings;
+        // spec says don't do this:
+        // this.bindings = bindings;
 		return eval(reader);
 	}
 
@@ -182,16 +201,7 @@ public class JepScriptEngine implements ScriptEngine {
 	 * @see javax.script.ScriptEngine#eval(java.lang.String)
 	 */
 	public Object eval(String line) throws ScriptException {
-        this.inter.setInteractive(true);
-
-        try {
-            this.inter.eval(line);
-        }
-        catch(JepException e) {
-            throw new ScriptException(e.getMessage());
-        }
-
-		return null;
+        return eval(line, this.context, this.bindings);
 	}
 
 
@@ -200,8 +210,10 @@ public class JepScriptEngine implements ScriptEngine {
 	 */
 	public Object eval(String line,
                        ScriptContext context) throws ScriptException {
-        this.context = context;
-		return eval(line);
+        // spec says don't do that
+        // this.context = context;
+
+		return eval(line, context, this.bindings);
 	}
 
 
@@ -209,19 +221,41 @@ public class JepScriptEngine implements ScriptEngine {
 	 * @see javax.script.ScriptEngine#eval(java.lang.String, javax.script.Bindings)
 	 */
 	public Object eval(String line, Bindings b) throws ScriptException {
-        this.bindings = b;
-		return eval(line);
+		return eval(line, this.context, b);
 	}
+
+
+	private Object eval(String line,
+                        ScriptContext context,
+                        Bindings b) throws ScriptException {
+        this.inter.setInteractive(true);
+
+        try {
+            _setContext(context);
+            this.inter.eval(line);
+        }
+        catch(JepException e) {
+            throw new ScriptException(e.getMessage());
+        }
+
+		return null;
+    }
 
 
 	/* (non-Javadoc)
 	 * @see javax.script.ScriptEngine#getFactory()
 	 */
 	public ScriptEngineFactory getFactory() {
+        if(this.factory == null)
+            this.factory = new JepScriptEngineFactory();
 		return this.factory;
 	}
 
 
+    /**
+     * For internal use.
+     *
+     */
     protected void setFactory(ScriptEngineFactory fact) {
         this.factory = fact;
     }
@@ -235,9 +269,8 @@ public class JepScriptEngine implements ScriptEngine {
             return this.inter.getValue(name);
         }
         catch(JepException e) {
-            // can't throw exception. that's real smart of javax.script
-            e.printStackTrace();
-            return null;
+            // can't throw ScriptException. that's awesome
+            throw new RuntimeException(e.getMessage());
         }
 	}
 
