@@ -35,7 +35,7 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_decref
     PyObject *o = NULL;
 
     // silence compiler warning
-    t = (intptr_t) o;
+    t = (intptr_t) jobj;
     o = (PyObject *) t;
 
     if(ptr == 0) {
@@ -57,7 +57,7 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_incref
     PyObject *o = NULL;
 
     // silence compiler warning
-    t = (intptr_t) o;
+    t = (intptr_t) jobj;
     o = (PyObject *) t;
 
     if(ptr == 0) {
