@@ -31,7 +31,12 @@
  */
 JNIEXPORT void JNICALL Java_jep_python_PyObject_decref
 (JNIEnv *env, jobject jobj, jlong ptr) {
-    PyObject *o = (PyObject *) ptr;
+    intptr_t t;
+    PyObject *o = NULL;
+
+    // silence compiler warning
+    t = (intptr_t) o;
+    o = (PyObject *) t;
 
     if(ptr == 0) {
         THROW_JEP(env, "Invalid object");
@@ -48,7 +53,12 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_decref
  */
 JNIEXPORT void JNICALL Java_jep_python_PyObject_incref
 (JNIEnv *env, jobject jobj, jlong ptr) {
-    PyObject *o = (PyObject *) ptr;
+    intptr_t t;
+    PyObject *o = NULL;
+
+    // silence compiler warning
+    t = (intptr_t) o;
+    o = (PyObject *) t;
 
     if(ptr == 0) {
         THROW_JEP(env, "Invalid object");
