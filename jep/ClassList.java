@@ -240,8 +240,9 @@ public class ClassList {
     /**
      * get classnames in package
      *
-     * @param <code>String</code> name of package
+     * @param p a <code>String</code> value
      * @return <code>String[]</code> array of class names
+     * @exception JepException if an error occurs
      */
     public static String[] get(String p) throws JepException {
         return ClassList.getInstance()._get(p);
