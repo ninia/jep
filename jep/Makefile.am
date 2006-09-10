@@ -1,5 +1,9 @@
 AM_CPPFLAGS = $(all_includes)
 
+SUBDIRS = python
+
+LDADD = python/libjeppython.a
+
 lib_LTLIBRARIES = libjep.la
 libjep_la_LDFLAGS = -version-info 1:1:0 -no-undefined $(JAVA_LDFLAGS)
 libjep_la_SOURCES = jep.c jep.1 system.h aclocal.m4 \
@@ -30,7 +34,6 @@ EXTRA_DIST=python.m4 \
 	BSFJepEngine.java \
 	JepException.java \
 	Test.java \
-	ClassList.java \
 	test.py \
 	jep.h \
 	makejar.sh \
@@ -41,7 +44,14 @@ EXTRA_DIST=python.m4 \
 	javadoc/ \
 	console.py \
 	memtest.py \
-	winconfig.h
+	winconfig.h \
+	META-INF \
+	python/jep_object.h \
+	python/PyObject.java \
+	python/PyModule.java \
+	ClassList.java \
+	JepScriptEngineFactory.java \
+	JepScriptEngine.java
 
 dist-hook:
 	rm -rf `find $(distdir)/javadoc -name CVS`
@@ -78,7 +88,13 @@ JepException.class: JepException.java
 ClassList.class: ClassList.java
 	$(JAVAC) ${JAVACOPT} ClassList.java
 
-jep.jar: Jep.class Test.class JepException.class Run.class ClassList.class
+JepScriptEngine.class: JepScriptEngine.java
+	$(JAVAC) ${JAVACOPT} JepScriptEngine.java
+
+JepScriptEngineFactory.class: JepScriptEngineFactory.java
+	$(JAVAC) ${JAVACOPT} JepScriptEngineFactory.java
+
+jep.jar: Jep.class Test.class JepException.class Run.class ClassList.class JepScriptEngine.java JepScriptEngineFactory.java
 	./makejar.sh jep/ jep.jar
 
 javadoc: jep.jar

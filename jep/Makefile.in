@@ -93,6 +93,10 @@ VERSION = @VERSION@
 
 AM_CPPFLAGS = $(all_includes)
 
+SUBDIRS = python
+
+LDADD = python/libjeppython.a
+
 lib_LTLIBRARIES = libjep.la
 libjep_la_LDFLAGS = -version-info 1:1:0 -no-undefined $(JAVA_LDFLAGS)
 libjep_la_SOURCES = jep.c jep.1 system.h aclocal.m4 	pyembed.c 	util.c 	pyjmethod.c 	pyjobject.c 	pyjclass.c 	pyjfield.c 	pyjarray.c
@@ -103,7 +107,7 @@ METASOURCES = AUTO
 #  uncomment the following if jep requires the math library
 libjep_la_LIBADD = $(JAVA_LIBS)
 
-EXTRA_DIST = python.m4 	autogen.sh 	pyembed.h 	util.h 	pyjmethod.h 	pyjobject.h 	pyjarray.h 	pyjclass.h 	pyjfield.h 	Jep.java 	Run.java 	BSFJepEngine.java 	JepException.java 	Test.java 	ClassList.java 	test.py 	jep.h 	makejar.sh 	jep.jar 	ext/bsf.jar 	windows/jep.dsp 	windows/setup.nsi 	javadoc/ 	console.py 	memtest.py 	winconfig.h
+EXTRA_DIST = python.m4 	autogen.sh 	pyembed.h 	util.h 	pyjmethod.h 	pyjobject.h 	pyjarray.h 	pyjclass.h 	pyjfield.h 	Jep.java 	Run.java 	BSFJepEngine.java 	JepException.java 	Test.java 	test.py 	jep.h 	makejar.sh 	jep.jar 	ext/bsf.jar 	windows/jep.dsp 	windows/setup.nsi 	javadoc/ 	console.py 	memtest.py 	winconfig.h 	META-INF 	python/jep_object.h 	python/PyObject.java 	python/PyModule.java 	ClassList.java 	JepScriptEngineFactory.java 	JepScriptEngine.java
 
 
 #  if you write a self-test script named `chk', uncomment the
@@ -312,6 +316,61 @@ uninstall-man:
 	@$(NORMAL_UNINSTALL)
 	$(MAKE) $(AM_MAKEFLAGS) uninstall-man1
 
+# This directory's subdirectories are mostly independent; you can cd
+# into them and run `make' without going through this Makefile.
+# To change the values of `make' variables: instead of editing Makefiles,
+# (1) if the variable is set in `config.status', edit `config.status'
+#     (which will cause the Makefiles to be regenerated when you run `make');
+# (2) otherwise, pass the desired values on the `make' command line.
+
+@SET_MAKE@
+
+all-recursive install-data-recursive install-exec-recursive \
+installdirs-recursive install-recursive uninstall-recursive  \
+check-recursive installcheck-recursive info-recursive dvi-recursive:
+	@set fnord $(MAKEFLAGS); amf=$$2; \
+	dot_seen=no; \
+	target=`echo $@ | sed s/-recursive//`; \
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  echo "Making $$target in $$subdir"; \
+	  if test "$$subdir" = "."; then \
+	    dot_seen=yes; \
+	    local_target="$$target-am"; \
+	  else \
+	    local_target="$$target"; \
+	  fi; \
+	  (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
+	   || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; \
+	done; \
+	if test "$$dot_seen" = "no"; then \
+	  $(MAKE) $(AM_MAKEFLAGS) "$$target-am" || exit 1; \
+	fi; test -z "$$fail"
+
+mostlyclean-recursive clean-recursive distclean-recursive \
+maintainer-clean-recursive:
+	@set fnord $(MAKEFLAGS); amf=$$2; \
+	dot_seen=no; \
+	rev=''; list='$(SUBDIRS)'; for subdir in $$list; do \
+	  rev="$$subdir $$rev"; \
+	  test "$$subdir" != "." || dot_seen=yes; \
+	done; \
+	test "$$dot_seen" = "no" && rev=". $$rev"; \
+	target=`echo $@ | sed s/-recursive//`; \
+	for subdir in $$rev; do \
+	  echo "Making $$target in $$subdir"; \
+	  if test "$$subdir" = "."; then \
+	    local_target="$$target-am"; \
+	  else \
+	    local_target="$$target"; \
+	  fi; \
+	  (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
+	   || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; \
+	done && test -z "$$fail"
+tags-recursive:
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  test "$$subdir" = . || (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) tags); \
+	done
+
 tags: TAGS
 
 ID: $(HEADERS) $(SOURCES) $(LISP)
@@ -322,9 +381,14 @@ ID: $(HEADERS) $(SOURCES) $(LISP)
 	here=`pwd` && cd $(srcdir) \
 	  && mkid -f$$here/ID $$unique $(LISP)
 
-TAGS:  $(HEADERS) $(SOURCES) config.h.in $(TAGS_DEPENDENCIES) $(LISP)
+TAGS: tags-recursive $(HEADERS) $(SOURCES) config.h.in $(TAGS_DEPENDENCIES) $(LISP)
 	tags=; \
 	here=`pwd`; \
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+   if test "$$subdir" = .; then :; else \
+	    test -f $$subdir/TAGS && tags="$$tags -i $$here/$$subdir/TAGS"; \
+   fi; \
+	done; \
 	list='$(SOURCES) $(HEADERS)'; \
 	unique=`for i in $$list; do echo $$i; done | \
 	  awk '    { files[$$0] = 1; } \
@@ -384,7 +448,7 @@ distdir: $(DISTFILES)
 	distdir=`cd $(distdir) && pwd`; \
 	cd $(top_srcdir) \
 	  && $(AUTOMAKE) --include-deps --build-dir=$$here --srcdir-name=$(top_srcdir) --output-dir=$$top_distdir --gnu Makefile
-	$(mkinstalldirs) $(distdir)/ext $(distdir)/windows
+	$(mkinstalldirs) $(distdir)/ext $(distdir)/python $(distdir)/windows
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
@@ -393,6 +457,16 @@ distdir: $(DISTFILES)
 	    test -f $(distdir)/$$file \
 	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
 	    || cp -p $$d/$$file $(distdir)/$$file || :; \
+	  fi; \
+	done
+	for subdir in $(SUBDIRS); do \
+	  if test "$$subdir" = .; then :; else \
+	    test -d $(distdir)/$$subdir \
+	    || mkdir $(distdir)/$$subdir \
+	    || exit 1; \
+	    chmod 777 $(distdir)/$$subdir; \
+	    (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) top_distdir=../$(distdir) distdir=../$(distdir)/$$subdir distdir) \
+	      || exit 1; \
 	  fi; \
 	done
 	$(MAKE) $(AM_MAKEFLAGS) top_distdir="$(top_distdir)" distdir="$(distdir)" dist-hook
@@ -429,32 +503,33 @@ maintainer-clean-depend:
 	    >> .deps/$(*F).P; \
 	rm -f .deps/$(*F).pp
 info-am:
-info: info-am
+info: info-recursive
 dvi-am:
-dvi: dvi-am
+dvi: dvi-recursive
 check-am: all-am
-check: check-am
+check: check-recursive
 installcheck-am:
-installcheck: installcheck-am
+installcheck: installcheck-recursive
 all-recursive-am: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
 install-exec-am: install-libLTLIBRARIES
-install-exec: install-exec-am
+install-exec: install-exec-recursive
 
 install-data-am: install-man
-install-data: install-data-am
+install-data: install-data-recursive
 
 install-am: all-am
 	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
-install: install-am
+install: install-recursive
 uninstall-am: uninstall-libLTLIBRARIES uninstall-man
-uninstall: uninstall-am
+uninstall: uninstall-recursive
 all-am: Makefile $(LTLIBRARIES) $(MANS) config.h
-all-redirect: all-am
+all-redirect: all-recursive-am
 install-strip:
 	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
-installdirs:
+installdirs: installdirs-recursive
+installdirs-am:
 	$(mkinstalldirs)  $(DESTDIR)$(libdir) $(DESTDIR)$(mandir)/man1
 
 
@@ -473,19 +548,19 @@ mostlyclean-am:  mostlyclean-hdr mostlyclean-libLTLIBRARIES \
 		mostlyclean-compile mostlyclean-libtool \
 		mostlyclean-tags mostlyclean-depend mostlyclean-generic
 
-mostlyclean: mostlyclean-am
+mostlyclean: mostlyclean-recursive
 
 clean-am:  clean-hdr clean-libLTLIBRARIES clean-compile clean-libtool \
 		clean-tags clean-depend clean-generic mostlyclean-am
 
-clean: clean-am
+clean: clean-recursive
 
 distclean-am:  distclean-hdr distclean-libLTLIBRARIES distclean-compile \
 		distclean-libtool distclean-tags distclean-depend \
 		distclean-generic clean-am
 	-rm -f libtool
 
-distclean: distclean-am
+distclean: distclean-recursive
 	-rm -f config.status
 
 maintainer-clean-am:  maintainer-clean-hdr \
@@ -496,7 +571,7 @@ maintainer-clean-am:  maintainer-clean-hdr \
 	@echo "This command is intended for maintainers to use;"
 	@echo "it deletes files that may require special tools to rebuild."
 
-maintainer-clean: maintainer-clean-am
+maintainer-clean: maintainer-clean-recursive
 	-rm -f config.status
 
 .PHONY: mostlyclean-hdr distclean-hdr clean-hdr maintainer-clean-hdr \
@@ -506,13 +581,19 @@ uninstall-libLTLIBRARIES install-libLTLIBRARIES mostlyclean-compile \
 distclean-compile clean-compile maintainer-clean-compile \
 mostlyclean-libtool distclean-libtool clean-libtool \
 maintainer-clean-libtool install-man1 uninstall-man1 install-man \
-uninstall-man tags mostlyclean-tags distclean-tags clean-tags \
-maintainer-clean-tags distdir mostlyclean-depend distclean-depend \
-clean-depend maintainer-clean-depend info-am info dvi-am dvi check \
-check-am installcheck-am installcheck all-recursive-am install-exec-am \
+uninstall-man install-data-recursive uninstall-data-recursive \
+install-exec-recursive uninstall-exec-recursive installdirs-recursive \
+uninstalldirs-recursive all-recursive check-recursive \
+installcheck-recursive info-recursive dvi-recursive \
+mostlyclean-recursive distclean-recursive clean-recursive \
+maintainer-clean-recursive tags tags-recursive mostlyclean-tags \
+distclean-tags clean-tags maintainer-clean-tags distdir \
+mostlyclean-depend distclean-depend clean-depend \
+maintainer-clean-depend info-am info dvi-am dvi check check-am \
+installcheck-am installcheck all-recursive-am install-exec-am \
 install-exec install-data-am install-data install-am install \
-uninstall-am uninstall all-redirect all-am all installdirs \
-mostlyclean-generic distclean-generic clean-generic \
+uninstall-am uninstall all-redirect all-am all installdirs-am \
+installdirs mostlyclean-generic distclean-generic clean-generic \
 maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
 
@@ -538,7 +619,13 @@ JepException.class: JepException.java
 ClassList.class: ClassList.java
 	$(JAVAC) ${JAVACOPT} ClassList.java
 
-jep.jar: Jep.class Test.class JepException.class Run.class ClassList.class
+JepScriptEngine.class: JepScriptEngine.java
+	$(JAVAC) ${JAVACOPT} JepScriptEngine.java
+
+JepScriptEngineFactory.class: JepScriptEngineFactory.java
+	$(JAVAC) ${JAVACOPT} JepScriptEngineFactory.java
+
+jep.jar: Jep.class Test.class JepException.class Run.class ClassList.class JepScriptEngine.java JepScriptEngineFactory.java
 	./makejar.sh jep/ jep.jar
 
 javadoc: jep.jar
