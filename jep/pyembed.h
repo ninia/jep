@@ -66,13 +66,15 @@ jobject pyembed_getvalue(JNIEnv*, intptr_t, char*);
 JNIEnv* pyembed_get_env(void);
 JepThread* pyembed_get_jepthread(void);
 
+intptr_t pyembed_create_module(JNIEnv*, intptr_t, char*);
+
 // -------------------------------------------------- set() methods
 
-void pyembed_setparameter_object(JNIEnv*, intptr_t, const char*, jobject);
-void pyembed_setparameter_string(JNIEnv*, intptr_t, const char*, const char*);
-void pyembed_setparameter_int(JNIEnv*, intptr_t, const char*, int);
-void pyembed_setparameter_long(JNIEnv*, intptr_t, const char*, jeplong);
-void pyembed_setparameter_double(JNIEnv*, intptr_t, const char*, double);
-void pyembed_setparameter_float(JNIEnv*, intptr_t, const char*, float);
+void pyembed_setparameter_object(JNIEnv*, intptr_t, intptr_t, const char*, jobject);
+void pyembed_setparameter_string(JNIEnv*, intptr_t, intptr_t, const char*, const char*);
+void pyembed_setparameter_int(JNIEnv*, intptr_t, intptr_t, const char*, int);
+void pyembed_setparameter_long(JNIEnv*, intptr_t, intptr_t, const char*, jeplong);
+void pyembed_setparameter_double(JNIEnv*, intptr_t, intptr_t, const char*, double);
+void pyembed_setparameter_float(JNIEnv*, intptr_t, intptr_t, const char*, float);
 
 #endif

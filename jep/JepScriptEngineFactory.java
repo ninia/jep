@@ -42,23 +42,28 @@ import javax.script.*;
  */
 public class JepScriptEngineFactory implements ScriptEngineFactory {
 
-	/* (non-Javadoc)
-	 * @see javax.script.ScriptEngineFactory#getEngineName()
-	 */
-	public String getEngineName() {
+	/**
+     * Describe <code>getEngineName</code> method here.
+     *
+     * @return a <code>String</code> value
+     */
+    public String getEngineName() {
 		return "jep";
 	}
 
 
-	/* (non-Javadoc)
-	 * @see javax.script.ScriptEngineFactory#getEngineVersion()
-	 */
-	public String getEngineVersion() {
+	/**
+     * Describe <code>getEngineVersion</code> method here.
+     *
+     * @return a <code>String</code> value
+     */
+    public String getEngineVersion() {
 		return "2.x";
 	}
 
 
-	/* (non-Javadoc)
+	/**
+     * (non-Javadoc)
 	 * @see javax.script.ScriptEngineFactory#getExtensions()
 	 */
 	public List<String> getExtensions() {
@@ -68,26 +73,35 @@ public class JepScriptEngineFactory implements ScriptEngineFactory {
 	}
 
 
-	/* (non-Javadoc)
-	 * @see javax.script.ScriptEngineFactory#getLanguageName()
-	 */
-	public String getLanguageName() {
+	/**
+     * Describe <code>getLanguageName</code> method here.
+     *
+     * @return a <code>String</code> value
+     */
+    public String getLanguageName() {
 		return "CPython";
 	}
 
 
-	/* (non-Javadoc)
-	 * @see javax.script.ScriptEngineFactory#getLanguageVersion()
-	 */
-	public String getLanguageVersion() {
+	/**
+     * Describe <code>getLanguageVersion</code> method here.
+     *
+     * @return a <code>String</code> value
+     */
+    public String getLanguageVersion() {
 		return "Whatever you compiled with";
 	}
 
 
-	/* (non-Javadoc)
-	 * @see javax.script.ScriptEngineFactory#getMethodCallSyntax(java.lang.String, java.lang.String, java.lang.String[])
-	 */
-	public String getMethodCallSyntax(String obj, String m, String[] args) {
+	/**
+     * Describe <code>getMethodCallSyntax</code> method here.
+     *
+     * @param obj a <code>String</code> value
+     * @param m a <code>String</code> value
+     * @param args a <code>String[]</code> value
+     * @return a <code>String</code> value
+     */
+    public String getMethodCallSyntax(String obj, String m, String[] args) {
         // copied from javadoc. might be right. *shrugs*
 
         String ret = obj;
@@ -104,7 +118,8 @@ public class JepScriptEngineFactory implements ScriptEngineFactory {
 	}
 
 
-	/* (non-Javadoc)
+	/**
+     * (non-Javadoc)
 	 * @see javax.script.ScriptEngineFactory#getMimeTypes()
 	 */
 	public List<String> getMimeTypes() {
@@ -114,7 +129,8 @@ public class JepScriptEngineFactory implements ScriptEngineFactory {
 	}
 
 
-	/* (non-Javadoc)
+	/**
+     * (non-Javadoc)
 	 * @see javax.script.ScriptEngineFactory#getNames()
 	 */
 	public List<String> getNames() {
@@ -124,18 +140,24 @@ public class JepScriptEngineFactory implements ScriptEngineFactory {
 	}
 
 
-	/* (non-Javadoc)
-	 * @see javax.script.ScriptEngineFactory#getOutputStatement(java.lang.String)
-	 */
-	public String getOutputStatement(String o) {
+	/**
+     * Describe <code>getOutputStatement</code> method here.
+     *
+     * @param o a <code>String</code> value
+     * @return a <code>String</code> value
+     */
+    public String getOutputStatement(String o) {
         return "print " + o;
 	}
 
 
-	/* (non-Javadoc)
-	 * @see javax.script.ScriptEngineFactory#getParameter(java.lang.String)
-	 */
-	public Object getParameter(String p) {
+	/**
+     * Describe <code>getParameter</code> method here.
+     *
+     * @param p a <code>String</code> value
+     * @return an <code>Object</code> value
+     */
+    public Object getParameter(String p) {
         if(p == null)
             return null;
 
@@ -159,10 +181,13 @@ public class JepScriptEngineFactory implements ScriptEngineFactory {
 	}
 
 
-	/* (non-Javadoc)
-	 * @see javax.script.ScriptEngineFactory#getProgram(java.lang.String[])
-	 */
-	public String getProgram(String[] lines) {
+	/**
+     * Describe <code>getProgram</code> method here.
+     *
+     * @param lines a <code>String[]</code> value
+     * @return a <code>String</code> value
+     */
+    public String getProgram(String[] lines) {
         StringBuffer ret = new StringBuffer();
 
         for(int i = 0; i < lines.length; i++) {
@@ -173,10 +198,13 @@ public class JepScriptEngineFactory implements ScriptEngineFactory {
 		return ret.toString();
 	}
 
-	/* (non-Javadoc)
-	 * @see javax.script.ScriptEngineFactory#getScriptEngine()
-	 */
-	public ScriptEngine getScriptEngine() {
+
+	/**
+     * Describe <code>getScriptEngine</code> method here.
+     *
+     * @return a <code>ScriptEngine</code> value
+     */
+    public ScriptEngine getScriptEngine() {
         try {
             JepScriptEngine e = new JepScriptEngine();
             e.setFactory(this);

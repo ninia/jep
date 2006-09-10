@@ -1,6 +1,9 @@
 package jep;
 
+import jep.python.*;
 import java.io.File;
+import java.util.ArrayList;
+
 
 /**
  * <pre>
@@ -52,6 +55,13 @@ public final class Jep {
     
     // windows requires this as unix newline...
     private static final String LINE_SEP = "\n";
+
+    /*
+     * keep track of objects that we create. do this to prevent
+     * crashes in userland if jep is closed.
+     *
+     */
+    private ArrayList<PyObject> pythonObjects = new ArrayList<PyObject>();
     
     
     // -------------------------------------------------- constructors
@@ -132,7 +142,7 @@ public final class Jep {
      *
      * @exception JepException if an error occurs
      */
-    private void isValidThread() throws JepException {
+    public void isValidThread() throws JepException {
         if(this.thread != Thread.currentThread())
             throw new JepException("Invalid thread access.");
         if(this.tstate == 0)
@@ -288,6 +298,35 @@ public final class Jep {
                                    String str) throws JepException;
     
 
+    private PyObject trackObject(PyObject obj) throws JepException {
+        // make sure python doesn't close it
+        obj.incref();
+        this.pythonObjects.add(obj);
+        return obj;
+    }
+
+
+    /**
+     * Create a python module on the interpreter. If the given name is
+     * valid, imported module, this method will return that module.
+     *
+     * @param name a <code>String</code> value
+     * @return a <code>PyModule</code> value
+     * @exception JepException if an error occurs
+     */
+    public PyModule createModule(String name) throws JepException {
+        return (PyModule) trackObject(new PyModule(
+                                          this.tstate,
+                                          createModule(this.tstate,
+                                                       name),
+                                          this));
+    }
+
+
+    private native long createModule(long tstate,
+                                     String name) throws JepException;
+
+
     // -------------------------------------------------- set things
     
     /**
@@ -374,14 +413,11 @@ public final class Jep {
      * @exception JepException if an error occurs
      */
     public void set(String name, boolean v) throws JepException {
-        if(this.closed)
-            throw new JepException("Jep has been closed.");
-        
         // there's essentially no difference between int and bool...
         if(v)
-            set(tstate, name, 1);
+            set(name, 1);
         else
-            set(tstate, name, 0);
+            set(name, 0);
     }
 
 
@@ -533,6 +569,10 @@ public final class Jep {
         if(this.closed)
             return;
         
+        // close all the PyObjects we created
+        for(int i = 0; i < this.pythonObjects.size(); i++)
+            pythonObjects.get(i).close();
+
         this.closed = true;
         this.close(tstate);
         this.tstate = 0;

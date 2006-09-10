@@ -11,7 +11,7 @@ if test -z $JAVA_HOME; then
 fi
 
 JAR=${JAVA_HOME}/bin/jar
-OPTS=-c0f
+OPTS=-u0f
 
 if test -z $1 -o -z $2; then
     echo "
@@ -19,6 +19,11 @@ Usage ./makejar.sh [path/to/target/] [jarname.jar]
 Example: ./makejar.sh com/trinitycapital/DB/ DB.jar
 "
     exit 1
+fi
+
+#check for and add existing META-INF
+if test -d META-INF; then
+    $JAR -cf jep.jar META-INF/services/javax.script.ScriptEngineFactory
 fi
 
 echo "cd .."

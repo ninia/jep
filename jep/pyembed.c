@@ -98,6 +98,11 @@ static struct PyMethodDef jep_methods[] = {
 };
 
 
+static struct PyMethodDef noop_methods[] = {
+    { NULL, NULL }
+};
+
+
 static PyObject* initjep(void) {
     PyObject *modjep;
     
@@ -627,6 +632,62 @@ int pyembed_compile_string(JNIEnv *env,
 }
 
 
+intptr_t pyembed_create_module(JNIEnv *env,
+                               intptr_t _jepThread,
+                               char *str) {
+    PyThreadState  *prevThread;
+    PyObject       *module;
+    JepThread      *jepThread;
+    intptr_t        ret;
+    PyObject       *main, *globals;
+
+    jepThread = (JepThread *) _jepThread;
+    if(!jepThread) {
+        THROW_JEP(env, "Couldn't get thread objects.");
+        return 0;
+    }
+
+    if(str == NULL)
+        return 0;
+
+    PyEval_AcquireLock();
+    prevThread = PyThreadState_Swap(jepThread->tstate);
+
+    main = PyImport_AddModule("__main__");    /* borrowed */
+    if(main == NULL) {
+        THROW_JEP(env, "Couldn't add module __main__.");
+        goto EXIT;
+    }
+
+    globals = PyModule_GetDict(main);
+    Py_INCREF(globals);
+
+    if(PyImport_AddModule(str) == NULL || process_py_exception(env, 1))
+        goto EXIT;
+
+    Py_InitModule(str, noop_methods);
+    module = PyImport_ImportModuleEx(str, globals, globals, NULL);
+
+    PyDict_SetItem(globals,
+                   PyString_FromString(str),
+                   module);     /* steals */
+
+    if(process_py_exception(env, 0) || module == NULL)
+        ret = 0;
+    else
+        ret = (intptr_t) module;
+
+EXIT:
+    if(globals)
+        Py_DECREF(globals);
+
+    PyThreadState_Swap(prevThread);
+    PyEval_ReleaseLock();
+
+    return ret;
+}
+
+
 void pyembed_setloader(JNIEnv *env, intptr_t _jepThread, jobject cl) {
     jobject    oldLoader = NULL;
     JepThread *jepThread = (JepThread *) _jepThread;
@@ -725,7 +786,7 @@ void pyembed_run(JNIEnv *env,
     prevThread = PyThreadState_Swap(jepThread->tstate);
     
     if(file != NULL) {
-        PyObject *main, *locals, *globals;
+        PyObject *main, *globals;
         
         FILE *script = fopen(file, "r");
         if(!script) {
@@ -742,11 +803,9 @@ void pyembed_run(JNIEnv *env,
         }
         
         globals = PyModule_GetDict(main);
-        locals  = PyModule_GetDict(main);
-        Py_INCREF(locals);
         Py_INCREF(globals);
 
-        PyRun_File(script, file, Py_file_input, globals, locals);
+        PyRun_File(script, file, Py_file_input, globals, globals);
         
         // c programs inside some java environments may get buffered output
         fflush(stdout);
@@ -754,7 +813,6 @@ void pyembed_run(JNIEnv *env,
         
         fclose(script);
         process_py_exception(env, 1);
-        Py_DECREF(locals);
         Py_DECREF(globals);
     }
 
@@ -781,15 +839,22 @@ EXIT:
     }                                                   \
                                                         \
     PyEval_AcquireLock();                               \
-    prevThread = PyThreadState_Swap(jepThread->tstate);
+    prevThread = PyThreadState_Swap(jepThread->tstate); \
+                                                        \
+    pymodule = NULL;                                    \
+    if(module != 0)                                     \
+        pymodule = (PyObject *) module;
+
 
 
 void pyembed_setparameter_object(JNIEnv *env,
                                  intptr_t _jepThread,
+                                 intptr_t module,
                                  const char *name,
                                  jobject value) {
     PyObject      *pyjob;
     PyThreadState *prevThread;
+    PyObject      *pymodule;
     
     // does common things
     GET_COMMON;
@@ -802,9 +867,16 @@ void pyembed_setparameter_object(JNIEnv *env,
         pyjob = pyjobject_new(env, value);
     
     if(pyjob) {
-        PyModule_AddObject(jepThread->modjep,
-                           (char *) name,
-                           pyjob); // steals reference
+        if(pymodule == NULL) {
+            PyModule_AddObject(jepThread->modjep,
+                               (char *) name,
+                               pyjob); // steals reference
+        }
+        else {
+            PyModule_AddObject(pymodule,
+                               (char *) name,
+                               pyjob); // steals reference
+        }
     }
 
     PyThreadState_Swap(prevThread);
@@ -815,10 +887,12 @@ void pyembed_setparameter_object(JNIEnv *env,
 
 void pyembed_setparameter_string(JNIEnv *env,
                                  intptr_t _jepThread,
+                                 intptr_t module,
                                  const char *name,
                                  const char *value) {
     PyObject      *pyvalue;
     PyThreadState *prevThread;
+    PyObject      *pymodule;
     
     // does common things
     GET_COMMON;
@@ -829,10 +903,17 @@ void pyembed_setparameter_string(JNIEnv *env,
     }
     else
         pyvalue = PyString_FromString(value);
-    
-    PyModule_AddObject(jepThread->modjep,
-                       (char *) name,
-                       pyvalue);  // steals reference
+
+    if(pymodule == NULL) {
+        PyModule_AddObject(jepThread->modjep,
+                           (char *) name,
+                           pyvalue);  // steals reference
+    }
+    else {
+        PyModule_AddObject(pymodule,
+                           (char *) name,
+                           pyvalue); // steals reference
+    }
 
     PyThreadState_Swap(prevThread);
     PyEval_ReleaseLock();
@@ -842,10 +923,12 @@ void pyembed_setparameter_string(JNIEnv *env,
 
 void pyembed_setparameter_int(JNIEnv *env,
                               intptr_t _jepThread,
+                              intptr_t module,
                               const char *name,
                               int value) {
     PyObject      *pyvalue;
     PyThreadState *prevThread;
+    PyObject      *pymodule;
     
     // does common things
     GET_COMMON;
@@ -855,10 +938,17 @@ void pyembed_setparameter_int(JNIEnv *env,
         return;
     }
     
-    PyModule_AddObject(jepThread->modjep,
-                       (char *) name,
-                       pyvalue); // steals reference
-    
+    if(pymodule == NULL) {
+        PyModule_AddObject(jepThread->modjep,
+                           (char *) name,
+                           pyvalue); // steals reference
+    }
+    else {
+        PyModule_AddObject(pymodule,
+                           (char *) name,
+                           pyvalue); // steals reference
+    }
+
     PyThreadState_Swap(prevThread);
     PyEval_ReleaseLock();
     return;
@@ -867,10 +957,12 @@ void pyembed_setparameter_int(JNIEnv *env,
 
 void pyembed_setparameter_long(JNIEnv *env,
                                intptr_t _jepThread,
+                               intptr_t module,
                                const char *name,
                                jeplong value) {
     PyObject      *pyvalue;
     PyThreadState *prevThread;
+    PyObject      *pymodule;
     
     // does common things
     GET_COMMON;
@@ -880,10 +972,17 @@ void pyembed_setparameter_long(JNIEnv *env,
         return;
     }
     
-    PyModule_AddObject(jepThread->modjep,
-                       (char *) name,
-                       pyvalue); // steals reference
-    
+    if(pymodule == NULL) {
+        PyModule_AddObject(jepThread->modjep,
+                           (char *) name,
+                           pyvalue); // steals reference
+    }
+    else {
+        PyModule_AddObject(pymodule,
+                           (char *) name,
+                           pyvalue); // steals reference
+    }
+
     PyThreadState_Swap(prevThread);
     PyEval_ReleaseLock();
     return;
@@ -892,10 +991,12 @@ void pyembed_setparameter_long(JNIEnv *env,
 
 void pyembed_setparameter_double(JNIEnv *env,
                                  intptr_t _jepThread,
+                                 intptr_t module,
                                  const char *name,
                                  double value) {
     PyObject      *pyvalue;
     PyThreadState *prevThread;
+    PyObject      *pymodule;
     
     // does common things
     GET_COMMON;
@@ -905,10 +1006,17 @@ void pyembed_setparameter_double(JNIEnv *env,
         return;
     }
     
-    PyModule_AddObject(jepThread->modjep,
-                       (char *) name,
-                       pyvalue); // steals reference
-    
+    if(pymodule == NULL) {
+        PyModule_AddObject(jepThread->modjep,
+                           (char *) name,
+                           pyvalue); // steals reference
+    }
+    else {
+        PyModule_AddObject(pymodule,
+                           (char *) name,
+                           pyvalue); // steals reference
+    }
+
     PyThreadState_Swap(prevThread);
     PyEval_ReleaseLock();
     return;
@@ -917,11 +1025,13 @@ void pyembed_setparameter_double(JNIEnv *env,
 
 void pyembed_setparameter_float(JNIEnv *env,
                                 intptr_t _jepThread,
+                                intptr_t module,
                                 const char *name,
                                 float value) {
     PyObject      *pyvalue;
     PyThreadState *prevThread;
-    
+    PyObject      *pymodule;
+
     // does common things
     GET_COMMON;
     
@@ -930,10 +1040,17 @@ void pyembed_setparameter_float(JNIEnv *env,
         return;
     }
     
-    PyModule_AddObject(jepThread->modjep,
-                       (char *) name,
-                       pyvalue); // steals reference
-    
+    if(pymodule == NULL) {
+        PyModule_AddObject(jepThread->modjep,
+                           (char *) name,
+                           pyvalue); // steals reference
+    }
+    else {
+        PyModule_AddObject(pymodule,
+                           (char *) name,
+                           pyvalue); // steals reference
+    }
+
     PyThreadState_Swap(prevThread);
     PyEval_ReleaseLock();
     return;

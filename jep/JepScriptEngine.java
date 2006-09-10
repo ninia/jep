@@ -11,7 +11,7 @@ import javax.script.*;
 
 /**
  * <pre>
- * JepScriptEngine.java - Embeds CPython in Java.
+ * JepScriptEngine.java - implements javax.script.ScriptEngine
  *
  * Copyright (c) 2004, 2005 Mike Johnson.
  *
@@ -43,8 +43,8 @@ import javax.script.*;
  * @author [mrjohnson0 at sourceforge.net] Mike Johnson
  * @version $Id$
  */
-public class JepScriptEngine implements ScriptEngine, Compilable {
-    private Jep inter = null;
+public class JepScriptEngine implements ScriptEngine {
+    private Jep jep = null;
 
     private Bindings bindings       = new SimpleBindings();
     private Bindings globalBindings = new SimpleBindings();
@@ -57,11 +57,12 @@ public class JepScriptEngine implements ScriptEngine, Compilable {
     /**
      * Make a new JepScriptEngine
      *
+     *@throws ScriptException
      */
     public JepScriptEngine() throws ScriptException {
         try {
-            this.inter = new Jep(true); // make interactive because javax.script sucks
-            this.inter.setClassLoader(Thread.currentThread().getContextClassLoader());
+            this.jep = new Jep(true); // make interactive because javax.script sucks
+            this.jep.setClassLoader(Thread.currentThread().getContextClassLoader());
         }
         catch(JepException e) {
             throw new ScriptException(e.getMessage());
@@ -69,10 +70,13 @@ public class JepScriptEngine implements ScriptEngine, Compilable {
     }
 
 
-	/* (non-Javadoc)
+	/**
+     * Describe <code>createBindings</code> method here.
 	 * @see javax.script.ScriptEngine#createBindings()
-	 */
-	public Bindings createBindings() {
+     *
+     * @return a <code>Bindings</code> value
+     */
+    public Bindings createBindings() {
 		return new SimpleBindings();
 	}
 
@@ -80,7 +84,7 @@ public class JepScriptEngine implements ScriptEngine, Compilable {
     // me: lazy
     private void _setContext(ScriptContext c) throws ScriptException {
         try {
-            this.inter.set("context", c);
+            this.jep.set("context", c);
         }
         catch(JepException e) {
             throw new ScriptException(e.getMessage());
@@ -104,35 +108,7 @@ public class JepScriptEngine implements ScriptEngine, Compilable {
     }
 
 
-    public CompiledScript compile(String script) throws ScriptException {
-        File f = null;
-
-        try{
-            f = writeTemp(new StringReader(script));
-        }
-        catch(IOException e) {
-            throw new ScriptException("IOException: " + e.getMessage());
-        }
-
-        return new JepCompiledScript(f);
-    }
-
-
-    public CompiledScript compile(Reader script) throws ScriptException {
-        File f = null;
-
-        try{
-            f = writeTemp(script);
-        }
-        catch(IOException e) {
-            throw new ScriptException("IOException: " + e.getMessage());
-        }
-
-        return new JepCompiledScript(f);
-    }
-
-
-	/*
+	/**
      * <pre>
      * Run script from reader.
      *
@@ -141,17 +117,19 @@ public class JepScriptEngine implements ScriptEngine, Compilable {
      *
      * </pre>
      *
-	 * @see javax.script.ScriptEngine#eval(java.io.Reader)
-	 */
-	public Object eval(Reader reader) throws ScriptException {
+     * @param reader a <code>Reader</code> value
+     * @return an <code>Object</code> value
+     * @exception ScriptException if an error occurs
+     */
+    public Object eval(Reader reader) throws ScriptException {
         try {
             // turn off interactive mode
-            this.inter.setInteractive(false);
+            this.jep.setInteractive(false);
 
             File temp = writeTemp(reader);
 
             // okay sic jep on it
-            this.inter.runScript(temp.getAbsolutePath());
+            this.jep.runScript(temp.getAbsolutePath());
         }
         catch(IOException e) {
             throw new ScriptException("Error writing to file: " +
@@ -169,9 +147,13 @@ public class JepScriptEngine implements ScriptEngine, Compilable {
      * Note: always returns null due to Python limitations.
      *
      * (non-Javadoc)
-	 * @see javax.script.ScriptEngine#eval(java.io.Reader, javax.script.ScriptContext)
-	 */
-	public Object eval(Reader reader,
+     * @param reader a <code>Reader</code> value
+     * @param context a <code>ScriptContext</code> value
+     * @return an <code>Object</code> value
+     * @exception ScriptException
+     * @see javax.script.ScriptEngine#eval(java.io.Reader, javax.script.ScriptContext)
+     */
+    public Object eval(Reader reader,
                        ScriptContext context) throws ScriptException {
         // the spec says don't do this:
         // this.context = context;
@@ -184,9 +166,13 @@ public class JepScriptEngine implements ScriptEngine, Compilable {
      * Note: always returns null due to Python limitations.
      *
      * (non-Javadoc)
-	 * @see javax.script.ScriptEngine#eval(java.io.Reader, javax.script.Bindings)
-	 */
-	public Object eval(Reader reader,
+     * @param reader a <code>Reader</code> value
+     * @param bindings a <code>Bindings</code> value
+     * @return an <code>Object</code> value
+     * @exception ScriptException
+     * @see javax.script.ScriptEngine#eval(java.io.Reader, javax.script.Bindings)
+     */
+    public Object eval(Reader reader,
                        Bindings bindings) throws ScriptException {
         // spec says don't do this:
         // this.bindings = bindings;
@@ -198,17 +184,25 @@ public class JepScriptEngine implements ScriptEngine, Compilable {
      * Note: always returns null due to Python limitations.
      *
      * (non-Javadoc)
-	 * @see javax.script.ScriptEngine#eval(java.lang.String)
-	 */
-	public Object eval(String line) throws ScriptException {
+     * @param line a <code>String</code> value
+     * @return an <code>Object</code> value
+     * @exception ScriptException
+     * @see javax.script.ScriptEngine#eval(java.lang.String)
+     */
+    public Object eval(String line) throws ScriptException {
         return eval(line, this.context, this.bindings);
 	}
 
 
-	/* (non-Javadoc)
-	 * @see javax.script.ScriptEngine#eval(java.lang.String, javax.script.ScriptContext)
-	 */
-	public Object eval(String line,
+	/**
+     * Describe <code>eval</code> method here.
+     *
+     * @param line a <code>String</code> value
+     * @param context a <code>ScriptContext</code> value
+     * @return an <code>Object</code> value
+     * @exception ScriptException if an error occurs
+     */
+    public Object eval(String line,
                        ScriptContext context) throws ScriptException {
         // spec says don't do that
         // this.context = context;
@@ -217,10 +211,15 @@ public class JepScriptEngine implements ScriptEngine, Compilable {
 	}
 
 
-	/* (non-Javadoc)
-	 * @see javax.script.ScriptEngine#eval(java.lang.String, javax.script.Bindings)
-	 */
-	public Object eval(String line, Bindings b) throws ScriptException {
+	/**
+     * Describe <code>eval</code> method here.
+     *
+     * @param line a <code>String</code> value
+     * @param b a <code>Bindings</code> value
+     * @return an <code>Object</code> value
+     * @exception ScriptException if an error occurs
+     */
+    public Object eval(String line, Bindings b) throws ScriptException {
 		return eval(line, this.context, b);
 	}
 
@@ -228,11 +227,11 @@ public class JepScriptEngine implements ScriptEngine, Compilable {
 	private Object eval(String line,
                         ScriptContext context,
                         Bindings b) throws ScriptException {
-        this.inter.setInteractive(true);
+        this.jep.setInteractive(true);
 
         try {
             _setContext(context);
-            this.inter.eval(line);
+            this.jep.eval(line);
         }
         catch(JepException e) {
             throw new ScriptException(e.getMessage());
@@ -242,10 +241,12 @@ public class JepScriptEngine implements ScriptEngine, Compilable {
     }
 
 
-	/* (non-Javadoc)
-	 * @see javax.script.ScriptEngine#getFactory()
-	 */
-	public ScriptEngineFactory getFactory() {
+	/**
+     * Describe <code>getFactory</code> method here.
+     *
+     * @return a <code>ScriptEngineFactory</code> value
+     */
+    public ScriptEngineFactory getFactory() {
         if(this.factory == null)
             this.factory = new JepScriptEngineFactory();
 		return this.factory;
@@ -255,18 +256,22 @@ public class JepScriptEngine implements ScriptEngine, Compilable {
     /**
      * For internal use.
      *
+     * @param fact a <code>ScriptEngineFactory</code> value
      */
     protected void setFactory(ScriptEngineFactory fact) {
         this.factory = fact;
     }
 
 
-	/* (non-Javadoc)
-	 * @see javax.script.ScriptEngine#get(java.lang.String)
-	 */
-	public Object get(String name) {
+	/**
+     * Describe <code>get</code> method here.
+     *
+     * @param name a <code>String</code> value
+     * @return an <code>Object</code> value
+     */
+    public Object get(String name) {
         try {
-            return this.inter.getValue(name);
+            return this.jep.getValue(name);
         }
         catch(JepException e) {
             // can't throw ScriptException. that's awesome
@@ -275,13 +280,17 @@ public class JepScriptEngine implements ScriptEngine, Compilable {
 	}
 
 
-	/* (non-Javadoc)
-	 * @see javax.script.ScriptEngine#put(java.lang.String, java.lang.Object)
-	 */
-	public void put(String name,
+	/**
+     * Describe <code>put</code> method here.
+     *
+     * @param name a <code>String</code> value
+     * @param val an <code>Object</code> value
+     * @exception IllegalArgumentException if an error occurs
+     */
+    public void put(String name,
                     Object val) throws IllegalArgumentException {
         try {
-            this.inter.set(name, val);
+            this.jep.set(name, val);
         }
         catch(JepException e) {
             throw new IllegalArgumentException(e);
@@ -289,10 +298,13 @@ public class JepScriptEngine implements ScriptEngine, Compilable {
 	}
 
 
-	/* (non-Javadoc)
-	 * @see javax.script.ScriptEngine#getBindings(int)
-	 */
-	public Bindings getBindings(int scope) {
+	/**
+     * Describe <code>getBindings</code> method here.
+     *
+     * @param scope an <code>int</code> value
+     * @return a <code>Bindings</code> value
+     */
+    public Bindings getBindings(int scope) {
         if(scope == ScriptContext.ENGINE_SCOPE)
             return this.bindings;
         else
@@ -300,10 +312,13 @@ public class JepScriptEngine implements ScriptEngine, Compilable {
 	}
 
 
-	/* (non-Javadoc)
-	 * @see javax.script.ScriptEngine#setBindings(javax.script.Bindings, int)
-	 */
-	public void setBindings(Bindings bindings, int scope) {
+	/**
+     * Describe <code>setBindings</code> method here.
+     *
+     * @param bindings a <code>Bindings</code> value
+     * @param scope an <code>int</code> value
+     */
+    public void setBindings(Bindings bindings, int scope) {
         if(scope == ScriptContext.ENGINE_SCOPE)
             this.bindings = bindings;
         else
@@ -311,18 +326,31 @@ public class JepScriptEngine implements ScriptEngine, Compilable {
 	}
 
 
-	/* (non-Javadoc)
-	 * @see javax.script.ScriptEngine#getContext()
-	 */
-	public ScriptContext getContext() {
+	/**
+     * Describe <code>getContext</code> method here.
+     *
+     * @return a <code>ScriptContext</code> value
+     */
+    public ScriptContext getContext() {
 		return this.context;
 	}
 
 
-	/* (non-Javadoc)
-	 * @see javax.script.ScriptEngine#setContext(javax.script.ScriptContext)
-	 */
-	public void setContext(ScriptContext c) {
+	/**
+     * Describe <code>setContext</code> method here.
+     *
+     * @param c a <code>ScriptContext</code> value
+     */
+    public void setContext(ScriptContext c) {
         this.context = c;
 	}
+
+
+    /**
+     * You *must* close this
+     *
+     */
+    public void close() {
+        this.jep.close();
+    }
 }

@@ -23,7 +23,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="&quot;C:\Program Files\Java\jdk1.6.0\include&quot;;&quot;C:\Program Files\Java\jdk1.6.0\include\win32&quot;;C:\Python24\include"
+				AdditionalIncludeDirectories="&quot;C:\Program Files\Java\jdk1.6.0\include&quot;;&quot;C:\Program Files\Java\jdk1.6.0\include\win32&quot;;C:\Python24\include;..\"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;JEP_EXPORTS"
 				StringPooling="TRUE"
 				RuntimeLibrary="2"
@@ -34,13 +34,16 @@
 				ObjectFile=".\Release/"
 				ProgramDataBaseFileName=".\Release/"
 				WarningLevel="2"
+				WarnAsError="TRUE"
 				SuppressStartupBanner="TRUE"
+				Detect64BitPortabilityProblems="TRUE"
 				CompileAs="0"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="odbc32.lib odbccp32.lib jvm.lib"
+				ShowProgress="0"
 				OutputFile=".\Release/jep.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
@@ -96,6 +99,9 @@
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;JEP_EXPORTS;$(NoInherit)"/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\python\jep_object.c">
 			</File>
 			<File
 				RelativePath="..\pyembed.c">
@@ -180,6 +186,9 @@
 			Filter="h;hpp;hxx;hm;inl">
 			<File
 				RelativePath="..\jep.h">
+			</File>
+			<File
+				RelativePath="..\python\jep_object.h">
 			</File>
 			<File
 				RelativePath="..\pyembed.h">
