@@ -498,7 +498,9 @@ PyObject* pyjfield_get(PyJfield_Object *self) {
     }
         
     default:
-        PyErr_Format(PyExc_RuntimeError, "Unknown field type.");
+        PyErr_Format(PyExc_RuntimeError,
+                     "Unknown field type %i.",
+                     self->fieldTypeId);
         Py_INCREF(Py_None);
         return Py_None;
     }
@@ -842,7 +844,9 @@ int pyjfield_set(PyJfield_Object *self, PyObject *value) {
     }
     
 
-    PyErr_Format(PyExc_RuntimeError, "Unknown field type.");
+    PyErr_Format(PyExc_RuntimeError,
+                 "Unknown field type %i.",
+                 self->fieldTypeId);
     return -1;
 }
 
