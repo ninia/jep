@@ -59,6 +59,7 @@ static PyThreadState *mainThreadState = NULL;
 static PyObject* pyembed_findclass(PyObject*, PyObject*);
 static PyObject* pyembed_forname(PyObject*, PyObject*);
 static PyObject* pyembed_jimport(PyObject*, PyObject*);
+static PyObject* pyembed_set_print_stack(PyObject*, PyObject*);
 
 
 // ClassLoader.loadClass
@@ -93,6 +94,11 @@ static struct PyMethodDef jep_methods[] = {
       pyembed_jimport,
       METH_VARARGS,
       "Same definition as the standard __import__." },
+
+    { "printStack",
+      pyembed_set_print_stack,
+      METH_VARARGS,
+      "Turn on printing of stack traces (True|False)" },
 
     { NULL, NULL }
 };
@@ -186,6 +192,7 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl) {
     jepThread->modjep      = initjep();
     jepThread->env         = env;
     jepThread->classloader = (*env)->NewGlobalRef(env, cl);
+    jepThread->printStack  = 0;
 
     // now, add custom import function to builtin module
 
@@ -305,6 +312,31 @@ JepThread* pyembed_get_jepthread(void) {
                                                                             \
         (*env)->DeleteLocalRef(env, clazz);                                 \
     }                                                                       \
+}
+
+
+static PyObject* pyembed_set_print_stack(PyObject *self, PyObject *args) {
+    JepThread *jepThread;
+    JNIEnv    *env   = NULL;
+    char      *print = 0;
+
+	if(!PyArg_ParseTuple(args, "b:setPrintStack", &print))
+        return NULL;
+
+    jepThread = pyembed_get_jepthread();
+    if(!jepThread) {
+        if(!PyErr_Occurred())
+            PyErr_SetString(PyExc_RuntimeError, "Invalid JepThread pointer.");
+        return NULL;
+    }
+
+    if(print == 0)
+        jepThread->printStack = 0;
+    else
+        jepThread->printStack = 1;
+
+    Py_INCREF(Py_None);
+    return Py_None;
 }
 
 
