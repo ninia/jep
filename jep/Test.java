@@ -185,6 +185,7 @@ public class Test implements Runnable {
     public float floatField = 3.4028235E38F;
     public byte byteField = 43;
     public char charField = 'c';
+    public Class classField = this.getClass();
     
     
     // -------------------------------------------------- static fields
@@ -198,6 +199,7 @@ public class Test implements Runnable {
     public static float staticFloat = 3.4028235E38F;
     public static byte staticByte = 125;
     public static char staticChar = 'j';
+    public static Class staticClass = Thread.currentThread().getClass();
 
     
     // -------------------------------------------------- static methods
@@ -246,6 +248,9 @@ public class Test implements Runnable {
         return 'b';
     }
     
+    public static Class getStaticClass() {
+        return Thread.currentThread().getClass();
+    }
     
     public static void main(String argv[]) throws Throwable {
         
