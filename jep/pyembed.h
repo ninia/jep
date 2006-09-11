@@ -46,6 +46,7 @@ struct __JepThread {
     PyThreadState *tstate;
     JNIEnv        *env;
     jobject        classloader;
+    int            printStack;
 };
 typedef struct __JepThread JepThread;
 
