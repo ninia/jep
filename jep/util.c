@@ -66,8 +66,9 @@ jclass JVOID_TYPE    = NULL;
 jclass JDOUBLE_TYPE  = NULL;
 jclass JSHORT_TYPE   = NULL;
 jclass JFLOAT_TYPE   = NULL;
-jclass JCHAR_TYPE   = NULL;
-jclass JBYTE_TYPE   = NULL;
+jclass JCHAR_TYPE    = NULL;
+jclass JBYTE_TYPE    = NULL;
+jclass JCLASS_TYPE   = NULL;
 
 
 // cached methodids
@@ -176,6 +177,7 @@ PyObject* pystring_split_last(PyObject *str, char *split) {
 
 // convert python exception to java.
 int process_py_exception(JNIEnv *env, int printTrace) {
+    JepThread  *jepThread;
     PyObject *ptype, *pvalue, *ptrace, *message = NULL;
     char *m;
     
@@ -187,11 +189,22 @@ int process_py_exception(JNIEnv *env, int printTrace) {
     // to have the source code printed to the user's
     // screen. (i do.)
     //
-    // so we pull relevant info and print strack to the
+    // so we pull relevant info and print strace to the
     // console.
-    
+
     PyErr_Fetch(&ptype, &pvalue, &ptrace);
-    
+
+    jepThread = pyembed_get_jepthread();
+    if(!jepThread) {
+        printf("Error while processing a Python exception, "
+               "invalid JepThread.\n");
+        if(jepThread->printStack) {
+            PyErr_Print();
+            if(!PyErr_Occurred())
+                return 0;
+        }
+    }
+
     if(ptype) {
         message = PyObject_Str(ptype);
         
@@ -246,16 +259,19 @@ int process_java_exception(JNIEnv *env) {
     if((exception = (*env)->ExceptionOccurred(env)) == NULL)
         return 0;
     
-/*     (*env)->ExceptionDescribe(env); */
+    jepThread = pyembed_get_jepthread();
+    if(!jepThread) {
+        printf("Error while processing a Java exception, "
+               "invalid JepThread.\n");
+        return 1;
+    }
+
+    if(jepThread->printStack)    
+        (*env)->ExceptionDescribe(env);
+
     // we're already processing this one, clear the old
     (*env)->ExceptionClear(env);
 
-    jepThread = pyembed_get_jepthread();
-    if(!jepThread) {
-        printf("Error while processing an exception, invalid JepThread.\n");
-        return 1;
-    }
-    
     clazz = (*env)->GetObjectClass(env, exception);
     if((*env)->ExceptionCheck(env) || !clazz) {
         (*env)->ExceptionDescribe(env);
@@ -299,8 +315,6 @@ int process_java_exception(JNIEnv *env) {
     
     if((texc = PyObject_GetAttr(jepThread->modjep, className)) != NULL)
         pyException = texc;
-    else
-        printf("WARNING, didn't find mapped exception.\n");
 
     Py_DECREF(str);
     Py_DECREF(tmp);
@@ -617,6 +631,15 @@ int cache_primitive_classes(JNIEnv *env) {
         (*env)->DeleteLocalRef(env, clazz);
     }
 
+    if(JCLASS_TYPE == NULL) {
+        clazz = (*env)->FindClass(env, "java/lang/Class");
+        if((*env)->ExceptionOccurred(env))
+            return 0;
+        
+        JCLASS_TYPE = (*env)->NewGlobalRef(env, clazz);
+        (*env)->DeleteLocalRef(env, clazz);
+    }
+
     return 1;
 }
 
@@ -666,6 +689,10 @@ void unref_cache_primitive_classes(JNIEnv *env) {
     if(JBYTE_TYPE != NULL) {
         (*env)->DeleteGlobalRef(env, JBYTE_TYPE);
         JBYTE_TYPE = NULL;
+    }
+    if(JCLASS_TYPE != NULL) {
+        (*env)->DeleteGlobalRef(env, JCLASS_TYPE);
+        JCLASS_TYPE = NULL;
     }
 }
 
@@ -773,7 +800,7 @@ int get_jtype(JNIEnv *env, jobject obj, jclass clazz) {
     if(equals)
         return JBYTE_ID;
 
-    // object
+    // object checks
     
     // check if it's an array first
     array = (*env)->CallBooleanMethod(env, obj, objectIsArray);
@@ -898,7 +925,7 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
                             int pos) {
     jvalue ret;
     ret.l = NULL;
-    
+
     switch(paramTypeId) {
 
     case JCHAR_ID: {
