@@ -74,7 +74,7 @@ public class PyObject {
      */
     public void isValid() throws JepException {
         if(obj == 0)
-            throw new JepException("Invalid pointer.");
+            throw new JepException("Object: Invalid pointer.");
         jep.isValidThread();
     }
 
@@ -85,6 +85,7 @@ public class PyObject {
      * @exception JepException if an error occurs
      */
     public void decref() throws JepException {
+        isValid();
         this.decref(this.obj);
     }
 
@@ -98,6 +99,7 @@ public class PyObject {
      * @exception JepException if an error occurs
      */
     public void incref() throws JepException {
+        isValid();
         this.incref(this.obj);
     }
 
@@ -114,12 +116,11 @@ public class PyObject {
             if(this.obj == 0)
                 return;
 
-            isValid();
             this.decref();
         }
         catch(JepException e) {
             // shouldn't happen?
-            e.printStackTrace();
+            ;
         }
 
         this.obj = 0;
