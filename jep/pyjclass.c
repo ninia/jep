@@ -134,6 +134,11 @@ EXIT_ERROR:
 }
 
 
+int pyjclass_check(PyObject *obj) {
+    return pyjobject_check(obj) && ((PyJobject_Object *) obj)->clazz != NULL;
+}
+
+
 static void pyjclass_dealloc(PyJclass_Object *self) {
 #if USE_DEALLOC
     JNIEnv *env = pyembed_get_env();

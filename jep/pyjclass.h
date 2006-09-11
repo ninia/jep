@@ -38,5 +38,6 @@ typedef struct {
 
 PyJclass_Object* pyjclass_new(JNIEnv*, PyObject*);
 PyObject* pyjclass_call(PyJclass_Object*, PyObject*, PyObject*);
+int pyjclass_check(PyObject*);
 
 #endif // ndef pyjclass
