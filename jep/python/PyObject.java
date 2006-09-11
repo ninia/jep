@@ -55,11 +55,15 @@ public class PyObject {
      * @param tstate a <code>long</code> value
      * @param obj
      * @param jep
+     * @exception JepException if an error occurs
      */
-    public PyObject(long tstate, long obj, Jep jep) {
+    public PyObject(long tstate, long obj, Jep jep) throws JepException {
         this.tstate = tstate;
         this.obj    = obj;
         this.jep    = jep;
+
+        if(obj == 0)
+            throw new JepException("Unable to create module.");
     }
 
 
@@ -104,7 +108,6 @@ public class PyObject {
     /**
      * I will be closed automagically.
      * 
-     * @exception JepException
      */
     public void close() {
         try {

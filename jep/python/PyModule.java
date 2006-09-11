@@ -41,10 +41,12 @@ public class PyModule extends PyObject {
     /**
      * Creates a new <code>PyModule</code> instance.
      *
+     * @param tstate a <code>long</code> value
      * @param obj a <code>long</code> value
      * @param jep a <code>Jep</code> value
+     * @exception JepException if an error occurs
      */
-    public PyModule(long tstate, long obj, Jep jep) {
+    public PyModule(long tstate, long obj, Jep jep) throws JepException {
         super(tstate, obj, jep);
     }
 }
