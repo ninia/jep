@@ -17,8 +17,8 @@ OutFile "setup.exe"
 
 InstallDir "$PROGRAMFILES\Jep"
 
-LicenseText "GPL"
-LicenseData "..\gpl.txt"
+LicenseText "zlib/libpng"
+LicenseData "..\LICENSE"
 
 Page license
 Page directory
