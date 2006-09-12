@@ -720,6 +720,63 @@ EXIT:
 }
 
 
+intptr_t pyembed_create_module_on(JNIEnv *env,
+                                  intptr_t _jepThread,
+                                  intptr_t _onModule,
+                                  char *str) {
+    PyThreadState  *prevThread;
+    PyObject       *module, *onModule;
+    JepThread      *jepThread;
+    intptr_t        ret;
+    PyObject       *main, *globals;
+
+    jepThread = (JepThread *) _jepThread;
+    if(!jepThread) {
+        THROW_JEP(env, "Couldn't get thread objects.");
+        return 0;
+    }
+
+    if(str == NULL)
+        return 0;
+
+    PyEval_AcquireLock();
+    prevThread = PyThreadState_Swap(jepThread->tstate);
+
+    onModule = (PyObject *) _onModule;
+    if(!PyModule_Check(onModule)) {
+        THROW_JEP(env, "Invalid onModule.");
+        goto EXIT;
+    }
+
+    globals = PyModule_GetDict(onModule);
+    Py_INCREF(globals);
+
+    if(PyImport_AddModule(str) == NULL || process_py_exception(env, 1))
+        goto EXIT;
+
+    Py_InitModule(str, noop_methods);
+    module = PyImport_ImportModuleEx(str, globals, globals, NULL);
+
+    PyDict_SetItem(globals,
+                   PyString_FromString(str),
+                   module);     /* steals */
+
+    if(process_py_exception(env, 0) || module == NULL)
+        ret = 0;
+    else
+        ret = (intptr_t) module;
+
+EXIT:
+    if(globals)
+        Py_DECREF(globals);
+
+    PyThreadState_Swap(prevThread);
+    PyEval_ReleaseLock();
+
+    return ret;
+}
+
+
 void pyembed_setloader(JNIEnv *env, intptr_t _jepThread, jobject cl) {
     jobject    oldLoader = NULL;
     JepThread *jepThread = (JepThread *) _jepThread;
@@ -736,6 +793,72 @@ void pyembed_setloader(JNIEnv *env, intptr_t _jepThread, jobject cl) {
         (*env)->DeleteGlobalRef(env, oldLoader);
     
     jepThread->classloader = (*env)->NewGlobalRef(env, cl);
+}
+
+
+jobject pyembed_getvalue_on(JNIEnv *env,
+                            intptr_t _jepThread,
+                            intptr_t _onModule,
+                            char *str) {
+    PyThreadState  *prevThread;
+    PyObject       *dict, *result, *onModule;
+    jobject         ret = NULL;
+    JepThread      *jepThread;
+    
+    jepThread = (JepThread *) _jepThread;
+    if(!jepThread) {
+        THROW_JEP(env, "Couldn't get thread objects.");
+        return NULL;
+    }
+    
+    if(str == NULL)
+        return NULL;
+    
+    PyEval_AcquireLock();
+    prevThread = PyThreadState_Swap(jepThread->tstate);
+    
+    if(process_py_exception(env, 1))
+        goto EXIT;
+
+    onModule = (PyObject *) _onModule;
+    if(!PyModule_Check(onModule)) {
+        THROW_JEP(env, "pyembed_getvalue_on: Invalid onModule.");
+        goto EXIT;
+    }
+    
+    dict = PyModule_GetDict(onModule);
+    Py_INCREF(dict);
+    
+    result = PyRun_String(str, Py_eval_input, dict, dict);      /* new ref */
+    
+    process_py_exception(env, 1);
+    Py_DECREF(dict);
+    
+    if(result == NULL)
+        goto EXIT;              /* don't return, need to release GIL */
+    if(result == Py_None)
+        goto EXIT;
+    
+    // convert result to jobject
+    if(pyjobject_check(result))
+        ret = ((PyJobject_Object *) result)->object;
+    else {
+        char *tt;
+        // TODO i'm lazy, just convert everything else to strings.
+        // TODO otherwise we'd have to box primitives...
+        PyObject *t = PyObject_Str(result);
+        tt = PyString_AsString(t);
+        ret = (jobject) (*env)->NewStringUTF(env, (const char *) tt);
+        Py_DECREF(t);
+    }
+    
+EXIT:
+    PyThreadState_Swap(prevThread);
+    PyEval_ReleaseLock();
+
+    if(result != NULL)
+        Py_DECREF(result);
+    return ret;
 }
 
 
@@ -928,7 +1051,7 @@ void pyembed_setparameter_string(JNIEnv *env,
     
     // does common things
     GET_COMMON;
-    
+
     if(value == NULL) {
         Py_INCREF(Py_None);
         pyvalue = Py_None;

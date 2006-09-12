@@ -1,5 +1,7 @@
 package jep;
 
+import jep.python.*;
+
 import java.io.Reader;
 import java.io.File;
 import java.io.IOException;
@@ -271,11 +273,28 @@ public class JepScriptEngine implements ScriptEngine {
      */
     public Object get(String name) {
         try {
-            return this.jep.getValue(name);
+            PyModule module = null;
+            String[] tokens = null;
+
+            if(name.indexOf('.') > 0) {
+                // split package name by '.' and make modules
+                tokens = name.split("\\.");
+                for(int i = 0; i < tokens.length - 1; i++) {
+                    if(module == null)
+                        module = jep.createModule(tokens[i]);
+                    else
+                        module = module.createModule(tokens[i]);
+                }
+            }
+
+            if(module == null)
+                return this.jep.getValue(name);
+            else
+                return module.getValue(tokens[tokens.length - 1]);
         }
         catch(JepException e) {
-            // can't throw ScriptException. that's awesome
-            throw new RuntimeException(e.getMessage());
+            // probably not found. javax.script wants use to just return null
+            return null;
         }
 	}
 
@@ -290,7 +309,26 @@ public class JepScriptEngine implements ScriptEngine {
     public void put(String name,
                     Object val) throws IllegalArgumentException {
         try {
-            this.jep.set(name, val);
+            PyModule module = null;
+            String[] tokens = null;
+            String   mname  = null;
+
+            if(name.indexOf('.') > 0) {
+                // split package name by '.' and make modules
+                tokens = name.split("\\.");
+                for(int i = 0; i < tokens.length - 1; i++) {
+                    mname = tokens[i];
+                    if(module == null)
+                        module = jep.createModule(mname);
+                    else
+                        module = module.createModule(mname);
+                }
+            }
+
+            if(module == null)
+                this.jep.set(name, val);
+            else
+                module.set(tokens[tokens.length - 1], val);
         }
         catch(JepException e) {
             throw new IllegalArgumentException(e);

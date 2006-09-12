@@ -38,15 +38,23 @@ import jep.*;
  * @version $Id$
  */
 public class PyObject {
+    /**
+     * the jep that created this object
+     *
+     */
+    protected Jep  jep = null;
 
-    // the jep that created this object
-    private Jep  jep = null;
+    /**
+     * the pointer to the PyObject
+     *
+     */
+    protected long obj = 0;
 
-    // the pointer to the PyObject
-    private long obj = 0;
-
-    // thread state pointer in python
-    private long tstate = 0;
+    /**
+     * thread state pointer in python
+     *
+     */
+    protected long tstate = 0;
 
 
     /**
@@ -291,4 +299,36 @@ public class PyObject {
     
     private native void set(long tstate, long module, String name, float v)
         throws JepException;
+
+
+    /**
+     * Create a module.
+     *
+     * <b>Internal use only.</b>
+     *
+     * @param tstate a <code>long</code> value
+     * @param onModule a <code>long</code> value
+     * @param name a <code>String</code> value
+     * @return a <code>long</code> value
+     * @exception JepException if an error occurs
+     */
+    protected native long createModule(long tstate,
+                                       long onModule,
+                                       String name) throws JepException;
+
+
+    /**
+     * Get a string value from a module.
+     *
+     * <b>Internal use only.</b>
+     *
+     * @param tstate a <code>long</code> value
+     * @param onModule a <code>long</code> value
+     * @param str a <code>String</code> value
+     * @return an <code>Object</code> value
+     * @exception JepException if an error occurs
+     */
+    protected native Object getValue(long tstate,
+                                     long onModule,
+                                     String str) throws JepException;
 }

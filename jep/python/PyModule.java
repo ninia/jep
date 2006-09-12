@@ -49,4 +49,45 @@ public class PyModule extends PyObject {
     public PyModule(long tstate, long obj, Jep jep) throws JepException {
         super(tstate, obj, jep);
     }
+
+
+    /**
+     * Create a python module on the interpreter. If the given name is
+     * valid, imported module, this method will return that module.
+     *
+     * @param name a <code>String</code> value
+     * @return a <code>PyModule</code> value
+     * @exception JepException if an error occurs
+     */
+    public PyModule createModule(String name) throws JepException {
+        super.isValid();
+        return (PyModule) jep.trackObject(new PyModule(
+                                              super.tstate,
+                                              super.createModule(
+                                                  super.tstate,
+                                                  super.obj,
+                                                  name),
+                                              super.jep));
+    }
+
+
+    /**
+     * <pre>
+     * Retrieves a value from python. If the result is not a java object,
+     * the implementation currently returns a String.
+     *
+     * Python is pretty picky about what it excepts here. The general syntax:
+     * <blockquote>eval("a = 5")
+     *String a = (String) getValue("a")</blockquote>
+     * will work.
+     * </pre>
+     *
+     * @param str a <code>String</code> value
+     * @return an <code>Object</code> value
+     * @exception JepException if an error occurs
+     */
+    public Object getValue(String str) throws JepException {
+        super.isValid();
+        return super.getValue(super.tstate, super.obj, str);
+    }
 }

@@ -152,3 +152,37 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2F
     pyembed_setparameter_float(env, tstate, module, name, (float) jval);
     release_utf_char(env, jname, name);
 }
+
+
+/*
+ * Class:     jep_python_PyObject
+ * Method:    createModule
+ * Signature: (JJLjava/lang/String;)J
+ */
+JNIEXPORT jlong JNICALL Java_jep_python_PyObject_createModule
+(JNIEnv *env, jobject obj, jlong tstate, jlong module, jstring jstr) {
+    const char *str;
+    jlong ret;
+
+    str = jstring2char(env, jstr);
+    ret = pyembed_create_module_on(env, tstate, module, (char *) str);
+    release_utf_char(env, jstr, str);
+    return ret;
+}
+
+
+/*
+ * Class:     jep_python_PyObject
+ * Method:    getValue
+ * Signature: (JJLjava/lang/String;)Ljava/lang/Object;
+ */
+JNIEXPORT jobject JNICALL Java_jep_python_PyObject_getValue
+(JNIEnv *env, jobject obj, jlong tstate, jlong onModule, jstring jstr) {
+    const char *str;
+    jobject ret;
+
+    str = jstring2char(env, jstr);
+    ret = pyembed_getvalue_on(env, tstate, onModule, (char *) str);
+    release_utf_char(env, jstr, str);
+    return ret;
+}

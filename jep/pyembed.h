@@ -63,11 +63,13 @@ void pyembed_eval(JNIEnv *, intptr_t, char*);
 int pyembed_compile_string(JNIEnv*, intptr_t, char*);
 void pyembed_setloader(JNIEnv*, intptr_t, jobject);
 jobject pyembed_getvalue(JNIEnv*, intptr_t, char*);
+jobject pyembed_getvalue_on(JNIEnv*, intptr_t, intptr_t, char*);
 
 JNIEnv* pyembed_get_env(void);
 JepThread* pyembed_get_jepthread(void);
 
 intptr_t pyembed_create_module(JNIEnv*, intptr_t, char*);
+intptr_t pyembed_create_module_on(JNIEnv*, intptr_t, intptr_t, char*);
 
 // -------------------------------------------------- set() methods
 

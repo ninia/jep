@@ -298,7 +298,18 @@ public final class Jep {
                                    String str) throws JepException;
     
 
-    private PyObject trackObject(PyObject obj) throws JepException {
+    /**
+     * <pre>
+     * Track Python objects we create so they can be smoothly shutdown
+     * with no risk of crashes due to bad reference counting.
+     *
+     * <b>Internal use only.</b>
+     * </pre>
+     *
+     * @return same object, for inlining stuff
+     * @exception JepException if an error occurs
+     */
+    public PyObject trackObject(PyObject obj) throws JepException {
         // make sure python doesn't close it
         obj.incref();
         this.pythonObjects.add(obj);
