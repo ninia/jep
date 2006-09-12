@@ -3,8 +3,8 @@ import sys
 
 print "Hello world using Jep."
 
-import os
-raw_input('gdb --pid=%s' % os.getpid())
+#import os
+#raw_input('gdb --pid=%s' % os.getpid())
 
 from jep import *
 
