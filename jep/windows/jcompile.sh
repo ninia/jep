@@ -38,6 +38,10 @@ else
 
     run $JAVAH -o jep.h -classpath ../ jep.Jep
     ./makejar.sh jep/ jep.jar
+
+    # copy jep.jar/.dll to ext dir for jrunscript support
+    run cp -f jep.jar $JAVA_HOME/jre/lib/ext/
+    run cp -f windows/Release/jep.dll /cygdrive/c/WINDOWS/system32/jep.dll
 fi
 
 popd >/dev/null
