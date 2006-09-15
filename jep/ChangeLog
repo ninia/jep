@@ -1,5 +1,11 @@
 2006-4-24 Mike Johnson <mrjohnson0@users.sourceforge.ner>
+	* python/PyObject.java: added
+	* python/PyModule.java: added
+	* JepScriptEngine.java: added
+	* JepScriptEngineFactory.java: added
+	* pyembed.c: added printTrace() python function
 	* windows/: added vs2003 project file
+	* windows/jcompile.sh: added cygwin script to compile java code
 	* pyembed.c: fixed decref of NULL reported by jkiter
 	* makefilecrap: add -framework JavaVM so the mac can link against libjvm
 	* makefilecrap: updated
