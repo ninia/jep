@@ -65,9 +65,11 @@ public class JepScriptEngine implements ScriptEngine {
         try {
             this.jep = new Jep(true); // make interactive because javax.script sucks
             this.jep.setClassLoader(Thread.currentThread().getContextClassLoader());
+            throw new JepException("test");
         }
         catch(JepException e) {
-            throw new ScriptException(e.getMessage());
+            throw (ScriptException) new ScriptException(
+                e.getMessage()).initCause(e);
         }
     }
 
@@ -89,7 +91,8 @@ public class JepScriptEngine implements ScriptEngine {
             this.jep.set("context", c);
         }
         catch(JepException e) {
-            throw new ScriptException(e.getMessage());
+            throw (ScriptException) new ScriptException(
+                e.getMessage()).initCause(e);
         }
     }
 
@@ -138,7 +141,8 @@ public class JepScriptEngine implements ScriptEngine {
                                       e.getMessage());
         }
         catch(JepException e) {
-            throw new ScriptException(e.getMessage());
+            throw (ScriptException) new ScriptException(
+                e.getMessage()).initCause(e);
         }
 
         return null;
@@ -236,7 +240,8 @@ public class JepScriptEngine implements ScriptEngine {
             this.jep.eval(line);
         }
         catch(JepException e) {
-            throw new ScriptException(e.getMessage());
+            throw (ScriptException) new ScriptException(
+                e.getMessage()).initCause(e);
         }
 
 		return null;

@@ -211,12 +211,10 @@ public class JepScriptEngineFactory implements ScriptEngineFactory {
             return e;
         }
         catch(ScriptException e) {
-            // can't throw it in method. this is another fucking
-            // retarded piece of work
-            e.printStackTrace();
+            // aint this grand.
+            // we can throw it in the constructor, but not here.
+            throw new RuntimeException(e);
         }
-
-        return null;
 	}
 
 }
