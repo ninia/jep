@@ -112,21 +112,13 @@ public class JepScriptEngine implements ScriptEngine {
     }
 
 
-	/**
-     * <pre>
-     * Run script from reader.
-     *
-     * Performance of this method will suck compared to using
-     * Jep.runScript(). Use the compiled interface or something.
-     *
-     * </pre>
-     *
-     * @param reader a <code>Reader</code> value
-     * @return an <code>Object</code> value
-     * @exception ScriptException if an error occurs
-     */
-    public Object eval(Reader reader) throws ScriptException {
+    private Object eval(Reader reader,
+                        ScriptContext context,
+                        Bindings bindings) throws ScriptException {
         try {
+            // make sure to always set a context, even if null (None)
+            _setContext(context);
+
             // turn off interactive mode
             this.jep.setInteractive(false);
 
@@ -145,6 +137,24 @@ public class JepScriptEngine implements ScriptEngine {
         }
 
         return null;
+    }
+
+
+	/**
+     * <pre>
+     * Run script from reader.
+     *
+     * Performance of this method will suck compared to using
+     * Jep.runScript(). Use the compiled interface or something.
+     *
+     * </pre>
+     *
+     * @param reader a <code>Reader</code> value
+     * @return an <code>Object</code> value
+     * @exception ScriptException if an error occurs
+     */
+    public Object eval(Reader reader) throws ScriptException {
+        return eval(reader, this.context, this.bindings);
 	}
 
 
@@ -162,8 +172,7 @@ public class JepScriptEngine implements ScriptEngine {
                        ScriptContext context) throws ScriptException {
         // the spec says don't do this:
         // this.context = context;
-        _setContext(context);
-		return eval(reader);
+		return eval(reader, context, this.bindings);
 	}
 
 
@@ -181,9 +190,11 @@ public class JepScriptEngine implements ScriptEngine {
                        Bindings bindings) throws ScriptException {
         // spec says don't do this:
         // this.bindings = bindings;
-		return eval(reader);
+		return eval(reader, this.context, bindings);
 	}
 
+
+    // -------------------------------------------------- string evals
 
 	/**
      * Note: always returns null due to Python limitations.
@@ -385,6 +396,12 @@ public class JepScriptEngine implements ScriptEngine {
      */
     public void setContext(ScriptContext c) {
         this.context = c;
+        try {
+            _setContext(c);
+        }
+        catch(ScriptException e) {
+            throw new RuntimeException(e);
+        }
 	}
 
 
