@@ -1,4 +1,5 @@
 2006-4-24 Mike Johnson <mrjohnson0@users.sourceforge.ner>
+	* pyembec.c: don't set parameters on jep module, set them in globals dict
 	* pyjmethod.c: handle java.lang.Class objects specially
 	* pyjfield.c: handle java.lang.Class objects specially
 	* util.c: handle java.lang.Class objects specially
