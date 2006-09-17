@@ -68,6 +68,18 @@ static jmethodID loadClassMethod = 0;
 // jep.ClassList.get()
 static jmethodID getClassListMethod = 0;
 
+// Integer(int)
+static jmethodID integerIConstructor = 0;
+
+// Long(long)
+static jmethodID longJConstructor = 0;
+
+// Float(float)
+static jmethodID floatFConstructor = 0;
+
+// Boolean(boolean)
+static jmethodID booleanBConstructor = 0;
+
 static struct PyMethodDef jep_methods[] = {
     { "findClass",
       pyembed_findclass,
@@ -916,9 +928,83 @@ jobject pyembed_getvalue(JNIEnv *env, intptr_t _jepThread, char *str) {
     if(result == Py_None)
         goto EXIT;
     
-    // convert result to jobject
-    if(pyjobject_check(result))
+    // convert results to jobject
+    if(pyjclass_check(result))
+        ret = ((PyJobject_Object *) result)->clazz;
+    else if(pyjobject_check(result))
         ret = ((PyJobject_Object *) result)->object;
+    else if(PyString_Check(result)) {
+        char *s = PyString_AS_STRING(result);
+        ret = (*env)->NewStringUTF(env, (const char *) s);
+    }
+    else if(PyBool_Check(result)) {
+        jclass clazz;
+        jboolean b = JNI_FALSE;
+        if(result == Py_True)
+            b = JNI_TRUE;
+
+        clazz = (*env)->FindClass(env, "java/lang/Boolean");
+
+        if(booleanBConstructor == 0) {
+            booleanBConstructor = (*env)->GetMethodID(env,
+                                                      clazz,
+                                                      "<init>",
+                                                      "(Z)V");
+        }
+
+        if(!process_java_exception(env) && booleanBConstructor)
+            ret = (*env)->NewObject(env, clazz, booleanBConstructor, b);
+    }
+    else if(PyInt_Check(result)) {
+        jclass clazz;
+        jint i = PyInt_AS_LONG(result);
+
+        clazz = (*env)->FindClass(env, "java/lang/Integer");
+
+        if(integerIConstructor == 0) {
+            integerIConstructor = (*env)->GetMethodID(env,
+                                                      clazz,
+                                                      "<init>",
+                                                      "(I)V");
+        }
+
+        if(!process_java_exception(env) && integerIConstructor)
+            ret = (*env)->NewObject(env, clazz, integerIConstructor, i);
+    }
+    else if(PyLong_Check(result)) {
+        jclass clazz;
+        jeplong i = PyLong_AsLongLong(result);
+
+        clazz = (*env)->FindClass(env, "java/lang/Long");
+
+        if(longJConstructor == 0) {
+            longJConstructor = (*env)->GetMethodID(env,
+                                                   clazz,
+                                                   "<init>",
+                                                   "(J)V");
+        }
+
+        if(!process_java_exception(env) && longJConstructor)
+            ret = (*env)->NewObject(env, clazz, longJConstructor, i);
+    }
+    else if(PyFloat_Check(result)) {
+        jclass clazz;
+
+        // causes precision loss. python's float type sucks. *shrugs*
+        jfloat f = PyFloat_AS_DOUBLE(result);
+
+        clazz = (*env)->FindClass(env, "java/lang/Float");
+
+        if(floatFConstructor == 0) {
+            floatFConstructor = (*env)->GetMethodID(env,
+                                                    clazz,
+                                                    "<init>",
+                                                    "(F)V");
+        }
+
+        if(!process_java_exception(env) && floatFConstructor)
+            ret = (*env)->NewObject(env, clazz, floatFConstructor, f);
+    }
     else {
         char *tt;
         // TODO i'm lazy, just convert everything else to strings.

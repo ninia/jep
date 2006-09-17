@@ -43,6 +43,18 @@ public class Test implements Runnable {
 
                 jep.runScript("test.py");
 
+                System.out.println("Test get object: " + jep.getValue("testo"));
+                System.out.println("Test get string: " + jep.getValue("test"));
+                System.out.println("Test get int: " +
+                                   ((Integer) jep.getValue("testi")).intValue());
+                System.out.println("Test get boolean: " + (Boolean) jep.getValue("testb"));
+                System.out.println("Test get long: " + (Long) jep.getValue("testl"));
+                System.out.println("Test get double: " + (Float) jep.getValue("testd"));
+                System.out.println("Test get float: " + (Float) jep.getValue("testf"));
+                System.out.println("Test get short: " + (Integer) jep.getValue("testy"));
+                System.out.println("Test get null: " + jep.getValue("testn"));
+                System.out.println("Test get class: " + (Class) jep.getValue("testz"));
+
                 System.out.print("get unknown val:  ");
                 System.out.println(jep.getValue("_asdf"));
             }

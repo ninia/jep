@@ -332,4 +332,7 @@ if(__name__ == '__main__'):
     ar = testo.getFloatArray()
     print 'float[0]:        ', ar[0]
 
+    print 'Float max: ', Float.MAX_VALUE
+    testb = True
+
     print 'python loop %i finished.' % (i)
