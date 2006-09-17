@@ -57,8 +57,6 @@
 
 staticforward PyTypeObject PyJclass_Type;
 
-static void pyjclass_addmethod(PyJclass_Object*, PyObject*);
-static void pyjclass_addfield(PyJclass_Object*, PyObject*);
 static void pyjclass_dealloc(PyJclass_Object*);
 
 static jmethodID classGetConstructors = 0;
@@ -135,7 +133,7 @@ EXIT_ERROR:
 
 
 int pyjclass_check(PyObject *obj) {
-    return pyjobject_check(obj) && ((PyJobject_Object *) obj)->clazz != NULL;
+    return pyjobject_check(obj) && ((PyJobject_Object *) obj)->object == NULL;
 }
 
 
