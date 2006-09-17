@@ -1,4 +1,8 @@
 2006-4-24 Mike Johnson <mrjohnson0@users.sourceforge.ner>
+	* pyjmethod.c: handle java.lang.Class objects specially
+	* pyjfield.c: handle java.lang.Class objects specially
+	* util.c: handle java.lang.Class objects specially
+	* pyembed.c: handle java.lang.Class objects specially
 	* python/PyObject.java: added
 	* python/PyModule.java: added
 	* JepScriptEngine.java: added
