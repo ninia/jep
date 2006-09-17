@@ -1007,8 +1007,6 @@ jobject pyembed_getvalue(JNIEnv *env, intptr_t _jepThread, char *str) {
     }
     else {
         char *tt;
-        // TODO i'm lazy, just convert everything else to strings.
-        // TODO otherwise we'd have to box primitives...
         PyObject *t = PyObject_Str(result);
         tt = PyString_AsString(t);
         ret = (jobject) (*env)->NewStringUTF(env, (const char *) tt);
