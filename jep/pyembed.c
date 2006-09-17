@@ -664,6 +664,25 @@ int pyembed_compile_string(JNIEnv *env,
 }
 
 
+// returns new reference to globals dict
+// hold lock before calling.
+// null on error
+PyObject* pyembed_get_globals(JNIEnv *env) {
+    PyObject *main, *globals;
+
+    main = PyImport_AddModule("__main__");    /* borrowed */
+    if(main == NULL) {
+        THROW_JEP(env, "Couldn't add module __main__.");
+        return NULL;
+    }
+
+    globals = PyModule_GetDict(main);
+    Py_INCREF(globals);
+
+    return globals;
+}
+
+
 intptr_t pyembed_create_module(JNIEnv *env,
                                intptr_t _jepThread,
                                char *str) {
@@ -671,7 +690,7 @@ intptr_t pyembed_create_module(JNIEnv *env,
     PyObject       *module;
     JepThread      *jepThread;
     intptr_t        ret;
-    PyObject       *main, *globals;
+    PyObject       *globals;
 
     jepThread = (JepThread *) _jepThread;
     if(!jepThread) {
@@ -685,14 +704,9 @@ intptr_t pyembed_create_module(JNIEnv *env,
     PyEval_AcquireLock();
     prevThread = PyThreadState_Swap(jepThread->tstate);
 
-    main = PyImport_AddModule("__main__");    /* borrowed */
-    if(main == NULL) {
-        THROW_JEP(env, "Couldn't add module __main__.");
+    globals = pyembed_get_globals(env);
+    if(!globals)
         goto EXIT;
-    }
-
-    globals = PyModule_GetDict(main);
-    Py_INCREF(globals);
 
     if(PyImport_AddModule(str) == NULL || process_py_exception(env, 1))
         goto EXIT;
@@ -728,7 +742,7 @@ intptr_t pyembed_create_module_on(JNIEnv *env,
     PyObject       *module, *onModule;
     JepThread      *jepThread;
     intptr_t        ret;
-    PyObject       *main, *globals;
+    PyObject       *globals;
 
     jepThread = (JepThread *) _jepThread;
     if(!jepThread) {
@@ -941,7 +955,7 @@ void pyembed_run(JNIEnv *env,
     prevThread = PyThreadState_Swap(jepThread->tstate);
     
     if(file != NULL) {
-        PyObject *main, *globals;
+        PyObject *globals;
         
         FILE *script = fopen(file, "r");
         if(!script) {
@@ -949,16 +963,9 @@ void pyembed_run(JNIEnv *env,
             goto EXIT;
         }
         
-        // some inspiration from pythonrun.c
-        
-        main = PyImport_AddModule("__main__");    /* borrowed */
-        if(main == NULL) {
-            THROW_JEP(env, "Couldn't add module __main__.");
+        globals = pyembed_get_globals(env);
+        if(!globals)
             goto EXIT;
-        }
-        
-        globals = PyModule_GetDict(main);
-        Py_INCREF(globals);
 
         PyRun_File(script, file, Py_file_input, globals, globals);
         
@@ -979,25 +986,32 @@ EXIT:
 
 // -------------------------------------------------- set() things
 
-#define GET_COMMON                                      \
-    JepThread *jepThread;                               \
-                                                        \
-    jepThread = (JepThread *) _jepThread;               \
-    if(!jepThread) {                                    \
-        THROW_JEP(env, "Couldn't get thread objects."); \
-        return;                                         \
-    }                                                   \
-                                                        \
-    if(name == NULL) {                                  \
-        THROW_JEP(env, "name is invalid.");             \
-        return;                                         \
-    }                                                   \
-                                                        \
-    PyEval_AcquireLock();                               \
-    prevThread = PyThreadState_Swap(jepThread->tstate); \
-                                                        \
-    pymodule = NULL;                                    \
-    if(module != 0)                                     \
+#define GET_COMMON                                                  \
+    JepThread *jepThread;                                           \
+    PyObject  *globals;                                             \
+                                                                    \
+    jepThread = (JepThread *) _jepThread;                           \
+    if(!jepThread) {                                                \
+        THROW_JEP(env, "Couldn't get thread objects.");             \
+        return;                                                     \
+    }                                                               \
+                                                                    \
+    if(name == NULL) {                                              \
+        THROW_JEP(env, "name is invalid.");                         \
+        return;                                                     \
+    }                                                               \
+                                                                    \
+    PyEval_AcquireLock();                                           \
+    prevThread = PyThreadState_Swap(jepThread->tstate);             \
+                                                                    \
+    globals = pyembed_get_globals(env);                             \
+    if(!globals) {                                                  \
+        THROW_JEP(env, "pyembed_set: Couldn't get globals dict.");  \
+        return;                                                     \
+    }                                                               \
+                                                                    \
+    pymodule = NULL;                                                \
+    if(module != 0)                                                 \
         pymodule = (PyObject *) module;
 
 
@@ -1023,9 +1037,9 @@ void pyembed_setparameter_object(JNIEnv *env,
     
     if(pyjob) {
         if(pymodule == NULL) {
-            PyModule_AddObject(jepThread->modjep,
-                               (char *) name,
-                               pyjob); // steals reference
+            PyDict_SetItem(globals,
+                           PyString_FromString(name),
+                           pyjob); // steals reference
         }
         else {
             PyModule_AddObject(pymodule,
@@ -1060,9 +1074,9 @@ void pyembed_setparameter_string(JNIEnv *env,
         pyvalue = PyString_FromString(value);
 
     if(pymodule == NULL) {
-        PyModule_AddObject(jepThread->modjep,
-                           (char *) name,
-                           pyvalue);  // steals reference
+        PyDict_SetItem(globals,
+                       PyString_FromString(name),
+                       pyvalue);  // steals reference
     }
     else {
         PyModule_AddObject(pymodule,
@@ -1094,9 +1108,9 @@ void pyembed_setparameter_int(JNIEnv *env,
     }
     
     if(pymodule == NULL) {
-        PyModule_AddObject(jepThread->modjep,
-                           (char *) name,
-                           pyvalue); // steals reference
+        PyDict_SetItem(globals,
+                       PyString_FromString(name),
+                       pyvalue); // steals reference
     }
     else {
         PyModule_AddObject(pymodule,
@@ -1128,9 +1142,9 @@ void pyembed_setparameter_long(JNIEnv *env,
     }
     
     if(pymodule == NULL) {
-        PyModule_AddObject(jepThread->modjep,
-                           (char *) name,
-                           pyvalue); // steals reference
+        PyDict_SetItem(globals,
+                       PyString_FromString(name),
+                       pyvalue); // steals reference
     }
     else {
         PyModule_AddObject(pymodule,
@@ -1162,9 +1176,9 @@ void pyembed_setparameter_double(JNIEnv *env,
     }
     
     if(pymodule == NULL) {
-        PyModule_AddObject(jepThread->modjep,
-                           (char *) name,
-                           pyvalue); // steals reference
+        PyDict_SetItem(globals,
+                       PyString_FromString(name),
+                       pyvalue); // steals reference
     }
     else {
         PyModule_AddObject(pymodule,
@@ -1196,9 +1210,9 @@ void pyembed_setparameter_float(JNIEnv *env,
     }
     
     if(pymodule == NULL) {
-        PyModule_AddObject(jepThread->modjep,
-                           (char *) name,
-                           pyvalue); // steals reference
+        PyDict_SetItem(globals,
+                       PyString_FromString(name),
+                       pyvalue); // steals reference
     }
     else {
         PyModule_AddObject(pymodule,
