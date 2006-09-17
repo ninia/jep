@@ -74,6 +74,7 @@ intptr_t pyembed_create_module_on(JNIEnv*, intptr_t, intptr_t, char*);
 // -------------------------------------------------- set() methods
 
 void pyembed_setparameter_object(JNIEnv*, intptr_t, intptr_t, const char*, jobject);
+void pyembed_setparameter_class(JNIEnv *, intptr_t, intptr_t, const char*, jclass);
 void pyembed_setparameter_string(JNIEnv*, intptr_t, intptr_t, const char*, const char*);
 void pyembed_setparameter_int(JNIEnv*, intptr_t, intptr_t, const char*, int);
 void pyembed_setparameter_long(JNIEnv*, intptr_t, intptr_t, const char*, jeplong);

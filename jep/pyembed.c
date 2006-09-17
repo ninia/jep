@@ -1054,6 +1054,44 @@ void pyembed_setparameter_object(JNIEnv *env,
 }
 
 
+void pyembed_setparameter_class(JNIEnv *env,
+                                intptr_t _jepThread,
+                                intptr_t module,
+                                const char *name,
+                                jclass value) {
+    PyObject      *pyjob;
+    PyThreadState *prevThread;
+    PyObject      *pymodule;
+    
+    // does common things
+    GET_COMMON;
+    
+    if(value == NULL) {
+        Py_INCREF(Py_None);
+        pyjob = Py_None;
+    }
+    else
+        pyjob = pyjobject_new_class(env, value);
+    
+    if(pyjob) {
+        if(pymodule == NULL) {
+            PyDict_SetItem(globals,
+                           PyString_FromString(name),
+                           pyjob); // steals reference
+        }
+        else {
+            PyModule_AddObject(pymodule,
+                               (char *) name,
+                               pyjob); // steals reference
+        }
+    }
+
+    PyThreadState_Swap(prevThread);
+    PyEval_ReleaseLock();
+    return;
+}
+
+
 void pyembed_setparameter_string(JNIEnv *env,
                                  intptr_t _jepThread,
                                  intptr_t module,

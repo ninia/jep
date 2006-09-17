@@ -389,12 +389,17 @@ public final class Jep {
             throw new JepException("Jep has been closed.");
         isValidThread();
         
-        set(tstate, name, v);
+        if(v instanceof Class)
+            set(tstate, name, (Class) v);
+        else
+            set(tstate, name, v);
     }
 
     private native void set(long tstate, String name, Object v)
         throws JepException;
 
+    private native void set(long tstate, String name, Class v)
+        throws JepException;
 
     /**
      * Describe <code>set</code> method here.

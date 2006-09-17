@@ -186,6 +186,21 @@ JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2Ljava_lang_Object_2
 /*
  * Class:     jep_Jep
  * Method:    set
+ * Signature: (JLjava/lang/String;Ljava/lang/Class;)V
+ */
+JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2Ljava_lang_Class_2
+(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jclass jval) {
+    const char *name;
+    
+    name = jstring2char(env, jname);
+    pyembed_setparameter_class(env, tstate, 0, name, jval);
+    release_utf_char(env, jname, name);
+}
+
+
+/*
+ * Class:     jep_Jep
+ * Method:    set
  * Signature: (ILjava/lang/String;Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2Ljava_lang_String_2

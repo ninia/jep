@@ -45,7 +45,7 @@ if(__name__ == '__main__'):
     print 'test byte:       ', testy
     print 'test char:       ', testc
     print 'test null obj:   ', testn
-    print 'test class obj:  ', testz
+    print 'test class obj:  ', testz().toString()
 
     print """
     ##################################################
