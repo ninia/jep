@@ -1,5 +1,6 @@
 2006-4-24 Mike Johnson <mrjohnson0@users.sourceforge.ner>
-	* pyembec.c: don't set parameters on jep module, set them in globals dict
+	* pyembed.c: convert types (and box) on return from getValue
+	* pyembed.c: don't set parameters on jep module, set them in globals dict
 	* Jep.java: handle java.lang.Class objects specially
 	* jep.c: handle java.lang.Class objects specially
 	* pyjmethod.c: handle java.lang.Class objects specially
