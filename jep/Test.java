@@ -13,6 +13,7 @@ import java.io.File;
  * @version $Id$
  */
 public class Test implements Runnable {
+    private Jep jep = null;
 
     public Test() {
     } // Test constructor
@@ -22,13 +23,12 @@ public class Test implements Runnable {
 
         for(int i = 0; i < 1; i++) {
             System.out.println("running i: " + i);
-            Jep jep = null;
             
             try {
                 File pwd = new File(".");
 
-                jep = new Jep(false, pwd.getAbsolutePath());
-                jep.set("testo", new Test());
+                this.jep = new Jep(false, pwd.getAbsolutePath());
+                jep.set("testo", this);
                 jep.set("test", "value from java.");
                 jep.set("testi", i);
                 jep.set("testb", true);
@@ -39,6 +39,7 @@ public class Test implements Runnable {
                 jep.set("testc", 't');
                 jep.set("testn", (String) null);
                 jep.set("testn", (Object) null);
+                jep.set("testz", this.getClass());
 
                 jep.runScript("test.py");
 
@@ -61,6 +62,11 @@ public class Test implements Runnable {
     protected void finalize() {
         System.out.println("test instance finalized, you should see this " +
                            "if the reference counting worked...");
+    }
+
+    // get the jep used for this class
+    public Jep getJep() {
+        return this.jep;
     }
 
     public String toString() {

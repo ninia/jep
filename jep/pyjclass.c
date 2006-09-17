@@ -133,7 +133,7 @@ EXIT_ERROR:
 
 
 int pyjclass_check(PyObject *obj) {
-    return pyjobject_check(obj) && ((PyJobject_Object *) obj)->object == NULL;
+    return pyjobject_check(obj) && ((PyJobject_Object *) obj)->pyjclass != NULL;
 }
 
 

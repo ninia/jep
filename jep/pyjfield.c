@@ -317,9 +317,33 @@ PyObject* pyjfield_get(PyJfield_Object *self) {
         break;
     }
         
+    case JCLASS_ID: {
+        jobject obj;
+
+        if(self->isStatic)
+            obj = (*env)->GetStaticObjectField(env,
+                                               self->pyjobject->clazz,
+                                               self->fieldId);
+        else
+            obj = (*env)->GetObjectField(env,
+                                         self->pyjobject->object,
+                                         self->fieldId);
+
+        if(process_java_exception(env))
+            return NULL;
+        
+        if(obj == NULL) {
+            Py_INCREF(Py_None);
+            return Py_None;
+        }
+        
+        result = pyjobject_new_class(env, obj);
+        break;
+    }
+
     case JOBJECT_ID: {
         jobject obj;
-        
+
         if(self->isStatic)
             obj = (*env)->GetStaticObjectField(env,
                                                self->pyjobject->clazz,
@@ -564,6 +588,36 @@ int pyjfield_set(PyJfield_Object *self, PyObject *value) {
         return 0; // success
     
         
+    case JCLASS_ID:
+        if(!pyarg_matches_jtype(env, value, JCLASS_TYPE, self->fieldTypeId)) {
+            PyErr_Format(PyExc_RuntimeError, "Expected class.");
+            return -1;
+        }
+        jarg = convert_pyarg_jvalue(env,
+                                    value,
+                                    JCLASS_TYPE,
+                                    self->fieldTypeId,
+                                    1);
+        if(PyErr_Occurred())
+            return -1;
+
+        if(self->isStatic)
+            (*env)->SetStaticObjectField(env,
+                                         self->pyjobject->clazz,
+                                         self->fieldId,
+                                         jarg.l);
+        else
+            (*env)->SetObjectField(env,
+                                   self->pyjobject->object,
+                                   self->fieldId,
+                                   jarg.l);
+        
+        if(process_java_exception(env))
+            return -1;
+        
+        return 0; // success
+
+
     case JOBJECT_ID:
         if(!pyarg_matches_jtype(env, value, JOBJECT_TYPE, self->fieldTypeId)) {
             PyErr_Format(PyExc_RuntimeError, "Expected object.");
@@ -577,7 +631,7 @@ int pyjfield_set(PyJfield_Object *self, PyObject *value) {
                                     1);
         if(PyErr_Occurred())
             return -1;
-        
+
         if(self->isStatic)
             (*env)->SetStaticObjectField(env,
                                          self->pyjobject->clazz,

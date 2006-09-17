@@ -563,6 +563,36 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
         break;
     }
 
+    case JCLASS_ID: {
+        jobject obj;
+        Py_UNBLOCK_THREADS;
+        
+        if(self->isStatic)
+            obj = (*env)->CallStaticObjectMethodA(
+                env,
+                self->pyjobject->clazz,
+                self->methodId,
+                jargs);
+        else {
+            if(!self->pyjobject->object)
+                obj = (*env)->CallObjectMethodA(env,
+                                                self->pyjobject->clazz,
+                                                self->methodId,
+                                                jargs);
+            else
+                obj = (*env)->CallObjectMethodA(env,
+                                                self->pyjobject->object,
+                                                self->methodId,
+                                                jargs);
+        }
+        
+        Py_BLOCK_THREADS;
+        if(!process_java_exception(env) && obj != NULL)
+            result = pyjobject_new_class(env, obj);
+        
+        break;
+    }
+
     case JOBJECT_ID: {
         jobject obj;
         Py_UNBLOCK_THREADS;

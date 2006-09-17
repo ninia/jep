@@ -12,9 +12,15 @@ from java.lang import *
 from java.util import HashMap
 from java.io import FileInputStream
 
+def console(quit=True):
+    import console
+    console.prompt(testo.getJep())
+    if(quit):
+        raise RuntimeError, 'blah'
 
 #for i in (range(0, 10)):
 if(__name__ == '__main__'):
+    
     # turn on stack traces
     printStack(True)
     
@@ -39,7 +45,7 @@ if(__name__ == '__main__'):
     print 'test byte:       ', testy
     print 'test char:       ', testc
     print 'test null obj:   ', testn
-#    print 'test class obj:  ', testz
+    print 'test class obj:  ', testz
 
     print """
     ##################################################
@@ -55,7 +61,7 @@ if(__name__ == '__main__'):
     print 'test getFloat:   ', testo.getFloat()
     print 'test getByte:    ', testo.getByte()
     print 'test getChar:    ', testo.getChar()
-#    print 'test getClass:   ', testo.getClass()
+    print 'test getClass:   ', testo.getClass()
     integer = testo.getInteger()
     print 'dir getInteger:  ', dir(integer)
     l = testo.getClassLong()
@@ -131,7 +137,7 @@ if(__name__ == '__main__'):
     print 'floatField:      ', testo.floatField
     print 'byteField:       ', testo.byteField
     print 'charField:       ', testo.charField
-#    print 'classField:      ', testo.classField
+    print 'classField:      ', testo.classField
 
     testo.stringField = 'a new string for loop: %i' % (i)
     testo.intField = i
@@ -142,7 +148,7 @@ if(__name__ == '__main__'):
     testo.floatField = 12312.122
     testo.charField = 'j'
     testo.byteField = 2
-#    testo.classField = Integer
+    testo.classField = Integer
     
     print 'stringField:     ', testo.stringField
     print 'intField:        ', testo.intField
@@ -153,7 +159,7 @@ if(__name__ == '__main__'):
     print 'floatField:      ', testo.floatField
     print 'byteField:       ', testo.byteField
     print 'charField:       ', testo.charField
-    #print 'classField:      ', testo.classField
+    print 'classField:      ', testo.classField
     
     print """
     ##################################################
@@ -169,7 +175,7 @@ if(__name__ == '__main__'):
     print 'staticFloat:     ', testo.staticFloat
     print 'staticChar:      ', testo.staticChar
     print 'staticByte:      ', testo.staticByte
-#    print 'staticClass:     ', testo.staticClass
+    print 'staticClass:     ', testo.staticClass
 
     print ""
     testo.staticString = 'a new string for loop: %i' % (i)
@@ -181,7 +187,7 @@ if(__name__ == '__main__'):
     testo.staticFloat = 123.123
     testo.staticByte = testo.staticByte * 10
     testo.staticChar = 'z'
-#    testo.staticClass = Integer
+    testo.staticClass = Integer
     
     Test = findClass('jep.Test')
     print 'staticShort:     ', Test.staticShort
@@ -193,7 +199,7 @@ if(__name__ == '__main__'):
     print 'staticFloat:     ', Test.staticFloat
     print 'staticChar:      ', Test.staticChar
     print 'staticByte:      ', Test.staticByte
-    #print 'staticClass:     ', Test.staticClass
+    print 'staticClass:     ', Test.staticClass
     
     Test.staticString = 'a new string for loop: %i' % (i)
     Test.staticInt = i
@@ -238,7 +244,7 @@ if(__name__ == '__main__'):
     print 'staticFloat:     ', testo.getStaticFloat()
     print 'staticByte:      ', testo.getStaticByte()
     print 'staticChar:      ', testo.getStaticChar()
-#    print 'staticClass:     ', testo.getStaticClass()
+    print 'staticClass:     ', testo.getStaticClass()
 
     print """
     ##################################################

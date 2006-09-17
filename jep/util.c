@@ -252,13 +252,13 @@ int process_java_exception(JNIEnv *env) {
     PyObject   *str, *tmp, *texc, *className;
     char       *message;
     JepThread  *jepThread;
-    
+
     if(!(*env)->ExceptionCheck(env))
         return 0;
-    
+
     if((exception = (*env)->ExceptionOccurred(env)) == NULL)
         return 0;
-    
+
     jepThread = pyembed_get_jepthread();
     if(!jepThread) {
         printf("Error while processing a Java exception, "
@@ -809,6 +809,9 @@ int get_jtype(JNIEnv *env, jobject obj, jclass clazz) {
     
     if(array)
         return JARRAY_ID;
+
+    if((*env)->IsAssignableFrom(env, obj, JCLASS_TYPE))
+        return JCLASS_ID;
     
     if((*env)->IsAssignableFrom(env, clazz, JOBJECT_TYPE))
         return JOBJECT_ID;
@@ -863,6 +866,15 @@ int pyarg_matches_jtype(JNIEnv *env,
 
         break;
         
+    case JCLASS_ID:
+        if(param == Py_None)
+            return 1;
+        
+        if(pyjclass_check(param))
+            return 1;
+
+        break;
+
     case JOBJECT_ID:
         if(param == Py_None)
             return 1;
@@ -1003,6 +1015,26 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
             obj = ((PyJarray_Object *) param)->object;
         }
         
+        ret.l = obj;
+        return ret;
+    }
+
+    case JCLASS_ID: { 
+        jobject obj = NULL;
+        // none is okay, we'll translate to null
+        if(param == Py_None)
+            ;
+        else {
+            if(!pyjclass_check(param)) {
+                PyErr_Format(PyExc_TypeError,
+                             "Expected class parameter at %i.",
+                             pos + 1);
+                return ret;
+            }
+
+            obj = ((PyJobject_Object *) param)->clazz;
+        }
+
         ret.l = obj;
         return ret;
     }
