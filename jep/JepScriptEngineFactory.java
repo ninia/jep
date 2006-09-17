@@ -69,6 +69,9 @@ public class JepScriptEngineFactory implements ScriptEngineFactory {
 	public List<String> getExtensions() {
         List<String> l = new ArrayList<String>();
         l.add(".py");
+// TODO add support for running compiled scripts.
+//         l.add(".pyo");
+//         l.add(".pyc");
 		return l;
 	}
 
