@@ -65,7 +65,6 @@ public class JepScriptEngine implements ScriptEngine {
         try {
             this.jep = new Jep(true); // make interactive because javax.script sucks
             this.jep.setClassLoader(Thread.currentThread().getContextClassLoader());
-            throw new JepException("test");
         }
         catch(JepException e) {
             throw (ScriptException) new ScriptException(
