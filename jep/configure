@@ -425,7 +425,7 @@ PACKAGE_VERSION=
 PACKAGE_STRING=
 PACKAGE_BUGREPORT=
 
-ac_unique_file="jep.c"
+ac_unique_file="makejar.sh"
 # Factoring default headers for most tests.
 ac_includes_default="\
 #include <stdio.h>
@@ -20769,7 +20769,7 @@ echo "${ECHO_T}$ac_cv_func_mknod" >&6
 
 
 
-                                        ac_config_files="$ac_config_files Makefile jep.lsm jep.spec python/Makefile"
+                                                            ac_config_files="$ac_config_files Makefile jep.lsm jep.spec src/Makefile src/jep/Makefile src/jep/python/Makefile"
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -21308,7 +21308,9 @@ do
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
   "jep.lsm" ) CONFIG_FILES="$CONFIG_FILES jep.lsm" ;;
   "jep.spec" ) CONFIG_FILES="$CONFIG_FILES jep.spec" ;;
-  "python/Makefile" ) CONFIG_FILES="$CONFIG_FILES python/Makefile" ;;
+  "src/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
+  "src/jep/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/jep/Makefile" ;;
+  "src/jep/python/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/jep/python/Makefile" ;;
   "default-1" ) CONFIG_COMMANDS="$CONFIG_COMMANDS default-1" ;;
   "config.h" ) CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5

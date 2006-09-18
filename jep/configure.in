@@ -1,5 +1,5 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(jep.c)
+AC_INIT(makejar.sh)
 dnl Every other copy of the package version number gets its value from here
 AM_INIT_AUTOMAKE(jep, 2.0)
 
@@ -59,4 +59,4 @@ dnl Checks for typedefs, structures, and compiler characteristics.
 
 dnl Checks for library functions.
 
-AC_OUTPUT(Makefile jep.lsm jep.spec python/Makefile)
+AC_OUTPUT(Makefile jep.lsm jep.spec src/Makefile src/jep/Makefile src/jep/python/Makefile)
