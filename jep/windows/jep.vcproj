@@ -23,7 +23,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="&quot;C:\Program Files\Java\jdk1.6.0\include&quot;;&quot;C:\Program Files\Java\jdk1.6.0\include\win32&quot;;C:\Python24\include;..\"
+				AdditionalIncludeDirectories="&quot;C:\Program Files\Java\jdk1.6.0\include&quot;;&quot;C:\Program Files\Java\jdk1.6.0\include\win32&quot;;C:\Python24\include;..\src\jep"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;JEP_EXPORTS"
 				StringPooling="TRUE"
 				RuntimeLibrary="2"
@@ -90,132 +90,74 @@
 			Name="Source Files"
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat">
 			<File
-				RelativePath="..\jep.c">
+				RelativePath="..\src\jep\jep.c">
+			</File>
+			<File
+				RelativePath="..\src\jep\python\jep_object.c">
 				<FileConfiguration
 					Name="Release|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;JEP_EXPORTS;$(NoInherit)"/>
+						AdditionalIncludeDirectories=""/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\python\jep_object.c">
+				RelativePath="..\src\jep\pyembed.c">
 			</File>
 			<File
-				RelativePath="..\pyembed.c">
-				<FileConfiguration
-					Name="Release|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;JEP_EXPORTS;$(NoInherit)"/>
-				</FileConfiguration>
+				RelativePath="..\src\jep\pyjarray.c">
 			</File>
 			<File
-				RelativePath="..\pyjarray.c">
-				<FileConfiguration
-					Name="Release|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;JEP_EXPORTS;$(NoInherit)"/>
-				</FileConfiguration>
+				RelativePath="..\src\jep\pyjclass.c">
 			</File>
 			<File
-				RelativePath="..\pyjclass.c">
-				<FileConfiguration
-					Name="Release|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;JEP_EXPORTS;$(NoInherit)"/>
-				</FileConfiguration>
+				RelativePath="..\src\jep\pyjfield.c">
 			</File>
 			<File
-				RelativePath="..\pyjfield.c">
-				<FileConfiguration
-					Name="Release|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;JEP_EXPORTS;$(NoInherit)"/>
-				</FileConfiguration>
+				RelativePath="..\src\jep\pyjmethod.c">
 			</File>
 			<File
-				RelativePath="..\pyjmethod.c">
-				<FileConfiguration
-					Name="Release|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;JEP_EXPORTS;$(NoInherit)"/>
-				</FileConfiguration>
+				RelativePath="..\src\jep\pyjobject.c">
 			</File>
 			<File
-				RelativePath="..\pyjobject.c">
-				<FileConfiguration
-					Name="Release|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;JEP_EXPORTS;$(NoInherit)"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\util.c">
-				<FileConfiguration
-					Name="Release|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;JEP_EXPORTS;$(NoInherit)"/>
-				</FileConfiguration>
+				RelativePath="..\src\jep\util.c">
 			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl">
 			<File
-				RelativePath="..\jep.h">
+				RelativePath="..\src\jep\jep.h">
 			</File>
 			<File
-				RelativePath="..\python\jep_object.h">
+				RelativePath="..\src\jep\python\jep_object.h">
 			</File>
 			<File
-				RelativePath="..\pyembed.h">
+				RelativePath="..\src\jep\pyembed.h">
 			</File>
 			<File
-				RelativePath="..\pyjarray.h">
+				RelativePath="..\src\jep\pyjarray.h">
 			</File>
 			<File
-				RelativePath="..\pyjclass.h">
+				RelativePath="..\src\jep\pyjclass.h">
 			</File>
 			<File
-				RelativePath="..\pyjfield.h">
+				RelativePath="..\src\jep\pyjfield.h">
 			</File>
 			<File
-				RelativePath="..\pyjmethod.h">
+				RelativePath="..\src\jep\pyjmethod.h">
 			</File>
 			<File
-				RelativePath="..\pyjobject.h">
+				RelativePath="..\src\jep\pyjobject.h">
 			</File>
 			<File
-				RelativePath="..\system.h">
+				RelativePath="..\src\jep\system.h">
 			</File>
 			<File
-				RelativePath="..\util.h">
+				RelativePath="..\src\jep\util.h">
 			</File>
 			<File
-				RelativePath="..\winconfig.h">
+				RelativePath="..\src\jep\winconfig.h">
 			</File>
 		</Filter>
 		<Filter

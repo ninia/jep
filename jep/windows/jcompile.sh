@@ -3,12 +3,12 @@
 export JAVA_HOME='/cygdrive/c/Progra~1/Java/jdk1.6.0'
 export PATH=$JAVA_HOME/bin/:$PATH
 
+TOPDIR=`pwd`/..
 JAVAH=javah
 JAVAC=javac
-CLASSPATH=ext\\bsf.jar\;..\\
-SUBCLASSPATH=..\\ext\\bsf.jar\;..\\..\\
+CLASSPATH=..\\..\\ext\\bsf.jar\;..\\
+SUBCLASSPATH=..\\..\\..\\ext\\bsf.jar\;..\\..\\
 JAVACOPT='-Xlint:unchecked -deprecation -Xmaxerrs 5'
-
 
 failed() {
     if [ $? != 0 ]; then
@@ -24,7 +24,7 @@ run() {
     failed
 }
 
-pushd ../ >/dev/null
+pushd ../src/jep/ >/dev/null
 
 if [ "$1" == "clean" ]; then
     run rm -f *.class *.jar
@@ -37,11 +37,14 @@ else
     popd
 
     run $JAVAH -o jep.h -classpath ../ jep.Jep
-    ./makejar.sh jep/ jep.jar
+
+    pushd $TOPDIR
+    run ./makejar.sh jep/ jep.jar
+    popd
 
     # copy jep.jar/.dll to ext dir for jrunscript support
-    run cp -f jep.jar $JAVA_HOME/jre/lib/ext/
-    run cp -f windows/Release/jep.dll /cygdrive/c/WINDOWS/system32/jep.dll
+    run cp -f $TOPDIR/jep.jar $JAVA_HOME/jre/lib/ext/
+    run cp -f $TOPDIR/windows/Release/jep.dll /cygdrive/c/WINDOWS/system32/jep.dll
 fi
 
 popd >/dev/null

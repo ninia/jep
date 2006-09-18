@@ -11,7 +11,23 @@ if test -z $JAVA_HOME; then
 fi
 
 JAR=${JAVA_HOME}/bin/jar
+# set jarfile one directory up because we're going to cd into src
+JARFILE=../$2
 OPTS=-u0f
+
+failed() {
+    if [ $? != 0 ]; then
+        echo "Error"
+        exit 1
+    fi
+}
+
+run() {
+    echo $*
+    $*
+
+    failed
+}
 
 if test -z $1 -o -z $2; then
     echo "
@@ -21,13 +37,15 @@ Example: ./makejar.sh com/trinitycapital/DB/ DB.jar
     exit 1
 fi
 
-#check for and add existing META-INF
-if test -d META-INF; then
-    $JAR -cf jep.jar META-INF/services/javax.script.ScriptEngineFactory
-fi
+run cd src
 
-echo "cd .."
-cd ..
+#add existing META-INF
+if test -d META-INF; then
+    run $JAR -cf $JARFILE META-INF/services/javax.script.ScriptEngineFactory
+else
+    echo "Couldn't find META-INF, pwd is `pwd`"
+    exit 1
+fi
 
 files=`find $1 -name "*.class"`
 
@@ -39,16 +57,12 @@ if test -f ${1}jarfiles; then
     done
 fi
 
-echo $JAR $OPTS ${1}${2} $files
-$JAR $OPTS ${1}${2} $files
-ret=$?
+run $JAR $OPTS $JARFILE $files
 
-if test "$ret" = "0" -a -f ${1}manifest; then
+if test -f ${1}manifest; then
     echo "Adding manifest information...."
-    $JAR -umf ${1}manifest ${1}${2}
+    run $JAR -umf ${1}manifest $JARFILE
 fi
 
-echo "cd jep"
-cd jep
+run cd jep
 
-exit $ret
