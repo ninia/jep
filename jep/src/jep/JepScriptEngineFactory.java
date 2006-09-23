@@ -1,6 +1,7 @@
 package jep;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.script.ScriptEngine;
@@ -44,6 +45,28 @@ import javax.script.ScriptException;
  */
 public class JepScriptEngineFactory implements ScriptEngineFactory {
 
+    private static List<String> names;
+
+    private static List<String> extensions;
+
+    private static List<String> mimeTypes;
+
+    static {
+        names = new ArrayList<String>(1);
+        names.add("jep");
+        names = Collections.unmodifiableList(names);
+
+        extensions = new ArrayList<String>(1);
+        extensions.add("py");
+        // TODO add support for running compiled scripts.
+        // l.add("pyo");
+        // l.add("pyc");
+        extensions = Collections.unmodifiableList(extensions);
+
+        mimeTypes = new ArrayList<String>(0);
+        mimeTypes = Collections.unmodifiableList(mimeTypes);
+    }
+
     /**
      * Describe <code>getEngineName</code> method here.
      *
@@ -69,12 +92,7 @@ public class JepScriptEngineFactory implements ScriptEngineFactory {
      * @see javax.script.ScriptEngineFactory#getExtensions()
      */
     public List<String> getExtensions() {
-        List<String> l = new ArrayList<String>();
-        l.add(".py");
-// TODO add support for running compiled scripts.
-//      l.add(".pyo");
-//      l.add(".pyc");
-        return l;
+        return extensions;
     }
 
 
@@ -128,9 +146,7 @@ public class JepScriptEngineFactory implements ScriptEngineFactory {
      * @see javax.script.ScriptEngineFactory#getMimeTypes()
      */
     public List<String> getMimeTypes() {
-        List<String> l = new ArrayList<String>();
-        l.add("text/plain");
-        return l;
+        return mimeTypes;
     }
 
 
@@ -139,9 +155,7 @@ public class JepScriptEngineFactory implements ScriptEngineFactory {
      * @see javax.script.ScriptEngineFactory#getNames()
      */
     public List<String> getNames() {
-        List<String> l = new ArrayList<String>();
-        l.add("jep");
-        return l;
+        return names;
     }
 
 
