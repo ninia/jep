@@ -1,11 +1,12 @@
 package jep;
 
-
 import java.util.Vector;
-import java.io.FileReader;
 
-import org.apache.bsf.*;
-import org.apache.bsf.util.*;
+import org.apache.bsf.BSFDeclaredBean;
+import org.apache.bsf.BSFException;
+import org.apache.bsf.BSFManager;
+import org.apache.bsf.util.BSFEngineImpl;
+import org.apache.bsf.util.BSFFunctions;
 
 
 /**
@@ -216,4 +217,4 @@ public class BSFJepEngine extends BSFEngineImpl {
         }
     }
 
-} // BSFJepEngine
+}
