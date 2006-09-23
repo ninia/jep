@@ -1,8 +1,10 @@
 package jep;
 
-import jep.python.*;
 import java.io.File;
 import java.util.ArrayList;
+
+import jep.python.PyModule;
+import jep.python.PyObject;
 
 
 /**
