@@ -1,15 +1,17 @@
 package jep;
 
-import java.io.*;
-
-import java.util.HashMap;
-import java.util.ArrayList;
-import java.util.StringTokenizer;
-import java.util.Enumeration;
-
-import java.util.jar.*;
-
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.StringTokenizer;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 
 /**
@@ -266,12 +268,11 @@ public class ClassList {
      * testing only
      */
     public static void main(String argv[]) throws Throwable {
-        ClassList cl = ClassList.getInstance();
-        for(String c : cl.get("java.lang"))
+        for(String c : ClassList.get("java.lang"))
             System.out.println(c);
 
         // test loadPackages
-        for(String c : cl.get("jep"))
+        for(String c : ClassList.get("jep"))
             System.out.println(c);
     }
 }
