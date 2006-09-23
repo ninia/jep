@@ -1,6 +1,7 @@
 package jep.python;
 
-import jep.*;
+import jep.Jep;
+import jep.JepException;
 
 
 /**
