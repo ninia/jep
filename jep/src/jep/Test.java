@@ -55,6 +55,9 @@ public class Test implements Runnable {
                 System.out.println("Test get null: " + jep.getValue("testn"));
                 System.out.println("Test get class: " + (Class) jep.getValue("testz"));
 
+                jep.eval("testmap = {'blah': 'har'}");
+                System.out.println("Test get Python object: " + jep.getValue("testmap"));
+
                 System.out.print("get unknown val:  ");
                 System.out.println(jep.getValue("_asdf"));
             }
