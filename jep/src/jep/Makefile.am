@@ -1,6 +1,6 @@
 AM_CPPFLAGS = $(all_includes)
 
-SUBDIRS = python
+SUBDIRS = python .
 
 LDADD = python/libjeppython.a
 
@@ -25,34 +25,4 @@ libjep_la_LIBADD=$(JAVA_LIBS)
 #TESTS=chk
 
 CLEANFILES = *.class *.jar
-JAVACOPT=-deprecation -classpath ../
 
-all: Jep.class Test.class JepException.class Run.class ClassList.class JepScriptEngine.class JepScriptEngineFactory.class
-
-Jep.class: Jep.java
-	$(JAVAC) ${JAVACOPT} Jep.java
-	$(JAVAH) -o jep.h -classpath ../ jep.Jep
-
-Run.class: Run.java Jep.java
-	$(JAVAC) ${JAVACOPT} Run.java
-
-BSFJepEngine.class: BSFJepEngine.java Jep.java
-	$(JAVAC) ${JAVACOPT}:./ext/bsf.jar BSFJepEngine.java
-
-Test.class: Test.java
-	$(JAVAC) ${JAVACOPT} Test.java
-
-JepException.class: JepException.java
-	$(JAVAC) ${JAVACOPT} JepException.java
-
-ClassList.class: ClassList.java
-	$(JAVAC) ${JAVACOPT} ClassList.java
-
-JepScriptEngine.class: JepScriptEngine.java
-	$(JAVAC) ${JAVACOPT} JepScriptEngine.java
-
-JepScriptEngineFactory.class: JepScriptEngineFactory.java
-	$(JAVAC) ${JAVACOPT} JepScriptEngineFactory.java
-
-jclean:
-	rm -f *.class *.jar
