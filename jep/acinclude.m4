@@ -1,7 +1,7 @@
 #serial 3
 
 dnl find libjvm, if needed
-AC_DEFUN(AC_JAVA_LIBJVM,
+AC_DEFUN([AC_JAVA_LIBJVM],
 [
   AC_MSG_CHECKING([for libjvm])
 
@@ -28,7 +28,7 @@ dnl Define HAVE_STRUCT_UTIMBUF if `struct utimbuf' is declared --
 dnl usually in <utime.h>.
 dnl Some systems have utime.h but don't declare the struct anywhere.
 
-AC_DEFUN(jm_CHECK_TYPE_STRUCT_UTIMBUF,
+AC_DEFUN([jm_CHECK_TYPE_STRUCT_UTIMBUF],
 [
   AC_CHECK_HEADERS(utime.h)
   AC_REQUIRE([AC_HEADER_TIME])
