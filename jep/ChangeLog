@@ -1,4 +1,7 @@
-2006-4-24 Mike Johnson <mrjohnson0@users.sourceforge.ner>
+2006-10-2 Mike Johnson <mrjohnson0@users.sourceforge.net>
+	* makefiles: fixes for src/
+
+2006-4-24 Mike Johnson <mrjohnson0@users.sourceforge.net>
 	* pyembed.c: convert types (and box) on return from getValue
 	* pyembed.c: don't set parameters on jep module, set them in globals dict
 	* Jep.java: handle java.lang.Class objects specially
