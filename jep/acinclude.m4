@@ -120,6 +120,42 @@ if test $use_dealloc = yes; then
 fi
 ])
 
+dnl mrj
+dnl check if we have javax.script, enable/disable support
+AC_DEFUN([AC_JAVAX_SCRIPTING],
+[
+AC_CACHE_CHECK([for javax.script], ac_cv_prog_javax_script_works, [
+JAVA_TEST=Test.java
+CLASS_TEST=Test.class
+cat << \EOF > $JAVA_TEST
+/* [#]line __oline__ "configure" */
+import javax.script.Bindings;
+import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineFactory;
+import javax.script.ScriptException;
+import javax.script.SimpleBindings;
+
+public class Test {
+}
+EOF
+
+classes=
+ac_cv_prog_javax_script_works=no
+
+if AC_TRY_COMMAND($JAVAC $JAVACFLAGS $JAVA_TEST) >/dev/null 2>&1; then
+  ac_cv_prog_javax_script_works=yes
+  classes="src/jep/JepScriptEngine.class src/jep/JepScriptEngineFactory.class"
+fi
+
+AC_SUBST(JAVAX_SCRIPT_CLASSES, $classes)
+
+#AC_MSG_RESULT($ac_cv_prog_javax_script_works)
+rm -f $JAVA_TEST $CLASS_TEST
+])
+AC_PROVIDE([$0])dnl
+])
+
 dnl enable/disable automagic exception mapping
 AC_DEFUN([AC_ARG_EXCEPT], [
 AC_ARG_ENABLE([map-exceptions],

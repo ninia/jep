@@ -95,9 +95,7 @@ jep.jar:  \
 	src/jep/JepException.class \
 	src/jep/Test.class \
 	src/jep/Run.class \
-	src/jep/ClassList.class \
-	src/jep/JepScriptEngine.class \
-	src/jep/JepScriptEngineFactory.class
+	src/jep/ClassList.class $(JAVAX_SCRIPT_CLASSES)
 
 	./makejar.sh jep/ jep.jar
 

@@ -115,6 +115,7 @@ INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 ISODATE = @ISODATE@
 JAVAC = @JAVAC@
 JAVAH = @JAVAH@
+JAVAX_SCRIPT_CLASSES = @JAVAX_SCRIPT_CLASSES@
 JAVA_LDFLAGS = @JAVA_LDFLAGS@
 JAVA_LIBS = @JAVA_LIBS@
 LDFLAGS = @LDFLAGS@
@@ -781,9 +782,7 @@ jep.jar:  \
 	src/jep/JepException.class \
 	src/jep/Test.class \
 	src/jep/Run.class \
-	src/jep/ClassList.class \
-	src/jep/JepScriptEngine.class \
-	src/jep/JepScriptEngineFactory.class
+	src/jep/ClassList.class $(JAVAX_SCRIPT_CLASSES)
 
 	./makejar.sh jep/ jep.jar
 

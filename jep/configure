@@ -463,7 +463,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar ISODATE build build_cpu build_vendor build_os host host_cpu host_vendor host_os CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE EGREP LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB CPP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL JAVAC JAVAH JAVA_LIBS JAVA_LDFLAGS PYTHON python_version python_prefix python_execprefix python_configdir python_moduledir python_moduleexecdir python_includespec python_libspec ALLOCA LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar ISODATE build build_cpu build_vendor build_os host host_cpu host_vendor host_os CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE EGREP LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB CPP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL JAVAC JAVAH JAVA_LIBS JAVA_LDFLAGS JAVAX_SCRIPT_CLASSES PYTHON python_version python_prefix python_execprefix python_configdir python_moduledir python_moduleexecdir python_includespec python_libspec ALLOCA LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -18827,6 +18827,51 @@ echo "${ECHO_T}not needed" >&6
 
 
 
+echo "$as_me:$LINENO: checking for javax.script" >&5
+echo $ECHO_N "checking for javax.script... $ECHO_C" >&6
+if test "${ac_cv_prog_javax_script_works+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+JAVA_TEST=Test.java
+CLASS_TEST=Test.class
+cat << \EOF > $JAVA_TEST
+/* #line 18839 "configure" */
+import javax.script.Bindings;
+import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineFactory;
+import javax.script.ScriptException;
+import javax.script.SimpleBindings;
+
+public class Test {
+}
+EOF
+
+classes=
+ac_cv_prog_javax_script_works=no
+
+if { ac_try='$JAVAC $JAVACFLAGS $JAVA_TEST'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } >/dev/null 2>&1; then
+  ac_cv_prog_javax_script_works=yes
+  classes="src/jep/JepScriptEngine.class src/jep/JepScriptEngineFactory.class"
+fi
+
+JAVAX_SCRIPT_CLASSES=$classes
+
+
+#AC_MSG_RESULT($ac_cv_prog_javax_script_works)
+rm -f $JAVA_TEST $CLASS_TEST
+
+fi
+echo "$as_me:$LINENO: result: $ac_cv_prog_javax_script_works" >&5
+echo "${ECHO_T}$ac_cv_prog_javax_script_works" >&6
+
+
 
 
 echo "$as_me:$LINENO: checking how to disable long double warning" >&5
@@ -21917,6 +21962,7 @@ s,@JAVAC@,$JAVAC,;t t
 s,@JAVAH@,$JAVAH,;t t
 s,@JAVA_LIBS@,$JAVA_LIBS,;t t
 s,@JAVA_LDFLAGS@,$JAVA_LDFLAGS,;t t
+s,@JAVAX_SCRIPT_CLASSES@,$JAVAX_SCRIPT_CLASSES,;t t
 s,@PYTHON@,$PYTHON,;t t
 s,@python_version@,$python_version,;t t
 s,@python_prefix@,$python_prefix,;t t
