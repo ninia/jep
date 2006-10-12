@@ -39,9 +39,11 @@ fi
 
 run cd src
 
+run test -f manifest
+
 #add existing META-INF
 if test -d META-INF; then
-    run $JAR -cf $JARFILE META-INF/services/javax.script.ScriptEngineFactory
+    run $JAR -cfm $JARFILE manifest META-INF/services/javax.script.ScriptEngineFactory
 else
     echo "Couldn't find META-INF, pwd is `pwd`"
     exit 1
@@ -58,11 +60,6 @@ if test -f ${1}jarfiles; then
 fi
 
 run $JAR $OPTS $JARFILE $files
-
-if test -f ${1}manifest; then
-    echo "Adding manifest information...."
-    run $JAR -umf ${1}manifest $JARFILE
-fi
 
 run cd jep
 
