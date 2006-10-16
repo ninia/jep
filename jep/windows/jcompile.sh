@@ -9,6 +9,21 @@ JAVAC=javac
 CLASSPATH=..\\..\\ext\\bsf.jar\;..\\
 SUBCLASSPATH=..\\..\\..\\ext\\bsf.jar\;..\\..\\
 JAVACOPT='-Xlint:unchecked -deprecation -Xmaxerrs 5'
+JWIN_DIR=`pwd`
+
+#testing variables
+JAVA_TEST=Test.java
+CACHE=./jcompile.cache
+CCACHE=./jcompile.cache.javac
+
+LOG=config.log
+
+SCRIPT_IMPORTS="import javax.script.Bindings;
+import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineFactory;
+import javax.script.ScriptException;
+import javax.script.SimpleBindings;"
 
 failed() {
     if [ $? != 0 ]; then
@@ -24,12 +39,108 @@ run() {
     failed
 }
 
-pushd ../src/jep/ >/dev/null
+rlog() {
+    if [ ! -z "$JCOMPILE_DEBUG" ]; then
+        echo $*
+    fi
+
+    echo $* >> $LOG
+    $* >> $LOG 2>&1
+    return $?
+}
+
+cache_new() {
+    rm -f $CACHE
+}
+
+# $1 should be variable name
+# $2 should be value
+cache() {
+    # bash screws it up if we do this on one line. *shrugs*
+    echo -n "$1=" >> $CACHE
+    echo $2 >> $CACHE
+}
+
+# $1 should be name of cache variable
+# $2 should be imports to test
+test_javac() {
+    eval cache_var=\$$1
+    if [ ! -z "$cache_var" ]; then
+        echo "testing $i (cached) ... $cache_var"
+        cache $1 $cache_var
+        return
+    fi
+    echo -n "testing $1 ... "
+
+    echo "$2" > $JAVA_TEST
+    cat << \EOF >> $JAVA_TEST
+public class Test {
+}
+EOF
+
+    ret=no
+    rlog $JAVAC $JAVACOPT Test.java
+    if [ $? -eq 0 ]; then
+        ret=yes
+    fi
+
+    rlog rm -f Test.java
+    rlog rm -f Test.class
+
+    cache $1 $ret
+    echo $ret
+    return
+}
+
+rm -f $LOG
+echo "`date`" > $LOG
+
+# invalidate cache if javac changes
+mycc=`javac -version 2>&1 | head -1 | awk '{print $NF}'`
+if [ -r $CCACHE ]; then
+    rlog source $CCACHE
+fi
+
+# bash screws this up. dunno why
+echo "CACHE_CC=$mycc" > $CCACHE
+
+if [ "$mycc" = "$CACHE_CC" ] && [ -r $CACHE ]; then
+    echo "Loading $CACHE ..."
+    rlog source $CACHE
+fi
+
+# ----------------------------------------
+# configure
+
+if [ "$1" != "clean" ]; then
+    # make a new cache
+    cache_new
+
+    # test if we have javax.script
+    test_javac HAS_SCRIPTING "$SCRIPT_IMPORTS"
+fi
+
+run pushd ../src/jep/ >/dev/null
 
 if [ "$1" == "clean" ]; then
     run rm -f *.class *.jar
+
+    run pushd python
+    run rm -f *.class *.jar
+    run popd
+
+    run pushd $JWIN_DIR
+    run rm -f $CACHE $CCACHE
+    run popd
 else
-    run $JAVAC -classpath $CLASSPATH $JAVACOPT *.java
+    jep_files=`ls -1 --color=no *.java`
+
+    # don't attempt to compile javax.script support if we don't have it
+    if [ "$HAS_SCRIPTING" = "no" ]; then
+        jep_files=`echo "$jep_files" | grep -v ScriptEngine`
+    fi
+
+    run $JAVAC -classpath $CLASSPATH $JAVACOPT $jep_files
 
     pushd python
     run $JAVAC -classpath $SUBCLASSPATH $JAVACOPT *.java
@@ -47,4 +158,5 @@ else
     run cp -f $TOPDIR/windows/Release/jep.dll /cygdrive/c/WINDOWS/system32/jep.dll
 fi
 
-popd >/dev/null
+run popd >/dev/null
+
