@@ -15,7 +15,7 @@ CRCCheck on
 Name "Java Embedded Python"
 OutFile "setup.exe"
 
-InstallDir "$PROGRAMFILES\Jep"
+InstallDir "$PROGRAMFILES\Jepp"
 
 LicenseText "zlib/libpng"
 LicenseData "..\LICENSE"

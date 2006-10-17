@@ -68,6 +68,7 @@ test_javac() {
     if [ ! -z "$cache_var" ]; then
         echo "testing $i (cached) ... $cache_var"
         cache $1 $cache_var
+        ret=$cache_var
         return
     fi
     echo -n "testing $1 ... "
@@ -118,6 +119,7 @@ if [ "$1" != "clean" ]; then
 
     # test if we have javax.script
     test_javac HAS_SCRIPTING "$SCRIPT_IMPORTS"
+    HAS_SCRIPTING=$ret
 fi
 
 run pushd ../src/jep/ >/dev/null
