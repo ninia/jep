@@ -22,6 +22,7 @@ EXTRA_DIST=python.m4 \
 	ext/bsf.jar \
 	windows/jep.dsp \
 	windows/setup.nsi \
+	windows/jcompile.sh \
 	javadoc/ \
 	console.py \
 	memtest.py \
