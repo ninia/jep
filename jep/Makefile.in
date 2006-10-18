@@ -211,6 +211,7 @@ EXTRA_DIST = python.m4 \
 	makejar.sh \
 	jep.jar \
 	ext/bsf.jar \
+	src/manifest \
 	windows/jep.dsp \
 	windows/setup.nsi \
 	windows/jcompile.sh \
