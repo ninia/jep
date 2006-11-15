@@ -1,8 +1,5 @@
 #!/bin/bash
 
-export JAVA_HOME='/cygdrive/c/Progra~1/Java/jdk1.6.0'
-export PATH=$JAVA_HOME/bin/:$PATH
-
 TOPDIR=`pwd`/..
 JAVAH=javah
 JAVAC=javac
@@ -95,6 +92,7 @@ EOF
 
 rm -f $LOG
 echo "`date`" > $LOG
+echo "using javac `which javac`" >> $LOG
 
 # invalidate cache if javac changes
 mycc=`javac -version 2>&1 | head -1 | awk '{print $NF}'`
@@ -157,7 +155,7 @@ else
 
     # copy jep.jar/.dll to ext dir for jrunscript support
     run cp -f $TOPDIR/jep.jar $JAVA_HOME/jre/lib/ext/
-    run cp -f $TOPDIR/windows/Release/jep.dll /cygdrive/c/WINDOWS/system32/jep.dll
+    run cp -f $TOPDIR/windows/Active/jep.dll /cygdrive/c/WINDOWS/system32/jep.dll
 fi
 
 run popd >/dev/null
