@@ -28,9 +28,11 @@ Section "Install"
 SectionIn 2
 
 	SetOutPath $SYSDIR
-	File Release\jep.dll
+	File Active\jep.dll
 	
 	SetOutPath $INSTDIR
+    File c:\windows\system32\MSVCR71.DLL
+    File c:\windows\system32\MSVCRT.DLL
 	File ..\jep.jar
 	File ..\README
 	File ..\console.py
