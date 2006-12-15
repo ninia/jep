@@ -1,4 +1,6 @@
-
+2006-12-12 Mike Johnson <mrjohnson0@users.sourceforge.net>
+	* ClassList.java: fix error importing classes with no package name.
+	
 2006-10-17 Mike Johnson <mrjohnson0@users.sourceforge.net>
 	* makefiles: don't compile javax.script support if not available.
 	
