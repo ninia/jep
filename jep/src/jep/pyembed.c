@@ -486,6 +486,7 @@ static PyObject* pyembed_jimport(PyObject *self, PyObject *args) {
                                                      member);
         if((*env)->ExceptionOccurred(env) != NULL || !objclazz) {
             // this error we ignore
+            // (*env)->ExceptionDescribe(env);
             Py_DECREF(memberList);
             (*env)->DeleteLocalRef(env, member);
             (*env)->ExceptionClear(env);

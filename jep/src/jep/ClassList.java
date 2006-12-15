@@ -72,7 +72,7 @@ public class ClassList {
     private void loadClassPath() throws JepException {
         StringTokenizer tok = new StringTokenizer(
             System.getProperty("java.class.path"),
-            ";");
+            System.getProperty("path.separator"));
         
         while(tok.hasMoreTokens()) {
             String el = tok.nextToken();
@@ -90,12 +90,17 @@ public class ClassList {
                         continue;
 
                     // ent.getName() looks like:
+                    // blah.class
                     // jep/ClassList.class
                     int    end   = ent.getName().lastIndexOf('/');
-                    String pname = ent.getName().substring(
-                        0,
-                        end).replace('/', '.');
-                    String cname = stripClassExt(ent.getName().substring(end + 1));
+                    String pname = "default";
+                    if(end > 0) {
+                        pname = ent.getName().substring(
+                            0, end).replace('/', '.');
+                    }
+
+                    String cname = stripClassExt(
+                        ent.getName().substring(end + 1));
 
                     addClass(pname, cname);
                 }
@@ -210,7 +215,12 @@ public class ClassList {
             el = new ArrayList<String>();
 
         // convert to style we need in C code
-        cname = pname + "." + cname;
+        if(pname.equals("default")) {
+            // don't use this package name, just the class
+            ;
+        }
+        else
+            cname = pname + "." + cname;
 
         // unlikely, but don't add a class twice.
         if(el.indexOf(cname) > -1)
