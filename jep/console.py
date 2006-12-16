@@ -65,7 +65,11 @@ def prompt(jep):
 if(__name__ == '__main__'):
     Jep = findClass('jep.Jep')
     jep = Jep(True)
-    
+
+    # Pass argv to interactive prompt. We can't pass a Python object,
+    # but we can make a new one.
+    jep.eval("argv = %s" % argv)
+
     try:
         prompt(jep)
     except:
