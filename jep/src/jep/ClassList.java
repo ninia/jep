@@ -80,6 +80,11 @@ public class ClassList {
             if(!el.toLowerCase().endsWith(".jar"))
                 continue;       // ignore filesystem classpath
 
+            // make sure it exists
+            File file = new File(el);
+            if(!file.exists() || !file.canRead())
+                continue;
+
             try {
                 JarFile jfile = new JarFile(el, false);
                 Enumeration<JarEntry> entries = jfile.entries();
