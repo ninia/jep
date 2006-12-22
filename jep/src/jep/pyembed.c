@@ -60,6 +60,7 @@ static PyObject* pyembed_findclass(PyObject*, PyObject*);
 static PyObject* pyembed_forname(PyObject*, PyObject*);
 static PyObject* pyembed_jimport(PyObject*, PyObject*);
 static PyObject* pyembed_set_print_stack(PyObject*, PyObject*);
+static PyObject* pyembed_jproxy(PyObject*, PyObject*);
 
 
 // ClassLoader.loadClass
@@ -67,6 +68,9 @@ static jmethodID loadClassMethod = 0;
 
 // jep.ClassList.get()
 static jmethodID getClassListMethod = 0;
+
+// jep.Proxy.newProxyInstance
+static jmethodID newProxyMethod = 0;
 
 // Integer(int)
 static jmethodID integerIConstructor = 0;
@@ -111,6 +115,13 @@ static struct PyMethodDef jep_methods[] = {
       pyembed_set_print_stack,
       METH_VARARGS,
       "Turn on printing of stack traces (True|False)" },
+
+    { "jproxy",
+      pyembed_jproxy,
+      METH_VARARGS,
+      "Create a Proxy class for a Python object.\n"
+      "Accepts two arguments: ([a class object], [list of java interfaces "
+      "to implement, string names])" },
 
     { NULL, NULL }
 };
@@ -173,7 +184,7 @@ void pyembed_shutdown(void) {
 }
 
 
-intptr_t pyembed_thread_init(JNIEnv *env, jobject cl) {
+intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller) {
     JepThread *jepThread;
     PyObject  *tdict;
     
@@ -204,6 +215,7 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl) {
     jepThread->modjep      = initjep();
     jepThread->env         = env;
     jepThread->classloader = (*env)->NewGlobalRef(env, cl);
+    jepThread->caller      = (*env)->NewGlobalRef(env, caller);
     jepThread->printStack  = 0;
 
     // now, add custom import function to builtin module
@@ -262,6 +274,8 @@ void pyembed_thread_close(intptr_t _jepThread) {
         Py_DECREF(jepThread->modjep);
     if(jepThread->classloader)
         (*env)->DeleteGlobalRef(env, jepThread->classloader);
+    if(jepThread->caller)
+        (*env)->DeleteGlobalRef(env, jepThread->caller);
     
     Py_EndInterpreter(jepThread->tstate);
     
@@ -327,6 +341,95 @@ JepThread* pyembed_get_jepthread(void) {
 }
 
 
+static PyObject* pyembed_jproxy(PyObject *self, PyObject *args) {
+    PyThreadState *_save;
+    JepThread     *jepThread;
+    JNIEnv        *env = NULL;
+    PyObject      *pytarget;
+    PyObject      *interfaces;
+    jclass         clazz;
+    jobject        cl;
+    jobject        classes;
+    int            inum, i;
+    jobject        proxy;
+
+	if(!PyArg_ParseTuple(args, "O!O!:jproxy",
+                         &PyInstance_Type,
+                         &pytarget, 
+                         &PyList_Type,
+                         &interfaces))
+        return NULL;
+
+    jepThread = pyembed_get_jepthread();
+    if(!jepThread) {
+        if(!PyErr_Occurred())
+            PyErr_SetString(PyExc_RuntimeError, "Invalid JepThread pointer.");
+        return NULL;
+    }
+
+    env = jepThread->env;
+    cl  = jepThread->classloader;
+
+    Py_UNBLOCK_THREADS;
+    clazz = (*env)->FindClass(env, "jep/Proxy");
+    Py_BLOCK_THREADS;
+    if(process_java_exception(env) || !clazz)
+        return NULL;
+
+    if(newProxyMethod == 0) {
+        newProxyMethod =
+            (*env)->GetStaticMethodID(
+                env,
+                clazz,
+                "newProxyInstance",
+                "(JJLjep/Jep;Ljava/lang/ClassLoader;[Ljava/lang/String;)Ljava/lang/Object;");
+
+        if(process_java_exception(env) || !newProxyMethod)
+            return NULL;
+    }
+
+    inum = PyList_GET_SIZE(interfaces);
+    if(inum < 1)
+        return PyErr_Format(PyExc_ValueError, "Empty interface list.");
+
+    // now convert string list to java array
+
+    classes = (*env)->NewObjectArray(env, inum, JSTRING_TYPE, NULL);
+    if(process_java_exception(env) || !classes)
+        return NULL;
+
+    for(i = 0; i < inum; i++) {
+        char     *str;
+        jstring   jstr;
+        PyObject *item;
+
+        item = PyList_GET_ITEM(interfaces, i);
+        if(!PyString_Check(item))
+            return PyErr_Format(PyExc_ValueError, "Item %i not a string.", i);
+
+        str  = PyString_AsString(item);
+        jstr = (*env)->NewStringUTF(env, (const char *) str);
+
+        (*env)->SetObjectArrayElement(env, classes, i, jstr);
+        (*env)->DeleteLocalRef(env, jstr);
+    }
+
+    // do the deed
+    proxy = (*env)->CallStaticObjectMethod(env,
+                                           clazz,
+                                           newProxyMethod,
+                                           (jlong) (intptr_t) jepThread,
+                                           (jlong) (intptr_t) pytarget,
+                                           jepThread->caller,
+                                           cl,
+                                           classes);
+    if(process_java_exception(env) || !proxy)
+        return NULL;
+
+    return pyjobject_new(env, proxy);
+}
+
+
 static PyObject* pyembed_set_print_stack(PyObject *self, PyObject *args) {
     JepThread *jepThread;
     JNIEnv    *env   = NULL;
@@ -353,16 +456,18 @@ static PyObject* pyembed_set_print_stack(PyObject *self, PyObject *args) {
 
 
 static PyObject* pyembed_jimport(PyObject *self, PyObject *args) {
-    JNIEnv       *env        = NULL;
-    jstring       jname;
-    jclass        clazz;
-    jobject       cl;
-    JepThread    *jepThread;
-    int           len, i;
-    jobjectArray  jar;
+    PyThreadState *_save;
+    JNIEnv        *env = NULL;
+    jstring        jname;
+    jclass         clazz;
+    jobject        cl;
+    JepThread     *jepThread;
+    int            len, i;
+    jobjectArray   jar;
 
 	char         *name;
     PyObject     *module     = NULL;
+    PyObject     *addmod     = NULL; /* add object to, may be same as module */
 	PyObject     *globals    = NULL;
 	PyObject     *locals     = NULL;
 	PyObject     *fromlist   = NULL;
@@ -391,7 +496,9 @@ static PyObject* pyembed_jimport(PyObject *self, PyObject *args) {
 
     LOAD_CLASS_METHOD(env, cl);
 
+    Py_UNBLOCK_THREADS;
     clazz = (*env)->FindClass(env, "jep/ClassList");
+    Py_BLOCK_THREADS;
     if(process_java_exception(env) || !clazz)
         return NULL;
 
@@ -407,22 +514,64 @@ static PyObject* pyembed_jimport(PyObject *self, PyObject *args) {
     }
 
     jname = (*env)->NewStringUTF(env, name);
+    Py_UNBLOCK_THREADS;
     jar = (jobjectArray) (*env)->CallStaticObjectMethod(
         env,
         clazz,
         getClassListMethod,
         jname);
+    Py_BLOCK_THREADS;
 
     if(process_java_exception(env) || !jar)
         return NULL;
 
+    // process module name. foo.bar must be split so 'module' is 'bar'
+    {
+        PyObject *pyname;
+        PyObject *tname;
+        PyObject *modlist;
+
+        pyname  = PyString_FromString(name);
+        modlist = PyObject_CallMethod(pyname, "split", "s", ".");
+        Py_DECREF(pyname);
+
+        if(!PyList_Check(modlist) || PyErr_Occurred()) {
+            return PyErr_Format(PyExc_ImportError,
+                                "Couldn't split package name %s ",
+                                name);
+        }
+
+        // first module gets added a little differently
+        tname  = PyList_GET_ITEM(modlist, 0); /* borrowed */
+        addmod = module = PyImport_AddModule(PyString_AsString(tname));
+
+        if(module == NULL || PyErr_Occurred()) {
+            return PyErr_Format(PyExc_ImportError,
+                                "Couldn't add package %s ",
+                                name);
+        }
+
+        len = PyList_GET_SIZE(modlist);
+        for(i = 1; i < len; i++) {
+            char     *cname;
+            PyObject *globals;  /* shadow parent scope */
+            PyObject *tmod;
+
+            tname = PyList_GET_ITEM(modlist, i);
+            cname = PyString_AsString(tname);
+            
+            globals = PyModule_GetDict(addmod); /* borrowed */
+
+            Py_InitModule(cname, noop_methods);
+            addmod = PyImport_ImportModuleEx(cname, globals, globals, NULL);
+
+            PyDict_SetItem(globals,
+                           tname,
+                           addmod);     /* steals */
+        }
+    }
+
     len = (*env)->GetArrayLength(env, jar);
-
-    // it doesn't really matter what the module is named, python will
-    // use it as it wants.
-    if(len > 0)
-            module = PyImport_AddModule(name);
-
     for(i = 0; i < len; i++) {
         jstring   member     = NULL;
         jclass    objclazz   = NULL;
@@ -454,7 +603,7 @@ static PyObject* pyembed_jimport(PyObject *self, PyObject *args) {
             }
         }
 
-        // make sure our class name is in the fromlist (a tuple, oddly)
+        // make sure our class name is in the fromlist (a tuple)
         if(PyTuple_Check(fromlist) &&
            PyString_AsString(PyTuple_GET_ITEM(fromlist, 0))[0] != '*') {
 
@@ -480,10 +629,13 @@ static PyObject* pyembed_jimport(PyObject *self, PyObject *args) {
             }
         }
 
+        Py_UNBLOCK_THREADS;
         objclazz = (jclass) (*env)->CallObjectMethod(env,
                                                      cl,
                                                      loadClassMethod,
                                                      member);
+        Py_BLOCK_THREADS;
+
         if((*env)->ExceptionOccurred(env) != NULL || !objclazz) {
             // this error we ignore
             // (*env)->ExceptionDescribe(env);
@@ -497,7 +649,7 @@ static PyObject* pyembed_jimport(PyObject *self, PyObject *args) {
         pclass = (PyObject *) pyjobject_new_class(env, objclazz);
         if(pclass) {
             PyModule_AddObject(
-                module,
+                addmod,
                 PyString_AsString(
                     PyList_GET_ITEM(
                         memberList,
@@ -510,9 +662,30 @@ static PyObject* pyembed_jimport(PyObject *self, PyObject *args) {
     }
 
     if(module == NULL)
-        PyErr_Format(PyExc_ImportError, "No module %s found", name);
-    else
-        Py_INCREF(module);
+        return PyErr_Format(PyExc_ImportError, "No module %s found", name);
+
+    if(PyTuple_Check(fromlist) && PyTuple_GET_SIZE(fromlist) > 0) {
+        // user specified a list of objects.
+        // python's __import__.__doc__ reads:
+
+        /* When importing a module from a package, note that
+         * __import__('A.B', ...) returns package A when fromlist is
+         * empty, but its submodule B when fromlist is not empty.
+         */
+
+        if(addmod == NULL) {
+            return PyErr_Format(
+                PyExc_ImportError,
+                "While importing %s addmod was NULL. I goofed.",
+                name);
+        }
+
+        Py_INCREF(addmod);
+        return addmod;
+    }
+
+    // otherwise, return parent module.
+    Py_INCREF(module);
     return module;
 }
 

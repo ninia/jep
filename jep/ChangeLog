@@ -1,4 +1,11 @@
 2006-12-12 Mike Johnson <mrjohnson0@users.sourceforge.net>
+	* pyembed.c: store Jep class instance to JepThread
+	* ClassList.java: return empty array for packages that have no classes
+	* invocationhandler.c: add
+	* Proxy.java: add
+	* InvocationHandler.java: add
+	* pyembed.c: fix jimport so A.B imports like Python expects
+	* Run.java: add a -s switch to run swing apps (basically, don't close jep)
 	* console.py: pass argv to interactive prompt
 	* ClassList.java: fix error importing classes with no package name.
 	

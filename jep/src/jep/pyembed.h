@@ -46,6 +46,7 @@ struct __JepThread {
     PyThreadState *tstate;
     JNIEnv        *env;
     jobject        classloader;
+    jobject        caller;      /* Jep instance that called us. */
     int            printStack;
 };
 typedef struct __JepThread JepThread;
@@ -54,7 +55,7 @@ typedef struct __JepThread JepThread;
 void pyembed_startup(void);
 void pyembed_shutdown(void);
 
-intptr_t pyembed_thread_init(JNIEnv*, jobject);
+intptr_t pyembed_thread_init(JNIEnv*, jobject, jobject);
 void pyembed_thread_close(intptr_t);
 
 void pyembed_close(void);
@@ -64,6 +65,7 @@ int pyembed_compile_string(JNIEnv*, intptr_t, char*);
 void pyembed_setloader(JNIEnv*, intptr_t, jobject);
 jobject pyembed_getvalue(JNIEnv*, intptr_t, char*);
 jobject pyembed_getvalue_on(JNIEnv*, intptr_t, intptr_t, char*);
+jobject pyembed_box_py(JNIEnv*, PyObject*);
 
 JNIEnv* pyembed_get_env(void);
 JepThread* pyembed_get_jepthread(void);

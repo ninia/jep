@@ -119,7 +119,7 @@ public final class Jep {
             this.classLoader = cl;
         
         this.interactive = interactive;
-        this.tstate = init(this.classLoader);
+        this.tstate = init(this.classLoader, this);
         this.thread = Thread.currentThread();
         
         // why write C code if you don't have to? :-)
@@ -136,11 +136,16 @@ public final class Jep {
     }
     
     
-    private static native long init(ClassLoader classloader) throws JepException;
+    private static native long init(ClassLoader classloader,
+                                    Jep jep) throws JepException;
     
     
     /**
+     * <pre>
      * all calls must check thread
+     *
+     * <b>Internal Only</b>
+     * </pre>
      *
      * @exception JepException if an error occurs
      */

@@ -9,6 +9,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -169,13 +170,15 @@ public class ClassList {
         String javaHome = System.getProperty("java.home");
         String pathSep  = System.getProperty("file.separator");
 
-        File file = new File(javaHome + pathSep + "lib" + pathSep + "classlist");
+        File file = new File(javaHome + pathSep + "lib" +
+                             pathSep + "classlist");
         if(!file.exists())
             return;
 
         BufferedReader reader = null;
         try {
-            reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
+            reader = new BufferedReader(new InputStreamReader(
+                                            new FileInputStream(file)));
 
             String line = "";
             while((line = reader.readLine()) != null) {
@@ -236,10 +239,21 @@ public class ClassList {
     }
 
 
-    private String[] _get(String p) {
+    private String[] _get(String p) throws JepException {
         ArrayList<String> el = packages.get(p);
-        if(el == null)
-            return new String[0];
+        if(el == null) {
+
+            // before we error out, find out if it really is a
+            // package. maybe it just doesn't have any classes in it.
+
+            Set<String> keys = packages.keySet();
+            for(String key : keys) {
+                if(key.startsWith(p))
+                    return new String[0];
+            }
+
+            throw new JepException("Package not found: " + p);
+        }
 
         // wtf...
         // return (String[]) el.toArray();
@@ -247,9 +261,7 @@ public class ClassList {
         // bollocks.
 
         String[] ret = new String[el.size()];
-        for(int i = 0; i < el.size(); i++)
-            ret[i] = (String) el.get(i);
-
+        System.arraycopy(el.toArray(), 0, ret, 0, el.size());
         return ret;
     }
 
@@ -283,12 +295,20 @@ public class ClassList {
      * testing only
      */
     public static void main(String argv[]) throws Throwable {
-        for(String c : ClassList.get("java.lang"))
-            System.out.println(c);
+        if(argv.length > 0) {
+            for(String arg : argv) {
+                for(String c : ClassList.get(arg))
+                    System.out.println(c);
+            }
+        }
+        else {
+            for(String c : ClassList.get("java.lang"))
+                System.out.println(c);
 
-        // test loadPackages
-        for(String c : ClassList.get("jep"))
-            System.out.println(c);
+            // test loadPackages
+            for(String c : ClassList.get("jep"))
+                System.out.println(c);
+        }
     }
 }
 

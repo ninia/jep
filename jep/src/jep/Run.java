@@ -34,11 +34,61 @@ package jep;
  * @version $Id$	
  */
 public class Run {
+    private static boolean interactive  = false;
+    private static boolean swingApp     = false;
+    private static String  file         = null;
+    private static String  scriptArgv   = null;
+
     
     private final static String USAGE =
-    "  Run.java [-i] [-x] file [script args]\n" +
-    "-i    Run script interactively";
+    "  Usage: jep.Run [OPTIONS]...  [FILE].. [SCRIPT ARGS]\n" +
+    "Options:\n" +
+    "  -i                         Run script interactively.\n" +
+    "  -s                         Run script in event dispatching thread (for use with Swing)\n";
     
+
+    public static int run(boolean eventDispatch) {
+        Jep jep = null;
+        
+        try {
+            jep = new Jep(false, ".");
+            
+            // "set" by eval'ing it
+            jep.eval("argv = " + scriptArgv);
+            jep.runScript(file);
+        }
+        catch(Throwable t) {
+            t.printStackTrace();
+            jep.close();
+            
+            return 1;
+        }
+
+        try {
+            if(interactive) {
+                jep.set("jep", jep);
+                jep.eval("from jep import *");
+                jep.eval("import console");
+                jep.setInteractive(true);
+                jep.eval("console.prompt(jep)");
+            }
+        }
+        catch(Throwable t) {
+            t.printStackTrace();
+            jep.close();
+            
+            return 1;
+        }
+
+        // if we're the event dispatch thread, we should quit now.
+        // don't close jep.
+        if(eventDispatch)
+            return 0;
+
+        jep.close();
+        return 0;
+    }
+
     
     /**
      * Describe <code>main</code> method here.
@@ -48,18 +98,16 @@ public class Run {
      * @exception Exception if an error occurs
      */
     public static void main(String args[]) throws Throwable {
-        Jep jep = null;
-        
-        boolean interactive  = false;
-        String  file         = null;
-        String  scriptArgs[] = new String[args.length];
-        int     argsi        = 0;
+        String scriptArgs[] = new String[args.length];
+        int    argsi        = 0;
         
         for(int i = 0; i < args.length; i++) {
             if(file != null)
                 scriptArgs[argsi++] = args[i];
             else if(args[i].equals("-i"))
                 interactive = true;
+            else if(args[i].equals("-s"))
+                swingApp = true;
             else if(args[i].equals("-h")) {
                 System.out.println(USAGE);
                 System.exit(1);
@@ -79,48 +127,33 @@ public class Run {
             System.exit(1);
         }
         
-        try {
-            jep = new Jep(false, ".");
-            
-            // setup argv
-            StringBuffer b = new StringBuffer("[");
-            // always the first arg
-            b.append("'" + file + "',");
-            // trailing comma is okay
-            for(int i = 0; i < argsi; i++)
-                b.append("'" + scriptArgs[i] + "',");
-            b.append("]");
-            
-            // "set" by eval'ing it
-            jep.eval("argv = " + b);
-            jep.runScript(file);
-        }
-        catch(Throwable t) {
-            t.printStackTrace();
-            jep.close();
-            
-            System.exit(1);
-        }
-        
-        try {
-            if(interactive) {
-                jep.set("jep", jep);
-                jep.eval("from jep import *");
-                jep.eval("import console");
-                jep.setInteractive(true);
-                jep.eval("console.prompt(jep)");
-            }
-        }
-        catch(Throwable t) {
-            t.printStackTrace();
-            jep.close();
-            
-            System.exit(1);
-        }
+        // setup argv
+        StringBuffer b = new StringBuffer("[");
+        // always the first arg
+        b.append("'" + file + "',");
+        // trailing comma is okay
+        for(int i = 0; i < argsi; i++)
+            b.append("'" + scriptArgs[i] + "',");
+        b.append("]");
+        scriptArgv = b.toString();
 
-        jep.close();
+        int ret = 1;
+        if(swingApp) {
+            // run in the event-dispatching thread
+            javax.swing.SwingUtilities.invokeAndWait(
+                new Runnable() {
+                    public void run() {
+                        Run.run(swingApp);
+                    }
+                });
+            ret = 0;
+        }
+        else
+            ret = run(swingApp);
+
         // in case we're run with -Xrs
-        System.exit(0);
+        if(!swingApp)
+            System.exit(ret);
     }
     
     

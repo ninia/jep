@@ -698,7 +698,7 @@ void unref_cache_primitive_classes(JNIEnv *env) {
 
 
 // given the Class object, return the const ID.
-// -1 on error.
+// -1 on error or NULL.
 // doesn't process errors!
 int get_jtype(JNIEnv *env, jobject obj, jclass clazz) {
     jboolean equals = JNI_FALSE;

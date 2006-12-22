@@ -72,7 +72,7 @@ public class PyObject {
         this.jep    = jep;
 
         if(obj == 0)
-            throw new JepException("Unable to create module.");
+            throw new JepException("Unable to create object, NULL.");
     }
 
 

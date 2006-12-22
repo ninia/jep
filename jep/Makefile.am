@@ -32,9 +32,13 @@ EXTRA_DIST=python.m4 \
 	src/jep/python/jep_object.h \
 	src/jep/python/PyObject.java \
 	src/jep/python/PyModule.java \
+	src/jep/python/PyClass.java \
 	src/jep/ClassList.java \
 	src/jep/JepScriptEngineFactory.java \
-	src/jep/JepScriptEngine.java
+	src/jep/JepScriptEngine.java \
+	src/jep/Proxy.java \
+	src/jep/InvocationHandler.java \
+	src/jep/Util.java
 
 dist-hook:
 	rm -rf `find $(distdir) -name .svn`
@@ -50,12 +54,16 @@ CLEANFILES = *.class *.jar src/jep/jep.h src/jep/python/jep_object.h
 
 JAVACOPT = -deprecation -classpath src/
 
-BUILT_SOURCES = src/jep/jep.h src/jep/python/jep_object.h
+BUILT_SOURCES = src/jep/jep.h \
+	src/jep/python/jep_object.h \
+	src/jep/invocationhandler.h
 
 all: jep.jar
 
 src/jep/python/jep_object.h: src/jep/python/PyObject.class
 	$(JAVAH) -o src/jep/python/jep_object.h -classpath src/ jep.python.PyObject
+# make sure the timestamp gets updated because javac might not
+	touch src/jep/python/jep_object.h
 
 src/jep/python/PyObject.class: src/jep/python/PyObject.java
 	$(JAVAC) ${JAVACOPT} src/jep/python/PyObject.java
@@ -63,8 +71,13 @@ src/jep/python/PyObject.class: src/jep/python/PyObject.java
 src/jep/python/PyModule.class: src/jep/python/PyModule.java
 	$(JAVAC) ${JAVACOPT} src/jep/python/PyModule.java
 
+src/jep/python/PyClass.class: src/jep/python/PyClass.java
+	$(JAVAC) ${JAVACOPT} src/jep/python/PyClass.java
+
 src/jep/jep.h: src/jep/Jep.class
 	$(JAVAH) -o src/jep/jep.h -classpath src/ jep.Jep
+# make sure the timestamp gets updated because javac might not
+	touch src/jep/jep.h
 
 src/jep/Jep.class: src/jep/Jep.java
 	$(JAVAC) ${JAVACOPT} src/jep/Jep.java
@@ -90,13 +103,31 @@ src/jep/JepScriptEngine.class: src/jep/JepScriptEngine.java
 src/jep/JepScriptEngineFactory.class: src/jep/JepScriptEngineFactory.java
 	$(JAVAC) ${JAVACOPT} src/jep/JepScriptEngineFactory.java
 
+src/jep/InvocationHandler.class: src/jep/InvocationHandler.java
+	$(JAVAC) ${JAVACOPT} src/jep/InvocationHandler.java
+
+src/jep/invocationhandler.h: src/jep/InvocationHandler.class
+	$(JAVAH) -o src/jep/invocationhandler.h -classpath src/ jep.InvocationHandler
+# make sure the timestamp gets updated because javac might not
+	touch src/jep/invocationhandler.h
+
+src/jep/Proxy.class: src/jep/Proxy.java
+	$(JAVAC) ${JAVACOPT} src/jep/Proxy.java
+
+src/jep/Util.class: src/jep/Util.java
+	$(JAVAC) ${JAVACOPT} src/jep/Util.java
+
 jep.jar:  \
 	src/jep/python/PyObject.class \
 	src/jep/python/PyModule.class \
+	src/jep/python/PyClass.class \
 	src/jep/Jep.class \
 	src/jep/JepException.class \
 	src/jep/Test.class \
 	src/jep/Run.class \
+	src/jep/InvocationHandler.class \
+	src/jep/Proxy.class \
+	src/jep/Util.class \
 	src/jep/ClassList.class $(JAVAX_SCRIPT_CLASSES)
 
 	./makejar.sh jep/ jep.jar
