@@ -1,4 +1,6 @@
 2006-12-12 Mike Johnson <mrjohnson0@users.sourceforge.net>
+	* Util.java: add
+	* PyClass.java: add
 	* pyembed.c: store Jep class instance to JepThread
 	* ClassList.java: return empty array for packages that have no classes
 	* invocationhandler.c: add
