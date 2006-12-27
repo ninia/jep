@@ -43,6 +43,17 @@ public class Test implements Runnable {
 
                 jep.runScript("test.py");
 
+                jep.invoke("testMethod", true);
+                jep.invoke("testMethod", 123);
+                jep.invoke("testMethod", 112L);
+                jep.invoke("testMethod", 112.23D);
+                jep.invoke("testMethod", 112.2312331F);
+                jep.invoke("testMethod", (byte) 211);
+                jep.invoke("testMethod", 't');
+
+                Object ret = jep.invoke("testMethod", "method called from Java");
+                System.out.println("testMethod ret:   " + ret);
+
                 System.out.println("Test get object: " + jep.getValue("testo"));
                 System.out.println("Test get string: " + jep.getValue("test"));
                 System.out.println("Test get int: " +
@@ -59,7 +70,14 @@ public class Test implements Runnable {
                 System.out.println("Test get Python object: " + jep.getValue("testmap"));
 
                 System.out.print("get unknown val:  ");
-                System.out.println(jep.getValue("_asdf"));
+
+                try {
+                    System.out.println(jep.getValue("_asdf"));
+                    System.out.println("whoops");
+                }
+                catch(JepException e) {
+                    System.out.println(e.getMessage());
+                }
             }
             catch(Throwable t) {
                 System.out.println("Java caught error:");
