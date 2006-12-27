@@ -197,6 +197,32 @@ public final class Jep {
     
 
     /**
+     * Invoke a Python function.
+     *
+     * @param name must be a valid Python function name in globals dict.
+     * @return an <code>Object</code> value
+     * @exception JepException if an error occurs
+     */
+    public Object invoke(String name, Object... args) throws JepException {
+        if(name == null || name.trim().equals(""))
+            throw new JepException("Invalid function name.");
+
+        int[] types = new int[args.length];
+
+        for(int i = 0; i < args.length; i++)
+            types[i] = Util.getTypeId(args[i]);
+
+        return invoke(this.tstate, name, args, types);
+    }
+
+
+    private native Object invoke(long tstate,
+                                 String name,
+                                 Object[] args,
+                                 int[] types);
+
+
+    /**
      * <pre>
      * Evaluate python statements.
      *

@@ -43,6 +43,7 @@
 
 struct __JepThread {
     PyObject      *modjep;
+    PyObject      *globals;
     PyThreadState *tstate;
     JNIEnv        *env;
     jobject        classloader;
@@ -60,6 +61,8 @@ void pyembed_thread_close(intptr_t);
 
 void pyembed_close(void);
 void pyembed_run(JNIEnv*, intptr_t, char*);
+jobject pyembed_invoke_method(JNIEnv*, intptr_t,const char*, jobjectArray, jintArray);
+jobject pyembed_invoke(JNIEnv*, PyObject*, jobjectArray, jintArray);
 void pyembed_eval(JNIEnv *, intptr_t, char*);
 int pyembed_compile_string(JNIEnv*, intptr_t, char*);
 void pyembed_setloader(JNIEnv*, intptr_t, jobject);
