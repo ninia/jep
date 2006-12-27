@@ -18,6 +18,10 @@ def console(quit=True):
     if(quit):
         raise RuntimeError, 'blah'
 
+def testMethod(str):
+    print 'testMethod:      ', str
+    return Integer(12)
+
 #for i in (range(0, 10)):
 if(__name__ == '__main__'):
     
