@@ -106,6 +106,10 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
                          Object[] args) throws Throwable {
         this.jep.isValidThread();
 
+        // java passes null args sometimes. *shrugs*
+        if(args == null)
+            args = new Object[0];
+
         // find typeid for args. it's easier in Java and I'm a lazy
         // bastard.
         int types[] = new int[args.length];
