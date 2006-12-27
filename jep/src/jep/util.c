@@ -70,12 +70,18 @@ jclass JCHAR_TYPE    = NULL;
 jclass JBYTE_TYPE    = NULL;
 jclass JCLASS_TYPE   = NULL;
 
-
 // cached methodids
 jmethodID objectToString     = 0;
 jmethodID objectEquals       = 0;
 jmethodID objectIsArray      = 0;
 
+// for convert_jobject
+jmethodID getBooleanValue    = 0;
+jmethodID getIntValue        = 0;
+jmethodID getLongValue       = 0;
+jmethodID getDoubleValue     = 0;
+jmethodID getFloatValue      = 0;
+jmethodID getCharValue       = 0;
 
 // call toString() on jobject, make a python string and return
 // sets error conditions as needed.
@@ -924,6 +930,171 @@ int pyarg_matches_jtype(JNIEnv *env,
 
     // no match
     return 0;
+}
+
+
+// convert java object to python. use this to unbox jobject
+// throws java exception on error
+PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid) {
+    PyThreadState *_save;
+
+    if(getIntValue == 0) {
+        jclass clazz;
+
+        // get all the methodIDs here. Faster this way for Number
+        // subclasses, then we'll just call the right methods below
+        Py_UNBLOCK_THREADS;
+        clazz = (*env)->FindClass(env, "java/lang/Number");
+
+        getIntValue = (*env)->GetMethodID(env,
+                                          clazz,
+                                          "intValue",
+                                          "()I");
+        getLongValue = (*env)->GetMethodID(env,
+                                           clazz,
+                                           "longValue",
+                                           "()J");
+        getDoubleValue = (*env)->GetMethodID(env,
+                                             clazz,
+                                             "doubleValue",
+                                             "()D");
+        getFloatValue = (*env)->GetMethodID(env,
+                                            clazz,
+                                            "floatValue",
+                                            "()F");
+
+        (*env)->DeleteLocalRef(env, clazz);
+        Py_BLOCK_THREADS;
+
+        if((*env)->ExceptionOccurred(env))
+            return NULL;
+    }
+
+    switch(typeid) {
+    case -1:
+        // null
+        Py_INCREF(Py_None);
+        return Py_None;
+
+    case JARRAY_ID:
+        return (PyObject *) pyjarray_new(env, val);
+
+    case JSTRING_ID: {
+        const char *str;
+        PyObject *ret;
+
+        str = jstring2char(env, val);
+        ret = PyString_FromString(str);
+        release_utf_char(env, val, str);
+
+        return ret;
+    }
+
+    case JCLASS_ID:
+        return (PyObject *) pyjobject_new_class(env, val);
+
+    case JVOID_ID:
+        // pass through
+        // wrap as a object... try to be diligent.
+
+    case JOBJECT_ID:
+        return (PyObject *) pyjobject_new(env, val);
+
+    case JBOOLEAN_ID: {
+        jboolean b;
+
+        if(getBooleanValue == 0) {
+            jclass clazz;
+
+            Py_UNBLOCK_THREADS;
+            clazz = (*env)->FindClass(env, "java/lang/Boolean");
+
+            getBooleanValue = (*env)->GetMethodID(env,
+                                                  clazz,
+                                                  "booleanValue",
+                                                  "()Z");
+
+            Py_BLOCK_THREADS;
+            if((*env)->ExceptionOccurred(env))
+                return NULL;
+        }
+
+        b = (*env)->CallBooleanMethod(env, val, getBooleanValue);
+        if((*env)->ExceptionOccurred(env))
+            return NULL;
+
+        if(b)
+            return Py_BuildValue("i", 1);
+        return Py_BuildValue("i", 0);
+    }
+
+    case JBYTE_ID:              /* pass through */
+    case JSHORT_ID:             /* pass through */
+    case JINT_ID: {
+        jint b = (*env)->CallIntMethod(env, val, getIntValue);
+        if((*env)->ExceptionOccurred(env))
+            return NULL;
+
+        return Py_BuildValue("i", b);
+    }
+
+    case JLONG_ID: {
+        jlong b = (*env)->CallLongMethod(env, val, getLongValue);
+        if((*env)->ExceptionOccurred(env))
+            return NULL;
+
+        return Py_BuildValue("i", b);
+    }
+
+    case JDOUBLE_ID: {
+        jdouble b = (*env)->CallDoubleMethod(env, val, getDoubleValue);
+        if((*env)->ExceptionOccurred(env))
+            return NULL;
+
+        return PyFloat_FromDouble(b);
+    }
+
+    case JFLOAT_ID: {
+        jfloat b = (*env)->CallFloatMethod(env, val, getFloatValue);
+        if((*env)->ExceptionOccurred(env))
+            return NULL;
+
+        return PyFloat_FromDouble(b);
+    }
+
+    case JCHAR_ID: {
+        jchar c;
+
+        if(getCharValue == 0) {
+            jclass clazz;
+
+            Py_UNBLOCK_THREADS;
+            clazz = (*env)->FindClass(env, "java/lang/Character");
+
+            getCharValue = (*env)->GetMethodID(env,
+                                               clazz,
+                                               "charValue",
+                                               "()C");
+            (*env)->DeleteLocalRef(env, clazz);
+            Py_BLOCK_THREADS;
+
+            if((*env)->ExceptionOccurred(env))
+                return NULL;
+        }
+
+        c = (*env)->CallCharMethod(env, val, getCharValue);
+        if((*env)->ExceptionOccurred(env))
+            return NULL;
+
+        return PyString_FromFormat("%c", (char) c);
+    }
+
+    default:
+        break;
+    }
+
+    THROW_JEP(env, "util.c:convert_jobject invalid typeid.");
+    return NULL;
 }
 
 
