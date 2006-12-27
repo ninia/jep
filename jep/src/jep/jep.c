@@ -80,6 +80,29 @@ JNIEXPORT void JNICALL Java_jep_Jep_run
 
 /*
  * Class:     jep_Jep
+ * Method:    invoke
+ * Signature: (JLjava/lang/String;[Ljava/lang/Object;[II)Ljava/lang/Object;
+ */
+JNIEXPORT jobject JNICALL Java_jep_Jep_invoke
+(JNIEnv *env,
+ jobject obj,
+ jlong tstate,
+ jstring name,
+ jobjectArray args,
+ jintArray types) {
+    const char *cname;
+    jobject ret;
+
+    cname = jstring2char(env, name);
+    ret = pyembed_invoke_method(env, (intptr_t) tstate, cname, args, types);
+    release_utf_char(env, name, cname);
+
+    return ret;
+}
+
+
+/*
+ * Class:     jep_Jep
  * Method:    compileString
  * Signature: (ILjava/lang/String;)I
  */
