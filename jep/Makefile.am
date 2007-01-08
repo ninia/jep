@@ -38,7 +38,8 @@ EXTRA_DIST=python.m4 \
 	src/jep/JepScriptEngine.java \
 	src/jep/Proxy.java \
 	src/jep/InvocationHandler.java \
-	src/jep/Util.java
+	src/jep/Util.java \
+	src/jep/invocationhander.h
 
 dist-hook:
 	rm -rf `find $(distdir) -name .svn`
