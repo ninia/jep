@@ -789,7 +789,7 @@ jobject pyembed_invoke_method(JNIEnv *env,
     jepThread = (JepThread *) _jepThread;
     if(!jepThread) {
         THROW_JEP(env, "Couldn't get thread objects.");
-        return;
+        return ret;
     }
 
     PyEval_AcquireLock();
