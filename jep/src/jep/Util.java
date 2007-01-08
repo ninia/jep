@@ -126,7 +126,7 @@ public final class Util {
      * @param obj an <code>Object</code> value
      * @return an <code>int</code> one of the type _ID constants
      */
-    public static final int getTypeId(Class clazz) {
+    public static final int getTypeId(Class<?> clazz) {
         if(clazz == null)
             return -1;
 
