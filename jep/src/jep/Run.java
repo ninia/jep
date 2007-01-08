@@ -59,7 +59,8 @@ public class Run {
         }
         catch(Throwable t) {
             t.printStackTrace();
-            jep.close();
+            if(jep != null)
+                jep.close();
             
             return 1;
         }
