@@ -148,6 +148,7 @@ else
     popd
 
     run $JAVAH -o jep.h -classpath ../ jep.Jep
+    run $JAVAH -o invocationhandler.h -classpath ../ jep.InvocationHandler
 
     pushd $TOPDIR
     run ./makejar.sh jep/ jep.jar
