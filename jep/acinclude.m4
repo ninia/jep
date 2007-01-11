@@ -71,7 +71,7 @@ ac_save_CPPFLAGS="$CPPFLAGS"
 sdk_inc="${JAVA_HOME}/include"
 
 # older autotools doesn't set this
-if test x$lt_cv_path_SED == "x"; then
+if test x$lt_cv_path_SED = "x"; then
     lt_cv_path_SED=sed
 fi
 
@@ -99,7 +99,7 @@ AC_TRY_COMPILE([],[],
     ac_long=0,
     ac_long=1
 )
-if test "$ac_long" == "0"; then
+if test "$ac_long" = "0"; then
     AC_MSG_RESULT([-Wno-long-double])
 else
     AC_MSG_RESULT([ignored])
@@ -172,7 +172,7 @@ dnl check JAVA_HOME, change path
 AC_DEFUN([AC_CHECK_JAVA_HOME], [
 AC_MSG_CHECKING([if JAVA_HOME is set])
 
-if test "${JAVA_HOME}X" == "X"; then
+if test "${JAVA_HOME}X" = "X"; then
     AC_MSG_ERROR([environment variable JAVA_HOME not set.])
 else
     PATH="$JAVA_HOME/bin:$PATH"
