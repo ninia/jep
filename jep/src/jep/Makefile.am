@@ -1,12 +1,10 @@
 AM_CPPFLAGS = $(all_includes)
 
-SUBDIRS = python .
-
-LDADD = python/libjeppython.a
-
 lib_LTLIBRARIES = libjep.la
-libjep_la_LDFLAGS = -version-info 2:0:0 -no-undefined $(JAVA_LDFLAGS)
-libjep_la_SOURCES = jep.c system.h \
+libjep_la_LDFLAGS = -version-info 2:1:0 -no-undefined $(JAVA_LDFLAGS)
+libjep_la_SOURCES = python/jep_object.c \
+	jep.c \
+	system.h \
 	pyembed.c \
 	util.c \
 	pyjmethod.c \
