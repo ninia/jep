@@ -19763,7 +19763,7 @@ LIBTOOL='$(SHELL) $(top_builddir)/libtool'
 { echo "$as_me:$LINENO: checking if JAVA_HOME is set" >&5
 echo $ECHO_N "checking if JAVA_HOME is set... $ECHO_C" >&6; }
 
-if test "${JAVA_HOME}X" == "X"; then
+if test "${JAVA_HOME}X" = "X"; then
     { { echo "$as_me:$LINENO: error: environment variable JAVA_HOME not set." >&5
 echo "$as_me: error: environment variable JAVA_HOME not set." >&2;}
    { (exit 1); exit 1; }; }
@@ -19825,7 +19825,7 @@ ac_save_CPPFLAGS="$CPPFLAGS"
 sdk_inc="${JAVA_HOME}/include"
 
 # older autotools doesn't set this
-if test x$lt_cv_path_SED == "x"; then
+if test x$lt_cv_path_SED = "x"; then
     lt_cv_path_SED=sed
 fi
 
@@ -20036,7 +20036,7 @@ sed 's/^/| /' conftest.$ac_ext >&5
 fi
 
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "$ac_long" == "0"; then
+if test "$ac_long" = "0"; then
     { echo "$as_me:$LINENO: result: -Wno-long-double" >&5
 echo "${ECHO_T}-Wno-long-double" >&6; }
 else
@@ -22592,7 +22592,7 @@ echo "${ECHO_T}$ac_cv_func_mknod" >&6; }
 
 
 
-ac_config_files="$ac_config_files Makefile jep.lsm jep.spec src/Makefile src/jep/Makefile src/jep/python/Makefile"
+ac_config_files="$ac_config_files Makefile jep.lsm jep.spec src/Makefile src/jep/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -23171,7 +23171,6 @@ do
     "jep.spec") CONFIG_FILES="$CONFIG_FILES jep.spec" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
     "src/jep/Makefile") CONFIG_FILES="$CONFIG_FILES src/jep/Makefile" ;;
-    "src/jep/python/Makefile") CONFIG_FILES="$CONFIG_FILES src/jep/python/Makefile" ;;
 
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}
