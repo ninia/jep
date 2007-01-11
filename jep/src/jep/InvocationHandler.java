@@ -55,6 +55,19 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
         this.tstate = tstate;
         this.target = ltarget;
         this.jep    = jep;
+
+        // track target with jep.
+
+        // this ensures that our target doesn't get garbage collected,
+        // and since we can't have a close(), it'll get cleaned up.
+
+        // correction. object is now increfed before being returned to
+        // Java since in some cases the garbage collection could run
+        // before this.
+        jep.trackObject(new PyObject(this.tstate,
+                                     this.target,
+                                     this.jep),
+                        false);
     }
 
 
