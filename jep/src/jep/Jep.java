@@ -339,12 +339,34 @@ public final class Jep {
      * <b>Internal use only.</b>
      * </pre>
      *
+     * @param obj a <code>PyObject</code> value
      * @return same object, for inlining stuff
      * @exception JepException if an error occurs
      */
     public PyObject trackObject(PyObject obj) throws JepException {
+        return trackObject(obj, true);
+    }
+
+
+    /**
+     * <pre>
+     * Track Python objects we create so they can be smoothly shutdown
+     * with no risk of crashes due to bad reference counting.
+     *
+     * <b>Internal use only.</b>
+     * </pre>
+     *
+     * @param obj a <code>PyObject</code> value
+     * @param inc should trackObject incref()
+     * @return same object, for inlining stuff
+     * @exception JepException if an error occurs
+     */
+    public PyObject trackObject(PyObject obj, boolean inc) throws JepException {
         // make sure python doesn't close it
-        obj.incref();
+        if(inc) {
+            obj.incref();
+            System.out.println("increfed obj");
+        }
         this.pythonObjects.add(obj);
         return obj;
     }
