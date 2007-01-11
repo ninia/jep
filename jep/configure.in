@@ -60,4 +60,4 @@ dnl Checks for typedefs, structures, and compiler characteristics.
 
 dnl Checks for library functions.
 
-AC_OUTPUT(Makefile jep.lsm jep.spec src/Makefile src/jep/Makefile src/jep/python/Makefile)
+AC_OUTPUT(Makefile jep.lsm jep.spec src/Makefile src/jep/Makefile)
