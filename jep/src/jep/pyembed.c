@@ -439,6 +439,9 @@ static PyObject* pyembed_jproxy(PyObject *self, PyObject *args) {
     if(process_java_exception(env) || !proxy)
         return NULL;
 
+    // make sure target doesn't get garbage collected
+    Py_INCREF(pytarget);
+
     return pyjobject_new(env, proxy);
 }
 
