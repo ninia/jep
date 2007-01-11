@@ -12,7 +12,7 @@
 	</Platforms>
 	<Configurations>
 		<Configuration
-			Name="Release|Win32"
+			Name="py24-java16|Win32"
 			OutputDirectory=".\Release"
 			IntermediateDirectory=".\Release"
 			ConfigurationType="2"
@@ -44,7 +44,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="odbc32.lib odbccp32.lib jvm.lib"
 				ShowProgress="0"
-				OutputFile=".\Release/jep.dll"
+				OutputFile=".\Active\jep.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
 				AdditionalLibraryDirectories="&quot;C:\Program Files\Java\jdk1.6.0\lib&quot;;c:\Python24\libs"
@@ -166,7 +166,7 @@
 			<File
 				RelativePath="..\src\jep\python\jep_object.c">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="py24-java16|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						AdditionalIncludeDirectories=""/>
