@@ -66,11 +66,6 @@ JNIEXPORT jobject JNICALL Java_jep_InvocationHandler_invoke
     PyEval_AcquireLock();
     prevThread = PyThreadState_Swap(jepThread->tstate);
 
-    if(!PyInstance_Check(target)) {
-        THROW_JEP(env, "Invocation target is not a valid Python instance.");
-        goto EXIT;
-    }
-
     // now get the callable object
     cname = jstring2char(env, jname);
     // python docs say this returns a new ref. they lie like dogs.

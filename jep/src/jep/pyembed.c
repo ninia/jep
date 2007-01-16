@@ -366,8 +366,7 @@ static PyObject* pyembed_jproxy(PyObject *self, PyObject *args) {
     int            inum, i;
     jobject        proxy;
 
-	if(!PyArg_ParseTuple(args, "O!O!:jproxy",
-                         &PyInstance_Type,
+	if(!PyArg_ParseTuple(args, "OO!:jproxy",
                          &pytarget, 
                          &PyList_Type,
                          &interfaces))
