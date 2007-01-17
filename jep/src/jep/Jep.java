@@ -105,7 +105,7 @@ public final class Jep {
      * Creates a new <code>Jep</code> instance.
      *
      * @param interactive a <code>boolean</code> value
-     * @param includePath a <code>String</code> value
+     * @param includePath a path separated by File.pathSeparator
      * @param cl a <code>ClassLoader</code> value
      * @exception JepException if an error occurs
      */
@@ -125,7 +125,8 @@ public final class Jep {
         // why write C code if you don't have to? :-)
         if(includePath != null) {
             eval("import sys");
-            eval("sys.path += '" + includePath + "'.split(':')");
+            eval("sys.path += '" + includePath + "'.split('" +
+                 File.pathSeparator + "')");
         }
     }
     
