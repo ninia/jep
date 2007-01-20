@@ -62,6 +62,9 @@ static PyObject* pyembed_jimport(PyObject*, PyObject*);
 static PyObject* pyembed_set_print_stack(PyObject*, PyObject*);
 static PyObject* pyembed_jproxy(PyObject*, PyObject*);
 
+static int maybe_pyc_file(FILE*, const char*, const char*, int);
+static void pyembed_run_pyc(JepThread *jepThread, FILE *);
+
 
 // ClassLoader.loadClass
 static jmethodID loadClassMethod = 0;
@@ -1308,6 +1311,7 @@ void pyembed_run(JNIEnv *env,
                  char *file) {
     PyThreadState *prevThread;
     JepThread     *jepThread;
+    const char    *ext;
     
     jepThread = (JepThread *) _jepThread;
     if(!jepThread) {
@@ -1319,20 +1323,38 @@ void pyembed_run(JNIEnv *env,
     prevThread = PyThreadState_Swap(jepThread->tstate);
     
     if(file != NULL) {
-        PyObject *globals;
-        
         FILE *script = fopen(file, "r");
         if(!script) {
             THROW_JEP(env, "Couldn't open script file.");
             goto EXIT;
         }
-        
-        PyRun_File(script,
-                   file,
-                   Py_file_input,
-                   jepThread->globals,
-                   jepThread->globals);
-        
+
+        // check if it's a pyc/pyo file
+        ext = file + strlen(file) - 4;
+        if (maybe_pyc_file(script, file, ext, 0)) {
+            /* Try to run a pyc file. First, re-open in binary */
+			fclose(script);
+            if((script = fopen(file, "rb")) == NULL) {
+                THROW_JEP(env, "pyembed_run: Can't reopen .pyc file");
+                goto EXIT;
+            }
+
+            /* Turn on optimization if a .pyo file is given */
+            if(strcmp(ext, ".pyo") == 0)
+                Py_OptimizeFlag = 1;
+            else
+                Py_OptimizeFlag = 0;
+
+            pyembed_run_pyc(jepThread, script);
+        }
+        else {
+            PyRun_File(script,
+                       file,
+                       Py_file_input,
+                       jepThread->globals,
+                       jepThread->globals);
+        }
+
         // c programs inside some java environments may get buffered output
         fflush(stdout);
         fflush(stderr);
@@ -1344,6 +1366,83 @@ void pyembed_run(JNIEnv *env,
 EXIT:
     PyThreadState_Swap(prevThread);
     PyEval_ReleaseLock();
+}
+
+
+// gratuitously copyied from pythonrun.c::run_pyc_file
+static void pyembed_run_pyc(JepThread *jepThread,
+                            FILE *fp) {
+	PyCodeObject    *co;
+	PyObject        *v;
+    PyObject        *globals;
+    PyCompilerFlags *flags;
+	long             magic;
+
+	long PyImport_GetMagicNumber(void);
+
+	magic = PyMarshal_ReadLongFromFile(fp);
+	if(magic != PyImport_GetMagicNumber()) {
+		PyErr_SetString(PyExc_RuntimeError,
+                        "Bad magic number in .pyc file");
+		return;
+	}
+	(void) PyMarshal_ReadLongFromFile(fp);
+	v = (PyObject *) PyMarshal_ReadLastObjectFromFile(fp);
+	if(v == NULL || !PyCode_Check(v)) {
+		Py_XDECREF(v);
+		PyErr_SetString(PyExc_RuntimeError,
+                        "Bad code object in .pyc file");
+		return;
+	}
+	co = (PyCodeObject *) v;
+	v = PyEval_EvalCode(co, jepThread->globals, jepThread->globals);
+	if(v && flags)
+		flags->cf_flags |= (co->co_flags & PyCF_MASK);
+	Py_DECREF(co);
+    Py_XDECREF(v);
+}
+
+
+/* Check whether a file maybe a pyc file: Look at the extension,
+   the file type, and, if we may close it, at the first few bytes. */
+// gratuitously copyied from pythonrun.c::run_pyc_file
+static int maybe_pyc_file(FILE *fp,
+                          const char* filename,
+                          const char* ext,
+                          int closeit) {
+	if(strcmp(ext, ".pyc") == 0 || strcmp(ext, ".pyo") == 0)
+		return 1;
+
+	/* Only look into the file if we are allowed to close it, since
+	   it then should also be seekable. */
+	if(closeit) {
+		/* Read only two bytes of the magic. If the file was opened in
+		   text mode, the bytes 3 and 4 of the magic (\r\n) might not
+		   be read as they are on disk. */
+		unsigned int halfmagic = PyImport_GetMagicNumber() & 0xFFFF;
+		unsigned char buf[2];
+		/* Mess:  In case of -x, the stream is NOT at its start now,
+		   and ungetc() was used to push back the first newline,
+		   which makes the current stream position formally undefined,
+		   and a x-platform nightmare.
+		   Unfortunately, we have no direct way to know whether -x
+		   was specified.  So we use a terrible hack:  if the current
+		   stream position is not 0, we assume -x was specified, and
+		   give up.  Bug 132850 on SourceForge spells out the
+		   hopelessness of trying anything else (fseek and ftell
+		   don't work predictably x-platform for text-mode files).
+		*/
+		int ispyc = 0;
+		if(ftell(fp) == 0) {
+			if(fread(buf, 1, 2, fp) == 2 &&
+               ((unsigned int)buf[1]<<8 | buf[0]) == halfmagic)
+				ispyc = 1;
+			rewind(fp);
+		}
+
+		return ispyc;
+	}
+	return 0;
 }
 
 
