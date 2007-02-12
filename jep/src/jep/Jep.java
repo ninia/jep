@@ -137,8 +137,8 @@ public final class Jep {
     }
     
     
-    private static native long init(ClassLoader classloader,
-                                    Jep jep) throws JepException;
+    private native long init(ClassLoader classloader,
+                             Jep jep) throws JepException;
     
     
     /**
