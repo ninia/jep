@@ -119,7 +119,7 @@ public final class Jep {
             this.classLoader = cl;
         
         this.interactive = interactive;
-        this.tstate = init(this.classLoader, this);
+        this.tstate = init(this.classLoader);
         this.thread = Thread.currentThread();
         
         // why write C code if you don't have to? :-)
@@ -137,8 +137,7 @@ public final class Jep {
     }
     
     
-    private native long init(ClassLoader classloader,
-                             Jep jep) throws JepException;
+    private native long init(ClassLoader classloader) throws JepException;
     
     
     /**
