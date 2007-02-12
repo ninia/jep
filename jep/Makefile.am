@@ -16,6 +16,9 @@ EXTRA_DIST=python.m4 \
 	src/jep/JepException.java \
 	src/jep/Test.java \
 	test.py \
+	console.py \
+	memtest.py \
+	testswing.py \
 	src/jep/jep.h \
 	makejar.sh \
 	jep.jar \
@@ -25,8 +28,6 @@ EXTRA_DIST=python.m4 \
 	windows/setup.nsi \
 	windows/jcompile.sh \
 	javadoc/ \
-	console.py \
-	memtest.py \
 	src/jep/winconfig.h \
 	src/META-INF \
 	src/jep/python/jep_object.h \
@@ -39,7 +40,7 @@ EXTRA_DIST=python.m4 \
 	src/jep/Proxy.java \
 	src/jep/InvocationHandler.java \
 	src/jep/Util.java \
-	src/jep/invocationhander.h
+	src/jep/invocationhandler.h
 
 dist-hook:
 	rm -rf `find $(distdir) -name .svn`

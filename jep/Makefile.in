@@ -235,7 +235,7 @@ EXTRA_DIST = python.m4 \
 	src/jep/Proxy.java \
 	src/jep/InvocationHandler.java \
 	src/jep/Util.java \
-	src/jep/invocationhander.h
+	src/jep/invocationhandler.h
 
 
 #  if you write a self-test script named `chk', uncomment the
