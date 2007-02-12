@@ -58,7 +58,7 @@ JNI_OnUnload(JavaVM *vm, void *reserved) {
  * Signature: (Ljava/lang/ClassLoader;)I
  */
 JNIEXPORT jlong JNICALL Java_jep_Jep_init
-(JNIEnv *env, jclass clazz, jobject cl, jobject caller) {
+(JNIEnv *env, jobject obj, jobject cl, jobject caller) {
     return pyembed_thread_init(env, cl, caller);
 }
 
