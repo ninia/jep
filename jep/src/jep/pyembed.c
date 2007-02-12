@@ -1375,7 +1375,6 @@ static void pyembed_run_pyc(JepThread *jepThread,
 	PyCodeObject    *co;
 	PyObject        *v;
     PyObject        *globals;
-    PyCompilerFlags *flags;
 	long             magic;
 
 	long PyImport_GetMagicNumber(void);
@@ -1387,7 +1386,7 @@ static void pyembed_run_pyc(JepThread *jepThread,
 		return;
 	}
 	(void) PyMarshal_ReadLongFromFile(fp);
-	v = (PyObject *) PyMarshal_ReadLastObjectFromFile(fp);
+	v = (PyObject *) (intptr_t) PyMarshal_ReadLastObjectFromFile(fp);
 	if(v == NULL || !PyCode_Check(v)) {
 		Py_XDECREF(v);
 		PyErr_SetString(PyExc_RuntimeError,
@@ -1396,8 +1395,6 @@ static void pyembed_run_pyc(JepThread *jepThread,
 	}
 	co = (PyCodeObject *) v;
 	v = PyEval_EvalCode(co, jepThread->globals, jepThread->globals);
-	if(v && flags)
-		flags->cf_flags |= (co->co_flags & PyCF_MASK);
 	Py_DECREF(co);
     Py_XDECREF(v);
 }
