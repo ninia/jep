@@ -1,6 +1,6 @@
 package jep;
 
-import java.io.File;
+import java.io.*;
 import java.util.ArrayList;
 
 /**
@@ -14,9 +14,15 @@ import java.util.ArrayList;
  */
 public class Test implements Runnable {
     private Jep jep = null;
+    private boolean testEval = false;
 
     public Test() {
     } // Test constructor
+
+
+    public Test(boolean testEval) {
+        this.testEval = testEval;
+    }
 
     
     public void run() {
@@ -27,7 +33,7 @@ public class Test implements Runnable {
             try {
                 File pwd = new File(".");
 
-                this.jep = new Jep(false, pwd.getAbsolutePath());
+                this.jep = new Jep(this.testEval, pwd.getAbsolutePath());
                 jep.set("testo", this);
                 jep.set("test", "value from java.");
                 jep.set("testi", i);
@@ -41,7 +47,23 @@ public class Test implements Runnable {
                 jep.set("testn", (Object) null);
                 jep.set("testz", this.getClass());
 
-                jep.runScript("test.py");
+                if(!this.testEval)
+                    jep.runScript("test.py");
+                else {
+                    BufferedReader buf = new BufferedReader(
+                        new FileReader("test.py"));
+
+                    String line = null;
+                    while((line = buf.readLine()) != null) {
+                        if(line.trim().startsWith("#"))
+                            continue;
+
+                        System.out.println("Running line: " + line);
+                        jep.eval(line);
+                    }
+
+                    buf.close();
+                }
 
                 jep.invoke("testMethod", true);
                 jep.invoke("testMethod", 123);
