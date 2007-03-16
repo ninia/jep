@@ -2254,7 +2254,7 @@ fi
 
 # Define the identity of the package.
  PACKAGE=jep
- VERSION=2.1
+ VERSION=2.2
 
 
 cat >>confdefs.h <<_ACEOF

@@ -517,7 +517,7 @@ static PyObject* pyembed_jimport(PyObject *self, PyObject *args) {
     Py_UNBLOCK_THREADS;
     clazz = (*env)->FindClass(env, "jep/ClassList");
     Py_BLOCK_THREADS;
-    if(process_java_exception(env) || !clazz)
+    if(process_import_exception(env) || !clazz)
         return NULL;
 
     if(getClassListMethod == 0) {
@@ -527,7 +527,7 @@ static PyObject* pyembed_jimport(PyObject *self, PyObject *args) {
                                       "get",
                                       "(Ljava/lang/String;)[Ljava/lang/String;");
         
-        if(process_java_exception(env) || !getClassListMethod)
+        if(process_import_exception(env) || !getClassListMethod)
             return NULL;
     }
 
@@ -540,7 +540,7 @@ static PyObject* pyembed_jimport(PyObject *self, PyObject *args) {
         jname);
     Py_BLOCK_THREADS;
 
-    if(process_java_exception(env) || !jar)
+    if(process_import_exception(env) || !jar)
         return NULL;
 
     // process module name. foo.bar must be split so 'module' is 'bar'
@@ -597,7 +597,7 @@ static PyObject* pyembed_jimport(PyObject *self, PyObject *args) {
         PyObject *memberList = NULL;
 
         member = (*env)->GetObjectArrayElement(env, jar, i);
-        if(process_java_exception(env) || !member) {
+        if(process_import_exception(env) || !member) {
             (*env)->DeleteLocalRef(env, member);
             continue;
         }

@@ -101,6 +101,10 @@ int process_py_exception(JNIEnv*, int);
 // true (1) if an exception was processed.
 int process_java_exception(JNIEnv*);
 
+// convert java exception to ImportError.
+// true (1) if an exception was processed.
+int process_import_exception(JNIEnv *env);
+
 // sets up J<BLAH>TYPE
 int cache_primitive_classes(JNIEnv*);
 void unref_cache_primitive_classes(JNIEnv*);

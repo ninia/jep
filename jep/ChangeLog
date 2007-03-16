@@ -1,3 +1,8 @@
+2007-03-15 Mike Johnson <mrjohnson0@users.sourceforge.net>
+	* libtool: update libtool. An updated version now correctly added suffix '.so' to libjep.
+	* util.c: add process_import_exception
+	* pyembed.c: jimport should throw ImportError
+
 2006-12-12 Mike Johnson <mrjohnson0@users.sourceforge.net>
 	* pyembed.c: check if the file is a pyc/pyo file and run code directly
 	* Jep.java: fix constructor's sys.path manipulation for Windows

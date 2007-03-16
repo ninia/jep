@@ -248,6 +248,58 @@ int process_py_exception(JNIEnv *env, int printTrace) {
 }
 
 
+// convert java exception to ImportError.
+// true (1) if an exception was processed.
+int process_import_exception(JNIEnv *env) {
+    jstring     estr;
+    jthrowable  exception    = NULL;
+    jclass      clazz;
+    PyObject   *pyException  = PyExc_ImportError;
+    PyObject   *str, *tmp, *texc, *className;
+    char       *message;
+    JepThread  *jepThread;
+
+    if(!(*env)->ExceptionCheck(env))
+        return 0;
+
+    if((exception = (*env)->ExceptionOccurred(env)) == NULL)
+        return 0;
+
+    jepThread = pyembed_get_jepthread();
+    if(!jepThread) {
+        printf("Error while processing a Java exception, "
+               "invalid JepThread.\n");
+        return 1;
+    }
+
+    if(jepThread->printStack)    
+        (*env)->ExceptionDescribe(env);
+
+    // we're already processing this one, clear the old
+    (*env)->ExceptionClear(env);
+
+    clazz = (*env)->GetObjectClass(env, exception);
+    if((*env)->ExceptionCheck(env) || !clazz) {
+        (*env)->ExceptionDescribe(env);
+        return 1;
+    }
+    
+    estr = jobject_tostring(env, exception, clazz);
+    if((*env)->ExceptionCheck(env) || !estr) {
+        PyErr_Format(PyExc_RuntimeError, "toString() on exception failed.");
+        return 1;
+    }
+
+    message = (char *) jstring2char(env, estr);
+    PyErr_Format(pyException, message);
+    release_utf_char(env, estr, message);
+    
+    (*env)->DeleteLocalRef(env, clazz);
+    (*env)->DeleteLocalRef(env, exception);
+    return 1;
+}
+
+
 // convert java exception to pyerr.
 // true (1) if an exception was processed.
 int process_java_exception(JNIEnv *env) {
