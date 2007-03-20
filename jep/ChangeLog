@@ -1,3 +1,9 @@
+2007-03-19 Mike Johnson <mrjohnson0@users.sourceforge.net>
+	* Jep.java: add set() for arrays
+	* PyModule.java: add set() for arrays
+	* jep.c: add set() for arrays
+	* jep_object.c: add set() for arrays
+	
 2007-03-15 Mike Johnson <mrjohnson0@users.sourceforge.net>
 	* libtool: update libtool. An updated version now correctly added suffix '.so' to libjep.
 	* util.c: add process_import_exception
