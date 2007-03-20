@@ -51,6 +51,12 @@ if(__name__ == '__main__'):
     print 'test null obj:   ', testn
     print 'test class obj:  ', testz().toString()
 
+    print 'test b array:    ', testab[1]
+    print 'test d array:    ', testad[1]
+
+    print 'test b array:    ', amod.testab[1]
+    print 'test d array:    ', amod.testad[1]
+
     print """
     ##################################################
     # test method calling

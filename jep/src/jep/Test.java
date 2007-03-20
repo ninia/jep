@@ -3,6 +3,9 @@ package jep;
 import java.io.*;
 import java.util.ArrayList;
 
+import jep.python.*;
+
+
 /**
  * Test.java
  *
@@ -46,6 +49,20 @@ public class Test implements Runnable {
                 jep.set("testn", (String) null);
                 jep.set("testn", (Object) null);
                 jep.set("testz", this.getClass());
+
+                // arrays
+
+                boolean[] ab = new boolean[10];
+                ab[1] = true;
+                jep.set("testab", ab);
+
+                double[] ad = new double[10];
+                ad[1] = 1.7976931348623157E308D;
+                jep.set("testad", ad);
+
+                PyModule amod = jep.createModule("amod");
+                amod.set("testab", ab);
+                amod.set("testad", ad);
 
                 if(!this.testEval)
                     jep.runScript("test.py");

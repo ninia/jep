@@ -630,6 +630,142 @@ public final class Jep {
     private native void set(long tstate, String name, float v)
         throws JepException;
 
+
+    // -------------------------------------------------- set arrays
+
+    /**
+     * Describe <code>set</code> method here.
+     *
+     * @param name a <code>String</code> value
+     * @param v a <code>boolean[]</code> value
+     * @exception JepException if an error occurs
+     */
+    public void set(String name, boolean[] v) throws JepException {
+        if(this.closed)
+            throw new JepException("Jep has been closed.");
+        isValidThread();
+        
+        set(tstate, name, v);
+    }
+
+    private native void set(long tstate, String name, boolean[] v)
+        throws JepException;
+
+
+    /**
+     * Describe <code>set</code> method here.
+     *
+     * @param name a <code>String</code> value
+     * @param v an <code>int[]</code> value
+     * @exception JepException if an error occurs
+     */
+    public void set(String name, int[] v) throws JepException {
+        if(this.closed)
+            throw new JepException("Jep has been closed.");
+        isValidThread();
+        
+        set(tstate, name, v);
+    }
+
+    private native void set(long tstate, String name, int[] v)
+        throws JepException;
+
+
+    /**
+     * Describe <code>set</code> method here.
+     *
+     * @param name a <code>String</code> value
+     * @param v a <code>short[]</code> value
+     * @exception JepException if an error occurs
+     */
+    public void set(String name, short[] v) throws JepException {
+        if(this.closed)
+            throw new JepException("Jep has been closed.");
+        isValidThread();
+        
+        set(tstate, name, v);
+    }
+
+    private native void set(long tstate, String name, short[] v)
+        throws JepException;
+
+
+    /**
+     * Describe <code>set</code> method here.
+     *
+     * @param name a <code>String</code> value
+     * @param v a <code>byte[]</code> value
+     * @exception JepException if an error occurs
+     */
+    public void set(String name, byte[] v) throws JepException {
+        if(this.closed)
+            throw new JepException("Jep has been closed.");
+        isValidThread();
+        
+        set(tstate, name, v);
+    }
+
+    private native void set(long tstate, String name, byte[] v)
+        throws JepException;
+
+
+    /**
+     * Describe <code>set</code> method here.
+     *
+     * @param name a <code>String</code> value
+     * @param v a <code>long[]</code> value
+     * @exception JepException if an error occurs
+     */
+    public void set(String name, long[] v) throws JepException {
+        if(this.closed)
+            throw new JepException("Jep has been closed.");
+        isValidThread();
+        
+        set(tstate, name, v);
+    }
+
+    private native void set(long tstate, String name, long[] v)
+        throws JepException;
+
+
+    /**
+     * Describe <code>set</code> method here.
+     *
+     * @param name a <code>String</code> value
+     * @param v a <code>double[]</code> value
+     * @exception JepException if an error occurs
+     */
+    public void set(String name, double[] v) throws JepException {
+        if(this.closed)
+            throw new JepException("Jep has been closed.");
+        isValidThread();
+        
+        set(tstate, name, v);
+    }
+
+    private native void set(long tstate, String name, double[] v)
+        throws JepException;
+
+
+    /**
+     * Describe <code>set</code> method here.
+     *
+     * @param name a <code>String</code> value
+     * @param v a <code>float[]</code> value
+     * @exception JepException if an error occurs
+     */
+    public void set(String name, float[] v) throws JepException {
+        if(this.closed)
+            throw new JepException("Jep has been closed.");
+        isValidThread();
+        
+        set(tstate, name, v);
+    }
+
+    private native void set(long tstate, String name, float[] v)
+        throws JepException;
+
+
     // -------------------------------------------------- close me
 
     /**

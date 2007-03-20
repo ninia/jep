@@ -156,6 +156,118 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2F
 
 /*
  * Class:     jep_python_PyObject
+ * Method:    set
+ * Signature: (JJLjava/lang/String;[Z)V
+ */
+JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2_3Z
+(JNIEnv *env, jobject obj, jlong tstate, jlong module,
+ jstring jname, jbooleanArray jarr) {
+    const char *name;
+    
+    name = jstring2char(env, jname);
+    pyembed_setparameter_array(env, tstate, module, name, (jobjectArray) jarr);
+    release_utf_char(env, jname, name);
+}
+
+
+/*
+ * Class:     jep_python_PyObject
+ * Method:    set
+ * Signature: (JJLjava/lang/String;[I)V
+ */
+JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2_3I
+(JNIEnv *env, jobject obj, jlong tstate, jlong module,
+ jstring jname, jintArray jarr) {
+    const char *name;
+    
+    name = jstring2char(env, jname);
+    pyembed_setparameter_array(env, tstate, module, name, (jobjectArray) jarr);
+    release_utf_char(env, jname, name);
+}
+
+
+/*
+ * Class:     jep_python_PyObject
+ * Method:    set
+ * Signature: (JJLjava/lang/String;[S)V
+ */
+JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2_3S
+(JNIEnv *env, jobject obj, jlong tstate, jlong module,
+ jstring jname, jshortArray jarr) {
+    const char *name;
+    
+    name = jstring2char(env, jname);
+    pyembed_setparameter_array(env, tstate, module, name, (jobjectArray) jarr);
+    release_utf_char(env, jname, name);
+}
+
+
+/*
+ * Class:     jep_python_PyObject
+ * Method:    set
+ * Signature: (JJLjava/lang/String;[B)V
+ */
+JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2_3B
+(JNIEnv *env, jobject obj, jlong tstate, jlong module,
+ jstring jname, jbyteArray jarr) {
+    const char *name;
+    
+    name = jstring2char(env, jname);
+    pyembed_setparameter_array(env, tstate, module, name, (jobjectArray) jarr);
+    release_utf_char(env, jname, name);
+}
+
+
+/*
+ * Class:     jep_python_PyObject
+ * Method:    set
+ * Signature: (JJLjava/lang/String;[J)V
+ */
+JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2_3J
+(JNIEnv *env, jobject obj, jlong tstate, jlong module,
+ jstring jname, jlongArray jarr) {
+    const char *name;
+    
+    name = jstring2char(env, jname);
+    pyembed_setparameter_array(env, tstate, module, name, (jobjectArray) jarr);
+    release_utf_char(env, jname, name);
+}
+
+
+/*
+ * Class:     jep_python_PyObject
+ * Method:    set
+ * Signature: (JJLjava/lang/String;[D)V
+ */
+JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2_3D
+(JNIEnv *env, jobject obj, jlong tstate, jlong module,
+ jstring jname, jdoubleArray jarr) {
+    const char *name;
+    
+    name = jstring2char(env, jname);
+    pyembed_setparameter_array(env, tstate, module, name, (jobjectArray) jarr);
+    release_utf_char(env, jname, name);
+}
+
+
+/*
+ * Class:     jep_python_PyObject
+ * Method:    set
+ * Signature: (JJLjava/lang/String;[F)V
+ */
+JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2_3F
+(JNIEnv *env, jobject obj, jlong tstate, jlong module,
+ jstring jname, jfloatArray jarr) {
+    const char *name;
+    
+    name = jstring2char(env, jname);
+    pyembed_setparameter_array(env, tstate, module, name, (jobjectArray) jarr);
+    release_utf_char(env, jname, name);
+}
+
+
+/*
+ * Class:     jep_python_PyObject
  * Method:    createModule
  * Signature: (JJLjava/lang/String;)J
  */

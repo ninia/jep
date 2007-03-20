@@ -296,3 +296,108 @@ JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2F
     pyembed_setparameter_float(env, tstate, 0, name, (float) jval);
     release_utf_char(env, jname, name);
 }
+
+
+/*
+ * Class:     jep_Jep
+ * Method:    set
+ * Signature: (JLjava/lang/String;[Z)V
+ */
+JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2_3Z
+(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jbooleanArray jarr) {
+    const char *name;
+    
+    name = jstring2char(env, jname);
+    pyembed_setparameter_array(env, tstate, 0, name, (jobjectArray) jarr);
+    release_utf_char(env, jname, name);
+}
+
+
+/*
+ * Class:     jep_Jep
+ * Method:    set
+ * Signature: (JLjava/lang/String;[I)V
+ */
+JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2_3I
+(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jintArray jarr) {
+    const char *name;
+    
+    name = jstring2char(env, jname);
+    pyembed_setparameter_array(env, tstate, 0, name, (jobjectArray) jarr);
+    release_utf_char(env, jname, name);
+}
+
+
+/*
+ * Class:     jep_Jep
+ * Method:    set
+ * Signature: (JLjava/lang/String;[S)V
+ */
+JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2_3S
+(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jshortArray jarr) {
+    const char *name;
+    
+    name = jstring2char(env, jname);
+    pyembed_setparameter_array(env, tstate, 0, name, (jobjectArray) jarr);
+    release_utf_char(env, jname, name);
+}
+
+
+/*
+ * Class:     jep_Jep
+ * Method:    set
+ * Signature: (JLjava/lang/String;[B)V
+ */
+JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2_3B
+(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jbyteArray jarr) {
+    const char *name;
+    
+    name = jstring2char(env, jname);
+    pyembed_setparameter_array(env, tstate, 0, name, (jobjectArray) jarr);
+    release_utf_char(env, jname, name);
+}
+
+
+/*
+ * Class:     jep_Jep
+ * Method:    set
+ * Signature: (JLjava/lang/String;[J)V
+ */
+JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2_3J
+(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jlongArray jarr) {
+    const char *name;
+    
+    name = jstring2char(env, jname);
+    pyembed_setparameter_array(env, tstate, 0, name, (jobjectArray) jarr);
+    release_utf_char(env, jname, name);
+}
+
+
+/*
+ * Class:     jep_Jep
+ * Method:    set
+ * Signature: (JLjava/lang/String;[D)V
+ */
+JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2_3D
+(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jdoubleArray jarr) {
+    const char *name;
+    
+    name = jstring2char(env, jname);
+    pyembed_setparameter_array(env, tstate, 0, name, (jobjectArray) jarr);
+    release_utf_char(env, jname, name);
+}
+
+
+/*
+ * Class:     jep_Jep
+ * Method:    set
+ * Signature: (JLjava/lang/String;[F)V
+ */
+JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2_3F
+(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jfloatArray jarr) {
+    const char *name;
+    
+    name = jstring2char(env, jname);
+    pyembed_setparameter_array(env, tstate, 0, name, (jobjectArray) jarr);
+    release_utf_char(env, jname, name);
+}

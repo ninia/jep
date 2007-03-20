@@ -302,6 +302,120 @@ public class PyObject {
         throws JepException;
 
 
+    // -------------------------------------------------- set arrays
+
+    /**
+     * Describe <code>set</code> method here.
+     *
+     * @param name a <code>String</code> value
+     * @param v a <code>boolean[]</code> value
+     * @exception JepException if an error occurs
+     */
+    public void set(String name, boolean[] v) throws JepException {
+        isValid();
+        set(this.tstate, this.obj, name, v);
+    }
+
+    private native void set(long tstate, long module, String name, boolean[] v)
+        throws JepException;
+
+
+    /**
+     * Describe <code>set</code> method here.
+     *
+     * @param name a <code>String</code> value
+     * @param v an <code>int[]</code> value
+     * @exception JepException if an error occurs
+     */
+    public void set(String name, int[] v) throws JepException {
+        isValid();
+        set(this.tstate, this.obj, name, v);
+    }
+
+    private native void set(long tstate, long module, String name, int[] v)
+        throws JepException;
+
+
+    /**
+     * Describe <code>set</code> method here.
+     *
+     * @param name a <code>String</code> value
+     * @param v a <code>short[]</code> value
+     * @exception JepException if an error occurs
+     */
+    public void set(String name, short[] v) throws JepException {
+        isValid();
+        set(this.tstate, this.obj, name, v);
+    }
+
+    private native void set(long tstate, long module, String name, short[] v)
+        throws JepException;
+
+
+    /**
+     * Describe <code>set</code> method here.
+     *
+     * @param name a <code>String</code> value
+     * @param v a <code>byte[]</code> value
+     * @exception JepException if an error occurs
+     */
+    public void set(String name, byte[] v) throws JepException {
+        isValid();
+        set(this.tstate, this.obj, name, v);
+    }
+
+    private native void set(long tstate, long module, String name, byte[] v)
+        throws JepException;
+
+
+    /**
+     * Describe <code>set</code> method here.
+     *
+     * @param name a <code>String</code> value
+     * @param v a <code>long[]</code> value
+     * @exception JepException if an error occurs
+     */
+    public void set(String name, long[] v) throws JepException {
+        isValid();
+        set(this.tstate, this.obj, name, v);
+    }
+
+    private native void set(long tstate, long module, String name, long[] v)
+        throws JepException;
+
+
+    /**
+     * Describe <code>set</code> method here.
+     *
+     * @param name a <code>String</code> value
+     * @param v a <code>double[]</code> value
+     * @exception JepException if an error occurs
+     */
+    public void set(String name, double[] v) throws JepException {
+        isValid();
+        set(this.tstate, this.obj, name, v);
+    }
+
+    private native void set(long tstate, long module, String name, double[] v)
+        throws JepException;
+
+
+    /**
+     * Describe <code>set</code> method here.
+     *
+     * @param name a <code>String</code> value
+     * @param v a <code>float[]</code> value
+     * @exception JepException if an error occurs
+     */
+    public void set(String name, float[] v) throws JepException {
+        isValid();
+        set(this.tstate, this.obj, name, v);
+    }
+
+    private native void set(long tstate, long module, String name, float[] v)
+        throws JepException;
+
+
     /**
      * Create a module.
      *
