@@ -1306,6 +1306,58 @@ EXIT:
 }
 
 
+jfloatArray pyembed_get_float_array(JNIEnv *env, intptr_t _jepThread, char *name) {
+    PyThreadState  *prevThread;
+    PyObject       *main, *dict, *result;
+    jfloatArray     ret = NULL;
+    JepThread      *jepThread;
+    
+    jepThread = (JepThread *) _jepThread;
+    if(!jepThread) {
+        THROW_JEP(env, "Couldn't get thread objects.");
+        return NULL;
+    }
+    
+    if(name == NULL)
+        return NULL;
+
+    PyEval_AcquireLock();
+    prevThread = PyThreadState_Swap(jepThread->tstate);
+    
+    if(process_py_exception(env, 1))
+        goto EXIT;
+    
+    result = PyRun_String(name,  /* new ref */
+                          Py_eval_input,
+                          jepThread->globals,
+                          jepThread->globals);
+    
+    process_py_exception(env, 1);
+    
+    if(result == NULL || result == Py_None)
+        goto EXIT;              /* don't return, need to release GIL */
+    
+    // convert results to jobject
+    ret = pyembed_box_py(env, result);
+    if(!PyString_Check(result))
+        goto EXIT;
+    else {                      /* local scope */
+        char *s = PyString_AS_STRING(result);
+        int len = PyString_Size(result);
+        ret = (*env)->NewFloatArray(env, (jsize) len);
+        (*env)->SetFloatArrayRegion(env, ret, 0, len, (jfloat *) s);
+    }
+
+EXIT:
+    PyThreadState_Swap(prevThread);
+    PyEval_ReleaseLock();
+
+    if(result != NULL)
+        Py_DECREF(result);
+    return ret;
+}
+
+
 void pyembed_run(JNIEnv *env,
                  intptr_t _jepThread,
                  char *file) {
