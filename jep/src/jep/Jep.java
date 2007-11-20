@@ -227,7 +227,7 @@ public final class Jep {
      * Evaluate python statements.
      *
      * In interactive mode, Jep may not immediately execute the given lines of code.
-     * In that case, eval() returns false and the statement is remembered and
+     * In that case, eval() returns false and the statement is stored and
      * is appended to the next incoming string.
      *
      * If you're running an unknown number of statements, finish with
@@ -271,8 +271,9 @@ public final class Jep {
             }
             else {
                 // first check if it compiles by itself
-                if(this.evalLines == null &&
-                   compileString(this.tstate, str) == 1) {
+                if(!this.interactive ||
+                   (this.evalLines == null &&
+                    compileString(this.tstate, str) == 1)) {
                     
                     eval(this.tstate, str);
                     return true;
@@ -363,10 +364,9 @@ public final class Jep {
      */
     public PyObject trackObject(PyObject obj, boolean inc) throws JepException {
         // make sure python doesn't close it
-        if(inc) {
+        if(inc)
             obj.incref();
-            System.out.println("increfed obj");
-        }
+
         this.pythonObjects.add(obj);
         return obj;
     }
