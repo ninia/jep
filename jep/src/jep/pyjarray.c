@@ -1258,6 +1258,20 @@ static PyObject* listindex(PyJarray_Object *self, PyObject *args) {
 }
 
 
+static PyObject* pyjarray_commit(PyJarray_Object *self, PyObject *args) {
+    int pos;
+    PyObject *v;
+    
+    if(!PyArg_ParseTuple(args, "", &v))
+		return NULL;
+
+    pyjarray_release_pinned(self, JNI_COMMIT);
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+
 static int pyjarray_contains(PyJarray_Object *self, PyObject *el) {
     JNIEnv *env = pyembed_get_env();
     
@@ -1500,6 +1514,31 @@ static PyObject* pyjarray_subscript(PyJarray_Object *self, PyObject *item) {
 }
 
 
+static PyObject* pyjarray_str(PyJarray_Object *self) {
+    PyObject *ret;
+    JNIEnv *env = pyembed_get_env();
+
+    if(!self->pinnedArray) {
+        PyErr_SetString(PyExc_RuntimeError, "No pinned array.");
+        return NULL;
+    }
+
+    switch(self->componentType) {
+    case JBYTE_ID: {
+        jbyte *ar;
+
+        ar = (jbyte *) self->pinnedArray;
+        ret = PyString_FromStringAndSize((const char *) ar, self->length);
+        return ret;
+    }
+    default:
+        PyErr_SetString(PyExc_TypeError,
+                        "Unsupported type for str operation.");
+        return NULL;
+    }
+}
+
+
 // -------------------------------------------------- sequence methods
 
 static int pyjarray_length(PyJarray_Object *self) {
@@ -1515,12 +1554,16 @@ PyDoc_STRVAR(getitem_doc,
              "x.__getitem__(y) <==> x[y]");
 PyDoc_STRVAR(index_doc,
              "L.index(value) -> integer -- return first index of value");
+PyDoc_STRVAR(commit_doc,
+             "x.commit() -- commit pinned array to Java memory");
 
 PyMethodDef pyjarray_methods[] = {
     { "__getitem__",
       (PyCFunction) pyjarray_subscript, METH_O, getitem_doc },
 
-    {"index", (PyCFunction)listindex, METH_VARARGS, index_doc},
+    {"index", (PyCFunction) listindex, METH_VARARGS, index_doc},
+
+    {"commit", (PyCFunction) pyjarray_commit, METH_VARARGS, commit_doc},
     
     { NULL, NULL }
 };
@@ -1560,7 +1603,7 @@ static PyTypeObject PyJarray_Type = {
     0,                                        /* tp_as_mapping */
     0,                                        /* tp_hash  */
     0,                                        /* tp_call */
-    0,                                        /* tp_str */
+    (reprfunc) pyjarray_str,                  /* tp_str */
     0,                                        /* tp_getattro */
     0,                                        /* tp_setattro */
     0,                                        /* tp_as_buffer */
