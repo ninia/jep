@@ -801,7 +801,11 @@ jobject pyembed_invoke_method(JNIEnv *env,
     prevThread = PyThreadState_Swap(jepThread->tstate);
 
     callable = PyDict_GetItemString(jepThread->globals, (char *) cname);
-    if(process_py_exception(env, 0) || !callable)
+    if(!callable) {
+        THROW_JEP(env, "Object was not found in the global dictionary.");
+        goto EXIT;
+    }
+    if(process_py_exception(env, 0))
         goto EXIT;
 
     ret = pyembed_invoke(env, callable, args, types);
@@ -1190,6 +1194,13 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result) {
             return (*env)->NewObject(env, clazz, floatFConstructor, f);
         else
             return NULL;
+    }
+
+    if(pyjarray_check(result)) {
+        PyJarray_Object *t = (PyJarray_Object *) result;
+        pyjarray_release_pinned(t, JNI_COMMIT);
+
+        return t->object;
     }
 
     // convert everything else to string
