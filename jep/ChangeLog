@@ -1,4 +1,7 @@
 2007-03-19 Mike Johnson <mrjohnson0@users.sourceforge.net>
+	* pyembed.c: return jarray object in invoke and getValue
+	* pyembed.c: throw exception if invocation object not found
+	* Jep.java: non-interactive should eval() statements even if they don't compile
 	* Jep.java: add set() for arrays
 	* PyModule.java: add set() for arrays
 	* jep.c: add set() for arrays
