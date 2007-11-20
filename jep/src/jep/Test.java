@@ -51,6 +51,21 @@ public class Test implements Runnable {
                 jep.set("testz", this.getClass());
 
                 // arrays
+                int[] ia = new int[] { 3 };
+                double[] da = new double[] { 2.0 };
+                String[] sa  = new String[] { "0" };
+
+                jep.eval("def manip(li, val):\n\tli[0]=val\n\tli.commit()");
+                jep.invoke("manip", ia, 1);
+                jep.invoke("manip", da, 1.0);
+                jep.invoke("manip", sa, "1");
+
+                System.out.println(ia[0]);
+                System.out.println(da[0]);
+                System.out.println(sa[0]);
+
+                jep.set("x", da);
+                assert ((double[]) jep.getValue("x"))[0] == 1.0;
 
                 boolean[] ab = new boolean[10];
                 ab[1] = true;
