@@ -1,4 +1,5 @@
 2007-03-19 Mike Johnson <mrjohnson0@users.sourceforge.net>
+	* pyembed.c: patch from Jon Wright to convert packed strings to float array in java.
 	* pyembed.c: return jarray object in invoke and getValue
 	* pyembed.c: throw exception if invocation object not found
 	* Jep.java: non-interactive should eval() statements even if they don't compile
