@@ -34,6 +34,7 @@ AC_JAVAX_SCRIPTING
 
 dnl mrj - disable long double warning
 AC_CHECK_LONG_DOUBLE
+AC_CHECK_SIZEOF([float])
 
 dnl Checks for libraries.
 PGAC_CHECK_PYTHON_ALL

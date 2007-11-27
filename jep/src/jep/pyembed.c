@@ -1317,6 +1317,86 @@ EXIT:
 }
 
 
+
+jobject pyembed_getvalue_array(JNIEnv *env, intptr_t _jepThread, char *str, int typeId) {
+    PyThreadState  *prevThread;
+    PyObject       *main, *dict, *result;
+    jobject         ret = NULL;
+    JepThread      *jepThread;
+    
+    jepThread = (JepThread *) _jepThread;
+    if(!jepThread) {
+        THROW_JEP(env, "Couldn't get thread objects.");
+        return NULL;
+    }
+
+    if(str == NULL)
+        return NULL;
+    
+    PyEval_AcquireLock();
+    prevThread = PyThreadState_Swap(jepThread->tstate);
+    
+    if(process_py_exception(env, 1))
+        goto EXIT;
+    
+    result = PyRun_String(str,  /* new ref */
+                          Py_eval_input,
+                          jepThread->globals,
+                          jepThread->globals);
+    
+    process_py_exception(env, 1);
+    
+    if(result == NULL || result == Py_None)
+        goto EXIT;              /* don't return, need to release GIL */
+    
+    if(PyString_Check(result)) {
+        void *s = (void*) PyString_AS_STRING(result);
+        int n = PyString_Size(result);
+
+        switch (typeId) {
+        case JFLOAT_ID:
+            if(n % SIZEOF_FLOAT != 0) {
+                THROW_JEP(env, "The Python string is the wrong length.\n");
+                goto EXIT;
+            }
+
+            ret = (*env)->NewFloatArray(env, (jsize) n / SIZEOF_FLOAT);
+            (*env)->SetFloatArrayRegion(env, ret, 0, (n / SIZEOF_FLOAT), (jfloat *) s);
+            break;
+
+        case JBYTE_ID:
+            ret = (*env)->NewByteArray(env, (jsize) n);
+            (*env)->SetByteArrayRegion(env, ret, 0, n, (jbyte *) s);
+            break;
+
+        default:
+            THROW_JEP(env, "Internal error: array type not handled.");
+            ret = NULL;
+            goto EXIT;
+
+        } // switch
+
+    }
+    else{
+        THROW_JEP(env, "Value is not a string.");
+        goto EXIT;
+    }
+    
+    
+EXIT:
+    PyThreadState_Swap(prevThread);
+    PyEval_ReleaseLock();
+
+    if(result != NULL)
+        Py_DECREF(result);
+    return ret;
+}
+
+
+
+
+
+
 void pyembed_run(JNIEnv *env,
                  intptr_t _jepThread,
                  char *file) {

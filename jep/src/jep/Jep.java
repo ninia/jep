@@ -330,8 +330,49 @@ public final class Jep {
     
     private native Object getValue(long tstate,
                                    String str) throws JepException;
-    
 
+
+    /**
+     * <pre>
+     * Retrieves a python string object as a java array.
+     *
+     * @param str a <code>String</code> 
+     * @return an <code>Object</code> array
+     * @exception JepException if an error occurs
+     */
+
+    public float[] getValue_floatarray(String str) throws JepException {
+        if(this.closed)
+            throw new JepException("Jep has been closed.");
+        isValidThread();
+        
+        return getValue_floatarray(this.tstate, str);
+    }
+
+    private native float[] getValue_floatarray(long tstate,
+                                   String str) throws JepException;
+
+
+    /**
+     * <pre>
+     * Retrieves a python string object as a java array.
+     *
+     * @param str a <code>String</code> 
+     * @return an <code>Object</code> array
+     * @exception JepException if an error occurs
+     */
+    public byte [] getValue_bytearray(String str) throws JepException {
+        if(this.closed)
+            throw new JepException("Jep has been closed.");
+        isValidThread();
+        
+        return getValue_bytearray(this.tstate, str);
+    }
+    
+    private native byte[] getValue_bytearray(long tstate,
+                                   String str) throws JepException;
+
+    
     /**
      * <pre>
      * Track Python objects we create so they can be smoothly shutdown
