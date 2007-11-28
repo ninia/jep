@@ -7,7 +7,7 @@
 	* PyModule.java: add set() for arrays
 	* jep.c: add set() for arrays
 	* jep_object.c: add set() for arrays
-	* pyjarray.c: add str() for converting byte arrays to python strings
+	* pyjarray.c: add str() for converting primitive arrays to python strings
 	
 2007-03-15 Mike Johnson <mrjohnson0@users.sourceforge.net>
 	* libtool: update libtool. An updated version now correctly added suffix '.so' to libjep.
