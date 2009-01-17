@@ -298,7 +298,7 @@ int process_import_exception(JNIEnv *env) {
     }
 
     message = (char *) jstring2char(env, estr);
-    PyErr_Format(pyException, message);
+    PyErr_Format(pyException, "%s", message);
     release_utf_char(env, estr, message);
     
     (*env)->DeleteLocalRef(env, clazz);
@@ -387,7 +387,7 @@ int process_java_exception(JNIEnv *env) {
 
 #endif // #if USE_MAPPED_EXCEPTIONS
 
-    PyErr_Format(pyException, message);
+    PyErr_Format(pyException, "%s", message);
     release_utf_char(env, estr, message);
     
     (*env)->DeleteLocalRef(env, clazz);
@@ -414,7 +414,7 @@ jstring jobject_tostring(JNIEnv *env, jobject obj, jclass clazz) {
     }
 
     if(!objectToString) {
-        PyErr_Format(PyExc_RuntimeError, "Couldn't get methodId.");
+        PyErr_Format(PyExc_RuntimeError, "%s", "Couldn't get methodId.");
         return NULL;
     }
 
