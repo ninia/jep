@@ -446,7 +446,7 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
     if(self->lenParameters != PyTuple_GET_SIZE(args)) {
         PyErr_Format(PyExc_RuntimeError,
                      "Invalid number of arguments: %i, expected %i.",
-                     PyTuple_GET_SIZE(args),
+                     (int) PyTuple_GET_SIZE(args),
                      self->lenParameters);
         return NULL;
     }
