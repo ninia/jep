@@ -148,11 +148,10 @@ if AC_TRY_COMMAND($JAVAC $JAVACFLAGS $JAVA_TEST) >/dev/null 2>&1; then
   classes="src/jep/JepScriptEngine.class src/jep/JepScriptEngineFactory.class"
 fi
 
-AC_SUBST(JAVAX_SCRIPT_CLASSES, $classes)
-
 #AC_MSG_RESULT($ac_cv_prog_javax_script_works)
 rm -f $JAVA_TEST $CLASS_TEST
 ])
+AC_SUBST(JAVAX_SCRIPT_CLASSES, $classes)
 AC_PROVIDE([$0])dnl
 ])
 
