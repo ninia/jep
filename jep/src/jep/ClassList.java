@@ -255,13 +255,8 @@ public class ClassList {
             throw new JepException("Package not found: " + p);
         }
 
-        // wtf...
-        // return (String[]) el.toArray();
-        // fails with classcastexception.
-        // bollocks.
-
         String[] ret = new String[el.size()];
-        System.arraycopy(el.toArray(), 0, ret, 0, el.size());
+        el.toArray(ret);
         return ret;
     }
 
