@@ -27,6 +27,12 @@ public class Test implements Runnable {
         this.testEval = testEval;
     }
 
+
+    public static enum TestEnum {
+        One,
+        Two
+    }
+
     
     public void run() {
 
@@ -158,6 +164,11 @@ public class Test implements Runnable {
 
     public String toString() {
         return "toString(). Thanks for calling Java(tm).";
+    }
+
+
+    public TestEnum getEnum() {
+        return TestEnum.One;
     }
 
     
