@@ -25,6 +25,7 @@ python_version=`${PYTHON} -c "import sys; print sys.version[[:3]]"`
 python_prefix=`${PYTHON} -c "import sys; print sys.prefix"`
 python_execprefix=`${PYTHON} -c "import sys; print sys.exec_prefix"`
 python_configdir="${python_execprefix}/lib/python${python_version}/config"
+python_makefile=`${PYTHON} -c "from distutils.sysconfig import get_makefile_filename; print get_makefile_filename()"`
 python_moduledir="${python_prefix}/lib/python${python_version}/site-packages"
 python_moduleexecdir="${python_execprefix}/lib/python${python_version}/site-packages"
 python_includespec="-I${python_prefix}/include/python${python_version}"
@@ -36,6 +37,7 @@ AC_SUBST(python_version)[]dnl
 AC_SUBST(python_prefix)[]dnl
 AC_SUBST(python_execprefix)[]dnl
 AC_SUBST(python_configdir)[]dnl
+AC_SUBST(python_makefile)[]dnl
 AC_SUBST(python_moduledir)[]dnl
 AC_SUBST(python_moduleexecdir)[]dnl
 AC_SUBST(python_includespec)[]dnl
@@ -69,16 +71,16 @@ AC_DEFUN([PGAC_CHECK_PYTHON_EMBED_SETUP],
 [AC_REQUIRE([_PGAC_CHECK_PYTHON_DIRS])
 AC_MSG_CHECKING([how to link an embedded Python application])
 
-if test ! -f "$python_configdir/Makefile"; then
+if test ! -f "$python_makefile"; then
   AC_MSG_RESULT(no)
   AC_MSG_ERROR([Python Makefile not found])
 fi
 
-_python_libs=`grep '^LIBS=' $python_configdir/Makefile | sed 's/^.*=//'`
-_python_libc=`grep '^LIBC=' $python_configdir/Makefile | sed 's/^.*=//'`
-_python_libm=`grep '^LIBM=' $python_configdir/Makefile | sed 's/^.*=//'`
-_python_liblocalmod=`grep '^LOCALMODLIBS=' $python_configdir/Makefile | sed 's/^.*=//'`
-_python_libbasemod=`grep '^BASEMODLIBS=' $python_configdir/Makefile | sed 's/^.*=//'`
+_python_libs=`grep '^LIBS=' $python_makefile | sed 's/^.*=//'`
+_python_libc=`grep '^LIBC=' $python_makefile | sed 's/^.*=//'`
+_python_libm=`grep '^LIBM=' $python_makefile | sed 's/^.*=//'`
+_python_liblocalmod=`grep '^LOCALMODLIBS=' $python_makefile | sed 's/^.*=//'`
+_python_libbasemod=`grep '^BASEMODLIBS=' $python_makefile | sed 's/^.*=//'`
 
 pgac_tab="	" # tab character
 python_libspec=`echo X"-L$python_configdir $_python_libs $_python_libc $_python_libm -lpython$python_version $_python_liblocalmod $_python_libbasemod" | sed -e 's/^X//' -e "s/[[ $pgac_tab]][[ $pgac_tab]]*/ /g"`
