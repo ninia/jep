@@ -135,7 +135,7 @@ PyObject* pyjarray_new_v(PyObject *isnull, PyObject *args) {
             typeId = PyInt_AsLong(two);
         
             if(size < 0)
-                return PyErr_Format(PyExc_ValueError, "Invalid size %i", size);
+                return PyErr_Format(PyExc_ValueError, "Invalid size %li", size);
 
             // make a new primitive array
             switch(typeId) {
