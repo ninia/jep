@@ -246,7 +246,9 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller) {
     // Guido said they were wrong. *shrug*. this is my work-around.
 
     PyRun_SimpleString("import jep\n");
+#ifdef USE_IMPORT
     PyRun_SimpleString("__builtins__.__import__ = jep.jimport\n");
+#endif
 
     if((tdict = PyThreadState_GetDict()) != NULL) {
         PyObject *key, *t;

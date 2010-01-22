@@ -160,6 +160,9 @@
 /* Define if you want to deallocate objects. */
 #undef USE_DEALLOC
 
+/* Define if you want to use the broken import. */
+#undef USE_IMPORT
+
 /* Define if you want to map exceptions. */
 #undef USE_MAPPED_EXCEPTIONS
 

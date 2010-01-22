@@ -102,3 +102,17 @@ AC_DEFUN([PGAC_CHECK_PYTHON_ALL],
     CPPFLAGS="$CPPFLAGS $python_includespec"
     LIBS="$libs $python_libspec"
 ])
+
+dnl --------------------------------------------------
+dnl enable disable import
+AC_DEFUN([AC_ARG_IMPORT], [
+AC_ARG_ENABLE([import],
+    [  --enable-import        enable broken import (historical, default no)],
+    [use_import=$enableval],
+    [use_import=no])
+
+echo "use import = $use_import"
+if test $use_import = yes; then
+   AC_DEFINE(USE_IMPORT, 1, [Define if you want to use the broken import.])
+fi
+])

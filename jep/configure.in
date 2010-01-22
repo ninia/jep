@@ -16,6 +16,8 @@ AC_CANONICAL_HOST
 dnl features
 AC_ARG_DEALLOC
 AC_ARG_EXCEPT
+dnl check if broken import should be used
+AC_ARG_IMPORT
 
 dnl Checks for programs.
 AC_PROG_INSTALL

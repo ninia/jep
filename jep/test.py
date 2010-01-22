@@ -7,6 +7,7 @@ print "Hello world using Jep."
 #raw_input('gdb --pid=%s' % os.getpid())
 
 from jep import *
+__builtins__.__import__ = jep.jimport
 
 from java.lang import *
 from java.util import HashMap
