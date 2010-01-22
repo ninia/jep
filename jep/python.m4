@@ -111,7 +111,6 @@ AC_ARG_ENABLE([import],
     [use_import=$enableval],
     [use_import=no])
 
-echo "use import = $use_import"
 if test $use_import = yes; then
    AC_DEFINE(USE_IMPORT, 1, [Define if you want to use the broken import.])
 fi
