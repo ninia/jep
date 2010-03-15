@@ -584,17 +584,18 @@ static PyObject* pyembed_jimport(PyObject *self, PyObject *args) {
             PyObject *globals;  /* shadow parent scope */
             PyObject *tmod;
 
-            tname = PyList_GET_ITEM(modlist, i);
+            tname = PyList_GET_ITEM(modlist, i); /* borrowed */
             cname = PyString_AsString(tname);
             
             globals = PyModule_GetDict(addmod); /* borrowed */
 
             Py_InitModule(cname, noop_methods);
-            addmod = PyImport_ImportModuleEx(cname, globals, globals, NULL);
+            addmod = PyImport_ImportModuleEx(cname, globals, globals, NULL); /* new ref */
 
             PyDict_SetItem(globals,
                            tname,
-                           addmod);     /* steals */
+                           addmod);     /* ownership */
+            Py_DECREF(addmod);
         }
     }
 
@@ -993,6 +994,7 @@ intptr_t pyembed_create_module(JNIEnv *env,
     PyObject       *module;
     JepThread      *jepThread;
     intptr_t        ret;
+    PyObject       *key;
 
     jepThread = (JepThread *) _jepThread;
     if(!jepThread) {
@@ -1013,11 +1015,15 @@ intptr_t pyembed_create_module(JNIEnv *env,
     module = PyImport_ImportModuleEx(str,
                                      jepThread->globals,
                                      jepThread->globals,
-                                     NULL);
+                                     NULL); /* new ref */
 
+    key = PyString_FromString(str);
     PyDict_SetItem(jepThread->globals,
-                   PyString_FromString(str),
-                   module);     /* steals */
+                   key,
+                   module);     /* takes ownership */
+
+    Py_DECREF(key);
+    Py_DECREF(module);
 
     if(process_py_exception(env, 0) || module == NULL)
         ret = 0;
@@ -1041,6 +1047,7 @@ intptr_t pyembed_create_module_on(JNIEnv *env,
     JepThread      *jepThread;
     intptr_t        ret;
     PyObject       *globals;
+    PyObject       *key;
 
     jepThread = (JepThread *) _jepThread;
     if(!jepThread) {
@@ -1067,11 +1074,14 @@ intptr_t pyembed_create_module_on(JNIEnv *env,
         goto EXIT;
 
     Py_InitModule(str, noop_methods);
-    module = PyImport_ImportModuleEx(str, globals, globals, NULL);
+    module = PyImport_ImportModuleEx(str, globals, globals, NULL); /* new ref */
 
+    key = PyString_FromString(str);
     PyDict_SetItem(globals,
-                   PyString_FromString(str),
-                   module);     /* steals */
+                   key,
+                   module);     /* ownership */
+    Py_DECREF(key);
+    Py_DECREF(module);
 
     if(process_py_exception(env, 0) || module == NULL)
         ret = 0;
@@ -1589,9 +1599,12 @@ void pyembed_setparameter_object(JNIEnv *env,
     
     if(pyjob) {
         if(pymodule == NULL) {
+            PyObject *key = PyString_FromString(name);
             PyDict_SetItem(jepThread->globals,
-                           PyString_FromString(name),
-                           pyjob); // steals reference
+                           key,
+                           pyjob); /* ownership */
+            Py_DECREF(key);
+            Py_DECREF(pyjob);
         }
         else {
             PyModule_AddObject(pymodule,
@@ -1627,9 +1640,12 @@ void pyembed_setparameter_array(JNIEnv *env,
     
     if(pyjob) {
         if(pymodule == NULL) {
+            PyObject *key = PyString_FromString(name);
             PyDict_SetItem(jepThread->globals,
-                           PyString_FromString(name),
-                           pyjob); // steals reference
+                           key,
+                           pyjob); /* ownership */
+            Py_DECREF(key);
+            Py_DECREF(pyjob);
         }
         else {
             PyModule_AddObject(pymodule,
@@ -1665,9 +1681,12 @@ void pyembed_setparameter_class(JNIEnv *env,
     
     if(pyjob) {
         if(pymodule == NULL) {
+            PyObject *key = PyString_FromString(name);
             PyDict_SetItem(jepThread->globals,
-                           PyString_FromString(name),
-                           pyjob); // steals reference
+                           key,
+                           pyjob); /* ownership */
+            Py_DECREF(key);
+            Py_DECREF(pyjob);
         }
         else {
             PyModule_AddObject(pymodule,
@@ -1702,9 +1721,12 @@ void pyembed_setparameter_string(JNIEnv *env,
         pyvalue = PyString_FromString(value);
 
     if(pymodule == NULL) {
+        PyObject *key = PyString_FromString(name);
         PyDict_SetItem(jepThread->globals,
-                       PyString_FromString(name),
-                       pyvalue);  // steals reference
+                       key,
+                       pyvalue); /* ownership */
+        Py_DECREF(key);
+        Py_DECREF(pyvalue);
     }
     else {
         PyModule_AddObject(pymodule,
@@ -1736,9 +1758,12 @@ void pyembed_setparameter_int(JNIEnv *env,
     }
     
     if(pymodule == NULL) {
+        PyObject *key = PyString_FromString(name);
         PyDict_SetItem(jepThread->globals,
-                       PyString_FromString(name),
-                       pyvalue); // steals reference
+                       key,
+                       pyvalue); /* ownership */
+        Py_DECREF(key);
+        Py_DECREF(pyvalue);
     }
     else {
         PyModule_AddObject(pymodule,
@@ -1770,9 +1795,12 @@ void pyembed_setparameter_long(JNIEnv *env,
     }
     
     if(pymodule == NULL) {
+        PyObject *key = PyString_FromString(name);
         PyDict_SetItem(jepThread->globals,
-                       PyString_FromString(name),
-                       pyvalue); // steals reference
+                       key,
+                       pyvalue); /* ownership */
+        Py_DECREF(key);
+        Py_DECREF(pyvalue);
     }
     else {
         PyModule_AddObject(pymodule,
@@ -1804,9 +1832,12 @@ void pyembed_setparameter_double(JNIEnv *env,
     }
     
     if(pymodule == NULL) {
+        PyObject *key = PyString_FromString(name);
         PyDict_SetItem(jepThread->globals,
-                       PyString_FromString(name),
-                       pyvalue); // steals reference
+                       key,
+                       pyvalue); /* ownership */
+        Py_DECREF(key);
+        Py_DECREF(pyvalue);
     }
     else {
         PyModule_AddObject(pymodule,
@@ -1838,9 +1869,12 @@ void pyembed_setparameter_float(JNIEnv *env,
     }
     
     if(pymodule == NULL) {
+        PyObject *key = PyString_FromString(name);
         PyDict_SetItem(jepThread->globals,
-                       PyString_FromString(name),
-                       pyvalue); // steals reference
+                       key,
+                       pyvalue); /* ownership */
+        Py_DECREF(key);
+        Py_DECREF(pyvalue);
     }
     else {
         PyModule_AddObject(pymodule,
