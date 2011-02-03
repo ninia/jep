@@ -21,7 +21,7 @@ EXTRA_DIST=python.m4 \
 	testswing.py \
 	src/jep/jep.h \
 	makejar.sh \
-	jep.jar \
+	jepp.jar \
 	ext/bsf.jar \
 	src/manifest \
 	windows/jep.dsp \
@@ -60,7 +60,7 @@ BUILT_SOURCES = src/jep/jep.h \
 	src/jep/python/jep_object.h \
 	src/jep/invocationhandler.h
 
-all: jep.jar
+all: jepp.jar
 
 src/jep/python/jep_object.h: src/jep/python/PyObject.class
 	$(JAVAH) -o src/jep/python/jep_object.h -classpath src/ jep.python.PyObject
@@ -119,7 +119,7 @@ src/jep/Proxy.class: src/jep/Proxy.java
 src/jep/Util.class: src/jep/Util.java
 	$(JAVAC) ${JAVACOPT} src/jep/Util.java
 
-jep.jar:  \
+jepp.jar:  \
 	src/jep/python/PyObject.class \
 	src/jep/python/PyModule.class \
 	src/jep/python/PyClass.class \
@@ -132,8 +132,8 @@ jep.jar:  \
 	src/jep/Util.class \
 	src/jep/ClassList.class $(JAVAX_SCRIPT_CLASSES)
 
-	./makejar.sh jep/ jep.jar
+	./makejar.sh jep/ jepp.jar
 
-javadoc: jep.jar
-	${JAVA_HOME}/bin/javadoc -version -windowtitle 'Java Embedded Python' -author -breakiterator -classpath jep.jar:ext/bsf.jar -sourcepath src/ jep -d javadoc/
+javadoc: jepp.jar
+	${JAVA_HOME}/bin/javadoc -version -windowtitle 'Java Embedded Python' -author -breakiterator -classpath jepp.jar:ext/bsf.jar -sourcepath src/ jep -d javadoc/
 

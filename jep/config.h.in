@@ -58,7 +58,7 @@
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
 
-/* Define to 1 if `struct stat' is a member of `st_blocks'. */
+/* Define to 1 if `st_blocks' is a member of `struct stat'. */
 #undef HAVE_STRUCT_STAT_ST_BLOCKS
 
 /* Define if struct utimbuf is declared -- usually in <utime.h>. Some systems

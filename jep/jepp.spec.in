@@ -1,7 +1,8 @@
-%define name jep
+%define name @PACKAGE@
 %define version @VERSION@
-%define release 1
+%define release 2
 %define manifest %{_builddir}/%{name}-%{version}-%{release}.manifest
+%define profile_dir /etc/profile.d
 
 Name: %{name}
 Version: %{version}
@@ -37,6 +38,7 @@ Javadoc for %{name}
 
 
 %prep
+%{__rm} -rf %{buildroot}
 %setup -q
 autoreconf -vif
 #Remove built files
@@ -70,6 +72,9 @@ ln -s %{name}-%{version} $RPM_BUILD_ROOT%{_javadocdir}/%{name}
 install -d -m 755 ${RPM_BUILD_ROOT}%{_datadir}/%{name}-%{version}/examples
 cp *.py ${RPM_BUILD_ROOT}%{_datadir}/%{name}-%{version}/examples
 
+#profile file
+install -D -m 755 etc/%{name}.sh ${RPM_BUILD_ROOT}/%{profile_dir}/%{name}.sh
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
@@ -82,6 +87,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}-%{version}/examples
 %{_libdir}/%{name}
 %{_mandir}/man1/jep.1.gz
+%{profile_dir}/%{name}.sh
 
 %files javadoc
 %defattr(-,root,root,-)
@@ -90,6 +96,13 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Tue Feb 1  2011 Harry Kantor <harry.kantor@navy.mil> 2.4-2
+- changed RPM and jar name (and related Java directory names) to jepp
+  - this was to avoid a conflict between the jep RPM available from JPackage
+- added profile.d file to:
+  1) automatically set the LD_PRELOAD variable
+  2) set the CLASSPATH to use the installed jar file
+  3) set the LD_LIBRARY_PATH to use the jep library
 * Mon Jan 25 2010 John Matthews <jmatthews@redhat.com> 2.4-1
 - update to jep 2.4
 * Fri Jan 22 2010 John Matthews <jmatthews@redhat.com> 2.3-1
