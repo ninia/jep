@@ -22,4 +22,4 @@
 #define USE_MAPPED_EXCEPTIONS 1
 
 /* Version number of package */
-#define VERSION "2.4"
+#define VERSION "2.5"
