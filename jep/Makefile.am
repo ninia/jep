@@ -42,6 +42,8 @@ EXTRA_DIST=python.m4 \
 	src/jep/Util.java \
 	src/jep/invocationhandler.h
 
+python_PYTHON = _jep.py
+
 dist-hook:
 	rm -rf `find $(distdir) -name .svn`
 
@@ -137,3 +139,5 @@ jepp.jar:  \
 javadoc: jepp.jar
 	${JAVA_HOME}/bin/javadoc -version -windowtitle 'Java Embedded Python' -author -breakiterator -classpath jepp.jar:ext/bsf.jar -sourcepath src/ jep -d javadoc/
 
+#install-data-local:
+#	$(INSTALL_SCRIPT) $(srcdir)/_jep.py $(python_moduleexecdir)/

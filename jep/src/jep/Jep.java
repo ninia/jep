@@ -128,6 +128,8 @@ public final class Jep {
             eval("sys.path += '" + includePath + "'.split('" +
                  File.pathSeparator + "')");
         }
+
+        eval("import _jep");
     }
     
     

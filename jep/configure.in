@@ -39,6 +39,7 @@ dnl doesn't work
 dnl AC_CHECK_LONG_DOUBLE
 AC_CHECK_SIZEOF([float])
 
+AM_PATH_PYTHON([2.2])
 dnl Checks for libraries.
 PGAC_CHECK_PYTHON_ALL
 dnl check found python version

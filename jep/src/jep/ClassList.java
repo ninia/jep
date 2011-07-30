@@ -252,7 +252,7 @@ public class ClassList {
                     return new String[0];
             }
 
-            throw new JepException("Package not found: " + p);
+            return null;
         }
 
         String[] ret = new String[el.size()];

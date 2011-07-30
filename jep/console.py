@@ -70,6 +70,9 @@ if(__name__ == '__main__'):
     # but we can make a new one.
     jep.eval("argv = %s" % argv)
 
+    # make sure we can import from the current directory
+    jep.eval('import sys; sys.path.append("")')
+
     try:
         prompt(jep)
     except:

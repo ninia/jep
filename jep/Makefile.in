@@ -34,12 +34,13 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
-	$(srcdir)/jep.lsm.in $(srcdir)/jepp.spec.in \
-	$(top_srcdir)/configure $(top_srcdir)/etc/jepp.sh.in AUTHORS \
-	COPYING ChangeLog INSTALL NEWS config.guess config.sub depcomp \
-	install-sh ltmain.sh missing mkinstalldirs texinfo.tex
+DIST_COMMON = README $(am__configure_deps) $(python_PYTHON) \
+	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
+	$(srcdir)/config.h.in $(srcdir)/jep.lsm.in \
+	$(srcdir)/jepp.spec.in $(top_srcdir)/configure \
+	$(top_srcdir)/etc/jepp.sh.in AUTHORS COPYING ChangeLog INSTALL \
+	NEWS config.guess config.sub depcomp install-sh ltmain.sh \
+	missing mkinstalldirs py-compile texinfo.tex
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
 	$(top_srcdir)/python.m4 $(top_srcdir)/configure.in
@@ -81,8 +82,9 @@ am__nobase_list = $(am__nobase_strip_setup); \
 am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
+am__installdirs = "$(DESTDIR)$(pythondir)" "$(DESTDIR)$(man1dir)"
+py_compile = $(top_srcdir)/py-compile
 man1dir = $(mandir)/man1
-am__installdirs = "$(DESTDIR)$(man1dir)"
 NROFF = nroff
 MANS = $(man_MANS)
 RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
@@ -190,6 +192,10 @@ PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PYTHON = @PYTHON@
+PYTHON_EXEC_PREFIX = @PYTHON_EXEC_PREFIX@
+PYTHON_PLATFORM = @PYTHON_PLATFORM@
+PYTHON_PREFIX = @PYTHON_PREFIX@
+PYTHON_VERSION = @PYTHON_VERSION@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
@@ -237,9 +243,12 @@ mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
 pdfdir = @pdfdir@
+pkgpyexecdir = @pkgpyexecdir@
+pkgpythondir = @pkgpythondir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+pyexecdir = @pyexecdir@
 python_configdir = @python_configdir@
 python_execprefix = @python_execprefix@
 python_includespec = @python_includespec@
@@ -249,6 +258,7 @@ python_moduledir = @python_moduledir@
 python_moduleexecdir = @python_moduleexecdir@
 python_prefix = @python_prefix@
 python_version = @python_version@
+pythondir = @pythondir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -300,6 +310,7 @@ EXTRA_DIST = python.m4 \
 	src/jep/Util.java \
 	src/jep/invocationhandler.h
 
+python_PYTHON = _jep.py
 
 #  if you write a self-test script named `chk', uncomment the
 #  following and add `chk' to the EXTRA_DIST list
@@ -383,6 +394,44 @@ clean-libtool:
 
 distclean-libtool:
 	-rm -f libtool config.lt
+install-pythonPYTHON: $(python_PYTHON)
+	@$(NORMAL_INSTALL)
+	test -z "$(pythondir)" || $(MKDIR_P) "$(DESTDIR)$(pythondir)"
+	@list='$(python_PYTHON)'; dlist=; list2=; test -n "$(pythondir)" || list=; \
+	for p in $$list; do \
+	  if test -f "$$p"; then b=; else b="$(srcdir)/"; fi; \
+	  if test -f $$b$$p; then \
+	    $(am__strip_dir) \
+	    dlist="$$dlist $$f"; \
+	    list2="$$list2 $$b$$p"; \
+	  else :; fi; \
+	done; \
+	for file in $$list2; do echo $$file; done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(pythondir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(pythondir)" || exit $$?; \
+	done || exit $$?; \
+	if test -n "$$dlist"; then \
+	  if test -z "$(DESTDIR)"; then \
+	    PYTHON=$(PYTHON) $(py_compile) --basedir "$(pythondir)" $$dlist; \
+	  else \
+	    PYTHON=$(PYTHON) $(py_compile) --destdir "$(DESTDIR)" --basedir "$(pythondir)" $$dlist; \
+	  fi; \
+	else :; fi
+
+uninstall-pythonPYTHON:
+	@$(NORMAL_UNINSTALL)
+	@list='$(python_PYTHON)'; test -n "$(pythondir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	test -n "$$files" || exit 0; \
+	filesc=`echo "$$files" | sed 's|$$|c|'`; \
+	fileso=`echo "$$files" | sed 's|$$|o|'`; \
+	echo " ( cd '$(DESTDIR)$(pythondir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(pythondir)" && rm -f $$files || exit $$?; \
+	echo " ( cd '$(DESTDIR)$(pythondir)' && rm -f" $$filesc ")"; \
+	cd "$(DESTDIR)$(pythondir)" && rm -f $$filesc || exit $$?; \
+	echo " ( cd '$(DESTDIR)$(pythondir)' && rm -f" $$fileso ")"; \
+	cd "$(DESTDIR)$(pythondir)" && rm -f $$fileso
 install-man1: $(man_MANS)
 	@$(NORMAL_INSTALL)
 	test -z "$(man1dir)" || $(MKDIR_P) "$(DESTDIR)$(man1dir)"
@@ -754,7 +803,7 @@ check: $(BUILT_SOURCES)
 all-am: Makefile $(MANS) config.h
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(man1dir)"; do \
+	for dir in "$(DESTDIR)$(pythondir)" "$(DESTDIR)$(man1dir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: $(BUILT_SOURCES)
@@ -807,7 +856,7 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-man
+install-data-am: install-man install-pythonPYTHON
 
 install-dvi: install-dvi-recursive
 
@@ -853,7 +902,7 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-man
+uninstall-am: uninstall-man uninstall-pythonPYTHON
 
 uninstall-man: uninstall-man1
 
@@ -872,11 +921,12 @@ uninstall-man: uninstall-man1
 	install-dvi-am install-exec install-exec-am install-html \
 	install-html-am install-info install-info-am install-man \
 	install-man1 install-pdf install-pdf-am install-ps \
-	install-ps-am install-strip installcheck installcheck-am \
-	installdirs installdirs-am maintainer-clean \
+	install-ps-am install-pythonPYTHON install-strip installcheck \
+	installcheck-am installdirs installdirs-am maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-generic \
 	mostlyclean-libtool pdf pdf-am ps ps-am tags tags-recursive \
-	uninstall uninstall-am uninstall-man uninstall-man1
+	uninstall uninstall-am uninstall-man uninstall-man1 \
+	uninstall-pythonPYTHON
 
 
 dist-hook:
@@ -958,6 +1008,9 @@ jepp.jar:  \
 
 javadoc: jepp.jar
 	${JAVA_HOME}/bin/javadoc -version -windowtitle 'Java Embedded Python' -author -breakiterator -classpath jepp.jar:ext/bsf.jar -sourcepath src/ jep -d javadoc/
+
+#install-data-local:
+#	$(INSTALL_SCRIPT) $(srcdir)/_jep.py $(python_moduleexecdir)/
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
