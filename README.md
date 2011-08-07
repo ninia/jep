@@ -33,7 +33,6 @@ Building on Mac OS X
 You'll need to:
 
 * set JAVA_HOME to /Library/Java/Home *not* /usr.
-* compile Python or download it using Fink.
 * have installed the developer kits from Apple
 * make a symlink from libjep.dynlib to /Library/Java/Extentions, like:
 
