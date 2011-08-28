@@ -1,14 +1,18 @@
 #!/usr/bin/env python
 from __future__ import print_function
+from __future__ import absolute_import
+import platform
 
 import os
 from distutils.core import setup, Extension
 from commands import jep_build
+from commands.clean import really_clean
 
 from commands.dist import JepDistribution
-from commands.java import build_java, build_javah, get_java_home, get_java_include
+from commands.java import build_java, build_javah, get_java_home, get_java_include, get_java_lib, get_java_linker_args
+from commands.python import get_python_libs, get_python_linker_args
 
-VERSION = '3.0'
+from jep import VERSION
 
 def get_files(pattern):
     ret = []
@@ -17,6 +21,11 @@ def get_files(pattern):
             if file.endswith(pattern):
                 ret.append(os.path.join(root, file))
     return ret
+
+def get_jep_libs():
+    if platform.system() != 'Darwin':
+        return ['jvm']
+    return []
 
 if __name__ == '__main__':
     get_java_home()
@@ -27,7 +36,8 @@ if __name__ == '__main__':
           author='Mike Johnson',
           author_email='mike@publicstatic.net',
           url='http://www.publicstatic.net/jep/',
-          scripts=['_jep.py'],
+          packages=['jep'],
+          #scripts=['_jep.py'],
           keywords='java',
           license='zlib/libpng',
           classifiers=['License :: OSI Approved :: zlib/libpng License'],
@@ -41,24 +51,26 @@ if __name__ == '__main__':
                       ('USE_MAPPED_EXCEPTIONS', 1),
                       ('VERSION', '"{0}"'.format(VERSION)),
                   ],
-                  # libraries=['jvm'],
-                  # library_dirs=[get_java_lib()],
-                  include_dirs=[get_java_include(), 'src/jep'],
+                  libraries=get_jep_libs() + get_python_libs(),
+                  library_dirs=[get_java_lib()],
+                  extra_link_args=get_java_linker_args() + get_python_linker_args(),
+                  include_dirs=[get_java_include(), 'src/jep', 'build/include'],
               )
           ],
 
           # my hacks to compile java files
           java_files=get_files('.java'),
           javah_files=[ # tuple containing class and the header file to output
-              ('jep.Jep', 'src/jep/jep.h'),
-	          ('jep.python.PyObject', 'src/jep/python/jep_object.h'),
-	          ('jep.InvocationHandler', 'src/jep/invocationhandler.h'),
+              ('jep.Jep', 'jep.h'),
+	          ('jep.python.PyObject', 'jep_object.h'),
+	          ('jep.InvocationHandler', 'invocationhandler.h'),
           ],
           distclass=JepDistribution,
           cmdclass={
               'build_java': build_java,
               'build_javah': build_javah,
               'build': jep_build,
+              'clean': really_clean,
           }
     )
 

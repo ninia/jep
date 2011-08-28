@@ -129,7 +129,7 @@ public final class Jep {
                  File.pathSeparator + "')");
         }
 
-        eval("import _jep");
+        eval("import jep");
     }
     
     

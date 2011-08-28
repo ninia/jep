@@ -74,6 +74,15 @@
 #include "util.h"
 
 
+#ifdef __APPLE__
+#ifndef WITH_NEXT_FRAMEWORK
+#include <crt_externs.h>
+// workaround for
+// http://bugs.python.org/issue1602133
+char **environ = NULL;
+#endif
+#endif
+
 static PyThreadState *mainThreadState = NULL;
 
 static PyObject* pyembed_findclass(PyObject*, PyObject*);
@@ -157,17 +166,13 @@ static struct PyMethodDef noop_methods[] = {
 
 static PyObject* initjep(void) {
     PyObject *modjep;
-    
-    PyImport_AddModule("jep");
-    Py_InitModule((char *) "jep", jep_methods);
-    modjep = PyImport_ImportModule("jep");
+
+    PyImport_AddModule("_jep");
+    Py_InitModule((char *) "_jep", jep_methods);
+    modjep = PyImport_ImportModule("_jep");
     if(modjep == NULL)
-        printf("WARNING: couldn't import module jep.\n");
+        printf("WARNING: couldn't import module _jep.\n");
     else {
-#ifdef VERSION
-        PyModule_AddStringConstant(modjep, "VERSION", VERSION);
-#endif
-        
         // stuff for making new pyjarray objects
         PyModule_AddIntConstant(modjep, "JBOOLEAN_ID", JBOOLEAN_ID);
         PyModule_AddIntConstant(modjep, "JINT_ID", JINT_ID);
@@ -185,6 +190,14 @@ static PyObject* initjep(void) {
 
 
 void pyembed_startup(void) {
+#ifdef __APPLE__
+#ifndef WITH_NEXT_FRAMEWORK
+// workaround for
+// http://bugs.python.org/issue1602133
+    environ = *_NSGetEnviron();
+#endif
+#endif
+
     if(mainThreadState != NULL)
         return;
 
@@ -251,17 +264,6 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller) {
     jepThread->classloader = (*env)->NewGlobalRef(env, cl);
     jepThread->caller      = (*env)->NewGlobalRef(env, caller);
     jepThread->printStack  = 0;
-
-    // now, add custom import function to builtin module
-
-    // i did have a whole crap load of code to do this from C but it
-    // didn't work. i found a PEP that said it wasn't possible, then
-    // Guido said they were wrong. *shrug*. this is my work-around.
-
-    PyRun_SimpleString("import jep\n");
-#ifdef USE_IMPORT
-    PyRun_SimpleString("__builtins__.__import__ = jep.jimport\n");
-#endif
 
     if((tdict = PyThreadState_GetDict()) != NULL) {
         PyObject *key, *t;

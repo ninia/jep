@@ -18,3 +18,5 @@ src/jep/invocationhandler.h
 src/jep/jep.h
 src/jep/python/jep_object.h
 stamp-h1
+build
+dist
