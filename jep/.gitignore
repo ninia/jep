@@ -20,3 +20,4 @@ src/jep/python/jep_object.h
 stamp-h1
 build
 dist
+*.pyc

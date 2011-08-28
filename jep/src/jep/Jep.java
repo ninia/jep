@@ -11,7 +11,7 @@ import jep.python.PyObject;
  * <pre>
  * Jep.java - Embeds CPython in Java.
  *
- * Copyright (c) 2004, 2005 Mike Johnson.
+ * Copyright (c) 2004 - 2011 Mike Johnson.
  *
  * This file is licenced under the the zlib/libpng License.
  *
