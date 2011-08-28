@@ -1,7 +1,7 @@
-Jepp - Java Embedded Python
+Jep - Java Embedded Python
 ===========================
 
-Jepp embeds CPython in Java. It is safe to use in a heavily threaded
+Jep embeds CPython in Java. It is safe to use in a heavily threaded
 environment, it is quite fast and its stability is a main feature and
 goal.
 
@@ -17,7 +17,7 @@ Patches, comments and other help is greatly appreciated. If you need
 help, post to the SourceForge mailing list or forums. Please include
 code snippets for the most accurate response.
 
-Jepp is licensed zlib/libpng license to avoid linking issues.
+Jep is licensed zlib/libpng license to avoid linking issues.
 
 Dependencies
 ------------
@@ -84,18 +84,18 @@ First, fire off the test.py script. We want to make sure you're fully
 setup. To start with, export LD_LIBRARY_PATH and LD_PRELOAD as in the
 section above. Then, start with:
 
-    $ java -cp jepp.jar jep.Test 0
+    $ java -cp jep.jar jep.Test 0
 
 A lot of early bugs in Jep didn't appear until the code is stressed a
 little. The above 0 argument is the number of additional threads to
 create. They all run through the test.py script in sub intepreters. Go
 ahead, throw some threads at it.
 
-    $ java -cp jepp.jar jep.Test 30
+    $ java -cp jep.jar jep.Test 30
 
 Also, try the console script:
 
-    $ java -jar jepp.jar console.py
+    $ java -jar jep.jar console.py
     >>> from java.util import HashMap
     >>> map = HashMap()
     >>> map.put('test', 'asdf')
@@ -104,7 +104,7 @@ You can run arbitrary scripts, too:
 
     $ cat hello.py 
     print 'Hello, world'
-    $ java -jar jepp.jar hello.py 
+    $ java -jar jep.jar hello.py 
     Hello, world
 
 Support
@@ -112,9 +112,9 @@ Support
 
 For issues and source control, use github:
 
-https://github.com/mrj0/jepp/
+https://github.com/mrj0/jep/
 
-There's also a Sourceforge mailing list that is the best way to get support for Jepp:
+There's also a Sourceforge mailing list that is the best way to get support for Jep:
 
 https://sourceforge.net/mail/?group_id=109839
 
