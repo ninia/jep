@@ -21,7 +21,7 @@ Jep is licensed zlib/libpng license to avoid linking issues.
 
 Dependencies
 ------------
-* Python version >= 2.2
+* Python version >= 2.6
 * JNI >= 1.2 (untested, preferably 1.4)
 
 Building on Linux/UNIX
@@ -55,6 +55,8 @@ installed libjep into a directory not cached by ld.so.
 
 For example, my tomcat startup.sh script starts with this:
 
+::
+
     #!/bin/sh
     # force system to load python
     export LD_PRELOAD=/usr/lib/libpython2.7.so
@@ -66,6 +68,8 @@ Adding some heap memory is a good idea, too.
 
 The libpython used here is whatever you've compiled jep against. If
 you don't know, try this command:
+
+::
 
     $ ldd /usr/local/lib/libjep.so | grep python
         /usr/lib/libpython2.7.so (0x00007f74adfbd000)
@@ -84,6 +88,8 @@ First, fire off the test.py script. We want to make sure you're fully
 setup. To start with, export LD_LIBRARY_PATH and LD_PRELOAD as in the
 section above. Then, start with:
 
+::
+
     $ java -cp jep.jar jep.Test 0
 
 A lot of early bugs in Jep didn't appear until the code is stressed a
@@ -91,9 +97,13 @@ little. The above 0 argument is the number of additional threads to
 create. They all run through the test.py script in sub intepreters. Go
 ahead, throw some threads at it.
 
+::
+
     $ java -cp jep.jar jep.Test 30
 
 Also, try the console script:
+
+::
 
     $ java -jar jep.jar console.py
     >>> from java.util import HashMap
@@ -101,6 +111,8 @@ Also, try the console script:
     >>> map.put('test', 'asdf')
 
 You can run arbitrary scripts, too:
+
+::
 
     $ cat hello.py 
     print 'Hello, world'
