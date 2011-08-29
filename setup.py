@@ -49,7 +49,7 @@ if __name__ == '__main__':
                   define_macros=[
                       ('PACKAGE', 'jep'),
                       ('USE_DEALLOC', 1),
-                      # ('USE_MAPPED_EXCEPTIONS', 1),
+                     # ('USE_MAPPED_EXCEPTIONS', 1),
                       ('VERSION', '"{0}"'.format(VERSION)),
                   ],
                   libraries=get_jep_libs() + get_python_libs(),

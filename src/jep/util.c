@@ -314,13 +314,9 @@ int process_java_exception(JNIEnv *env) {
     jthrowable  exception    = NULL;
     jclass      clazz;
     PyObject   *pyException  = PyExc_RuntimeError;
-    PyObject   *str, *tmp, *texc, *className, *modjep;
+    PyObject   *str, *tmp, *texc, *className, *modjep, *pyerr;
     char       *message;
     JepThread  *jepThread;
-
-    modjep = PyImport_AddModule("jep"); /* borrowed */
-    if(modjep == NULL)
-        return 0;
 
     if(!(*env)->ExceptionCheck(env))
         return 0;
@@ -334,6 +330,10 @@ int process_java_exception(JNIEnv *env) {
                "invalid JepThread.\n");
         return 1;
     }
+
+    modjep = PyImport_AddModule("jep"); /* borrowed */
+    if(modjep == NULL)
+        return 0;
 
     if(jepThread->printStack)    
         (*env)->ExceptionDescribe(env);
@@ -354,6 +354,9 @@ int process_java_exception(JNIEnv *env) {
     }
 
     message = (char *) jstring2char(env, estr);
+
+    str = PyString_FromString(message);
+
     
 #if USE_MAPPED_EXCEPTIONS
     
@@ -365,9 +368,7 @@ int process_java_exception(JNIEnv *env) {
     // java.lang.NumberFormatException: For input string: "asdf"
     //
     // if we don't find the name, just throw a RuntimeError
-        
-    str = PyString_FromString(message);
-
+ 
     if((tmp = pystring_split_last(str, ".")) == NULL || PyErr_Occurred()) {
         release_utf_char(env, estr, message);
         Py_DECREF(str);
@@ -381,16 +382,25 @@ int process_java_exception(JNIEnv *env) {
         Py_DECREF(str);
         return 1;
     }
-    
+   
     if((texc = PyObject_GetAttr(modjep, className)) != NULL)
         pyException = texc;
 
-    Py_DECREF(str);
     Py_DECREF(tmp);
     Py_DECREF(className);
 
+    PyErr_Format(pyException, "%s", message);
+#else
+    if((texc = PyObject_GetAttrString(modjep, "JavaException")) != NULL) {
+        pyException = texc;
+        str = PyString_FromString(message);
+        PyErr_SetObject(pyException, str);
+
+        Py_DECREF(pyException);
+    }
 #endif // #if USE_MAPPED_EXCEPTIONS
 
+    Py_DECREF(str);
     PyErr_Format(pyException, "%s", message);
     release_utf_char(env, estr, message);
     
