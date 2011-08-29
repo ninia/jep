@@ -393,9 +393,7 @@ int process_java_exception(JNIEnv *env) {
 #else
     if((texc = PyObject_GetAttrString(modjep, "JavaException")) != NULL) {
         pyException = texc;
-        str = PyString_FromString(message);
         PyErr_SetObject(pyException, str);
-
         Py_DECREF(pyException);
     }
 #endif // #if USE_MAPPED_EXCEPTIONS
