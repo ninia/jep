@@ -318,6 +318,10 @@ int process_java_exception(JNIEnv *env) {
     char       *message;
     JepThread  *jepThread;
 
+    modjep = PyImport_AddModule("jep"); /* borrowed */
+    if(modjep == NULL)
+        return 0;
+
     if(!(*env)->ExceptionCheck(env))
         return 0;
 
@@ -378,7 +382,6 @@ int process_java_exception(JNIEnv *env) {
         return 1;
     }
     
-    modjep = PyImport_AddModule("jep"); /* borrowed */
     if((texc = PyObject_GetAttr(modjep, className)) != NULL)
         pyException = texc;
 

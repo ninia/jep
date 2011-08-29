@@ -20,7 +20,7 @@ public class Test implements Runnable {
     private boolean testEval = false;
 
     public Test() {
-    } // Test constructor
+    }
 
 
     public Test(boolean testEval) {
@@ -171,35 +171,6 @@ public class Test implements Runnable {
         return TestEnum.One;
     }
 
-    
-    public int getInt() {
-        return 2147483647;
-    }
-
-    public byte getByte() {
-        return 123;
-    }
-
-    public char getChar() {
-        return 'c';
-    }
-
-    public short getShort() {
-        return 321;
-    }
-
-    public long getLong() {
-        return 9223372036854775807L;
-    }
-
-    public double getDouble() {
-        return 1.7976931348623157E308D;
-    }
-
-    public float getFloat() {
-        return 3.4028235E38F;
-    }
-
     public Integer getInteger() {
         return new Integer(-2147483648);
     }
@@ -290,6 +261,86 @@ public class Test implements Runnable {
     public byte byteField = 43;
     public char charField = 'c';
     public Class classField = this.getClass();
+
+    public boolean isBooleanField() {
+        return booleanField;
+    }
+
+    public void setBooleanField(boolean booleanField) {
+        this.booleanField = booleanField;
+    }
+
+    public byte getByteField() {
+        return byteField;
+    }
+
+    public void setByteField(byte byteField) {
+        this.byteField = byteField;
+    }
+
+    public char getCharField() {
+        return charField;
+    }
+
+    public void setCharField(char charField) {
+        this.charField = charField;
+    }
+
+    public Class getClassField() {
+        return classField;
+    }
+
+    public void setClassField(Class classField) {
+        this.classField = classField;
+    }
+
+    public double getDoubleField() {
+        return doubleField;
+    }
+
+    public void setDoubleField(double doubleField) {
+        this.doubleField = doubleField;
+    }
+
+    public float getFloatField() {
+        return floatField;
+    }
+
+    public void setFloatField(float floatField) {
+        this.floatField = floatField;
+    }
+
+    public int getIntField() {
+        return intField;
+    }
+
+    public void setIntField(int intField) {
+        this.intField = intField;
+    }
+
+    public long getLongField() {
+        return longField;
+    }
+
+    public void setLongField(long longField) {
+        this.longField = longField;
+    }
+
+    public short getShortField() {
+        return shortField;
+    }
+
+    public void setShortField(short shortField) {
+        this.shortField = shortField;
+    }
+
+    public String getStringField() {
+        return stringField;
+    }
+
+    public void setStringField(String stringField) {
+        this.stringField = stringField;
+    }
     
     
     // -------------------------------------------------- static fields
@@ -307,35 +358,81 @@ public class Test implements Runnable {
 
     
     // -------------------------------------------------- static methods
-    
-    public static String getStaticString() {
-        return "a static string.";
-    }
-    
-    public static boolean getStaticBoolean() {
-        return false;
-    }
-    
-    public static int getStaticInt() {
-        return 123;
+
+    public static boolean isStaticBoolean() {
+        return staticBoolean;
     }
 
-    public static short getStaticShort() {
-        return 321;
+    public static void setStaticBoolean(boolean staticBoolean) {
+        Test.staticBoolean = staticBoolean;
     }
 
-    public static long getStaticLong() {
-        return 9223372036854775807L;
+    public static byte getStaticByte() {
+        return staticByte;
     }
-    
+
+    public static void setStaticByte(byte staticByte) {
+        Test.staticByte = staticByte;
+    }
+
+    public static char getStaticChar() {
+        return staticChar;
+    }
+
+    public static void setStaticChar(char staticChar) {
+        Test.staticChar = staticChar;
+    }
+
     public static double getStaticDouble() {
-        return 123123213.123D;
+        return staticDouble;
+    }
+
+    public static void setStaticDouble(double staticDouble) {
+        Test.staticDouble = staticDouble;
     }
 
     public static float getStaticFloat() {
-        return 12312.123F;
+        return staticFloat;
     }
 
+    public static void setStaticFloat(float staticFloat) {
+        Test.staticFloat = staticFloat;
+    }
+
+    public static int getStaticInt() {
+        return staticInt;
+    }
+
+    public static void setStaticInt(int staticInt) {
+        Test.staticInt = staticInt;
+    }
+
+    public static long getStaticLong() {
+        return staticLong;
+    }
+
+    public static void setStaticLong(long staticLong) {
+        Test.staticLong = staticLong;
+    }
+
+    public static short getStaticShort() {
+        return staticShort;
+    }
+
+    public static void setStaticShort(short staticShort) {
+        Test.staticShort = staticShort;
+    }
+
+    public static String getStaticString() {
+        return staticString;
+    }
+
+    public static void setStaticString(String staticString) {
+        Test.staticString = staticString;
+    }
+    
+    // -------------------------------------------------- other static methods
+    
     public static Object getStaticObject() {
         return new Object();
     }
@@ -344,33 +441,19 @@ public class Test implements Runnable {
         return;
     }
 
-    public static byte getStaticByte() {
-        return 23;
-    }
-
-    public static char getStaticChar() {
-        return 'b';
-    }
-    
     public static Class getStaticClass() {
         return Thread.currentThread().getClass();
     }
     
     public static void main(String argv[]) throws Throwable {
-        
-        if(argv.length < 1) {
-            new Thread(new Test()).start();
-            new Thread(new Test()).start();
+        Jep jep = new Jep();
+        try {
+            jep.runScript("runtests.py");
         }
-        else {
-            int count = Integer.parseInt(argv[0]);
-            for(int i = 0; i < count; i++)
-                new Thread(new Test()).start();
+        finally {
+            jep.close();
         }
 
-        new Test().run();
-        
         System.gc();
     }
-
 } // Test
