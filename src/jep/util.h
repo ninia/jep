@@ -40,6 +40,10 @@
 #ifndef _Included_util
 #define _Included_util
 
+#ifndef USE_MAPPED_EXCEPTIONS
+#define USE_MAPPED_EXCEPTIONS 0
+#endif
+
 #define JEPEXCEPTION "jep/JepException"
 
 #define THROW_JEP(env, msg)                         \
