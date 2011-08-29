@@ -314,7 +314,7 @@ int process_java_exception(JNIEnv *env) {
     jthrowable  exception    = NULL;
     jclass      clazz;
     PyObject   *pyException  = PyExc_RuntimeError;
-    PyObject   *str, *tmp, *texc, *className;
+    PyObject   *str, *tmp, *texc, *className, *modjep;
     char       *message;
     JepThread  *jepThread;
 
@@ -378,7 +378,8 @@ int process_java_exception(JNIEnv *env) {
         return 1;
     }
     
-    if((texc = PyObject_GetAttr(jepThread->modjep, className)) != NULL)
+    modjep = PyImport_AddModule("jep"); /* borrowed */
+    if((texc = PyObject_GetAttr(modjep, className)) != NULL)
         pyException = texc;
 
     Py_DECREF(str);
@@ -1465,8 +1466,13 @@ int register_exceptions(JNIEnv *env,
 #if USE_MAPPED_EXCEPTIONS
     int        len, i;
     JepThread *jepThread;
+    PyObject  *modjep;
     
     jepThread = pyembed_get_jepthread();
+
+    modjep = PyImport_AddModule("jep"); /* borrowed */
+    if(!modjep)
+        return 0;
     
     len = (*env)->GetArrayLength(env, exceptions);
     for(i = 0; i < len; i++) {
@@ -1502,7 +1508,7 @@ int register_exceptions(JNIEnv *env,
         Py_DECREF(str);
         
         // don't add more
-        if(PyObject_HasAttr(jepThread->modjep, tmp)) {
+        if(PyObject_HasAttr(modjep, tmp)) {
             Py_DECREF(tmp);
             (*env)->DeleteLocalRef(env, exceptionClazz);
             (*env)->DeleteLocalRef(env, exceptionClass);
@@ -1514,7 +1520,7 @@ int register_exceptions(JNIEnv *env,
         jep = PyString_AsString(_jep);
         
         pyexc = PyErr_NewException(jep, NULL, NULL);
-        PyModule_AddObject(jepThread->modjep, className, pyexc); /* steals */
+        PyModule_AddObject(modjep, className, pyexc); /* steals */
         if(PyErr_Occurred()) {
             printf("WARNING: Failed to add exception %s.\n", className);
             PyErr_Print();
