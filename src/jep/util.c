@@ -365,14 +365,14 @@ int process_java_exception(JNIEnv *env) {
     str = PyString_FromString(message);
 
     if((tmp = pystring_split_last(str, ".")) == NULL || PyErr_Occurred()) {
+        release_utf_char(env, estr, message);
         Py_DECREF(str);
         return 1;
     }
     
     // may not have a message
-    if((className = pystring_split_item(tmp, ":", 0)) == NULL ||
-       PyErr_Occurred()) {
-        
+    if((className = pystring_split_item(tmp, ":", 0)) == NULL || PyErr_Occurred()) {
+        release_utf_char(env, estr, message);
         Py_DECREF(tmp);
         Py_DECREF(str);
         return 1;
