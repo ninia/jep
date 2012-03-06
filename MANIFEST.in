@@ -1,0 +1,9 @@
+recursive-include src *.c *.h *.java
+recursive-include tests *.py
+recursive-include javadoc
+recursive-include commands *.py
+include ChangeLog
+include LICENSE
+include AUTHORS
+include runtests.py
+include README.rst
