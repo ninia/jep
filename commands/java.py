@@ -1,16 +1,12 @@
 from __future__ import print_function
 
 from distutils.cmd import Command
-from distutils.command import install
 from distutils.spawn import spawn
-from distutils.util import get_platform, newer
-import platform
 import os
-import sys
-from commands.util import configure_error
+from commands.util import configure_error, is_osx
 
 JAVA_HOME = os.environ.get('JAVA_HOME')
-MAC_JAVA_HOME = '/Library/Java/Home'
+MAC_JAVA_HOME = '/System/Library/Frameworks/JavaVM.framework'
 
 def get_java_home():
     global JAVA_HOME
@@ -18,7 +14,7 @@ def get_java_home():
         return JAVA_HOME
 
     # mac's JAVA_HOME is predictable, just use that if we can
-    if 'macosx' in get_platform() and os.path.exists(MAC_JAVA_HOME):
+    if is_osx() and os.path.exists(MAC_JAVA_HOME):
         JAVA_HOME = MAC_JAVA_HOME
         return JAVA_HOME
 
@@ -28,22 +24,31 @@ def get_java_include():
     """
     Locate the Java include folder containing jni.h.
     """
-    inc = os.path.join(JAVA_HOME, "include")
+    inc_name = 'include'
+    if is_osx():
+        inc_name = 'Headers'
+    inc = os.path.join(JAVA_HOME, inc_name)
     if not os.path.exists(inc):
-        configure_error("Include folder should be at '{0}' but doesn't exist. Please check you've installed the JDK properly.".format(inc))
+        configure_error("Include folder should be at '{0}' but doesn't exist. " \
+                        "Please check you've installed the JDK properly.".format(inc))
     jni = os.path.join(inc, "jni.h")
     if not os.path.exists(jni):
-        configure_error("jni.h should be in '{0}' but doesn't exist. Please check you've installed the JDK properly.".format(jni))
+        configure_error("jni.h should be in '{0}' but doesn't exist. " \
+                        "Please check you've installed the JDK properly.".format(jni))
     return inc
 
 def get_java_lib():
-    lib = os.path.join(JAVA_HOME, "lib")
+    lib_name = 'lib'
+    if is_osx():
+        lib_name = 'Libraries'
+    lib = os.path.join(JAVA_HOME, lib_name)
     if not os.path.exists(lib):
-        configure_error("Lib folder should be at '{0}' but doesn't exist. Please check you've installed the JDK properly.".format(lib))
+        configure_error("Lib folder should be at '{0}' but doesn't exist. " \
+                        "Please check you've installed the JDK properly.".format(lib))
     return lib
 
 def get_java_linker_args():
-    if platform.system() == 'Darwin':
+    if is_osx():
         return ['-framework JavaVM']
 
 class build_java(Command):
@@ -59,7 +64,10 @@ class build_java(Command):
             os.makedirs(build_java.outdir)
 
         self.java_files = []
-        self.javac = os.path.join(get_java_home(), 'bin', 'javac')
+        if is_osx():
+            self.javac = os.path.join(get_java_home(), 'Commands', 'javac')
+        else:
+            self.javac = os.path.join(get_java_home(), 'bin', 'javac')
 
     def finalize_options(self):
         self.java_files = self.distribution.java_files
@@ -85,7 +93,10 @@ class build_javah(Command):
         if not os.path.exists(build_javah.outdir):
             os.mkdir(build_javah.outdir)
 
-        self.javah = os.path.join(get_java_home(), 'bin', 'javah')
+        if is_osx():
+            self.javah = os.path.join(get_java_home(), 'Commands', 'javah')
+        else:
+            self.javah = os.path.join(get_java_home(), 'bin', 'javah')
         self.javah_files = []
 
     def finalize_options(self):

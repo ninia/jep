@@ -33,7 +33,7 @@ Building on Mac OS X
 You'll need to:
 
 * set JAVA_HOME to /Library/Java/Home *not* /usr.
-* have installed the developer kits from Apple
+* have installed the Java Developer Package and Xcode from Apple
 * make a symlink from libjep.dynlib to /Library/Java/Extentions, like:
 
 ``sudo ln -s `pwd`/.libs/libjep.dylib /Library/Java/Extensions/libjep.jnilib``
