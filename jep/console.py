@@ -5,22 +5,22 @@ import traceback
 import jep
 from jep import *
 
-hasReadline = False
+has_readline = False
 
 try:
     import readline
 
     try:
-        hasReadline = True
+        has_readline = True
         import os
         HISTFILE = '%s/.jep' % (os.environ['HOME'])
         if(not os.access(HISTFILE, os.W_OK)):
             os.open(HISTFILE, os.O_CREAT)
         readline.read_history_file(HISTFILE)
-    except:
+    except IOError:
         traceback.print_exc()
         pass
-except:
+except ImportError:
     print """
     No readline available.
     You may want to set the LD_PRELOAD environment variable, see the
@@ -38,11 +38,9 @@ PS2  = "... "
 
 
 def prompt(jep):
-    global hasReadline
-    
     try:
         line = None
-        while(1):
+        while True:
             ran = True
             try:
                 ran = jep.eval(line)
@@ -58,11 +56,11 @@ def prompt(jep):
                 break
 
     finally:
-        if(hasReadline):
+        if has_readline:
             readline.write_history_file(HISTFILE)
 
 
-if(__name__ == '__main__'):
+if __name__ == '__main__':
     Jep = findClass('jep.Jep')
     jep = Jep(True)
 
