@@ -28,7 +28,7 @@ class TestTypes(unittest.TestCase):
 
     def test_getobj(self):
         obj = self.test.getObject()
-        self.assertEquals("list 0", str(obj.get(0))) # todo this should just return a string
+        self.assertEquals("list 0", str(obj.get(0)))
 
     def test_getstring_array(self):
         obj = self.test.getStringArray()
