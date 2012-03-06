@@ -10,12 +10,12 @@ MAC_JAVA_HOME = '/System/Library/Frameworks/JavaVM.framework'
 
 def get_java_home():
     global JAVA_HOME
-    if JAVA_HOME and os.path.exists(JAVA_HOME):
-        return JAVA_HOME
 
     # mac's JAVA_HOME is predictable, just use that if we can
     if is_osx() and os.path.exists(MAC_JAVA_HOME):
-        JAVA_HOME = MAC_JAVA_HOME
+        return MAC_JAVA_HOME
+
+    if JAVA_HOME and os.path.exists(JAVA_HOME):
         return JAVA_HOME
 
     configure_error("Please set JAVA_HOME to a path containing the JDK.")
@@ -27,7 +27,7 @@ def get_java_include():
     inc_name = 'include'
     if is_osx():
         inc_name = 'Headers'
-    inc = os.path.join(JAVA_HOME, inc_name)
+    inc = os.path.join(get_java_home(), inc_name)
     if not os.path.exists(inc):
         configure_error("Include folder should be at '{0}' but doesn't exist. " \
                         "Please check you've installed the JDK properly.".format(inc))
@@ -41,7 +41,7 @@ def get_java_lib():
     lib_name = 'lib'
     if is_osx():
         lib_name = 'Libraries'
-    lib = os.path.join(JAVA_HOME, lib_name)
+    lib = os.path.join(get_java_home(), lib_name)
     if not os.path.exists(lib):
         configure_error("Lib folder should be at '{0}' but doesn't exist. " \
                         "Please check you've installed the JDK properly.".format(lib))
@@ -55,7 +55,7 @@ class build_java(Command):
     outdir = None
 
     user_options = [
-        ('javac=', None, 'use javac (default: JAVA_HOME/bin/javac)'),
+        ('javac=', None, 'use javac (default: {0}/bin/javac)'.format(get_java_home())),
     ]
 
     def initialize_options(self):
@@ -83,7 +83,7 @@ class build_jar(Command):
     outdir = None
 
     user_options = [
-        ('jar=', None, 'use javac (default: JAVA_HOME/bin/jar)'),
+        ('jar=', None, 'use javac (default: {0}/bin/jar)'.format(get_java_home())),
     ]
 
     def initialize_options(self):
@@ -110,7 +110,7 @@ class build_javah(Command):
     outdir = None
 
     user_options = [
-        ('javah=', None, 'use javah (default: JAVA_HOME/bin/javah)'),
+        ('javah=', None, 'use javah (default: {0}/bin/javah)'.format(get_java_home())),
     ]
 
     def initialize_options(self):
