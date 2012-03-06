@@ -82,7 +82,7 @@ if __name__ == '__main__':
               'build_jar': build_jar,
               'build': jep_build,
               'build_scripts': build_scripts,
-              'install': post_install,
+              'install_data': post_install,
               'clean': really_clean,
               'test': test,
           },
