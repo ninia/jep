@@ -258,8 +258,9 @@ static void pyjfield_dealloc(PyJfield_Object *self) {
             (*env)->DeleteGlobalRef(env, self->rfield);
     }
     
-    if(self->pyFieldName)
+    if(self->pyFieldName) {
         Py_DECREF(self->pyFieldName);
+    }
 
     PyObject_Del(self);
 #endif

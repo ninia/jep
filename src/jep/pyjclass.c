@@ -68,7 +68,6 @@ static void pyjclass_dealloc(PyJclass_Object*);
 
 static jmethodID classGetConstructors = 0;
 static jmethodID classGetParmTypes    = 0;
-static jmethodID classGetExceptions   = 0;
 
 
 PyJclass_Object* pyjclass_new(JNIEnv *env, PyObject *pyjob) {
@@ -163,7 +162,6 @@ PyObject* pyjclass_call(PyJclass_Object *self,
     int            parmPos     = 0;
     int            parmLen     = 0;
     jobjectArray   parmArray   = NULL;
-    jobjectArray   exceptions  = NULL;
     JNIEnv        *env;
     jclass         initClass   = NULL;
     jobject        constructor = NULL;

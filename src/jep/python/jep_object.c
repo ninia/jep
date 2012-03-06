@@ -75,7 +75,7 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2Ljava_
     const char *name;
     
     name = jstring2char(env, jname);
-    pyembed_setparameter_object(env, tstate, module, name, jval);
+    pyembed_setparameter_object(env, (intptr_t) tstate, (intptr_t) module, name, jval);
     release_utf_char(env, jname, name);
 }
 
@@ -92,7 +92,7 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2Ljava_
 
     name  = jstring2char(env, jname);
     value = jstring2char(env, jval);
-    pyembed_setparameter_string(env, tstate, module, name, value);
+    pyembed_setparameter_string(env, (intptr_t) tstate, (intptr_t) module, name, value);
     release_utf_char(env, jname, name);
     release_utf_char(env, jval, value);
 }
@@ -108,7 +108,7 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2I
     const char *name;
     
     name = jstring2char(env, jname);
-    pyembed_setparameter_int(env, tstate, module, name, (int) jval);
+    pyembed_setparameter_int(env, (intptr_t) tstate, (intptr_t) module, name, (int) jval);
     release_utf_char(env, jname, name);
 }
 
@@ -124,7 +124,7 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2J
     const char *name;
     
     name = jstring2char(env, jname);
-    pyembed_setparameter_long(env, tstate, module, name, (jeplong) jval);
+    pyembed_setparameter_long(env, (intptr_t) tstate, (intptr_t) module, name, (jeplong) jval);
     release_utf_char(env, jname, name);
 }
 
@@ -140,7 +140,7 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2D
     const char *name;
     
     name = jstring2char(env, jname);
-    pyembed_setparameter_double(env, tstate, module, name, (double) jval);
+    pyembed_setparameter_double(env, (intptr_t) tstate, (intptr_t) module, name, (double) jval);
     release_utf_char(env, jname, name);
 }
 
@@ -155,7 +155,7 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2F
     const char *name;
     
     name = jstring2char(env, jname);
-    pyembed_setparameter_float(env, tstate, module, name, (float) jval);
+    pyembed_setparameter_float(env, (intptr_t) tstate, (intptr_t) module, name, (float) jval);
     release_utf_char(env, jname, name);
 }
 
@@ -171,7 +171,7 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2_3Z
     const char *name;
     
     name = jstring2char(env, jname);
-    pyembed_setparameter_array(env, tstate, module, name, (jobjectArray) jarr);
+    pyembed_setparameter_array(env, (intptr_t) tstate, (intptr_t) module, name, (jobjectArray) jarr);
     release_utf_char(env, jname, name);
 }
 
@@ -187,7 +187,7 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2_3I
     const char *name;
     
     name = jstring2char(env, jname);
-    pyembed_setparameter_array(env, tstate, module, name, (jobjectArray) jarr);
+    pyembed_setparameter_array(env, (intptr_t) tstate, (intptr_t) module, name, (jobjectArray) jarr);
     release_utf_char(env, jname, name);
 }
 
@@ -203,7 +203,7 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2_3S
     const char *name;
     
     name = jstring2char(env, jname);
-    pyembed_setparameter_array(env, tstate, module, name, (jobjectArray) jarr);
+    pyembed_setparameter_array(env, (intptr_t) tstate, (intptr_t) module, name, (jobjectArray) jarr);
     release_utf_char(env, jname, name);
 }
 
@@ -219,7 +219,7 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2_3B
     const char *name;
     
     name = jstring2char(env, jname);
-    pyembed_setparameter_array(env, tstate, module, name, (jobjectArray) jarr);
+    pyembed_setparameter_array(env, (intptr_t) tstate, (intptr_t) module, name, (jobjectArray) jarr);
     release_utf_char(env, jname, name);
 }
 
@@ -235,7 +235,7 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2_3J
     const char *name;
     
     name = jstring2char(env, jname);
-    pyembed_setparameter_array(env, tstate, module, name, (jobjectArray) jarr);
+    pyembed_setparameter_array(env, (intptr_t) tstate, (intptr_t) module, name, (jobjectArray) jarr);
     release_utf_char(env, jname, name);
 }
 
@@ -251,7 +251,7 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2_3D
     const char *name;
     
     name = jstring2char(env, jname);
-    pyembed_setparameter_array(env, tstate, module, name, (jobjectArray) jarr);
+    pyembed_setparameter_array(env, (intptr_t) tstate, (intptr_t) module, name, (jobjectArray) jarr);
     release_utf_char(env, jname, name);
 }
 
@@ -267,7 +267,7 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2_3F
     const char *name;
     
     name = jstring2char(env, jname);
-    pyembed_setparameter_array(env, tstate, module, name, (jobjectArray) jarr);
+    pyembed_setparameter_array(env, (intptr_t) tstate, (intptr_t) module, name, (jobjectArray) jarr);
     release_utf_char(env, jname, name);
 }
 
@@ -283,7 +283,7 @@ JNIEXPORT jlong JNICALL Java_jep_python_PyObject_createModule
     jlong ret;
 
     str = jstring2char(env, jstr);
-    ret = pyembed_create_module_on(env, tstate, module, (char *) str);
+    ret = pyembed_create_module_on(env, (intptr_t) tstate, (intptr_t) module, (char *) str);
     release_utf_char(env, jstr, str);
     return ret;
 }
@@ -300,7 +300,7 @@ JNIEXPORT jobject JNICALL Java_jep_python_PyObject_getValue
     jobject ret;
 
     str = jstring2char(env, jstr);
-    ret = pyembed_getvalue_on(env, tstate, onModule, (char *) str);
+    ret = pyembed_getvalue_on(env, (intptr_t) tstate, (intptr_t) onModule, (char *) str);
     release_utf_char(env, jstr, str);
     return ret;
 }

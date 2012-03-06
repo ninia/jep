@@ -286,8 +286,9 @@ static void pyjobject_dealloc(PyJobject_Object *self) {
         Py_DECREF(self->attr);
         Py_DECREF(self->methods);
         Py_DECREF(self->fields);
-        if(self->pyjclass)
+        if(self->pyjclass) {
             Py_DECREF(self->pyjclass);
+        }
     }
     
     PyObject_Del(self);
@@ -342,12 +343,12 @@ static void pyjobject_addfield(PyJobject_Object *obj, PyObject *name) {
 // steals reference to self, methodname and args.
 PyObject* find_method(JNIEnv *env,
                       PyObject *methodName,
-                      int methodCount,
+                      Py_ssize_t methodCount,
                       PyObject *attr,
                       PyObject *args) {
     // all possible method candidates
     PyJmethod_Object **cand = NULL;
-    int                pos, i, listSize, argsSize;
+    Py_ssize_t         pos, i, listSize, argsSize;
     
     pos = i = listSize = argsSize = 0;
 

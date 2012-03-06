@@ -224,7 +224,7 @@ void pyembed_shutdown(void) {
 
 intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller) {
     JepThread *jepThread;
-    PyObject  *tdict, *main, *globals;
+    PyObject  *tdict, *main_module, *globals;
     
     if(cl == NULL) {
         THROW_JEP(env, "Invalid Classloader.");
@@ -249,14 +249,14 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller) {
     if(!cache_primitive_classes(env))
         printf("WARNING: failed to get primitive class types.\n");
 
-    main = PyImport_AddModule("__main__");                      /* borrowed */
-    if(main == NULL) {
+    main_module = PyImport_AddModule("__main__");                      /* borrowed */
+    if(main_module == NULL) {
         THROW_JEP(env, "Couldn't add module __main__.");
         PyEval_ReleaseLock();
         return 0;
     }
     
-    globals = PyModule_GetDict(main);
+    globals = PyModule_GetDict(main_module);
     Py_INCREF(globals);
 
     // init static module
@@ -285,7 +285,7 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller) {
 
 
 void pyembed_thread_close(intptr_t _jepThread) {
-    PyThreadState *prevThread, *thread;
+    PyThreadState *prevThread;
     JepThread     *jepThread;
     PyObject      *tdict, *key;
     JNIEnv        *env;
@@ -310,14 +310,18 @@ void pyembed_thread_close(intptr_t _jepThread) {
         PyDict_DelItem(tdict, key);
     Py_DECREF(key);
 
-    if(jepThread->globals)
+    if(jepThread->globals) {
         Py_DECREF(jepThread->globals);
-    if(jepThread->modjep)
+    }
+    if(jepThread->modjep) {
         Py_DECREF(jepThread->modjep);
-    if(jepThread->classloader)
+    }
+    if(jepThread->classloader) {
         (*env)->DeleteGlobalRef(env, jepThread->classloader);
-    if(jepThread->caller)
+    }
+    if(jepThread->caller) {
         (*env)->DeleteGlobalRef(env, jepThread->caller);
+    }
     
     Py_EndInterpreter(jepThread->tstate);
     
@@ -429,7 +433,7 @@ static PyObject* pyembed_jproxy(PyObject *self, PyObject *args) {
             return NULL;
     }
 
-    inum = PyList_GET_SIZE(interfaces);
+    inum = (int) PyList_GET_SIZE(interfaces);
     if(inum < 1)
         return PyErr_Format(PyExc_ValueError, "Empty interface list.");
 
@@ -476,7 +480,6 @@ static PyObject* pyembed_jproxy(PyObject *self, PyObject *args) {
 
 static PyObject* pyembed_set_print_stack(PyObject *self, PyObject *args) {
     JepThread *jepThread;
-    JNIEnv    *env   = NULL;
     char      *print = 0;
 
 	if(!PyArg_ParseTuple(args, "b:setPrintStack", &print))
@@ -595,11 +598,10 @@ static PyObject* pyembed_jimport(PyObject *self, PyObject *args) {
                                 name);
         }
 
-        len = PyList_GET_SIZE(modlist);
+        len = (int) PyList_GET_SIZE(modlist);
         for(i = 1; i < len; i++) {
             char     *cname;
             PyObject *globals;  /* shadow parent scope */
-            PyObject *tmod;
 
             tname = PyList_GET_ITEM(modlist, i); /* borrowed */
             cname = PyString_AsString(tname);
@@ -660,7 +662,7 @@ static PyObject* pyembed_jimport(PyObject *self, PyObject *args) {
                 PyList_GET_SIZE(memberList) - 1); /* last one */
 
             found = 0;
-            len   = PyTuple_GET_SIZE(fromlist);
+            len   = (int) PyTuple_GET_SIZE(fromlist);
             for(i = 0; i < len && found == 0; i++) {
                 PyObject *el = PyTuple_GET_ITEM(fromlist, i);
                 if(PyObject_Compare(pymember, el) == 0)
@@ -811,7 +813,7 @@ jobject pyembed_invoke_method(JNIEnv *env,
                               const char *cname,
                               jobjectArray args,
                               jintArray types) {
-    PyThreadState    *prevThread, *thread;
+    PyThreadState    *prevThread;
     PyObject         *callable;
     JepThread        *jepThread;
     jobject           ret;
@@ -851,8 +853,6 @@ jobject pyembed_invoke(JNIEnv *env,
                        PyObject *callable,
                        jobjectArray args,
                        jintArray _types) {
-
-    PyThreadState *_save;
     jobject        ret;
     int            iarg, arglen;
     jint          *types;       /* pinned primitive array */
@@ -904,10 +904,12 @@ jobject pyembed_invoke(JNIEnv *env,
     ret = pyembed_box_py(env, pyret);
 
 EXIT:
-    if(pyargs)
+    if(pyargs) {
         Py_DECREF(pyargs);
-    if(pyret)
+    }
+    if(pyret) {
         Py_DECREF(pyret);
+    }
 
     if(types) {
         (*env)->ReleaseIntArrayElements(env,
@@ -925,8 +927,8 @@ EXIT:
 void pyembed_eval(JNIEnv *env,
                   intptr_t _jepThread,
                   char *str) {
-    PyThreadState    *prevThread, *thread;
-    PyObject         *modjep, *result;
+    PyThreadState    *prevThread;
+    PyObject         *result;
     JepThread        *jepThread;
     
     jepThread = (JepThread *) _jepThread;
@@ -955,8 +957,9 @@ void pyembed_eval(JNIEnv *env,
     
     process_py_exception(env, 1);
     
-    if(result != NULL)
+    if(result != NULL) {
         Py_DECREF(result);
+    }
 
 EXIT:
     PyThreadState_Swap(prevThread);
@@ -1106,8 +1109,9 @@ intptr_t pyembed_create_module_on(JNIEnv *env,
         ret = (intptr_t) module;
 
 EXIT:
-    if(globals)
+    if(globals) {
         Py_DECREF(globals);
+    }
 
     PyThreadState_Swap(prevThread);
     PyEval_ReleaseLock();
@@ -1175,7 +1179,7 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result) {
 
     if(PyInt_Check(result)) {
         jclass clazz;
-        jint i = PyInt_AS_LONG(result);
+        jlong i = PyInt_AS_LONG(result);
 
         clazz = (*env)->FindClass(env, "java/lang/Integer");
 
@@ -1215,7 +1219,7 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result) {
         jclass clazz;
 
         // causes precision loss. python's float type sucks. *shrugs*
-        jfloat f = PyFloat_AS_DOUBLE(result);
+        jfloat f = (jfloat) PyFloat_AS_DOUBLE(result);
 
         clazz = (*env)->FindClass(env, "java/lang/Float");
 
@@ -1303,15 +1307,16 @@ EXIT:
     PyThreadState_Swap(prevThread);
     PyEval_ReleaseLock();
 
-    if(result != NULL)
+    if(result != NULL) {
         Py_DECREF(result);
+    }
     return ret;
 }
 
 
 jobject pyembed_getvalue(JNIEnv *env, intptr_t _jepThread, char *str) {
     PyThreadState  *prevThread;
-    PyObject       *main, *dict, *result;
+    PyObject       *result;
     jobject         ret = NULL;
     JepThread      *jepThread;
     
@@ -1347,8 +1352,9 @@ EXIT:
     PyThreadState_Swap(prevThread);
     PyEval_ReleaseLock();
 
-    if(result != NULL)
+    if(result != NULL) {
         Py_DECREF(result);
+    }
     return ret;
 }
 
@@ -1356,7 +1362,7 @@ EXIT:
 
 jobject pyembed_getvalue_array(JNIEnv *env, intptr_t _jepThread, char *str, int typeId) {
     PyThreadState  *prevThread;
-    PyObject       *main, *dict, *result;
+    PyObject       *result;
     jobject         ret = NULL;
     JepThread      *jepThread;
     
@@ -1387,7 +1393,7 @@ jobject pyembed_getvalue_array(JNIEnv *env, intptr_t _jepThread, char *str, int 
     
     if(PyString_Check(result)) {
         void *s = (void*) PyString_AS_STRING(result);
-        int n = PyString_Size(result);
+        Py_ssize_t n = PyString_Size(result);
 
         switch (typeId) {
         case JFLOAT_ID:
@@ -1397,12 +1403,12 @@ jobject pyembed_getvalue_array(JNIEnv *env, intptr_t _jepThread, char *str, int 
             }
 
             ret = (*env)->NewFloatArray(env, (jsize) n / SIZEOF_FLOAT);
-            (*env)->SetFloatArrayRegion(env, ret, 0, (n / SIZEOF_FLOAT), (jfloat *) s);
+            (*env)->SetFloatArrayRegion(env, ret, 0, (jsize) (n / SIZEOF_FLOAT), (jfloat *) s);
             break;
 
         case JBYTE_ID:
             ret = (*env)->NewByteArray(env, (jsize) n);
-            (*env)->SetByteArrayRegion(env, ret, 0, n, (jbyte *) s);
+            (*env)->SetByteArrayRegion(env, ret, 0, (jsize) n, (jbyte *) s);
             break;
 
         default:
@@ -1423,8 +1429,9 @@ EXIT:
     PyThreadState_Swap(prevThread);
     PyEval_ReleaseLock();
 
-    if(result != NULL)
+    if(result != NULL) {
         Py_DECREF(result);
+    }
     return ret;
 }
 
@@ -1501,7 +1508,6 @@ static void pyembed_run_pyc(JepThread *jepThread,
                             FILE *fp) {
 	PyCodeObject    *co;
 	PyObject        *v;
-    PyObject        *globals;
 	long             magic;
 
 	long PyImport_GetMagicNumber(void);
@@ -1543,7 +1549,7 @@ static int maybe_pyc_file(FILE *fp,
 		/* Read only two bytes of the magic. If the file was opened in
 		   text mode, the bytes 3 and 4 of the magic (\r\n) might not
 		   be read as they are on disk. */
-		unsigned int halfmagic = PyImport_GetMagicNumber() & 0xFFFF;
+		long halfmagic = PyImport_GetMagicNumber() & 0xFFFF;
 		unsigned char buf[2];
 		/* Mess:  In case of -x, the stream is NOT at its start now,
 		   and ungetc() was used to push back the first newline,
@@ -1559,7 +1565,7 @@ static int maybe_pyc_file(FILE *fp,
 		int ispyc = 0;
 		if(ftell(fp) == 0) {
 			if(fread(buf, 1, 2, fp) == 2 &&
-               ((unsigned int)buf[1]<<8 | buf[0]) == halfmagic)
+               (buf[1]<<8 | buf[0]) == halfmagic)
 				ispyc = 1;
 			rewind(fp);
 		}
