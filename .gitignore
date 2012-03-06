@@ -1,4 +1,5 @@
 *.o
+*.pyo
 autom4te.cache/
 Makefile
 *.class
