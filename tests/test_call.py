@@ -58,5 +58,4 @@ class TestTypes(unittest.TestCase):
 
     def test_object_array(self):
         obj = self.test.getObjectArray()
-        #self.assertEquals(Test.toString(), obj[0].getClass().toString()) todo, this is all jacked up
-
+        self.assertEquals(self.test.toString(), obj[0].toString())
