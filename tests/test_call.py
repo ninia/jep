@@ -34,8 +34,7 @@ class TestTypes(unittest.TestCase):
         obj = self.test.getStringArray()
         self.assertEquals('one', obj[0])
         self.assertEquals('two', obj[1])
-        # self.assertEquals('one two', ' '.join(obj)) todo this gives the error:
-        # TypeError: 'pyjarrayiterator' object is not iterable
+        self.assertEquals('one two', ' '.join(obj))
 
     def test_string_string_array(self):
         obj = self.test.getStringStringArray()

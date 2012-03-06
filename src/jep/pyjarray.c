@@ -1617,7 +1617,8 @@ static PyTypeObject PyJarray_Type = {
     0,                                        /* tp_getattro */
     0,                                        /* tp_setattro */
     0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT,                       /* tp_flags */
+    Py_TPFLAGS_DEFAULT |
+    Py_TPFLAGS_HAVE_ITER,                     /* tp_flags */
     list_doc,                                 /* tp_doc */
     0,                                        /* tp_traverse */
     0,                                        /* tp_clear */
@@ -1675,6 +1676,12 @@ static PyObject *pyjarray_iter(PyObject *seq) {
 static void pyjarrayiter_dealloc(PyJarrayIterObject *it) {
     Py_XDECREF(it->it_seq);
     PyObject_Del(it);
+}
+
+/* the iterator's __iter()__ */
+PyObject* pyjarray_iter_self(PyObject *self) {
+    Py_INCREF(self);
+    return self;
 }
 
 static PyObject *pyjarrayiter_next(PyJarrayIterObject *it) {
@@ -1739,13 +1746,14 @@ PyTypeObject PyJarrayIter_Type = {
     (getattrofunc) pyjarrayiter_dealloc,      /* tp_getattro */
     0,                                        /* tp_setattro */
     0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT,                       /* tp_flags */
+    Py_TPFLAGS_DEFAULT |
+    Py_TPFLAGS_HAVE_ITER,                     /* tp_flags */
     0,                                        /* tp_doc */
     0,                                        /* tp_traverse */
     0,                                        /* tp_clear */
     0,                                        /* tp_richcompare */
     0,                                        /* tp_weaklistoffset */
-    0,                                        /* tp_iter */
+    pyjarray_iter_self,                       /* tp_iter */
     (iternextfunc) pyjarrayiter_next,         /* tp_iternext */
     0,                                        /* tp_methods */
     0,                                        /* tp_members */
