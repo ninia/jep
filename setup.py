@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from __future__ import print_function
 from __future__ import absolute_import
+import codecs
 import platform
 
 import os
@@ -9,8 +10,10 @@ from commands import jep_build
 from commands.clean import really_clean
 
 from commands.dist import JepDistribution
-from commands.java import build_java, build_javah, get_java_home, get_java_include, get_java_lib, get_java_linker_args, build_jar
+from commands.java import build_java, build_javah, get_java_home, get_java_include,\
+    get_java_lib, get_java_linker_args, build_jar
 from commands.python import get_python_libs, get_python_linker_args
+from commands.scripts import build_scripts
 from commands.test import test
 
 from jep import VERSION
@@ -28,17 +31,21 @@ def get_jep_libs():
         return ['jvm']
     return []
 
+def read_file(name):
+    return codecs.open(os.path.join(os.path.dirname(__file__), name), encoding='utf-8').read()
+
 if __name__ == '__main__':
     get_java_home()
 
-    setup(name='Jep',
+    setup(name='jep',
           version=VERSION,
           description='Jep embeds CPython in Java',
+          long_description=read_file('README.rst'),
           author='Mike Johnson',
-          author_email='mike@publicstatic.net',
-          url='http://www.publicstatic.net/jep/',
+          author_email='mike@mrj0.com',
+          url='http://www.mrj0.com/projects/jep/',
           packages=['jep'],
-          #scripts=['_jep.py'],
+          scripts=['src/scripts/jep'],
           keywords='java',
           license='zlib/libpng',
           classifiers=['License :: OSI Approved :: zlib/libpng License'],
@@ -72,8 +79,14 @@ if __name__ == '__main__':
               'build_javah': build_javah,
               'build_jar': build_jar,
               'build': jep_build,
+              'build_scripts': build_scripts,
               'clean': really_clean,
               'test': test,
-          }
+          },
+
+          # a list of other files to install
+          data_files=[
+              ('lib/jep', ['build/java/jep.jar']),
+          ]
     )
 

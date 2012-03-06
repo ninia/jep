@@ -1,0 +1,7 @@
+#!/bin/sh
+
+if test "x$*" = "x"; then
+  exec java -jar {prefix}/lib/jep/jep.jar {install_lib}jep/console.py
+else
+  exec java -jar {prefix}/lib/jep/jep.jar
+fi

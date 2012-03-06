@@ -101,7 +101,7 @@ class build_jar(Command):
         pass
 
     def build(self):
-        spawn([self.jar, '-cf', 'build/java/jep.jar', '-C', 'build/java/', 'jep'])
+        spawn([self.jar, '-cfe', 'build/java/jep.jar', 'jep.Run', '-C', 'build/java/', 'jep'])
 
     def run(self):
         self.build()

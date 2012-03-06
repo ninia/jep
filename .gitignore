@@ -21,3 +21,4 @@ stamp-h1
 build
 dist
 *.pyc
+MANIFEST
