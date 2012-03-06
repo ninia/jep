@@ -10,13 +10,15 @@ from commands import jep_build
 from commands.clean import really_clean
 
 from commands.dist import JepDistribution
+from commands.install import post_install
 from commands.java import build_java, build_javah, get_java_home, get_java_include,\
     get_java_lib, get_java_linker_args, build_jar
 from commands.python import get_python_libs, get_python_linker_args
 from commands.scripts import build_scripts
 from commands.test import test
 
-from jep import VERSION
+VERSION = None # shut up pycharm
+execfile('jep/version.py')
 
 def get_files(pattern):
     ret = []
@@ -80,6 +82,7 @@ if __name__ == '__main__':
               'build_jar': build_jar,
               'build': jep_build,
               'build_scripts': build_scripts,
+              'install': post_install,
               'clean': really_clean,
               'test': test,
           },

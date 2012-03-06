@@ -1,10 +1,6 @@
-__VERSION__ = '3.0.dev1'
-VERSION = __VERSION__
-try:
-    from _jep import *
-    from hook import *
-except:
-    pass
+from version import __VERSION__, VERSION
+from _jep import *
+from hook import *
 
 class JavaException(Exception):
     def __init__(self, er):

@@ -61,6 +61,7 @@ class build_scripts(Command):
             install_base=install.install_base,
             install_platbase=install.install_platbase,
             install_lib=install.install_lib,
+            virtual_env=os.environ.get('VIRTUAL_ENV'),
         )
 
         for script in self.scripts:
