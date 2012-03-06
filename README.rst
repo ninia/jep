@@ -7,53 +7,60 @@ goal.
 
 Some benefits of CPython over Java-based languages:
 
-* Using the native Python interpreter may mean a massive speed improvement over Java-based languages.
-* Python is mature so authors needn't fear the interpreter will suddenly change widely-used features.
-* Access to the high quality Python modules, both native and Python-based.
+* Using the native Python interpreter may be much faster.
+
+* Python is mature and well supported, so there's no fear the
+  interpreter will suddenly change widely-used features.
+
+* Access to the high quality Python modules, both native and
+  Python-based.
+
 * Compilers and assorted Python tools are as mature as the language.
-* Python is an ideal language for your business logic. It is easy to learn, eminently readable and generally immune to programming gotchas.
+
+* Python is an ideal language for your business logic. It is easy to
+  learn, readable and generally immune to programming gotchas.
 
 Patches, comments and other help is greatly appreciated. If you need
-help, post to the SourceForge mailing list or forums. Please include
-code snippets for the most accurate response.
+help, post to the `SourceForge mailing list <http://sourceforge.net/mailarchive/forum.php?forum_name=jepp-users>`_
+or forums. Please include code snippets for the most accurate
+response.
 
 Jep is licensed zlib/libpng license to avoid linking issues.
 
 Dependencies
 ------------
 * Python version >= 2.6
-* JNI >= 1.2 (untested, preferably 1.4)
+* JNI >= 1.4
 
-Building on Linux/UNIX
-----------------------
-* Simply ./configure && make && make install.
+Installation
+------------
 
-Building on Mac OS X
---------------------
-You'll need to:
+Simply run ``pip install jep``.
 
-* set JAVA_HOME to /Library/Java/Home *not* /usr.
-* have installed the Java Developer Package and Xcode from Apple
-* make a symlink from libjep.dynlib to /Library/Java/Extentions, like:
+*Building on Mac OS X*
 
-``sudo ln -s `pwd`/.libs/libjep.dylib /Library/Java/Extensions/libjep.jnilib``
+OS X requires the `Java Developer Package and Xcode
+<http://developer.apple.com/java/>`_ from Apple. They are free to download.
 
-*** Make sure to use '.jnilib' for the symlink. ***
+*Windows*
 
-Windows
--------
-You'll need to use the same compiler that your Python is built with. That's usually MSVC. I've successfully used the ActiveState version.
+You'll need to use the same compiler that your Python is built
+with. That's usually MSVC.
 
-There are project files for MSVC but you must manually update the paths to your Java and Python installations.
+Note that Oracle is now building Java with a MSVCRT version that is
+not easily linked with using tools that I have. Using native modules
+on Windows has not worked in recent years because the compilers are
+not widely available. If an OpenJDK build used MinGW, that'd be
+much more likely to work.
 
-Running on *Nix
----------------
+Running on \*nix
+-----------------
 Due to some (common) difficulties with Java and C projects
-that dlopen libraries, you'll need to set LD_PRELOAD environment
+that dlopen libraries, you may need to set LD_PRELOAD environment
 variable. That's in addition to setting LD_LIBRARY_PATH if you've
 installed libjep into a directory not cached by ld.so.
 
-For example, my tomcat startup.sh script starts with this:
+For example, my Tomcat startup.sh script starts with this:
 
 ::
 
@@ -64,8 +71,6 @@ For example, my tomcat startup.sh script starts with this:
     # this is where my libjep.so is.
     export LD_LIBRARY_PATH=/usr/local/lib
 
-Adding some heap memory is a good idea, too.
-
 The libpython used here is whatever you've compiled jep against. If
 you don't know, try this command:
 
@@ -74,50 +79,29 @@ you don't know, try this command:
     $ ldd /usr/local/lib/libjep.so | grep python
         /usr/lib/libpython2.7.so (0x00007f74adfbd000)
 
-That's the libpython you want to set in LD_PRELOAD. Unfortunately,
-this means you'll have to change this if you upgrade python. If it's
-the wrong library, it will most likely cause a crash. If it's not set
-you'll get an exception similar to: `Python Encountered:
-exceptions.ImportError: /usr/lib/python2.7/lib-dynload/datetime.so:
-undefined symbol: PyObject_GenericGetAttr`.
+That's the libpython you want to set in LD_PRELOAD.
 
-Running
--------
+Running the tests
+-----------------
 
-First, fire off the test.py script. We want to make sure you're fully
-setup. To start with, export LD_LIBRARY_PATH and LD_PRELOAD as in the
-section above. Then, start with:
+The tests are run from setup.py:
 
 ::
 
-    $ java -cp jep.jar jep.Test 0
+    $ python setup.py test
 
-A lot of early bugs in Jep didn't appear until the code is stressed a
-little. The above 0 argument is the number of additional threads to
-create. They all run through the test.py script in sub intepreters. Go
-ahead, throw some threads at it.
+Running scripts
+---------------
 
-::
-
-    $ java -cp jep.jar jep.Test 30
-
-Also, try the console script:
+There is a ``jep`` shell script to make launching Java and Python a little easier.
 
 ::
 
-    $ java -jar jep.jar console.py
-    >>> from java.util import HashMap
-    >>> map = HashMap()
-    >>> map.put('test', 'asdf')
-
-You can run arbitrary scripts, too:
-
-::
-
-    $ cat hello.py 
-    print 'Hello, world'
-    $ java -jar jep.jar hello.py 
-    Hello, world
+    $ jep
+    >>> from java.lang import System
+    >>> System.out.println('hello, world')
+    hello, world
+    >>> 
 
 Support
 -------
