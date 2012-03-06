@@ -8,7 +8,7 @@ sys.path.insert(0, '')
 
 if __name__ == '__main__':
     try:
-        unittest.main(module='testjep', argv=[''])
+        unittest.main(module='tests', argv=[''])
     except SystemExit:
         pass
     
