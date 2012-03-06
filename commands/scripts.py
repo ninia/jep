@@ -106,26 +106,3 @@ class build_scripts(Command):
     # copy_scripts ()
 
 # class build_scripts
-
-#class install_script_template(install_scripts):
-#    def write_script(self, script_name, contents, mode="t", *ignored):
-#        """Write an executable file to the scripts directory"""
-#
-#        install = self.get_finalized_command('install')
-#        context = dict(
-#            prefix=install.prefix,
-#            install_base=install.install_base,
-#            install_platbase=install.install_platbase,
-#            install_lib=install.install_lib,
-#        )
-#
-#        log.info("Installing %s script to %s", script_name, self.install_dir)
-#        target = os.path.join(self.install_dir, script_name)
-#        self.outfiles.append(target)
-#
-#        if not self.dry_run:
-#            ensure_directory(target)
-#            f = open(target, "w" + mode)
-#            f.write(contents.format(context))
-#            f.close()
-#            chmod(target, 0755)
