@@ -152,11 +152,6 @@ public class Test implements Runnable {
         }
     }
 
-    protected void finalize() {
-        System.out.println("test instance finalized, you should see this " +
-                           "if the reference counting worked...");
-    }
-
     // get the jep used for this class
     public Jep getJep() {
         return this.jep;
