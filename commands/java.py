@@ -76,10 +76,35 @@ class build_java(Command):
         spawn([self.javac, '-deprecation', '-d', build_java.outdir, '-classpath', 'src/'] + list(*jclasses))
 
     def run(self):
-        tobuild = []
-        for jclass in self.java_files:
-            tobuild.append(jclass)
-        self.build(tobuild)
+        self.build(self.java_files)
+
+
+class build_jar(Command):
+    outdir = None
+
+    user_options = [
+        ('jar=', None, 'use javac (default: JAVA_HOME/bin/jar)'),
+    ]
+
+    def initialize_options(self):
+        build_java.outdir = os.path.join('build', 'java')
+        if not os.path.exists(build_java.outdir):
+            os.makedirs(build_java.outdir)
+
+        self.java_files = []
+        if is_osx():
+            self.jar = os.path.join(get_java_home(), 'Commands', 'jar')
+        else:
+            self.jar = os.path.join(get_java_home(), 'bin', 'jar')
+
+    def finalize_options(self):
+        pass
+
+    def build(self):
+        spawn([self.jar, '-cf', 'build/java/jep.jar', '-C', 'build/java/', 'jep'])
+
+    def run(self):
+        self.build()
 
 class build_javah(Command):
     outdir = None

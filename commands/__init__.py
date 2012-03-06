@@ -7,6 +7,7 @@ class jep_build(build):
     sub_commands = [
         ('build_java', None),
         ('build_javah', None),
+        ('build_jar', None),
     ] + build.sub_commands
 
 

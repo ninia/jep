@@ -9,7 +9,7 @@ from commands import jep_build
 from commands.clean import really_clean
 
 from commands.dist import JepDistribution
-from commands.java import build_java, build_javah, get_java_home, get_java_include, get_java_lib, get_java_linker_args
+from commands.java import build_java, build_javah, get_java_home, get_java_include, get_java_lib, get_java_linker_args, build_jar
 from commands.python import get_python_libs, get_python_linker_args
 from commands.test import test
 
@@ -70,6 +70,7 @@ if __name__ == '__main__':
           cmdclass={
               'build_java': build_java,
               'build_javah': build_javah,
+              'build_jar': build_jar,
               'build': jep_build,
               'clean': really_clean,
               'test': test,
