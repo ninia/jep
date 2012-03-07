@@ -63,6 +63,8 @@ class build_scripts(Command):
             install_platbase=install.install_platbase,
             install_lib=install.install_lib,
             virtual_env=os.environ.get('VIRTUAL_ENV'),
+            ld_library_path='',
+            ld_preload='',
         )
 
         if not is_osx():
