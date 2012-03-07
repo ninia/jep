@@ -12,7 +12,7 @@ from commands.clean import really_clean
 from commands.dist import JepDistribution
 from commands.install import post_install
 from commands.java import build_java, build_javah, get_java_home, get_java_include,\
-    get_java_lib, get_java_linker_args, build_jar
+    get_java_lib, get_java_linker_args, build_jar, get_java_lib_folders, get_java_libraries
 from commands.python import get_python_libs, get_python_linker_args
 from commands.scripts import build_scripts
 from commands.test import test
@@ -27,11 +27,6 @@ def get_files(pattern):
             if file.endswith(pattern):
                 ret.append(os.path.join(root, file))
     return ret
-
-def get_jep_libs():
-    if platform.system() != 'Darwin':
-        return ['jvm']
-    return []
 
 def read_file(name):
     return codecs.open(os.path.join(os.path.dirname(__file__), name), encoding='utf-8').read()
@@ -61,10 +56,10 @@ if __name__ == '__main__':
                      # ('USE_MAPPED_EXCEPTIONS', 1),
                       ('VERSION', '"{0}"'.format(VERSION)),
                   ],
-                  libraries=get_jep_libs() + get_python_libs(),
-                  library_dirs=[get_java_lib()],
+                  libraries=get_java_libraries() + get_python_libs(),
+                  library_dirs=get_java_lib_folders(),
                   extra_link_args=get_java_linker_args() + get_python_linker_args(),
-                  include_dirs=[get_java_include(), 'src/jep', 'build/include'],
+                  include_dirs=get_java_include() + ['src/jep', 'build/include'],
               )
           ],
 

@@ -3,6 +3,9 @@
 VIRTUAL_ENV={virtual_env}
 export VIRTUAL_ENV
 
+{ld_library_path}
+{ld_preload}
+
 if test "x$VIRTUAL_ENV" != "x"; then
   PATH="$VIRTUAL_ENV/bin:$PATH"
   export PATH

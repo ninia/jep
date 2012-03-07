@@ -1,4 +1,5 @@
 from distutils import sysconfig
+from commands.util import is_osx
 
 def get_python_libs():
     """
@@ -9,4 +10,7 @@ def get_python_libs():
     return ['python' + sysconfig.get_config_var('VERSION'), 'dl']
 
 def get_python_linker_args():
-    return ['-framework CoreFoundation -u _PyMac_Error']
+    if is_osx():
+        return ['-framework CoreFoundation -u _PyMac_Error']
+    return []
+

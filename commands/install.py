@@ -15,3 +15,13 @@ class post_install(install_data):
                    '-sf',
                    '{0}'.format(os.path.join(install.install_lib, 'jep.so')),
                    '/Library/Java/Extensions/libjep.jnilib',])
+
+        else:
+            # otherwise, distutils outputs 'jep.so' which needs to be linked
+            # to libjep.so. The JVM will not find the library without.
+            spawn(['ln',
+                   '-sf',
+                   '{0}'.format(os.path.join(install.install_lib, 'jep.so')),
+                   '{0}'.format(os.path.join(install.install_lib, 'libjep.so')),
+                   ])
+            

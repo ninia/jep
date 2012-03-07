@@ -3,6 +3,7 @@ from __future__ import print_function
 from distutils.cmd import Command
 from distutils.spawn import spawn
 import os
+import fnmatch
 from commands.util import configure_error, is_osx
 
 JAVA_HOME = os.environ.get('JAVA_HOME')
@@ -22,7 +23,7 @@ def get_java_home():
 
 def get_java_include():
     """
-    Locate the Java include folder containing jni.h.
+    Locate the Java include folders for compiling JNI applications.
     """
     inc_name = 'include'
     if is_osx():
@@ -35,7 +36,12 @@ def get_java_include():
     if not os.path.exists(jni):
         configure_error("jni.h should be in '{0}' but doesn't exist. " \
                         "Please check you've installed the JDK properly.".format(jni))
-    return inc
+
+    paths = [inc]
+    include_linux = os.path.join(inc, 'linux')
+    if os.path.exists(include_linux):
+        paths.append(include_linux)
+    return paths
 
 def get_java_lib():
     lib_name = 'lib'
@@ -47,9 +53,26 @@ def get_java_lib():
                         "Please check you've installed the JDK properly.".format(lib))
     return lib
 
+def get_java_libraries():
+    if not is_osx():
+        return ['jvm']
+    return []
+
+def get_java_lib_folders():
+    if not is_osx():
+        jre = os.path.join(get_java_home(), 'jre', 'lib')
+        folders = []
+        for root, dirnames, filenames in os.walk(jre):
+            for filename in fnmatch.filter(filenames, '*jvm.so'):
+                folders.append(os.path.join(root, os.path.dirname(filename)))
+
+        return list(set(folders))
+    return []
+
 def get_java_linker_args():
     if is_osx():
         return ['-framework JavaVM']
+    return []
 
 class build_java(Command):
     outdir = None

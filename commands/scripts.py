@@ -9,6 +9,8 @@ from distutils.core import Command
 from distutils.dep_util import newer
 from distutils.util import convert_path
 from distutils import log
+from distutils import sysconfig
+from commands.util import is_osx
 
 class build_scripts(Command):
     description = "\"build\" scripts (copy and fixup #! line)"
@@ -62,6 +64,17 @@ class build_scripts(Command):
             install_lib=install.install_lib,
             virtual_env=os.environ.get('VIRTUAL_ENV'),
         )
+
+        if not is_osx():
+            context['ld_library_path'] = 'LD_LIBRARY_PATH="{0}"; export LD_LIBRARY_PATH'.format(
+                install.install_lib)
+            
+            # set the LD_PRELOAD environment variable if we can locate the
+            # libpython<version>.so library.
+            lib_python = os.path.join(sysconfig.get_config_var('LIBDIR'),
+                                      sysconfig.get_config_var('LDLIBRARY'))
+            if os.path.exists(lib_python):
+                context['ld_preload'] = 'LD_PRELOAD="{0}"; export LD_PRELOAD'.format(lib_python)
 
         for script in self.scripts:
             script = convert_path(script)
