@@ -73,8 +73,8 @@ class TestFields(unittest.TestCase):
         self.assertIsNotNone(self.test.classField)
         self.assertIsNotNone(self.test.getClassField())
         self.test.classField = Integer
-        self.assertNotEquals(Integer, self.test.classField)
-        self.assertNotEquals(Integer, self.test.getClassField())
+        self.assertEquals(Integer, self.test.classField)
+        self.assertEquals(Integer, self.test.getClassField())
 
     def test_static_string(self):
         self.assertEqual('stringField', self.test.staticString)
@@ -143,5 +143,15 @@ class TestFields(unittest.TestCase):
         self.assertNotEquals(None, self.test.staticClass)
         self.assertNotEquals(None, self.test.getStaticClass())
         self.test.staticClass = Integer
-        self.assertNotEquals(Integer, self.test.staticClass)
+        self.assertEquals(Integer, self.test.staticClass)
         self.assertNotEquals(Integer, self.test.getStaticClass())
+
+    def test_equals(self):
+        self.assertEqual(self.test, self.test)
+        self.assertNotEqual(self.test, self.test.getObject().get(0))
+        self.assertNotEqual(Integer, self.test)
+        self.assertNotEqual(self.test, Integer)
+        self.assertEqual(Integer, Integer)
+        from java.lang import Class
+        self.assertNotEqual(Integer, Class)
+

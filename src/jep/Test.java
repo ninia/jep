@@ -448,7 +448,5 @@ public class Test implements Runnable {
         finally {
             jep.close();
         }
-
-        System.gc();
     }
 } // Test

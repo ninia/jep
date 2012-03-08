@@ -70,6 +70,7 @@ static void pyjobject_addfield(PyJobject_Object*, PyObject*);
 static void pyjobject_dealloc(PyJobject_Object*);
 
 static jmethodID objectGetClass  = 0;
+static jmethodID objectEquals    = 0;
 static jmethodID classGetMethods = 0;
 static jmethodID classGetFields  = 0;
 
@@ -540,6 +541,80 @@ static PyObject* pyjobject_str(PyJobject_Object *self) {
 }
 
 
+static PyObject* pyjobject_richcompare(PyJobject_Object *self,
+                                       PyObject *_other,
+                                       int opid) {
+    JNIEnv *env = pyembed_get_env();
+
+    if(opid != Py_EQ && opid != Py_NE) {
+        Py_INCREF(Py_NotImplemented);
+        return Py_NotImplemented;
+    }
+
+    if(PyType_IsSubtype(Py_TYPE(_other), &PyJobject_Type)) {
+        PyObject *ret;
+        PyJobject_Object *other = (PyJobject_Object *) _other;
+
+        jobject target, other_target;
+
+        target = self->object;
+        if(self->pyjclass) {
+            target = self->clazz;
+        }
+        other_target = other->object;
+        if(other->pyjclass) {
+            other_target = other->clazz;
+        }
+
+        if(self == other) {
+            Py_INCREF(Py_True);
+            return Py_True;
+        }
+
+        if(!target) {
+            Py_INCREF(Py_False);
+            return Py_False;
+        }
+
+        // get the methodid for Object.equals()
+        if(objectEquals == 0) {
+            objectEquals = (*env)->GetMethodID(
+                env,
+                target,
+                "equals",
+                "(Ljava/lang/Object;)Z");
+            if(process_java_exception(env) || !objectEquals)
+                return NULL;
+        }
+
+        jboolean eq = (*env)->CallBooleanMethod(
+            env,
+            target,
+            objectEquals,
+            other_target);
+
+        if(process_java_exception(env))
+            return NULL;
+
+        if(opid == Py_NE) {
+            // watch out, jboolean is actually 8-bit
+            eq = eq ? JNI_FALSE : JNI_TRUE;
+        }
+
+        if(eq) {
+            Py_INCREF(Py_True);
+            return Py_True;
+        }
+
+        Py_INCREF(Py_False);
+        return Py_False;
+    }
+
+    Py_INCREF(Py_NotImplemented);
+    return Py_NotImplemented;
+}
+
+
 // get attribute 'name' for object.
 // uses obj->attr list of tuples for storage.
 // returns new reference.
@@ -717,7 +792,7 @@ static PyTypeObject PyJobject_Type = {
     "jobject",                                /* tp_doc */
     0,                                        /* tp_traverse */
     0,                                        /* tp_clear */
-    0,                                        /* tp_richcompare */
+    pyjobject_richcompare,                    /* tp_richcompare */
     0,                                        /* tp_weaklistoffset */
     0,                                        /* tp_iter */
     0,                                        /* tp_iternext */

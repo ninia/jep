@@ -59,3 +59,9 @@ class TestTypes(unittest.TestCase):
     def test_object_array(self):
         obj = self.test.getObjectArray()
         self.assertEquals(self.test.toString(), obj[0].toString())
+
+    def test_equals(self):
+        self.assertTrue(self.test.getClass() == Test)
+        from java.lang import Class
+        self.assertFalse(self.test.getClass() == Class)
+
