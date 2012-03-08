@@ -70,8 +70,8 @@ class TestFields(unittest.TestCase):
         self.assertEquals('a', self.test.getCharField())
 
     def test_class_field(self):
-        self.assertNotEquals(None, self.test.classField)
-        self.assertNotEquals(None, self.test.getClassField()) # todo equality for jclass
+        self.assertIsNotNone(self.test.classField)
+        self.assertIsNotNone(self.test.getClassField())
         self.test.classField = Integer
         self.assertNotEquals(Integer, self.test.classField)
         self.assertNotEquals(Integer, self.test.getClassField())
