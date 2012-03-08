@@ -665,7 +665,9 @@ static PyObject* pyjobject_getattr(PyJobject_Object *obj,
     Py_DECREF(pyname);
     
     if(PyErr_Occurred() || ret == Py_None) {
-        PyErr_Format(PyExc_NameError, "Method not found %s", name);
+        if(ret == Py_None)
+            Py_DECREF(Py_None);
+        PyErr_Format(PyExc_AttributeError, "attr not found: %s", name);
         return NULL;
     }
     
