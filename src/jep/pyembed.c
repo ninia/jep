@@ -203,8 +203,6 @@ void pyembed_startup(void) {
     if(mainThreadState != NULL)
         return;
 
-    Py_OptimizeFlag = 2;
-    
     Py_Initialize();
     PyEval_InitThreads();
 
@@ -1475,7 +1473,7 @@ void pyembed_run(JNIEnv *env,
 
             /* Turn on optimization if a .pyo file is given */
             if(strcmp(ext, ".pyo") == 0)
-                Py_OptimizeFlag = 1;
+                Py_OptimizeFlag = 2;
             else
                 Py_OptimizeFlag = 0;
 
