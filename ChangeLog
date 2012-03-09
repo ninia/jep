@@ -1,4 +1,14 @@
-2007-03-19 Mike Johnson <mrjohnson0@users.sourceforge.net>
+2012-04-09 Mike Johnson <mike@mrj0.com>
+    * setup.py: distutils build, pypi integration
+    * tests: unittesting implemented in python
+    * jep: added `jep` command line script for launching console.py
+    * exception mapping (dynamic creation of python exceptions) no longer supported
+    * pyjobject.c: implement richcompare using Java .equals
+    * pyjobject.c: missing attribute raises AttributeError
+    * pyjobject.c: don't change optimization flag by default
+    * pyjarray.c: fix for iterator, so list() works on jarrays
+
+2007-03-19 Mike Johnson <mike@mrj0.com>
 	* pyembed.c: patch from Jon Wright to convert packed strings to float array in java.
 	* pyembed.c: return jarray object in invoke and getValue
 	* pyembed.c: throw exception if invocation object not found
@@ -9,12 +19,12 @@
 	* jep_object.c: add set() for arrays
 	* pyjarray.c: add str() for converting primitive arrays to python strings
 	
-2007-03-15 Mike Johnson <mrjohnson0@users.sourceforge.net>
+2007-03-15 Mike Johnson <mike@mrj0.com>
 	* libtool: update libtool. An updated version now correctly added suffix '.so' to libjep.
 	* util.c: add process_import_exception
 	* pyembed.c: jimport should throw ImportError
 
-2006-12-12 Mike Johnson <mrjohnson0@users.sourceforge.net>
+2006-12-12 Mike Johnson <mike@mrj0.com>
 	* pyembed.c: check if the file is a pyc/pyo file and run code directly
 	* Jep.java: fix constructor's sys.path manipulation for Windows
 	* pyembed.c: add invoke methods
@@ -32,13 +42,13 @@
 	* console.py: pass argv to interactive prompt
 	* ClassList.java: fix error importing classes with no package name.
 	
-2006-10-17 Mike Johnson <mrjohnson0@users.sourceforge.net>
+2006-10-17 Mike Johnson <mike@mrj0.com>
 	* makefiles: don't compile javax.script support if not available.
 	
-2006-10-2 Mike Johnson <mrjohnson0@users.sourceforge.net>
+2006-10-2 Mike Johnson <mike@mrj0.com>
 	* makefiles: fixes for src/
 
-2006-4-24 Mike Johnson <mrjohnson0@users.sourceforge.net>
+2006-4-24 Mike Johnson <mike@mrj0.com>
 	* pyembed.c: convert types (and box) on return from getValue
 	* pyembed.c: don't set parameters on jep module, set them in globals dict
 	* Jep.java: handle java.lang.Class objects specially
@@ -59,14 +69,14 @@
 	* makefilecrap: updated
 	* pyjarray.c: pyjarrayiter_getattr added for Windows crappiness.
 
-2005-2-15 Mike Johnson <mrjohnson0@users.sourceforge.net>
+2005-2-15 Mike Johnson <mike@mrj0.com>
 	* pyembed.c: remove debug printf
 	* pyjobject.c: decref fields list in dealloc
 	* Jep.java, Run.java, BSFJepEngine.java: set license information
 	to libpng. it's the closest to what i wanted. really, i don't care
 	what the heck you do with them.
 	
-2004-12-13 Mike Johnson <mrjohnson0@users.sourceforge.net>
+2004-12-13 Mike Johnson <mike@mrj0.com>
 	* pyjmethod.c: throw exception for calling non-static methods
 	* pyembed.c: don't return error state without releasing GIL
 	* util.c: release utf string local references
@@ -74,10 +84,10 @@
 	* pyjobject.c: delete local method refs instead of filling localframe
 	* pyjembed.c: flush stdout and stderr after script run
 	
-2004-07-26 Mike Johnson <mrjohnson0@users.sourceforge.net>
+2004-07-26 Mike Johnson <mike@mrj0.com>
 	* pyjobject.c: fix circular reference memory leak
 	
-2004-06-24 Mike Johnson <mrjohnson0@users.sourceforge.net>
+2004-06-24 Mike Johnson <mike@mrj0.com>
 	* Jep.java: throw exception if calls not from original, python thread
 	* pyjmethod.c: check if method should be called on class, not obj
 	* ltmain.sh: a couple fixes for broken redhat boxen
@@ -90,14 +100,14 @@
 	* Jep.java: added constructor to append to sys.path
 	* Makefile: added javadoc support, javadoc included in CVS
 
-2004-06-17 Mike Johnson <mrjohnson0@users.sourceforge.net>
+2004-06-17 Mike Johnson <mike@mrj0.com>
 	* util.c: check string before converting. fixes crash if you used
 	Jep.set(String - (String) null).
 	* Console.java: some work here, pretty functional. basically acts
 	like python interactive prompt compiled without readline.
 	* Jep.java: some changes to eval() support.
 	
-2004-06-14 Mike Johnson <mrjohnson0@users.sourceforge.net>
+2004-06-14 Mike Johnson <mike@mrj0.com>
 	* Makefile: for older autotools
 	* Makefile: for gcc 2.95
 	* pyjobject.c: fixed bug in method search
@@ -106,10 +116,10 @@
 	* BSFJepEngine: added
 	* setup.nsi: a simple windows installer
 	
-2004-05-21 Mike Johnson <mrjohnson0@users.sourceforge.net>
+2004-05-21 Mike Johnson <mike@mrj0.com>
 	* - obvious crash on the Mac.
 	* - crash related to bug #957106.
 	
-2004-04-29 Mike Johnson  <mrjohnson0@users.sourceforge.net>
+2004-04-29 Mike Johnson  <mike@mrj0.com>
 	* - initial version.
 
