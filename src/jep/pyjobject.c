@@ -580,7 +580,7 @@ static PyObject* pyjobject_richcompare(PyJobject_Object *self,
         if(objectEquals == 0) {
             objectEquals = (*env)->GetMethodID(
                 env,
-                target,
+                self->clazz,
                 "equals",
                 "(Ljava/lang/Object;)Z");
             if(process_java_exception(env) || !objectEquals)

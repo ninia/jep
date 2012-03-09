@@ -62,6 +62,13 @@ class TestTypes(unittest.TestCase):
 
     def test_equals(self):
         self.assertTrue(self.test.getClass() == Test)
-        from java.lang import Class
+        from java.lang import Class, String, Integer
         self.assertFalse(self.test.getClass() == Class)
+        self.assertEqual(String('one'), String('one'))
+        self.assertTrue(String('1') == String('1'))
+        self.assertEqual(self.test, self.test)
+        self.assertNotEqual(self.test, Test())
+        self.assertNotEqual(String('two'), String('one'))
 
+        self.assertEqual(String, String)
+        self.assertNotEqual(String, Integer)
