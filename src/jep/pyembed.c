@@ -203,8 +203,6 @@ void pyembed_startup(void) {
     if(mainThreadState != NULL)
         return;
 
-    Py_OptimizeFlag = 2;
-    
     Py_Initialize();
     PyEval_InitThreads();
 
