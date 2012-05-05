@@ -1,3 +1,0 @@
-export LD_PRELOAD=/usr/`rpm --eval %_lib`/libpython@python_version@.so
-export CLASSPATH=$CLASSPATH:@libdir@/@PACKAGE@/@PACKAGE@-@VERSION@.jar
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:@libdir@/@PACKAGE@
