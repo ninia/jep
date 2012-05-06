@@ -1,3 +1,10 @@
+2012-05-05 3.1.0 - Mike Johnson <mike@mrj0.com>
+    * lazy load classes imported via import hook
+
+2012-03-06 3.0.0 - Mike Johnson <mike@mrj0.com>
+    * project uses distutils now, is pip installable
+    * added a proper import hook
+
 2007-03-19 Mike Johnson <mrjohnson0@users.sourceforge.net>
 	* pyembed.c: patch from Jon Wright to convert packed strings to float array in java.
 	* pyembed.c: return jarray object in invoke and getValue
