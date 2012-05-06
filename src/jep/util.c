@@ -114,8 +114,8 @@ PyObject* jobject_topystring(JNIEnv *env, jobject obj, jclass clazz) {
 
 
 PyObject* pystring_split_item(PyObject *str, char *split, int pos) {
-    PyObject *splitList, *ret;
-    int       len;
+    PyObject  *splitList, *ret;
+    Py_ssize_t len;
 
     if(pos < 0) {
         PyErr_SetString(PyExc_RuntimeError,
@@ -157,8 +157,8 @@ PyObject* pystring_split_item(PyObject *str, char *split, int pos) {
 
 
 PyObject* pystring_split_last(PyObject *str, char *split) {
-    PyObject *splitList, *ret;
-    int       len;
+    PyObject   *splitList, *ret;
+    Py_ssize_t  len;
 
     splitList = PyObject_CallMethod(str, "split", "s", split);
     if(PyErr_Occurred() || !splitList)
@@ -239,12 +239,15 @@ int process_py_exception(JNIEnv *env, int printTrace) {
         }
     }
 
-    if(ptype)
+    if(ptype) {
         Py_DECREF(ptype);
-    if(pvalue)
+    }
+    if(pvalue) {
         Py_DECREF(pvalue);
-    if(ptrace)
+    }
+    if(ptrace) {
         Py_DECREF(ptrace);
+    }
     
     if(message && PyString_Check(message)) {
         m = PyString_AsString(message);
@@ -262,7 +265,6 @@ int process_import_exception(JNIEnv *env) {
     jthrowable  exception    = NULL;
     jclass      clazz;
     PyObject   *pyException  = PyExc_ImportError;
-    PyObject   *str, *tmp, *texc, *className;
     char       *message;
     JepThread  *jepThread;
 
@@ -314,9 +316,13 @@ int process_java_exception(JNIEnv *env) {
     jthrowable  exception    = NULL;
     jclass      clazz;
     PyObject   *pyException  = PyExc_RuntimeError;
-    PyObject   *str, *tmp, *texc, *className, *modjep, *pyerr;
+    PyObject   *str, *texc, *modjep;
     char       *message;
     JepThread  *jepThread;
+
+#if USE_MAPPED_EXCEPTIONS
+    PyObject   *tmp, *className, *pyerr;
+#endif
 
     if(!(*env)->ExceptionCheck(env))
         return 0;
@@ -1437,9 +1443,8 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
 // steals all references.
 // returns new reference, new reference to Py_None if not found
 PyObject* tuplelist_getitem(PyObject *list, PyObject *pyname) {
-    int       i;
-    int       listSize = 0;
-    PyObject *ret      = NULL;
+    Py_ssize_t i, listSize;
+    PyObject *ret = NULL;
     
     listSize = PyList_GET_SIZE(list);
     for(i = 0; i < listSize; i++) {

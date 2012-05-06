@@ -68,7 +68,6 @@ static void pyjmethod_dealloc(PyJmethod_Object *self);
 static jmethodID classGetName        = 0;
 static jmethodID methodGetType       = 0;
 static jmethodID methodGetParmTypes  = 0;
-static jmethodID methodGetExceptions = 0;
 static jmethodID methodGetModifiers  = 0;
 
 // called internally to make new PyJmethod_Object instances.
@@ -197,7 +196,6 @@ int pyjmethod_init(JNIEnv *env, PyJmethod_Object *self) {
     jmethodID         methodId;
     jobject           returnType             = NULL;
     jobjectArray      paramArray             = NULL;
-    jobjectArray      exceptions             = NULL;
     jclass            modClass               = NULL;
     jint              modifier               = -1;
     jboolean          isStatic               = JNI_FALSE;
@@ -369,8 +367,9 @@ static void pyjmethod_dealloc(PyJmethod_Object *self) {
         if(self->rmethod)
             (*env)->DeleteGlobalRef(env, self->rmethod);
         
-        if(self->pyMethodName)
+        if(self->pyMethodName) {
             Py_DECREF(self->pyMethodName);
+        }
     }
     
     PyObject_Del(self);
