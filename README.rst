@@ -27,15 +27,15 @@ response.
 
 Jep is licensed zlib/libpng license to avoid linking issues.
 
-Dependencies
-------------
-* Python version >= 2.6
-* JNI >= 1.4
-
 Installation
 ------------
 
 Simply run ``pip install jep``.
+
+Dependencies
+------------
+* Python version >= 2.6
+* JNI >= 1.4
 
 *Building on Mac OS X*
 
@@ -53,6 +53,19 @@ on Windows has not worked in recent years because the compilers are
 not widely available. If an OpenJDK build used MinGW, that'd be
 much more likely to work.
 
+Running scripts
+---------------
+
+The ``setup.py`` script will provide a ``jep`` shortcut to make launching Java and Python easier.
+
+::
+
+    $ jep
+    >>> from java.lang import System
+    >>> System.out.println('hello, world')
+    hello, world
+    >>>
+
 Running on \*nix
 -----------------
 Due to some (common) difficulties with Java and C projects
@@ -60,26 +73,10 @@ that dlopen libraries, you may need to set LD_PRELOAD environment
 variable. That's in addition to setting LD_LIBRARY_PATH if you've
 installed libjep into a directory not cached by ld.so.
 
-For example, my Tomcat startup.sh script starts with this:
+See the contents of the installed ``jep`` script for an example how to do this.
+The script should have the correct values for your interpreter and virtualenv
+(if present).
 
-::
-
-    #!/bin/sh
-    # force system to load python
-    export LD_PRELOAD=/usr/lib/libpython2.7.so
-    
-    # this is where my libjep.so is.
-    export LD_LIBRARY_PATH=/usr/local/lib
-
-The libpython used here is whatever you've compiled jep against. If
-you don't know, try this command:
-
-::
-
-    $ ldd /usr/local/lib/libjep.so | grep python
-        /usr/lib/libpython2.7.so (0x00007f74adfbd000)
-
-That's the libpython you want to set in LD_PRELOAD.
 
 Running the tests
 -----------------
@@ -89,19 +86,6 @@ The tests are run from setup.py:
 ::
 
     $ python setup.py test
-
-Running scripts
----------------
-
-There is a ``jep`` shell script to make launching Java and Python a little easier.
-
-::
-
-    $ jep
-    >>> from java.lang import System
-    >>> System.out.println('hello, world')
-    hello, world
-    >>> 
 
 Support
 -------
