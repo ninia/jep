@@ -18,4 +18,4 @@ class test(Command):
         pass
 
     def run(self):
-        spawn(['java', '-cp', 'build/java/', 'jep.Test'])
+        spawn(['java', '-cp', 'build/java/:tests/lib/sqlitejdbc-v056.jar', 'jep.Test'])
