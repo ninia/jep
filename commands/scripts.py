@@ -62,7 +62,7 @@ class build_scripts(Command):
             install_base=install.install_base,
             install_platbase=install.install_platbase,
             install_lib=install.install_lib,
-            virtual_env=os.environ.get('VIRTUAL_ENV'),
+            virtual_env=os.environ.get('VIRTUAL_ENV') or '',
             ld_library_path='',
             ld_preload='',
         )
