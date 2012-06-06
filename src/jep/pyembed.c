@@ -1015,6 +1015,8 @@ intptr_t pyembed_create_module(JNIEnv *env,
     intptr_t        ret;
     PyObject       *key;
 
+    ret = 0;
+
     jepThread = (JepThread *) _jepThread;
     if(!jepThread) {
         THROW_JEP(env, "Couldn't get thread objects.");
@@ -1067,6 +1069,9 @@ intptr_t pyembed_create_module_on(JNIEnv *env,
     intptr_t        ret;
     PyObject       *globals;
     PyObject       *key;
+
+    ret = 0;
+    globals = 0;
 
     jepThread = (JepThread *) _jepThread;
     if(!jepThread) {
@@ -1264,7 +1269,9 @@ jobject pyembed_getvalue_on(JNIEnv *env,
     PyObject       *dict, *result, *onModule;
     jobject         ret = NULL;
     JepThread      *jepThread;
-    
+
+    result = 0;
+
     jepThread = (JepThread *) _jepThread;
     if(!jepThread) {
         THROW_JEP(env, "Couldn't get thread objects.");
@@ -1318,6 +1325,8 @@ jobject pyembed_getvalue(JNIEnv *env, intptr_t _jepThread, char *str) {
     PyObject       *result;
     jobject         ret = NULL;
     JepThread      *jepThread;
+
+    result = NULL;
     
     jepThread = (JepThread *) _jepThread;
     if(!jepThread) {
@@ -1364,6 +1373,8 @@ jobject pyembed_getvalue_array(JNIEnv *env, intptr_t _jepThread, char *str, int 
     PyObject       *result;
     jobject         ret = NULL;
     JepThread      *jepThread;
+
+    result = NULL;
     
     jepThread = (JepThread *) _jepThread;
     if(!jepThread) {

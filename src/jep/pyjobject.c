@@ -552,7 +552,6 @@ static PyObject* pyjobject_richcompare(PyJobject_Object *self,
     }
 
     if(PyType_IsSubtype(Py_TYPE(_other), &PyJobject_Type)) {
-        PyObject *ret;
         PyJobject_Object *other = (PyJobject_Object *) _other;
 
         jobject target, other_target;
