@@ -114,7 +114,7 @@ PyObject* jobject_topystring(JNIEnv *env, jobject obj, jclass clazz) {
 
 
 PyObject* pystring_split_item(PyObject *str, char *split, int pos) {
-    PyObject *splitList, *ret;
+    PyObject  *splitList, *ret;
     Py_ssize_t len;
 
     if(pos < 0) {
@@ -157,8 +157,8 @@ PyObject* pystring_split_item(PyObject *str, char *split, int pos) {
 
 
 PyObject* pystring_split_last(PyObject *str, char *split) {
-    PyObject *splitList, *ret;
-    Py_ssize_t len;
+    PyObject   *splitList, *ret;
+    Py_ssize_t  len;
 
     splitList = PyObject_CallMethod(str, "split", "s", split);
     if(PyErr_Occurred() || !splitList)
@@ -319,6 +319,10 @@ int process_java_exception(JNIEnv *env) {
     PyObject   *str, *texc, *modjep;
     char       *message;
     JepThread  *jepThread;
+
+#if USE_MAPPED_EXCEPTIONS
+    PyObject   *tmp, *className, *pyerr;
+#endif
 
     if(!(*env)->ExceptionCheck(env))
         return 0;
@@ -1439,9 +1443,8 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
 // steals all references.
 // returns new reference, new reference to Py_None if not found
 PyObject* tuplelist_getitem(PyObject *list, PyObject *pyname) {
-    Py_ssize_t  i;
-    Py_ssize_t  listSize = 0;
-    PyObject   *ret      = NULL;
+    Py_ssize_t i, listSize;
+    PyObject *ret = NULL;
     
     listSize = PyList_GET_SIZE(list);
     for(i = 0; i < listSize; i++) {

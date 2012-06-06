@@ -222,7 +222,7 @@ void pyembed_shutdown(void) {
 
 intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller) {
     JepThread *jepThread;
-    PyObject  *tdict, *main_module, *globals;
+    PyObject  *tdict, *mod_main, *globals;
     
     if(cl == NULL) {
         THROW_JEP(env, "Invalid Classloader.");
@@ -247,14 +247,14 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller) {
     if(!cache_primitive_classes(env))
         printf("WARNING: failed to get primitive class types.\n");
 
-    main_module = PyImport_AddModule("__main__");                      /* borrowed */
-    if(main_module == NULL) {
+    mod_main = PyImport_AddModule("__main__");                      /* borrowed */
+    if(mod_main == NULL) {
         THROW_JEP(env, "Couldn't add module __main__.");
         PyEval_ReleaseLock();
         return 0;
     }
     
-    globals = PyModule_GetDict(main_module);
+    globals = PyModule_GetDict(mod_main);
     Py_INCREF(globals);
 
     // init static module
@@ -394,7 +394,7 @@ static PyObject* pyembed_jproxy(PyObject *self, PyObject *args) {
     jclass         clazz;
     jobject        cl;
     jobject        classes;
-    int            inum, i;
+    Py_ssize_t     inum, i;
     jobject        proxy;
 
 	if(!PyArg_ParseTuple(args, "OO!:jproxy",
@@ -437,7 +437,7 @@ static PyObject* pyembed_jproxy(PyObject *self, PyObject *args) {
 
     // now convert string list to java array
 
-    classes = (*env)->NewObjectArray(env, inum, JSTRING_TYPE, NULL);
+    classes = (*env)->NewObjectArray(env, (jsize) inum, JSTRING_TYPE, NULL);
     if(process_java_exception(env) || !classes)
         return NULL;
 
@@ -448,12 +448,12 @@ static PyObject* pyembed_jproxy(PyObject *self, PyObject *args) {
 
         item = PyList_GET_ITEM(interfaces, i);
         if(!PyString_Check(item))
-            return PyErr_Format(PyExc_ValueError, "Item %i not a string.", i);
+            return PyErr_Format(PyExc_ValueError, "Item %zd not a string.", i);
 
         str  = PyString_AsString(item);
         jstr = (*env)->NewStringUTF(env, (const char *) str);
 
-        (*env)->SetObjectArrayElement(env, classes, i, jstr);
+        (*env)->SetObjectArrayElement(env, classes, (jsize) i, jstr);
         (*env)->DeleteLocalRef(env, jstr);
     }
 
@@ -507,7 +507,7 @@ static PyObject* pyembed_jimport(PyObject *self, PyObject *args) {
     jclass         clazz;
     jobject        cl;
     JepThread     *jepThread;
-    int            len, i;
+    Py_ssize_t     len, i;
     jobjectArray   jar;
 
 	char         *name;
@@ -623,7 +623,7 @@ static PyObject* pyembed_jimport(PyObject *self, PyObject *args) {
         PyObject *pclass     = NULL;
         PyObject *memberList = NULL;
 
-        member = (*env)->GetObjectArrayElement(env, jar, i);
+        member = (*env)->GetObjectArrayElement(env, jar, (jsize) i);
         if(process_import_exception(env) || !member) {
             (*env)->DeleteLocalRef(env, member);
             continue;
@@ -653,7 +653,8 @@ static PyObject* pyembed_jimport(PyObject *self, PyObject *args) {
            PyString_AsString(PyTuple_GET_ITEM(fromlist, 0))[0] != '*') {
 
             PyObject   *pymember;
-            int         found, i, len;
+            int         found;
+            Py_ssize_t  i, len;
 
             pymember = PyList_GET_ITEM(
                 memberList,
@@ -1177,7 +1178,7 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result) {
 
     if(PyInt_Check(result)) {
         jclass clazz;
-        jlong i = PyInt_AS_LONG(result);
+        jint i = (jint) PyInt_AS_LONG(result);
 
         clazz = (*env)->FindClass(env, "java/lang/Integer");
 
@@ -1547,7 +1548,7 @@ static int maybe_pyc_file(FILE *fp,
 		/* Read only two bytes of the magic. If the file was opened in
 		   text mode, the bytes 3 and 4 of the magic (\r\n) might not
 		   be read as they are on disk. */
-		long halfmagic = PyImport_GetMagicNumber() & 0xFFFF;
+		unsigned int halfmagic = (unsigned int) PyImport_GetMagicNumber() & 0xFFFF;
 		unsigned char buf[2];
 		/* Mess:  In case of -x, the stream is NOT at its start now,
 		   and ungetc() was used to push back the first newline,
