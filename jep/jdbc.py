@@ -226,6 +226,12 @@ class JDBCCursor(object):
                     return self.rs.getBoolean(col)
                 if sql_type in (2, 3,):
                     return Decimal(self.rs.getString(col))
+                if sql_type in (91,):
+                    return self.rs.getDate(col)
+                if sql_type in (92,):
+                    return self.rs.getTime(col)
+                if sql_type in (93,):
+                    return self.rs.getTimestamp(col)
 
                 return self.rs.getObject(col)
             except Exception as e:
@@ -235,7 +241,6 @@ class JDBCCursor(object):
             #public static final int 	BLOB 	2004
             #public static final int 	CLOB 	2005
             #public static final int 	DATALINK 	70
-            #public static final int 	DATE 	91
             #public static final int 	DISTINCT 	2001
             #public static final int 	JAVA_OBJECT 	2000
             #public static final int 	LONGVARBINARY 	-4
@@ -245,8 +250,6 @@ class JDBCCursor(object):
             #public static final int 	ROWID 	-8
             #public static final int 	SQLXML 	2009
             #public static final int 	STRUCT 	2002
-            #public static final int 	TIME 	92
-            #public static final int 	TIMESTAMP 	93
             #public static final int 	VARBINARY 	-3
 
         return tuple(map(map_type, range(1, self.columns + 1)))
