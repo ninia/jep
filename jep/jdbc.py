@@ -181,11 +181,11 @@ class JDBCCursor(object):
                 else:
                     self.statement.setObject(index, arg)
 
-            is_update = not operation.lower().strip().startswith('select')
+            is_update = not self.statement.execute()
             if is_update:
-                self.rowcount = self.statement.executeUpdate()
+                self.rowcount = self.statement.getUpdateCount()
             else:
-                self.rs = self.statement.executeQuery()
+                self.rs = self.statement.getResultSet()
                 self.meta_data = self.rs.getMetaData()
                 self.columns = self.meta_data.getColumnCount()
 
