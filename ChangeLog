@@ -1,4 +1,4 @@
-2012-05-05 3.1.0 - Mike Johnson <mike@mrj0.com>
+2012-06-10 3.1.0 - Mike Johnson <mike@mrj0.com>
     * lazy load classes imported via import hook
     * jep.jdbc, a DBAPI-2 wrapper for java.sql
 
