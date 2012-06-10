@@ -18,4 +18,5 @@ class test(Command):
         pass
 
     def run(self):
-        spawn(['java', '-cp', 'build/java/:tests/lib/sqlitejdbc-v056.jar', 'jep.Test'])
+        os.environ['CLASSPATH'] = 'build/java/:tests/lib/sqlitejdbc-v056.jar'
+        spawn(['jep', 'runtests.py'])
