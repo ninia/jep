@@ -163,23 +163,34 @@ class JDBCCursor(object):
         self.rowcount = None
         self.arraysize = 1
 
+    def _prepare(self, sql):
+        self.rs = None
+        self.meta_data = None
+        self.columns = None
+        self.rowcount = None
+
+        self.statement = self.connection.conn.prepareStatement(sql)
+
+    def _set_parameters(self, args):
+        for index, arg in enumerate(args):
+            index += 1
+
+            if isinstance(arg, int):
+                self.statement.setLong(index, arg)
+            elif isinstance(arg, float):
+                self.statement.setDouble(index, arg)
+            elif isinstance(arg, basestring):
+                self.statement.setString(index, arg)
+            else:
+                self.statement.setObject(index, arg)
+
     def execute(self, operation, *args):
         try:
             if log.isEnabledFor(logging.DEBUG):
                 log.debug('%s -- %s', operation.strip(), str(args))
-            self.statement = self.connection.conn.prepareStatement(operation)
 
-            for index, arg in enumerate(args):
-                index += 1
-
-                if isinstance(arg, int):
-                    self.statement.setLong(index, arg)
-                elif isinstance(arg, float):
-                    self.statement.setDouble(index, arg)
-                elif isinstance(arg, basestring):
-                    self.statement.setString(index, arg)
-                else:
-                    self.statement.setObject(index, arg)
+            self._prepare(operation)
+            self._set_parameters(args)
 
             is_update = not self.statement.execute()
             if is_update:
@@ -204,6 +215,18 @@ class JDBCCursor(object):
 
         except Exception as e:
             raise DatabaseError(e.message)
+
+    def executemany(self, operation, seq_of_parameters):
+        if log.isEnabledFor(logging.DEBUG):
+            log.debug('executemany: %s', operation.strip())
+
+        self._prepare(operation)
+        for args in seq_of_parameters:
+            self._set_parameters(args)
+            self.statement.addBatch()
+
+        self.statement.executeBatch()
+
 
     def fetchone(self):
         if not self.rs.next():

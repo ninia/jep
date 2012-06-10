@@ -141,6 +141,21 @@ class TestJdbc(unittest.TestCase):
         self.assertEqual(row[3].toString(), '01:02:03')
         self.assertEqual(row[4].toString(), '2012-06-01 01:02:03.0')
 
+    def test_batch(self):
+        conn = connect(self.jdbc_url)
+        cursor = conn.cursor()
+
+        cursor.execute('create table batch ( one integer )')
+
+        cursor.executemany('insert into batch values (?)', [
+            (1,),
+            (2,),
+            (3,),
+        ])
+
+        cursor.execute('select sum(one) from batch')
+        row = cursor.fetchone()
+        self.assertEqual(row[0], 6)
 
 
 if __name__ == '__main__':
