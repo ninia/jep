@@ -54,7 +54,7 @@ public class Run {
             jep = new Jep(false, ".");
             
             // "set" by eval'ing it
-            jep.eval("argv = " + scriptArgv);
+            jep.eval("import sys; sys.argv = argv = " + scriptArgv);
             jep.runScript(file);
         }
         catch(Throwable t) {
