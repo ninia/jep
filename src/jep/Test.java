@@ -19,6 +19,18 @@ public class Test implements Runnable {
     private Jep jep = null;
     private boolean testEval = false;
 
+    
+    public static ClassLoader restrictedClassLoader = new ClassLoader() {
+            @Override
+            public Class<?> loadClass(final String name) throws ClassNotFoundException {
+                if (name.startsWith("java.io.")) {
+                    throw new ClassNotFoundException("restricted class: " + name);
+                }
+                return super.loadClass(name);
+            }
+        };
+
+
     public Test() {
     }
 

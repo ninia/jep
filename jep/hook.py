@@ -1,4 +1,4 @@
-from _jep import findClass
+from _jep import forName
 import sys
 from types import ModuleType
 
@@ -20,7 +20,7 @@ class module(ModuleType):
             return super(module, self).__getattribute__(name)
         except AttributeError as ae:
             try:
-                clazz = findClass('{0}.{1}'.format(self.__name__, name))
+                clazz = forName('{0}.{1}'.format(self.__name__, name))
                 setattr(self, name, clazz)
                 return clazz
             except Exception:
@@ -30,7 +30,7 @@ class module(ModuleType):
 
 class JepImporter(object):
     def __init__(self):
-        self.classlist = findClass('jep.ClassList').getInstance()
+        self.classlist = forName('jep.ClassList').getInstance()
 
     def find_module(self, fullname, path=None):
         if self.classlist.get(fullname) is not None or fullname.startswith('java.'):
@@ -53,7 +53,7 @@ class JepImporter(object):
         classlist = self.classlist.get(fullname)
         if classlist:
             for name in classlist:
-                setattr(mod, name.split('.')[-1], findClass(name))
+                setattr(mod, name.split('.')[-1], forName(name))
         return mod
 
 
