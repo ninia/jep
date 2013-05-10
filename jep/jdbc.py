@@ -8,7 +8,7 @@ import time
 log = logging.getLogger('java.sql')
 
 apilevel = '2.0'
-paramstyle =  'qmark'
+paramstyle = 'qmark'
 threadsafety = 2
 
 
@@ -18,6 +18,7 @@ class Warning(StandardError):
     the Python StandardError (defined in the module
     exceptions)."""
     pass
+
 
 class Error(StandardError):
     """Exception that is the base class of all other error
@@ -29,22 +30,26 @@ class Error(StandardError):
     """
     pass
 
+
 class InterfaceError(Error):
     """Exception raised for errors that are related to the
     database interface rather than the database itself.  It
     must be a subclass of Error."""
     pass
 
+
 class DatabaseError(Error):
     """Exception raised for errors that are related to the
     database.  It must be a subclass of Error."""
     pass
+
 
 class DataError(DatabaseError):
     """Exception raised for errors that are due to problems with
     the processed data like division by zero, numeric value
     out of range, etc. It must be a subclass of DatabaseError."""
     pass
+
 
 class OperationalError(DatabaseError):
     """Exception raised for errors that are related to the
@@ -55,11 +60,13 @@ class OperationalError(DatabaseError):
     processing, etc.  It must be a subclass of DatabaseError."""
     pass
 
+
 class IntegrityError(DatabaseError):
     """Exception raised when the relational integrity of the
     database is affected, e.g. a foreign key check fails.  It
     must be a subclass of DatabaseError."""
     pass
+
 
 class InternalError(DatabaseError):
     """Exception raised when the database encounters an internal
@@ -68,12 +75,14 @@ class InternalError(DatabaseError):
     DatabaseError."""
     pass
 
+
 class ProgrammingError(DatabaseError):
     """Exception raised for programming errors, e.g. table not
     found or already exists, syntax error in the SQL
     statement, wrong number of parameters specified, etc.  It
     must be a subclass of DatabaseError."""
     pass
+
 
 class NotSupportedError(DatabaseError):
     """"Exception raised in case a method or database API was used
@@ -87,17 +96,23 @@ class NotSupportedError(DatabaseError):
 def Date(year, month, day):
     return java.sql.Date(long(time.mktime(datetime.date(year, month, day).timetuple())) * 1000)
 
+
 def Time(hour, minute, second):
     return java.sql.Time(hour, minute, second)
 
+
 def Timestamp(year, month, day, hour, minute, second):
-    return java.sql.Timestamp(long(time.mktime(datetime.datetime(year, month, day, hour, minute, second).timetuple())) * 1000)
+    return java.sql.Timestamp(
+        long(time.mktime(datetime.datetime(year, month, day, hour, minute, second).timetuple())) * 1000)
+
 
 def DateFromTicks(ticks):
     return Date(*time.localtime(ticks)[:3])
 
+
 def TimeFromTicks(ticks):
     return Time(*time.localtime(ticks)[3:6])
+
 
 def TimestampFromTicks(ticks):
     return Timestamp(*time.localtime(ticks)[:6])
@@ -123,7 +138,6 @@ def connect(url, user=None, password=None, timeout=0):
 
 
 class JDBCConnection(object):
-
     def __init__(self, conn):
         super(JDBCConnection, self).__init__()
         self.conn = conn
@@ -226,7 +240,6 @@ class JDBCCursor(object):
             self.statement.addBatch()
 
         self.statement.executeBatch()
-
 
     def fetchone(self):
         if not self.rs.next():
