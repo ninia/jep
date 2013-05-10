@@ -1,5 +1,5 @@
 
-HISTFILE = '.jep'
+history_file = None
 
 import traceback
 import jep
@@ -13,12 +13,12 @@ try:
     try:
         has_readline = True
         import os
-        HISTFILE = '%s/.jep' % (os.environ['HOME'])
-        if(not os.access(HISTFILE, os.W_OK)):
-            os.open(HISTFILE, os.O_CREAT)
-        readline.read_history_file(HISTFILE)
-    except IOError:
-        traceback.print_exc()
+        history_file = os.path.join(os.environ['HOME'], '.jep')
+        if not os.path.exists(history_file):
+            readline.write_history_file(history_file)
+        else:
+            readline.read_history_file(history_file)
+    except IOError as e:
         pass
 except ImportError:
     print """
@@ -33,8 +33,8 @@ except ImportError:
     http://newcenturycomputers.net/projects/readline.html """
 
 
-PS1  = ">>> "
-PS2  = "... "
+PS1 = ">>> "
+PS2 = "... "
 
 
 def prompt(jep):
@@ -48,7 +48,7 @@ def prompt(jep):
                 traceback.print_exc()
 
             try:
-                if(ran):
+                if ran:
                     line = raw_input(PS1)
                 else:
                     line = raw_input(PS2)
@@ -57,7 +57,10 @@ def prompt(jep):
 
     finally:
         if has_readline:
-            readline.write_history_file(HISTFILE)
+            try:
+                readline.write_history_file(history_file)
+            except IOError:
+                pass
 
 
 if __name__ == '__main__':
