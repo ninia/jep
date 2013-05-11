@@ -2,7 +2,6 @@
 from __future__ import print_function
 from __future__ import absolute_import
 import codecs
-import platform
 
 import os
 from distutils.core import setup, Extension
@@ -12,7 +11,7 @@ from commands.clean import really_clean
 from commands.dist import JepDistribution
 from commands.install import post_install
 from commands.java import build_java, build_javah, get_java_home, get_java_include,\
-    get_java_lib, get_java_linker_args, build_jar, get_java_lib_folders, get_java_libraries
+    get_java_linker_args, build_jar, get_java_lib_folders, get_java_libraries
 from commands.python import get_python_libs, get_python_linker_args
 from commands.scripts import build_scripts
 from commands.test import test
@@ -20,16 +19,19 @@ from commands.test import test
 VERSION = None # shut up pycharm
 execfile('jep/version.py')
 
+
 def get_files(pattern):
     ret = []
     for root, dirs, files in os.walk('src'):
-        for file in files:
-            if file.endswith(pattern):
-                ret.append(os.path.join(root, file))
+        for f in files:
+            if f.endswith(pattern):
+                ret.append(os.path.join(root, f))
     return ret
+
 
 def read_file(name):
     return codecs.open(os.path.join(os.path.dirname(__file__), name), encoding='utf-8').read()
+
 
 if __name__ == '__main__':
     get_java_home()
@@ -65,10 +67,10 @@ if __name__ == '__main__':
 
           # my hacks to compile java files
           java_files=get_files('.java'),
-          javah_files=[ # tuple containing class and the header file to output
+          javah_files=[   # tuple containing class and the header file to output
               ('jep.Jep', 'jep.h'),
-	          ('jep.python.PyObject', 'jep_object.h'),
-	          ('jep.InvocationHandler', 'invocationhandler.h'),
+              ('jep.python.PyObject', 'jep_object.h'),
+              ('jep.InvocationHandler', 'invocationhandler.h'),
           ],
           distclass=JepDistribution,
           cmdclass={
