@@ -2,7 +2,7 @@ package jep;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -62,7 +62,7 @@ public class ClassList {
     private ClassList() throws JepException {
         loadClassPath();
         loadPackages();
-        loadJREClasses();
+        loadClassList();
     }
 
 
@@ -165,20 +165,20 @@ public class ClassList {
      * this is my little hack.
      *
      */
-    private void loadJREClasses() throws JepException {
-        // load the JRE's classlist file
-        String javaHome = System.getProperty("java.home");
-        String pathSep  = System.getProperty("file.separator");
-
-        File file = new File(javaHome + pathSep + "lib" +
-                             pathSep + "classlist");
-        if(!file.exists())
-            return;
+    private void loadClassList() throws JepException {
+        String version = System.getProperty("java.version");
+        
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        InputStream in = null;
 
         BufferedReader reader = null;
         try {
-            reader = new BufferedReader(new InputStreamReader(
-                                            new FileInputStream(file)));
+            if(version.startsWith("1.7"))
+                in = cl.getResourceAsStream("jep/classlist_7.txt");
+            else
+                in = cl.getResourceAsStream("jep/classlist_6.txt");
+            
+            reader = new BufferedReader(new InputStreamReader(in));
 
             String line = "";
             while((line = reader.readLine()) != null) {
@@ -188,9 +188,9 @@ public class ClassList {
 
                 // lines in the file look like: java/lang/String
                 // split on /
-                String[]     parts = line.split("\\/");
-                StringBuffer pname = new StringBuffer();
-                String       cname = parts[parts.length - 1];
+                String[]      parts = line.split("\\/");
+                StringBuilder pname = new StringBuilder();
+                String        cname = parts[parts.length - 1];
 
                 for(int i = 0; i < parts.length - 1; i++) {
                     pname.append(parts[i]);
@@ -270,6 +270,18 @@ public class ClassList {
      */
     public static String[] get(String p) throws JepException {
         return ClassList.getInstance()._get(p);
+    }
+
+
+    /**
+     * get classnames in package
+     *
+     * @param p a <code>String</code> value
+     * @return <code>String[]</code> array of class names
+     * @exception JepException if an error occurs
+     */
+    public static boolean contains(String p) throws JepException {
+        return ClassList.getInstance()._get(p) != null;
     }
 
 

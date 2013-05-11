@@ -2,6 +2,7 @@ from __future__ import print_function
 
 from distutils.cmd import Command
 from distutils.spawn import spawn
+import shutil
 import os
 import fnmatch
 from commands.util import configure_error, is_osx
@@ -110,20 +111,29 @@ class build_jar(Command):
     ]
 
     def initialize_options(self):
-        build_java.outdir = os.path.join('build', 'java')
-        if not os.path.exists(build_java.outdir):
+        build_jar.outdir = os.path.join('build', 'java')
+        if not os.path.exists(build_jar.outdir):
             os.makedirs(build_java.outdir)
 
         self.java_files = []
+        self.extra_jar_files = []
         if is_osx():
             self.jar = os.path.join(get_java_home(), 'Commands', 'jar')
         else:
             self.jar = os.path.join(get_java_home(), 'bin', 'jar')
 
     def finalize_options(self):
-        pass
+        self.extra_jar_files = self.distribution.extra_jar_files
 
     def build(self):
+        for src in self.extra_jar_files:
+            dest = os.path.join(*['build/java'] + src.split(os.sep)[1:])
+            dest_dir = os.path.dirname(dest)
+            print('copying {0} to {1}'.format(src, dest))
+            if not os.path.exists(dest_dir):
+                os.makedirs(dest_dir)
+            shutil.copyfile(src, dest)
+
         spawn([self.jar, '-cfe', 'build/java/jep.jar', 'jep.Run', '-C', 'build/java/', 'jep'])
 
     def run(self):
@@ -148,7 +158,7 @@ class build_javah(Command):
         self.javah_files = []
 
     def finalize_options(self):
-        self.javah_files = self.distribution.javah_files
+        self.javah_files = self.distribution.javah_files or []
 
     def build(self, jclass, header):
         spawn([self.javah, '-classpath', build_java.outdir, '-o', os.path.join(build_javah.outdir, header), jclass])

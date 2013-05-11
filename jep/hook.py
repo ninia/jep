@@ -33,8 +33,8 @@ class JepImporter(object):
         self.classlist = forName('jep.ClassList').getInstance()
 
     def find_module(self, fullname, path=None):
-        if self.classlist.get(fullname) is not None or fullname.startswith('java.'):
-            return self # found a java package with this name
+        if self.classlist.contains(fullname):
+            return self  # found a java package with this name
         return None
 
     def load_module(self, fullname):
@@ -53,7 +53,10 @@ class JepImporter(object):
         classlist = self.classlist.get(fullname)
         if classlist:
             for name in classlist:
-                setattr(mod, name.split('.')[-1], forName(name))
+                try:
+                    setattr(mod, name.split('.')[-1], forName(name))
+                except Exception:
+                    pass
         return mod
 
 

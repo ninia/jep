@@ -1,3 +1,4 @@
+from __future__ import print_function
 import unittest
 from jep import JepImporter, findClass, JavaException
 
@@ -25,8 +26,6 @@ class TestImport(unittest.TestCase):
             with self.assertRaises(JavaException) as e:
                 vm.eval("from java.io import File")
                 vm.eval('f = File("failed.txt")')
-
-            self.assertTrue('restricted class: java.io.Serializable' in e.exception.message)
         finally:
             vm.close()
 
@@ -38,3 +37,13 @@ class TestImport(unittest.TestCase):
             vm.eval('f = File("failed.txt")')
         finally:
             vm.close()
+
+    def test_class_import(self):
+        from java.lang import System
+        System.out.print('')  # first
+
+        with self.assertRaises(ImportError) as e:
+            import java.lang.System
+
+        from java.lang import System
+        System.out.print('')  # should still work
