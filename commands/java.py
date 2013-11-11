@@ -113,7 +113,7 @@ class build_jar(Command):
     def initialize_options(self):
         build_jar.outdir = os.path.join('build', 'java')
         if not os.path.exists(build_jar.outdir):
-            os.makedirs(build_java.outdir)
+            os.makedirs(build_jar.outdir)
 
         self.java_files = []
         self.extra_jar_files = []
