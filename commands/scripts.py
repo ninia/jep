@@ -77,6 +77,14 @@ class build_scripts(Command):
             if os.path.exists(lib_python):
                 context['ld_preload'] = 'LD_PRELOAD="{0}"; export LD_PRELOAD'.format(lib_python)
 
+            else:
+                # x64 systems will tend to also have a MULTIARCH folder
+                lib_python = os.path.join(sysconfig.get_config_var('LIBDIR'),
+                                          sysconfig.get_config_var('MULTIARCH'),
+                                          sysconfig.get_config_var('LDLIBRARY'))
+                if os.path.exists(lib_python):
+                    context['ld_preload'] = 'LD_PRELOAD="{0}"; export LD_PRELOAD'.format(lib_python)
+
         for script in self.scripts:
             script = convert_path(script)
             outfile = os.path.join(self.build_dir, os.path.basename(script))
