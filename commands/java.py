@@ -5,29 +5,54 @@ from distutils.spawn import spawn
 import shutil
 import os
 import fnmatch
-from commands.util import configure_error, is_osx
+import traceback
+import sys
+from commands.util import configure_error, is_osx, shell, CommandFailed, warning
 
-JAVA_HOME = os.environ.get('JAVA_HOME')
+_java_home = None
 MAC_JAVA_HOME = '/System/Library/Frameworks/JavaVM.framework'
 
+
 def get_java_home():
-    global JAVA_HOME
+    global _java_home
+    if _java_home is not None:
+        return _java_home
 
-    # mac's JAVA_HOME is predictable, just use that if we can
-    if is_osx() and os.path.exists(MAC_JAVA_HOME):
-        return MAC_JAVA_HOME
+    if is_osx():
+        # newer macs have an executable to help us
+        try:
+            result = shell('/usr/libexec/java_home')
+            _java_home = result.stdout
+            return _java_home
+        except CommandFailed:
+            traceback.print_exc()
+            if not os.path.exists(MAC_JAVA_HOME):
+                configure_error('No JAVA_HOME')
 
-    if JAVA_HOME and os.path.exists(JAVA_HOME):
-        return JAVA_HOME
+        # Apple's JAVA_HOME is predictable, just use that if we can
+        # though it doesn't work for Oracle's JDK
+        if os.path.exists(MAC_JAVA_HOME):
+            _java_home = MAC_JAVA_HOME
+            return _java_home
+
+    env_home = os.environ.get('JAVA_HOME')
+    if env_home and os.path.exists(env_home):
+        _java_home = env_home
+        return env_home
 
     configure_error("Please set JAVA_HOME to a path containing the JDK.")
+
+
+def is_apple_jdk():
+    return get_java_home() == MAC_JAVA_HOME
+
 
 def get_java_include():
     """
     Locate the Java include folders for compiling JNI applications.
     """
     inc_name = 'include'
-    if is_osx():
+    if is_apple_jdk():
         inc_name = 'Headers'
     inc = os.path.join(get_java_home(), inc_name)
     if not os.path.exists(inc):
@@ -42,11 +67,16 @@ def get_java_include():
     include_linux = os.path.join(inc, 'linux')
     if os.path.exists(include_linux):
         paths.append(include_linux)
+
+    include_darwin = os.path.join(inc, 'darwin')
+    if os.path.exists(include_darwin):
+        paths.append(include_darwin)
     return paths
+
 
 def get_java_lib():
     lib_name = 'lib'
-    if is_osx():
+    if get_java_home() == MAC_JAVA_HOME:
         lib_name = 'Libraries'
     lib = os.path.join(get_java_home(), lib_name)
     if not os.path.exists(lib):
@@ -54,10 +84,12 @@ def get_java_lib():
                         "Please check you've installed the JDK properly.".format(lib))
     return lib
 
+
 def get_java_libraries():
     if not is_osx():
         return ['jvm']
     return []
+
 
 def get_java_lib_folders():
     if not is_osx():
@@ -70,10 +102,38 @@ def get_java_lib_folders():
         return list(set(folders))
     return []
 
+
 def get_java_linker_args():
-    if is_osx():
+    if is_apple_jdk():
         return ['-framework JavaVM']
     return []
+
+
+class setup_java(Command):
+    """
+    Output some useful information about the java environment
+    This is useful when people report errors
+    """
+
+    def initialize_options(self):
+        pass
+
+    def run(self):
+        warning('Using JAVA_HOME:', get_java_home())
+
+        if is_osx():
+            target = os.environ.get('MACOSX_DEPLOYMENT_TARGET')
+
+            if target:
+                warning('INFO: the MACOSX_DEPLOYMENT_TARGET environment variable is set:', target)
+
+                result = shell('sw_vers -productVersion')
+                if target.split('.')[:2] != result.stdout.split('.')[:2]:
+                    warning('This target appears to be incorrect for the system version:', result.stdout)
+
+    def finalize_options(self):
+        pass
+
 
 class build_java(Command):
     outdir = None
@@ -88,7 +148,7 @@ class build_java(Command):
             os.makedirs(build_java.outdir)
 
         self.java_files = []
-        if is_osx():
+        if is_apple_jdk():
             self.javac = os.path.join(get_java_home(), 'Commands', 'javac')
         else:
             self.javac = os.path.join(get_java_home(), 'bin', 'javac')
@@ -117,7 +177,7 @@ class build_jar(Command):
 
         self.java_files = []
         self.extra_jar_files = []
-        if is_osx():
+        if is_apple_jdk():
             self.jar = os.path.join(get_java_home(), 'Commands', 'jar')
         else:
             self.jar = os.path.join(get_java_home(), 'bin', 'jar')
@@ -139,6 +199,7 @@ class build_jar(Command):
     def run(self):
         self.build()
 
+
 class build_javah(Command):
     outdir = None
 
@@ -151,7 +212,7 @@ class build_javah(Command):
         if not os.path.exists(build_javah.outdir):
             os.mkdir(build_javah.outdir)
 
-        if is_osx():
+        if is_apple_jdk():
             self.javah = os.path.join(get_java_home(), 'Commands', 'javah')
         else:
             self.javah = os.path.join(get_java_home(), 'bin', 'javah')
