@@ -546,8 +546,8 @@ static void pyjarray_dealloc(PyJarray_Object *self) {
         // can't guarantee mode 0 will work in this case...
         pyjarray_release_pinned(self, JNI_ABORT);
 
-        // some environments will leak memory if self->object is deleted
-        // before pyjarray_release_pinned
+        // pyjarray_release_pinned potentially uses self->object so we can
+        // only delete self->object afterwards
         if(self->object)
             (*env)->DeleteGlobalRef(env, self->object);
     } // if env
