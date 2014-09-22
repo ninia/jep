@@ -1146,6 +1146,9 @@ void pyembed_setloader(JNIEnv *env, intptr_t _jepThread, jobject cl) {
 // convert pyobject to boxed java value
 jobject pyembed_box_py(JNIEnv *env, PyObject *result) {
 
+    if(result == Py_None)
+        return NULL;
+
     // class and object need to return a new local ref so the object
     // isn't garbage collected.
 
