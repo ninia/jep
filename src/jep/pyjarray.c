@@ -538,8 +538,6 @@ static void pyjarray_dealloc(PyJarray_Object *self) {
 #if USE_DEALLOC
     JNIEnv *env = pyembed_get_env();
     if(env) {
-        if(self->object)
-            (*env)->DeleteGlobalRef(env, self->object);
         if(self->clazz)
             (*env)->DeleteGlobalRef(env, self->clazz);
         if(self->componentClass)
@@ -547,6 +545,11 @@ static void pyjarray_dealloc(PyJarray_Object *self) {
 
         // can't guarantee mode 0 will work in this case...
         pyjarray_release_pinned(self, JNI_ABORT);
+
+        // pyjarray_release_pinned potentially uses self->object so we can
+        // only delete self->object afterwards
+        if(self->object)
+            (*env)->DeleteGlobalRef(env, self->object);
     } // if env
     
     PyObject_Del(self);
@@ -560,8 +563,9 @@ void pyjarray_release_pinned(PyJarray_Object *self, jint mode) {
 
     if(!self->pinnedArray)
         return;
-    
-    if(self->isCopy && mode == JNI_ABORT)
+
+    // don't release if it's the raw data, but do release if it's a copy
+    if(!self->isCopy && mode == JNI_ABORT)
         return;
 
     switch(self->componentType) {
@@ -1691,7 +1695,6 @@ static PyObject *pyjarrayiter_next(PyJarrayIterObject *it) {
     if (it->it_index < seq->length) {
         item = (PyObject *) pyjarray_item(seq, it->it_index);
         ++it->it_index;
-        Py_INCREF(item);
         return item;
     }
     
