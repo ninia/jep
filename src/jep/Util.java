@@ -1,5 +1,8 @@
 package jep;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 /**
  * <pre>
  * Util.java - utility functions
@@ -168,4 +171,21 @@ public final class Util {
 
         return JOBJECT_ID;
     }
+
+
+    /**
+     * Returns a String version of the throwable with the stacktrace
+     *  
+     * @param throwable
+     *            the throwable
+     * @return the throwable's stacktrace
+     */
+     public static String throwableAsString(Throwable throwable) {
+        StringWriter stringWriter = new StringWriter();
+        PrintWriter printWriter = new PrintWriter(stringWriter);
+        throwable.printStackTrace(printWriter);
+        return stringWriter.toString();
+     }
+
+
 }
