@@ -1299,7 +1299,7 @@ static PyObject* pyjarray_slice(PyObject *_self, Py_ssize_t ilow, Py_ssize_t ihi
     jobjectArray     arrayObj = NULL;
     PyObject        *ret      = NULL;
 
-    PyJarray_Object *self = (PyJarray_Object *) self;
+    PyJarray_Object *self = (PyJarray_Object *) _self;
     
     Py_ssize_t len, i;
     JNIEnv *env = pyembed_get_env();
