@@ -1,4 +1,4 @@
-# reads this file
+import os
 import unittest
 from jep import jarray, JINT_ID, JBYTE_ID
 
@@ -15,8 +15,11 @@ class TestArray(unittest.TestCase):
         from java.io import FileInputStream
         from java.lang import String
 
-        fin = FileInputStream(__file__)
+        filename = os.path.join(
+            os.path.abspath(os.path.dirname(__file__)),
+            'data/read_file.txt')
+        fin = FileInputStream(filename)
         ar = jarray(20, JBYTE_ID)
         count = fin.read(ar)
         s = String(ar, 0, count)
-        self.assertTrue(str(s).startswith('# reads this file'))
+        self.assertEqual(str(s).strip(), 'aewrv3v')

@@ -173,7 +173,9 @@ public class ClassList {
 
         BufferedReader reader = null;
         try {
-            if(version.startsWith("1.7"))
+            if(version.startsWith("1.8"))
+                in = cl.getResourceAsStream("jep/classlist_8.txt");
+            else if(version.startsWith("1.7"))
                 in = cl.getResourceAsStream("jep/classlist_7.txt");
             else
                 in = cl.getResourceAsStream("jep/classlist_6.txt");
