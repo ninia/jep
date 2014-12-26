@@ -11,7 +11,5 @@ def get_python_libs():
 
 def get_python_linker_args():
     if is_osx():
-        return ['-framework CoreFoundation -u _PyMac_Error']
-    else:
-        return ['-L{0}'.format(sysconfig.get_config_var('LIBDIR'))]
-
+        return []
+    return ['-L{0}'.format(sysconfig.get_config_var('LIBDIR'))]

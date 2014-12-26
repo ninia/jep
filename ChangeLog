@@ -1,3 +1,6 @@
+2014-12-126 3.1.0 - Mike Johnson <mike@mrj0.com>
+	* osx yet again changed their compiler flags
+
 2012-06-10 3.1.0 - Mike Johnson <mike@mrj0.com>
     * lazy load classes imported via import hook
     * jep.jdbc, a DBAPI-2 wrapper for java.sql

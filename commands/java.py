@@ -71,8 +71,6 @@ def get_java_lib_folders():
     return []
 
 def get_java_linker_args():
-    if is_osx():
-        return ['-framework JavaVM']
     return []
 
 class build_java(Command):
