@@ -108,9 +108,15 @@ void release_utf_char(JNIEnv*, jstring, const char*);
 // int param is printTrace, send traceback to stderr
 int process_py_exception(JNIEnv*, int);
 
+// convert pytraceback to string
+char* PyTraceback_AsString(PyObject*);
+
 // convert java exception to pyerr.
 // true (1) if an exception was processed.
 int process_java_exception(JNIEnv*);
+
+// convert jthrowable to jstring
+jstring javaStacktrace_tostring(JNIEnv*, jthrowable);
 
 // convert java exception to ImportError.
 // true (1) if an exception was processed.

@@ -61,6 +61,15 @@
 #include "pyjclass.h"
 #include "pyembed.h"
 
+
+/* Obtains a string from a Python traceback.
+ * This is the exact same string as "traceback.print_exc" would return.
+ *
+ * Pass in a Python traceback object (probably obtained from PyErr_Fetch())
+ * Result is a string which must be free'd using PyMem_Free()
+ */
+#define TRACEBACK_FETCH_ERROR(what) {errMsg = what; goto done;}
+
 // -------------------------------------------------- primitive class types
 // these are shared for all threads, you shouldn't change them.
 
@@ -81,6 +90,9 @@ jclass JCLASS_TYPE   = NULL;
 jmethodID objectToString     = 0;
 jmethodID objectEquals       = 0;
 jmethodID objectIsArray      = 0;
+jmethodID throwableAsString  = 0;
+
+jclass utilclass             = 0;
 
 // for convert_jobject
 jmethodID getBooleanValue    = 0;
@@ -191,8 +203,8 @@ PyObject* pystring_split_last(PyObject *str, char *split) {
 // convert python exception to java.
 int process_py_exception(JNIEnv *env, int printTrace) {
     JepThread  *jepThread;
-    PyObject *ptype, *pvalue, *ptrace, *message = NULL;
-    char *m;
+    PyObject *ptype, *pvalue, *ptrace, *message, *combined = NULL;
+    char *m, *tr;
     
     if(!PyErr_Occurred())
         return 0;
@@ -235,6 +247,16 @@ int process_py_exception(JNIEnv *env, int printTrace) {
                 Py_DECREF(v);
                 Py_DECREF(message);
                 message = t;
+
+                if(ptrace)
+                {
+                        m = PyString_AsString(message);
+                        tr = PyTraceback_AsString(ptrace);
+                        combined = PyString_FromFormat("%s >>> %s", m, tr);
+                        PyMem_Free((void *) tr);
+                        Py_DECREF(message);
+                        message = combined;
+                }
             }
         }
     }
@@ -255,6 +277,90 @@ int process_py_exception(JNIEnv *env, int printTrace) {
     }
     
     return 1;
+}
+
+
+// taken from python.org, see attachment: http://bugs.python.org/issue563338
+char* PyTraceback_AsString(PyObject *exc_tb)
+{
+        char *errMsg = NULL; /* holds a local error message */
+        char *result = NULL; /* a valid, allocated result. */
+        PyObject *modStringIO = NULL;
+        PyObject *modTB = NULL;
+        PyObject *obFuncStringIO = NULL;
+        PyObject *obStringIO = NULL;
+        PyObject *obFuncTB = NULL;
+        PyObject *argsTB = NULL;
+        PyObject *obResult = NULL;
+
+        /* Import the modules we need - cStringIO and traceback */
+        modStringIO = PyImport_ImportModule("cStringIO");
+        if (modStringIO==NULL)
+                TRACEBACK_FETCH_ERROR("cant import cStringIO\n");
+
+        modTB = PyImport_ImportModule("traceback");
+        if (modTB==NULL)
+                TRACEBACK_FETCH_ERROR("cant import traceback\n");
+        /* Construct a cStringIO object */
+        obFuncStringIO = PyObject_GetAttrString(modStringIO, "StringIO");
+        if (obFuncStringIO==NULL)
+                TRACEBACK_FETCH_ERROR("cant find cStringIO.StringIO\n");
+        obStringIO = PyObject_CallObject(obFuncStringIO, NULL);
+        if (obStringIO==NULL)
+                TRACEBACK_FETCH_ERROR("cStringIO.StringIO() failed\n");
+        /* Get the traceback.print_exception function, and call it. */
+        obFuncTB = PyObject_GetAttrString(modTB, "print_tb");
+        if (obFuncTB==NULL)
+                TRACEBACK_FETCH_ERROR("cant find traceback.print_tb\n");
+
+        argsTB = Py_BuildValue("OOO",
+                        exc_tb  ? exc_tb  : Py_None,
+                        Py_None,
+                        obStringIO);
+        if (argsTB==NULL)
+                TRACEBACK_FETCH_ERROR("cant make print_tb arguments\n");
+
+        obResult = PyObject_CallObject(obFuncTB, argsTB);
+        if (obResult==NULL)
+                TRACEBACK_FETCH_ERROR("traceback.print_tb() failed\n");
+        /* Now call the getvalue() method in the StringIO instance */
+        Py_DECREF(obFuncStringIO);
+        obFuncStringIO = PyObject_GetAttrString(obStringIO, "getvalue");
+        if (obFuncStringIO==NULL)
+                TRACEBACK_FETCH_ERROR("cant find getvalue function\n");
+        Py_DECREF(obResult);
+        obResult = PyObject_CallObject(obFuncStringIO, NULL);
+        if (obResult==NULL)
+                TRACEBACK_FETCH_ERROR("getvalue() failed.\n");
+
+        /* And it should be a string all ready to go - duplicate it. */
+        if (!PyString_Check(obResult))
+                        TRACEBACK_FETCH_ERROR("getvalue() did not return a string\n");
+
+        { // a temp scope so I can use temp locals.
+        char *tempResult = PyString_AsString(obResult);
+        result = (char *)PyMem_Malloc(strlen(tempResult)+1);
+        if (result==NULL)
+                TRACEBACK_FETCH_ERROR("memory error duplicating the traceback string\n");
+
+        strcpy(result, tempResult);
+        } // end of temp scope.
+done:
+        /* All finished - first see if we encountered an error */
+        if (result==NULL && errMsg != NULL) {
+                result = (char *)PyMem_Malloc(strlen(errMsg)+1);
+                if (result != NULL)
+                        /* if it does, not much we can do! */
+                        strcpy(result, errMsg);
+        }
+        Py_XDECREF(modStringIO);
+        Py_XDECREF(modTB);
+        Py_XDECREF(obFuncStringIO);
+        Py_XDECREF(obStringIO);
+        Py_XDECREF(obFuncTB);
+        Py_XDECREF(argsTB);
+        Py_XDECREF(obResult);
+        return result;
 }
 
 
@@ -353,7 +459,8 @@ int process_java_exception(JNIEnv *env) {
         return 1;
     }
     
-    estr = jobject_tostring(env, exception, clazz);
+    // get entire java stacktrace back
+    estr = javaStacktrace_tostring(env, exception);
     if((*env)->ExceptionCheck(env) || !estr) {
         PyErr_Format(PyExc_RuntimeError, "toString() on exception failed.");
         return 1;
@@ -405,13 +512,32 @@ int process_java_exception(JNIEnv *env) {
 #endif // #if USE_MAPPED_EXCEPTIONS
 
     Py_DECREF(str);
-    PyErr_Format(pyException, "%s", message);
+    PyErr_SetString(pyException, message);
     release_utf_char(env, estr, message);
     
     (*env)->DeleteLocalRef(env, clazz);
     (*env)->DeleteLocalRef(env, exception);
     return 1;
 }
+
+
+jstring javaStacktrace_tostring(JNIEnv *env, jthrowable exception)
+{
+    jstring jstr = NULL;
+    if(utilclass == 0) {
+        utilclass = (*env)->FindClass(env, "jep/Util");
+    }
+    if(throwableAsString == 0) {
+        throwableAsString = (*env)->GetStaticMethodID(env,
+                                                      utilclass,
+                                                      "throwableAsString",
+                                                      "(Ljava/lang/Throwable;)Ljava/lang/String;");
+    }
+
+    jstr = (jstring) (*env)->CallStaticObjectMethod(env, utilclass, throwableAsString, exception);
+    return jstr;
+}
+
 
 
 // call toString() on jobject and return result.
