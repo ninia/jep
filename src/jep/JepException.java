@@ -33,7 +33,7 @@ package jep;
  * @author [mrjohnson0 at sourceforge.net] Mike Johnson
  * @version $Id$
  */
-public class JepException extends Throwable {
+public class JepException extends Exception {
 
     /**
      * Creates a new <code>JepException</code> instance.
@@ -61,5 +61,16 @@ public class JepException extends Throwable {
      */
     public JepException(Throwable t) {
         super(t);
+    }
+
+
+    /**
+     * Creates a new <code>JepException</code> instance.
+     *
+     * @param s a <code>String</code> value
+     * @param t a <code>Throwable</code> value
+     */
+    public JepException(String s, Throwable t) {
+        super(s, t);
     }
 }

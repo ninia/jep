@@ -183,8 +183,6 @@ static PyObject* initjep(void) {
         PyModule_AddIntConstant(modjep, "JFLOAT_ID", JFLOAT_ID);
         PyModule_AddIntConstant(modjep, "JCHAR_ID", JCHAR_ID);
         PyModule_AddIntConstant(modjep, "JBYTE_ID", JBYTE_ID);
-
-        PyModule_AddIntConstant(modjep, "USE_MAPPED_EXCEPTIONS", USE_MAPPED_EXCEPTIONS);
     }
 
     return modjep;

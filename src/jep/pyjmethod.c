@@ -270,37 +270,7 @@ int pyjmethod_init(JNIEnv *env, PyJmethod_Object *self) {
     self->parameters    = (*env)->NewGlobalRef(env, paramArray);
     self->lenParameters = (*env)->GetArrayLength(env, paramArray);
     
-    
-    // ------------------------------ get exceptions declared thrown
-
-#if USE_MAPPED_EXCEPTIONS
-
-    if(methodGetExceptions == 0) {
-        methodGetExceptions = (*env)->GetMethodID(env,
-                                                  rmethodClass,
-                                                  "getExceptionTypes",
-                                                  "()[Ljava/lang/Class;");
-        if(process_java_exception(env) || !methodGetExceptions)
-            goto EXIT_ERROR;
-    }
-    
-    exceptions = (jobjectArray) (*env)->CallObjectMethod(env,
-                                                         self->rmethod,
-                                                         methodGetExceptions);
-    if(process_java_exception(env) || !exceptions)
-        goto EXIT_ERROR;
-
-    if(!register_exceptions(env,
-                            rmethodClass,
-                            self->rmethod,
-                            exceptions)) {
-        goto EXIT_ERROR;
-    }
-
-#endif    
-    
     // ------------------------------ get isStatic
-    
     if(self->isStatic != 1) { // may already know that
         
         // call getModifers()

@@ -284,37 +284,7 @@ PyObject* pyjclass_call(PyJclass_Object *self,
             if(PyErr_Occurred() || process_java_exception(env))
                 goto EXIT_ERROR;
                 
-            // get exceptions declared thrown
-                
-#if USE_MAPPED_EXCEPTIONS
-            
-            if(classGetExceptions == 0) {
-                classGetExceptions = (*env)->GetMethodID(
-                    env,
-                    initClass,
-                    "getExceptionTypes",
-                    "()[Ljava/lang/Class;");
-                if(process_java_exception(env) || !classGetExceptions)
-                    goto EXIT_ERROR;
-            }
-            
-            exceptions = (jobjectArray) (*env)->CallObjectMethod(
-                env,
-                constructor,
-                classGetExceptions);
-            if(process_java_exception(env) || !exceptions)
-                goto EXIT_ERROR;
-
-            if(!register_exceptions(env,
-                                    initClass,
-                                    constructor,
-                                    exceptions))
-                goto EXIT_ERROR;
-
-#endif
-                
             // worked out, create new object
-                
             methodId = (*env)->FromReflectedMethod(env,
                                                    constructor);
             if(process_java_exception(env) || !methodId)

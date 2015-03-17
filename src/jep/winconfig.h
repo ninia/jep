@@ -18,8 +18,5 @@
 /* Define if you want to deallocate objects. */
 #define USE_DEALLOC 1
 
-/* Define if you want to map exceptions. */
-#define USE_MAPPED_EXCEPTIONS 1
-
 /* Version number of package */
 #define VERSION "2.5"

@@ -40,10 +40,6 @@
 #ifndef _Included_util
 #define _Included_util
 
-#ifndef USE_MAPPED_EXCEPTIONS
-#define USE_MAPPED_EXCEPTIONS 0
-#endif
-
 #define JEPEXCEPTION "jep/JepException"
 
 #define THROW_JEP(env, msg)                         \
@@ -53,6 +49,8 @@
     if(clazz)                                       \
         (*env)->ThrowNew(env, clazz, msg);          \
 }
+
+#define THROW_JEP_EXC(env, jepExc) { (*env)->Throw(env, jepExc); }
 
 // does the same thing as the function version, but
 // restores thread blocking first
@@ -126,8 +124,6 @@ PyObject* convert_jobject(JNIEnv*, jobject, int);
 jvalue convert_pyarg_jvalue(JNIEnv*, PyObject*, jclass, int, int);
 
 PyObject* tuplelist_getitem(PyObject*, PyObject*);
-
-int register_exceptions(JNIEnv*, jobject, jobject, jobjectArray);
 
 #define JBOOLEAN_ID 0
 #define JINT_ID     1
