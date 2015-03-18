@@ -73,6 +73,7 @@ static jmethodID objectGetClass  = 0;
 static jmethodID objectEquals    = 0;
 static jmethodID classGetMethods = 0;
 static jmethodID classGetFields  = 0;
+static jmethodID classGetName    = 0;
 
 // called internally to make new PyJobject_Object instances
 PyObject* pyjobject_new(JNIEnv *env, jobject obj) {
@@ -130,6 +131,12 @@ static int pyjobject_init(JNIEnv *env, PyJobject_Object *pyjob) {
     int               i, len = 0;
     jobject           langClass   = NULL;
 
+    jstring           className   = NULL;
+    const char       *cClassName  = NULL;
+    PyObject         *pyClassName = NULL;
+    PyObject         *pyAttrName  = NULL;
+
+
     (*env)->PushLocalFrame(env, 20);
     // ------------------------------ call Class.getMethods()
 
@@ -146,6 +153,29 @@ static int pyjobject_init(JNIEnv *env, PyJobject_Object *pyjob) {
     langClass = (*env)->CallObjectMethod(env, pyjob->clazz, objectGetClass);
     if(process_java_exception(env) || !langClass)
         goto EXIT_ERROR;
+
+    /*
+     * attach attribute java_name to the pyjobject instance to assist with
+     * understanding the type at runtime
+     */
+    if(classGetName == 0) {
+        classGetName = (*env)->GetMethodID(env, langClass, "getName",
+                "()Ljava/lang/String;");
+    }
+    className = (*env)->CallObjectMethod(env, pyjob->clazz, classGetName);
+    cClassName = jstring2char(env, className);
+    pyClassName = PyString_FromString(cClassName);
+    release_utf_char(env, className, cClassName);
+    pyAttrName = PyString_FromString("java_name");
+    if(PyObject_SetAttr((PyObject *) pyjob, pyAttrName, pyClassName) != 0) {
+        PyErr_Format(PyExc_RuntimeError,
+                "Couldn't add java_name as attribute.");
+    } else {
+        pyjobject_addfield(pyjob, pyAttrName);
+    }
+    pyjob->javaClassName = pyClassName;
+    Py_DECREF(pyAttrName);
+    (*env)->DeleteLocalRef(env, className);
 
     // then, get methodid for getMethods()
     if(classGetMethods == 0) {
@@ -248,8 +278,9 @@ static int pyjobject_init(JNIEnv *env, PyJobject_Object *pyjob) {
                                 (PyObject *) pyjfield) != 0) {
                 printf("WARNING: couldn't add field.\n");
             }
-            else
+            else {
                 pyjobject_addfield(pyjob, pyjfield->pyFieldName);
+            }
         }
         
         Py_DECREF(pyjfield);
@@ -287,6 +318,7 @@ static void pyjobject_dealloc(PyJobject_Object *self) {
         Py_DECREF(self->attr);
         Py_DECREF(self->methods);
         Py_DECREF(self->fields);
+        Py_DECREF(self->javaClassName);
         if(self->pyjclass) {
             Py_DECREF(self->pyjclass);
         }

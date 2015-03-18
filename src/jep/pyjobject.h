@@ -52,6 +52,8 @@ typedef struct {
     PyObject        *methods;     /* list of method names */
     PyObject        *fields;      /* list of field names */
     int              finishAttr;  /* true if object attributes are finished */
+    PyObject        *javaClassName; /* string of the fully-qualified name of
+                                       the object's Java clazz */
 } PyJobject_Object;
 
 PyObject* pyjobject_new(JNIEnv*, jobject);
