@@ -41,6 +41,7 @@ typedef struct {
     jobjectArray      initArray;    /* constructor array */
     int               initLen;      /* length of initArray */
     PyObject         *pyjobject;    /* pointer to parent */
+    int              *numArgsPerInit; /* pointer to init arg count */
 } PyJclass_Object;
 
 PyJclass_Object* pyjclass_new(JNIEnv*, PyObject*);
