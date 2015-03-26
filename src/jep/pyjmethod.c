@@ -85,7 +85,6 @@ PyJmethod_Object* pyjmethod_new(JNIEnv *env,
 
     pym                = PyObject_NEW(PyJmethod_Object, &PyJmethod_Type);
     pym->rmethod       = (*env)->NewGlobalRef(env, rmethod);
-    pym->pyjobject     = pyjobject;
     pym->parameters    = NULL;
     pym->lenParameters = 0;
     pym->pyMethodName  = NULL;
@@ -144,7 +143,6 @@ PyJmethod_Object* pyjmethod_new_static(JNIEnv *env,
 
     pym                = PyObject_NEW(PyJmethod_Object, &PyJmethod_Type);
     pym->rmethod       = (*env)->NewGlobalRef(env, rmethod);
-    pym->pyjobject     = pyjobject;
     pym->parameters    = NULL;
     pym->lenParameters = 0;
     pym->pyMethodName  = NULL;
@@ -354,30 +352,6 @@ int pyjmethod_check(PyObject *obj) {
 }
 
 
-// called by python for __call__.
-// we pass off processing to pyjobject's _find_method.
-// sortof a dirty hack to get method overloading...
-static PyObject* pyjmethod_call(PyJmethod_Object *self,
-                                PyObject *args,
-                                PyObject *keywords) {
-    PyObject *ret;
-    
-    if(!PyTuple_Check(args)) {
-        PyErr_Format(PyExc_RuntimeError, "args is not a valid tuple");
-        return NULL;
-    }
-    
-    if(keywords != NULL) {
-        PyErr_Format(PyExc_RuntimeError, "Keywords are not supported.");
-        return NULL;
-    }
-    
-    ret = pyjobject_find_method(self->pyjobject, self->pyMethodName, args);
-    Py_XDECREF(self->pyjobject);
-    return ret;
-}
-
-
 // pyjmethod_call_internal. where the magic happens.
 // 
 // okay, some of the magic -- we already the methodId, so we don't have
@@ -386,6 +360,7 @@ static PyObject* pyjmethod_call(PyJmethod_Object *self,
 // 
 // easy. :-)
 PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
+                                  PyJobject_Object *instance,
                                   PyObject *args) {
     PyObject      *result     = NULL;
     const char    *str        = NULL;
@@ -400,11 +375,11 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
     if(!self->parameters) {
         if(!pyjmethod_init(env, self) || PyErr_Occurred())
             return NULL;
-        return pyjmethod_call_internal(self, args);
+        return pyjmethod_call_internal(self, instance, args);
     }
     
     // validate we can call this method
-    if(!self->pyjobject->object && self->isStatic != JNI_TRUE) {
+    if(!instance->object && self->isStatic != JNI_TRUE) {
         PyErr_Format(PyExc_RuntimeError,
                      "Instantiate this class before "
                      "calling an object method.");
@@ -424,25 +399,23 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
     
     // ------------------------------ build jargs off python values
 
+    // hopefully 40 local references are enough per method call
+    (*env)->PushLocalFrame(env, 40);
     for(pos = 0; pos < self->lenParameters; pos++) {
-        PyObject *param       = NULL;
-        int       paramTypeId = -1;
-        jclass    pclazz;
-        jclass    paramType   =
-            (jclass) (*env)->GetObjectArrayElement(env,
-                                                   self->parameters,
-                                                   pos);
+        PyObject *param = NULL;
+        int paramTypeId = -1;
+        jclass pclazz = NULL;
+        jclass paramType = (jclass) (*env)->GetObjectArrayElement(env,
+                self->parameters, pos);
 
         param = PyTuple_GetItem(args, pos);                   /* borrowed */
         if(PyErr_Occurred()) {                                /* borrowed */
-            PyMem_Free(jargs);
-            return NULL;
+            goto EXIT_ERROR;
         }
         
         pclazz = (*env)->GetObjectClass(env, paramType);
         if(process_java_exception(env) || !pclazz) {
-            PyMem_Free(jargs);
-            return NULL;
+            goto EXIT_ERROR;
         }
         
         paramTypeId = get_jtype(env, paramType, pclazz);
@@ -457,8 +430,7 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                                           paramTypeId,
                                           pos);
         if(PyErr_Occurred()) {                                /* borrowed */
-            PyMem_Free(jargs);
-            return NULL;
+            goto EXIT_ERROR;
         }
 
         (*env)->DeleteLocalRef(env, paramType);
@@ -476,21 +448,21 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
         if(self->isStatic)
             jstr = (jstring) (*env)->CallStaticObjectMethodA(
                 env,
-                self->pyjobject->clazz,
+                instance->clazz,
                 self->methodId,
                 jargs);
         else {
             // not static, a method on class then.
-            if(!self->pyjobject->object)
+            if(!instance->object)
                 jstr = (jstring) (*env)->CallObjectMethodA(
                     env,
-                    self->pyjobject->clazz,
+                    instance->clazz,
                     self->methodId,
                     jargs);
             else
                 jstr = (jstring) (*env)->CallObjectMethodA(
                     env,
-                    self->pyjobject->object,
+                    instance->object,
                     self->methodId,
                     jargs);
         }
@@ -514,20 +486,20 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
         if(self->isStatic)
             obj = (jobjectArray) (*env)->CallStaticObjectMethodA(
                 env,
-                self->pyjobject->clazz,
+                instance->clazz,
                 self->methodId,
                 jargs);
         else {
-            if(!self->pyjobject->object)
+            if(!instance->object)
                 obj = (jobjectArray) (*env)->CallObjectMethodA(
                     env,
-                    self->pyjobject->clazz,
+                    instance->clazz,
                     self->methodId,
                     jargs);
             else
                 obj = (jobjectArray) (*env)->CallObjectMethodA(
                     env,
-                    self->pyjobject->object,
+                    instance->object,
                     self->methodId,
                     jargs);
         }
@@ -546,18 +518,18 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
         if(self->isStatic)
             obj = (*env)->CallStaticObjectMethodA(
                 env,
-                self->pyjobject->clazz,
+                instance->clazz,
                 self->methodId,
                 jargs);
         else {
-            if(!self->pyjobject->object)
+            if(!instance->object)
                 obj = (*env)->CallObjectMethodA(env,
-                                                self->pyjobject->clazz,
+                                                instance->clazz,
                                                 self->methodId,
                                                 jargs);
             else
                 obj = (*env)->CallObjectMethodA(env,
-                                                self->pyjobject->object,
+                                                instance->object,
                                                 self->methodId,
                                                 jargs);
         }
@@ -576,18 +548,18 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
         if(self->isStatic)
             obj = (*env)->CallStaticObjectMethodA(
                 env,
-                self->pyjobject->clazz,
+                instance->clazz,
                 self->methodId,
                 jargs);
         else {
-            if(!self->pyjobject->object)
+            if(!instance->object)
                 obj = (*env)->CallObjectMethodA(env,
-                                                self->pyjobject->clazz,
+                                                instance->clazz,
                                                 self->methodId,
                                                 jargs);
             else
                 obj = (*env)->CallObjectMethodA(env,
-                                                self->pyjobject->object,
+                                                instance->object,
                                                 self->methodId,
                                                 jargs);
         }
@@ -606,18 +578,18 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
         if(self->isStatic)
             ret = (*env)->CallStaticIntMethodA(
                 env,
-                self->pyjobject->clazz,
+                instance->clazz,
                 self->methodId,
                 jargs);
         else {
-            if(!self->pyjobject->object)
+            if(!instance->object)
                 ret = (*env)->CallIntMethodA(env,
-                                             self->pyjobject->clazz,
+                                             instance->clazz,
                                              self->methodId,
                                              jargs);
             else
                 ret = (*env)->CallIntMethodA(env,
-                                             self->pyjobject->object,
+                                             instance->object,
                                              self->methodId,
                                              jargs);
         }
@@ -636,18 +608,18 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
         if(self->isStatic)
             ret = (*env)->CallStaticByteMethodA(
                 env,
-                self->pyjobject->clazz,
+                instance->clazz,
                 self->methodId,
                 jargs);
         else {
-            if(!self->pyjobject->object)
+            if(!instance->object)
                 ret = (*env)->CallByteMethodA(env,
-                                              self->pyjobject->clazz,
+                                              instance->clazz,
                                               self->methodId,
                                               jargs);
             else
                 ret = (*env)->CallByteMethodA(env,
-                                              self->pyjobject->object,
+                                              instance->object,
                                               self->methodId,
                                               jargs);
         }
@@ -667,18 +639,18 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
         if(self->isStatic)
             ret = (*env)->CallStaticCharMethodA(
                 env,
-                self->pyjobject->clazz,
+                instance->clazz,
                 self->methodId,
                 jargs);
         else {
-            if(!self->pyjobject->object)
+            if(!instance->object)
                 ret = (*env)->CallCharMethodA(env,
-                                              self->pyjobject->clazz,
+                                              instance->clazz,
                                               self->methodId,
                                               jargs);
             else
                 ret = (*env)->CallCharMethodA(env,
-                                              self->pyjobject->object,
+                                              instance->object,
                                               self->methodId,
                                               jargs);
         }
@@ -699,18 +671,18 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
         if(self->isStatic)
             ret = (*env)->CallStaticShortMethodA(
                 env,
-                self->pyjobject->clazz,
+                instance->clazz,
                 self->methodId,
                 jargs);
         else {
-            if(!self->pyjobject->object)
+            if(!instance->object)
                 ret = (*env)->CallShortMethodA(env,
-                                               self->pyjobject->clazz,
+                                               instance->clazz,
                                                self->methodId,
                                                jargs);
             else
                 ret = (*env)->CallShortMethodA(env,
-                                               self->pyjobject->object,
+                                               instance->object,
                                                self->methodId,
                                                jargs);
         }
@@ -729,18 +701,18 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
         if(self->isStatic)
             ret = (*env)->CallStaticDoubleMethodA(
                 env,
-                self->pyjobject->clazz,
+                instance->clazz,
                 self->methodId,
                 jargs);
         else {
-            if(!self->pyjobject->object)
+            if(!instance->object)
                 ret = (*env)->CallDoubleMethodA(env,
-                                                self->pyjobject->clazz,
+                                                instance->clazz,
                                                 self->methodId,
                                                 jargs);
             else
                 ret = (*env)->CallDoubleMethodA(env,
-                                                self->pyjobject->object,
+                                                instance->object,
                                                 self->methodId,
                                                 jargs);
         }
@@ -759,18 +731,18 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
         if(self->isStatic)
             ret = (*env)->CallStaticFloatMethodA(
                 env,
-                self->pyjobject->clazz,
+                instance->clazz,
                 self->methodId,
                 jargs);
         else {
-            if(!self->pyjobject->object)
+            if(!instance->object)
                 ret = (*env)->CallFloatMethodA(env,
-                                               self->pyjobject->clazz,
+                                               instance->clazz,
                                                self->methodId,
                                                jargs);
             else
                 ret = (*env)->CallFloatMethodA(env,
-                                               self->pyjobject->object,
+                                               instance->object,
                                                self->methodId,
                                                jargs);
         }
@@ -789,18 +761,18 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
         if(self->isStatic)
             ret = (*env)->CallStaticLongMethodA(
                 env,
-                self->pyjobject->clazz,
+                instance->clazz,
                 self->methodId,
                 jargs);
         else {
-            if(!self->pyjobject->object)
+            if(!instance->object)
                 ret = (*env)->CallLongMethodA(env,
-                                              self->pyjobject->clazz,
+                                              instance->clazz,
                                               self->methodId,
                                               jargs);
             else
                 ret = (*env)->CallLongMethodA(env,
-                                              self->pyjobject->object,
+                                              instance->object,
                                               self->methodId,
                                               jargs);
         }
@@ -819,18 +791,18 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
         if(self->isStatic)
             ret = (*env)->CallStaticBooleanMethodA(
                 env,
-                self->pyjobject->clazz,
+                instance->clazz,
                 self->methodId,
                 jargs);
         else {
-            if(!self->pyjobject->object)
+            if(!instance->object)
                 ret = (*env)->CallBooleanMethodA(env,
-                                                 self->pyjobject->clazz,
+                                                 instance->clazz,
                                                  self->methodId,
                                                  jargs);
             else
                 ret = (*env)->CallBooleanMethodA(env,
-                                                 self->pyjobject->object,
+                                                 instance->object,
                                                  self->methodId,
                                                  jargs);
         }
@@ -848,20 +820,22 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
         // i hereby anoint thee a void method
         if(self->isStatic)
             (*env)->CallStaticVoidMethodA(env,
-                                          self->pyjobject->clazz,
+                                          instance->clazz,
                                           self->methodId,
                                           jargs);
         else
             (*env)->CallVoidMethodA(env,
-                                    self->pyjobject->object,
+                                    instance->object,
                                     self->methodId,
                                     jargs);
 
         Py_BLOCK_THREADS;
         process_java_exception(env);
+        break;
     }
     
     PyMem_Free(jargs);
+    (*env)->PopLocalFrame(env, NULL);
     
     if(PyErr_Occurred())
         return NULL;
@@ -881,6 +855,11 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
     }
     
     return result;
+
+EXIT_ERROR:
+   PyMem_Free(jargs);
+   (*env)->PopLocalFrame(env, NULL);
+   return NULL;
 }
 
 
@@ -905,7 +884,7 @@ static PyTypeObject PyJmethod_Type = {
     0,                                        /* tp_as_sequence */
     0,                                        /* tp_as_mapping */
     0,                                        /* tp_hash  */
-    (ternaryfunc) pyjmethod_call,             /* tp_call */
+    0,                                        /* tp_call */
     0,                                        /* tp_str */
     0,                                        /* tp_getattro */
     0,                                        /* tp_setattro */

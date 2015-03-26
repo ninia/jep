@@ -3,6 +3,7 @@
    jep - Java Embedded Python
 
    Copyright (c) 2004 - 2011 Mike Johnson.
+   @author Nate Jensen.
 
    This file is licenced under the the zlib/libpng License.
 
@@ -24,7 +25,8 @@
 
    3. This notice may not be removed or altered from any source
    distribution.   
-*/ 	
+*/
+
 
 
 // shut up the compiler
@@ -34,34 +36,30 @@
 #include <jni.h>
 #include <Python.h>
 
-#ifndef _Included_pyjmethod
-#define _Included_pyjmethod
+
+#ifndef _Included_pyjmethodwrapper
+#define _Included_pyjmethodwrapper
 
 #include "pyjobject.h"
-#include "pyjclass.h"
+#include "pyjmethod.h"
 
-// i needed an object to store methods in. this is a callable
-// object and instances of these are dynamically added to a PyJobject
-// using setattr.
-
+/*
+ * PyJmethodWrapper_Object enables the ability to reuse a pyjmethod for
+ * multiple instances of pyjobjects of the same underlying Java type.
+ *
+ * Pyjmethods are tied to java.lang.Methods, which are tied
+ * to java.lang.Classes, which are shared across all instances of a particular
+ * Class.  To ensure the right object is called with the method, the pyjmethod
+ * wrapper includes both the pyjobject instance doing the calling and the
+ * pyjmethod to be called.
+ */
 typedef struct {
     PyObject_HEAD
-    jmethodID         methodId;            /* resolved methodid */
-    jobject           rmethod;             /* reflect/Method object */
-    int               returnTypeId;        /* type id of return */
-    PyObject         *pyMethodName;        /* python name... :-) */
-    jobjectArray      parameters;          /* array of jclass parameter types */
-    int               lenParameters;       /* length of parameters above */
-    int               isStatic;            /* if method is static */
-} PyJmethod_Object;
+    PyJmethod_Object *method; /* the original pyjmethod tied to a java.lang.reflect.Method */
+    PyJobject_Object *object; /* the pyjobject that called this method */
+} PyJmethodWrapper_Object;
 
-PyJmethod_Object* pyjmethod_new(JNIEnv*,
-                                jobject,
-                                PyJobject_Object*);
-PyJmethod_Object* pyjmethod_new_static(JNIEnv*, jobject, PyJobject_Object*);
-int pyjmethod_init(JNIEnv*, PyJmethod_Object*);
+PyJmethodWrapper_Object* pyjmethodwrapper_new(PyJobject_Object*,
+        PyJmethod_Object*);
 
-PyObject* pyjmethod_call_internal(PyJmethod_Object*, PyJobject_Object*, PyObject*);
-int pyjmethod_check(PyObject *obj);
-
-#endif // ndef pyjmethod
+#endif // ndef pyjmethodwrapper

@@ -60,6 +60,7 @@
 #include "pyjfield.h"
 #include "pyjclass.h"
 #include "util.h"
+#include "pyjmethodwrapper.h"
 
 staticforward PyTypeObject PyJobject_Type;
 
@@ -74,6 +75,7 @@ static jmethodID objectEquals    = 0;
 static jmethodID classGetMethods = 0;
 static jmethodID classGetFields  = 0;
 static jmethodID classGetName    = 0;
+static PyObject *classnamePyJMethodsDict = NULL;
 
 // called internally to make new PyJobject_Object instances
 PyObject* pyjobject_new(JNIEnv *env, jobject obj) {
@@ -136,6 +138,9 @@ static int pyjobject_init(JNIEnv *env, PyJobject_Object *pyjob) {
     PyObject         *pyClassName = NULL;
     PyObject         *pyAttrName  = NULL;
 
+    PyObject    *cachedMethodList = NULL;
+    jclass                   lock = NULL;
+
 
     (*env)->PushLocalFrame(env, 20);
     // ------------------------------ call Class.getMethods()
@@ -187,56 +192,103 @@ static int pyjobject_init(JNIEnv *env, PyJobject_Object *pyjob) {
             goto EXIT_ERROR;
     }
 
-    // - GetMethodID fails when you pass the clazz object, it expects
-    //   a java.lang.Class jobject.
-    // - if you CallObjectMethod with the langClass jclass object,
-    //   it'll return an array of methods, but they're methods of the
-    //   java.lang.reflect.Method class -- not ->object.
-    //
-    // so what i did here was find the methodid using langClass,
-    // but then i call the method using clazz. methodIds for java
-    // classes are shared....
-
-    methodArray = (jobjectArray) (*env)->CallObjectMethod(env,
-                                                          pyjob->clazz,
-                                                          classGetMethods);
-    if(process_java_exception(env) || !methodArray)
-        goto EXIT_ERROR;
-    
-    // for each method, create a new pyjmethod object
-    // and add to the internal methods list.
-    len = (*env)->GetArrayLength(env, methodArray);
-    for(i = 0; i < len; i++) {
-        PyJmethod_Object *pymethod = NULL;
-        jobject           rmethod  = NULL;
-        
-        rmethod = (*env)->GetObjectArrayElement(env,
-                                                methodArray,
-                                                i);
-
-        // make new PyJmethod_Object, linked to pyjob
-        if(pyjob->object)
-            pymethod = pyjmethod_new(env, rmethod, pyjob);
-        else
-            pymethod = pyjmethod_new_static(env, rmethod, pyjob);
-
-        if(!pymethod)
-            continue;
-
-        if(pymethod->pyMethodName && PyString_Check(pymethod->pyMethodName)) {
-            if(PyObject_SetAttr((PyObject *) pyjob,
-                                pymethod->pyMethodName,
-                                (PyObject *) pymethod) != 0) {
-                printf("WARNING: couldn't add method.\n");
-            }
-            else
-                pyjobject_addmethod(pyjob, pymethod->pyMethodName);
-        }
-        
-        Py_DECREF(pymethod);
-        (*env)->DeleteLocalRef(env, rmethod);
+    /*
+     * Performance improvement.  The code below is very similar to previous
+     * versions except methods are now cached in memory.
+     *
+     * Previously every time you instantiate a pyjobject, JEP would get the
+     * complete list of methods, turn them into pyjmethods, and add them as
+     * attributes to the pyjobject.
+     *
+     * Now JEP retains a python dictionary in memory with a key of the fully
+     * qualified Java classname to a list of pyjmethods. Since the
+     * Java methods will never change at runtime for a particular Class, this
+     * is safe and drastically speeds up pyjobject instantiation by reducing
+     * reflection calls. We continue to set and reuse the pyjmethods as
+     * attributes on the pyjobject instance, but if pyjobject_getattr sees a
+     * pyjmethod, it will put it inside a pyjmethodwrapper and return that,
+     * enabling the reuse of the pyjmethod for this particular object instance.
+     * For more info, see pyjmethodwrapper.
+     *
+     * We synchronize to prevent multiple threads from altering the
+     * dictionary at the same time.
+     */
+    lock = (*env)->FindClass(env, "java/lang/String");
+	if((*env)->MonitorEnter(env, lock) != JNI_OK) {
+	    PyErr_Format(PyExc_RuntimeError, "Couldn't get synchronization lock on class method creation.");
+	}
+    if(classnamePyJMethodsDict == NULL) {
+    	classnamePyJMethodsDict = PyDict_New();
     }
-    (*env)->DeleteLocalRef(env, methodArray);
+
+    cachedMethodList = PyDict_GetItem(classnamePyJMethodsDict, pyClassName);
+    if(cachedMethodList == NULL) {
+    	PyObject *pyjMethodList = NULL;
+    	pyjMethodList = PyList_New(0);
+
+        // - GetMethodID fails when you pass the clazz object, it expects
+        //   a java.lang.Class jobject.
+        // - if you CallObjectMethod with the langClass jclass object,
+        //   it'll return an array of methods, but they're methods of the
+        //   java.lang.reflect.Method class -- not ->object.
+        //
+        // so what i did here was find the methodid using langClass,
+        // but then i call the method using clazz. methodIds for java
+        // classes are shared....
+    
+        methodArray = (jobjectArray) (*env)->CallObjectMethod(env,
+                                                              pyjob->clazz,
+                                                              classGetMethods);
+        if(process_java_exception(env) || !methodArray)
+            goto EXIT_ERROR;
+        
+        // for each method, create a new pyjmethod object
+        // and add to the internal methods list.
+        len = (*env)->GetArrayLength(env, methodArray);
+        for(i = 0; i < len; i++) {
+            PyJmethod_Object *pymethod = NULL;
+            jobject           rmethod  = NULL;
+
+            rmethod = (*env)->GetObjectArrayElement(env,
+                                                    methodArray,
+                                                    i);
+
+            // make new PyJmethod_Object, linked to pyjob
+            if(pyjob->object)
+                pymethod = pyjmethod_new(env, rmethod, pyjob);
+            else
+                pymethod = pyjmethod_new_static(env, rmethod, pyjob);
+
+            if(!pymethod)
+                continue;
+
+            if(pymethod->pyMethodName && PyString_Check(pymethod->pyMethodName)) {
+                    if(PyList_Append(pyjMethodList, (PyObject*) pymethod) != 0)
+                            printf("WARNING: couldn't add method");
+            }
+
+            Py_DECREF(pymethod);
+            (*env)->DeleteLocalRef(env, rmethod);
+        } // end of looping over available methods
+        PyDict_SetItem(classnamePyJMethodsDict, pyClassName, pyjMethodList);
+        cachedMethodList = pyjMethodList;
+        (*env)->DeleteLocalRef(env, methodArray);
+    } // end of setting up cache for this Java Class
+    if((*env)->MonitorExit(env, lock) != JNI_OK) {
+    	PyErr_Format(PyExc_RuntimeError, "Couldn't release synchronization lock on class method creation.");
+    }
+    // end of synchronization
+
+	len = PyList_Size(cachedMethodList);
+	for(i = 0; i < len; i++) {
+		PyJmethod_Object* pymethod = (PyJmethod_Object*) PyList_GetItem(cachedMethodList, i);
+		if(PyObject_SetAttr((PyObject *) pyjob, pymethod->pyMethodName, (PyObject*) pymethod) != 0) {
+			PyErr_Format(PyExc_RuntimeError, "Couldn't add method as attribute.");
+		}
+		else {
+			pyjobject_addmethod(pyjob, pymethod->pyMethodName);
+		}
+	} // end of cached method optimizations
     
     
     // ------------------------------ process fields
@@ -375,6 +427,7 @@ static void pyjobject_addfield(PyJobject_Object *obj, PyObject *name) {
 //
 // steals reference to self, methodname and args.
 PyObject* find_method(JNIEnv *env,
+                      PyJobject_Object *self,
                       PyObject *methodName,
                       Py_ssize_t methodCount,
                       PyObject *attr,
@@ -444,7 +497,7 @@ PyObject* find_method(JNIEnv *env,
     }
     if(pos == 0) {
         // we're done, call that one
-        PyObject *ret = pyjmethod_call_internal(cand[0], args);
+        PyObject *ret = pyjmethod_call_internal(cand[0], self, args);
         PyMem_Free(cand);
         return ret;
     }
@@ -477,7 +530,7 @@ PyObject* find_method(JNIEnv *env,
         
         if(matching && count == 1) {
             PyMem_Free(cand);
-            return pyjmethod_call_internal(matching, args);
+            return pyjmethod_call_internal(matching, self, args);
         }
     } // local scope
     
@@ -521,7 +574,7 @@ PyObject* find_method(JNIEnv *env,
         
         // this method matches?
         if(parmpos == cand[i]->lenParameters) {
-            PyObject *ret = pyjmethod_call_internal(cand[i], args);
+            PyObject *ret = pyjmethod_call_internal(cand[i], self, args);
             PyMem_Free(cand);
             return ret;
         }
@@ -546,6 +599,7 @@ PyObject* pyjobject_find_method(PyJobject_Object *self,
                                 PyObject *args) {
     // util method does this for us
     return find_method(pyembed_get_env(),
+                       self,
                        methodName,
                        PyList_Size(self->methods),
                        self->attr,
@@ -695,6 +749,15 @@ static PyObject* pyjobject_getattr(PyJobject_Object *obj,
     
     Py_DECREF(pyname);
     
+    // method optimizations
+    if(pyjmethod_check(ret))
+    {
+    	PyJmethodWrapper_Object *wrapper = pyjmethodwrapper_new(obj, (PyJmethod_Object*) ret);
+    	Py_DECREF(ret);
+    	Py_INCREF(wrapper);
+    	ret = (PyObject *) wrapper;
+    }
+
     if(PyErr_Occurred() || ret == Py_None) {
         if(ret == Py_None)
             Py_DECREF(Py_None);
@@ -707,8 +770,6 @@ static PyObject* pyjobject_getattr(PyJobject_Object *obj,
         Py_DECREF(ret);
         return t;
     }
-    if(pyjmethod_check(ret))
-        Py_INCREF(obj);
     
     return ret;
 }
