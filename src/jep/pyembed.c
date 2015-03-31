@@ -116,6 +116,10 @@ static jmethodID floatFConstructor = 0;
 // Boolean(boolean)
 static jmethodID booleanBConstructor = 0;
 
+// ArrayList(int)
+static jmethodID arraylistIConstructor = 0;
+static jmethodID arraylistAdd = 0;
+
 static struct PyMethodDef jep_methods[] = {
     { "findClass",
       pyembed_findclass,
@@ -1144,9 +1148,18 @@ void pyembed_setloader(JNIEnv *env, intptr_t _jepThread, jobject cl) {
 // convert pyobject to boxed java value
 jobject pyembed_box_py(JNIEnv *env, PyObject *result) {
 
+    if(result == Py_None) {
+        /*
+         * To ensure we get back a Java null instead of the word "None", we
+         * return NULL in this case.  All the other return NULLs below will
+         * set the error indicator which should be checked for and handled by
+         * code calling pyembed_box_py.
+         */
+        return NULL;
+    }
+
     // class and object need to return a new local ref so the object
     // isn't garbage collected.
-
     if(pyjclass_check(result))
         return (*env)->NewLocalRef(env, ((PyJobject_Object *) result)->clazz);
 
@@ -1244,6 +1257,99 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result) {
 
         return t->object;
     }
+
+    if(PyList_Check(result) || PyTuple_Check(result)) {
+        jclass clazz;
+        int modifiable = PyList_Check(result);
+
+        clazz = (*env)->FindClass(env, "java/util/ArrayList");
+        if(arraylistIConstructor == 0) {
+            arraylistIConstructor = (*env)->GetMethodID(env,
+                                                    clazz,
+                                                    "<init>",
+                                                    "(I)V");
+        }
+        if(arraylistAdd == 0) {
+            arraylistAdd = (*env)->GetMethodID(env,
+                                               clazz,
+                                               "add",
+                                               "(Ljava/lang/Object;)Z");
+        }
+
+        if(!process_java_exception(env) && arraylistIConstructor && arraylistAdd) {
+            jobject list;
+            Py_ssize_t i;
+            Py_ssize_t size;
+
+            if(modifiable) {
+                size = PyList_Size(result);
+            } else {
+                size = PyTuple_Size(result);
+            }
+            list = (*env)->NewObject(env, clazz, arraylistIConstructor, (int) size);
+            if(process_java_exception(env) || !list) {
+                return NULL;
+            }
+
+            for(i=0; i < size; i++) {
+                PyObject *item;
+                jobject value;
+
+                if(modifiable) {
+                    item = PyList_GetItem(result, i);
+                } else {
+                    item = PyTuple_GetItem(result, i);
+                }
+                value = pyembed_box_py(env, item);
+                if(value == NULL && PyErr_Occurred()) {
+                    /*
+                     * java exceptions will have been transformed to python
+                     * exceptions by this point
+                     */
+                    (*env)->DeleteLocalRef(env, list);
+                    return NULL;
+                }
+                (*env)->CallBooleanMethod(env, list, arraylistAdd, value);
+                if(process_java_exception(env)) {
+                    (*env)->DeleteLocalRef(env, list);
+                    return NULL;
+                }
+            }
+
+            if(modifiable) {
+                return list;
+            } else {
+                // make the tuple unmodifiable in Java
+                jclass collections;
+                jmethodID unmodifiableList;
+
+                collections = (*env)->FindClass(env, "java/util/Collections");
+                if(process_java_exception(env) || !collections) {
+                    return NULL;
+                }
+
+                unmodifiableList = (*env)->GetStaticMethodID(env,
+                                                             collections,
+                                                             "unmodifiableList",
+                                                             "(Ljava/util/List;)Ljava/util/List;");
+                if(process_java_exception(env) || !unmodifiableList) {
+                    return NULL;
+                }
+                list = (*env)->CallStaticObjectMethod(env,
+                                                      collections,
+                                                      unmodifiableList,
+                                                      list);
+                if(process_java_exception(env) || !list) {
+                    return NULL;
+                }
+                return list;
+            }
+        }
+        else {
+            return NULL;
+        }
+    } // end of list and tuple conversion
+
 
     // convert everything else to string
     {

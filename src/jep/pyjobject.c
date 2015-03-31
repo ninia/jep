@@ -61,14 +61,11 @@
 #include "pyjclass.h"
 #include "util.h"
 #include "pyjmethodwrapper.h"
-
-staticforward PyTypeObject PyJobject_Type;
+#include "pyjlist.h"
 
 static int pyjobject_init(JNIEnv *env, PyJobject_Object*);
-static int pyjobject_setattr(PyJobject_Object*, char*, PyObject*);
 static void pyjobject_addmethod(PyJobject_Object*, PyObject*);
 static void pyjobject_addfield(PyJobject_Object*, PyObject*);
-static void pyjobject_dealloc(PyJobject_Object*);
 
 static jmethodID objectGetClass  = 0;
 static jmethodID objectEquals    = 0;
@@ -80,6 +77,7 @@ static PyObject *classnamePyJMethodsDict = NULL;
 // called internally to make new PyJobject_Object instances
 PyObject* pyjobject_new(JNIEnv *env, jobject obj) {
     PyJobject_Object *pyjob;
+    jclass            listClazz = NULL;
     
     if(PyType_Ready(&PyJobject_Type) < 0)
         return NULL;
@@ -88,7 +86,13 @@ PyObject* pyjobject_new(JNIEnv *env, jobject obj) {
         return NULL;
     }
 
-    pyjob              = PyObject_NEW(PyJobject_Object, &PyJobject_Type);
+    listClazz = (*env)->FindClass(env, "java/util/List");
+    if((*env)->IsInstanceOf(env, obj, listClazz)) {
+        pyjob = (PyJobject_Object*) pyjlist_new();
+    } else {
+        pyjob = PyObject_NEW(PyJobject_Object, &PyJobject_Type);
+    }
+
     pyjob->object      = (*env)->NewGlobalRef(env, obj);
     pyjob->clazz       = (*env)->NewGlobalRef(env, (*env)->GetObjectClass(env, obj));
     pyjob->pyjclass    = NULL;
@@ -96,7 +100,7 @@ PyObject* pyjobject_new(JNIEnv *env, jobject obj) {
     pyjob->methods     = PyList_New(0);
     pyjob->fields      = PyList_New(0);
     pyjob->finishAttr  = 0;
-    
+
     if(pyjobject_init(env, pyjob))
         return (PyObject *) pyjob;
     return NULL;
@@ -290,7 +294,7 @@ static int pyjobject_init(JNIEnv *env, PyJobject_Object *pyjob) {
 		}
 	} // end of cached method optimizations
     
-    
+
     // ------------------------------ process fields
     
     if(classGetFields == 0) {
@@ -358,7 +362,7 @@ EXIT_ERROR:
 }
 
 
-static void pyjobject_dealloc(PyJobject_Object *self) {
+void pyjobject_dealloc(PyJobject_Object *self) {
 #if USE_DEALLOC
     JNIEnv *env = pyembed_get_env();
     if(env) {
@@ -609,7 +613,7 @@ PyObject* pyjobject_find_method(PyJobject_Object *self,
 
 // call toString() on jobject. returns null on error.
 // excpected to return new reference.
-static PyObject* pyjobject_str(PyJobject_Object *self) {
+PyObject* pyjobject_str(PyJobject_Object *self) {
     PyObject   *pyres     = NULL;
     JNIEnv     *env;
 
@@ -703,7 +707,7 @@ static PyObject* pyjobject_richcompare(PyJobject_Object *self,
 // get attribute 'name' for object.
 // uses obj->attr list of tuples for storage.
 // returns new reference.
-static PyObject* pyjobject_getattr(PyJobject_Object *obj,
+PyObject* pyjobject_getattr(PyJobject_Object *obj,
                                    char *name) {
     PyObject *ret, *pyname, *methods, *members;
     int       listSize, i, found;
@@ -777,11 +781,11 @@ static PyObject* pyjobject_getattr(PyJobject_Object *obj,
 
 // set attribute v for object.
 // uses obj->attr dictionary for storage.
-static int pyjobject_setattr(PyJobject_Object *obj,
+int pyjobject_setattr(PyJobject_Object *obj,
                              char *name,
                              PyObject *v) {
     PyObject *pyname, *tuple;
-    
+
     if(!name) {
         PyErr_Format(PyExc_RuntimeError, "Invalid name: NULL.");
         return -1;
@@ -882,7 +886,8 @@ static PyTypeObject PyJobject_Type = {
     0,                                        /* tp_getattro */
     0,                                        /* tp_setattro */
     0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT,                       /* tp_flags */
+    Py_TPFLAGS_DEFAULT |
+    Py_TPFLAGS_BASETYPE,                      /* tp_flags */
     "jobject",                                /* tp_doc */
     0,                                        /* tp_traverse */
     0,                                        /* tp_clear */

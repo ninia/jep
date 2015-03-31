@@ -56,9 +56,17 @@ typedef struct {
                                        the object's Java clazz */
 } PyJobject_Object;
 
+staticforward PyTypeObject PyJobject_Type;
+
 PyObject* pyjobject_new(JNIEnv*, jobject);
 PyObject* pyjobject_new_class(JNIEnv*, jclass);
 PyObject* pyjobject_find_method(PyJobject_Object*, PyObject*, PyObject*);
 int pyjobject_check(PyObject *obj);
+
+// these methods need to be available to pyjlist
+int pyjobject_setattr(PyJobject_Object*, char*, PyObject*);
+PyObject* pyjobject_getattr(PyJobject_Object*, char*);
+void pyjobject_dealloc(PyJobject_Object*);
+PyObject* pyjobject_str(PyJobject_Object*);
 
 #endif // ndef pyjobject
