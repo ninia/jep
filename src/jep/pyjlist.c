@@ -310,34 +310,61 @@ static int pyjlist_setitem(PyObject *o, Py_ssize_t i, PyObject *v) {
 
 /*
  * Method for setting slices with the [int:int] operator on pyjlist.  For
- * example, o[i1:i2] = v.  Note this is not fully supported yet.
+ * example, o[i1:i2] = v where v is a sequence.
  */
 static int pyjlist_setslice(PyObject *o, Py_ssize_t i1, Py_ssize_t i2, PyObject *v) {
-    if(pyjlist_check(v) || PyList_Check(v) || PyTuple_Check(v)) {
-        /*
-         * TODO Implement, good luck.
-         *
-         * If v is a list, tuple, or pyjlist, then this gets infinitely more complex.
-         */
-        PyErr_Format(PyExc_NotImplementedError,
-                    "pyjlist.__setslice__ does not support assigning lists yet");
+   Py_ssize_t oSize;
+   Py_ssize_t vSize;
+   int diff;
+   int i, vi;
+
+    if(!PySequence_Check(v)) {
+        PyErr_Format(PyExc_TypeError,
+                "pyjlist can only slice assign a sequence");
         return -1;
-    } else {
-        Py_ssize_t i;
-        for(i = i1; i < i2 + 1; i++) {
-            if(pyjlist_setitem(o, i, v) == -1) {
-                /*
-                 * TODO This is not transactional if it fails partially through.
-                 * Not sure how to make that safe short of making a copy of o
-                 * and then replacing o's underlying jobject on success.  That
-                 * would slow it down though....
-                 */
-                return -1;
-            }
-        }
-        // have to return 0 on success even though it's not documented
-        return 0;
     }
+
+    oSize = PySequence_Size(o);
+    vSize = PySequence_Size(v);
+    if(i1 < 0) {
+        i1 = 0;
+    }
+    if(i2 > oSize) {
+        i2 = oSize;
+    }
+    if(i1 >= i2) {
+        PyErr_Format(PyExc_IndexError, "invalid slice indices: %i:%i",
+                (int) i1, (int) i2);
+        return -1;
+    }
+    diff = i2 - i1;
+    if(diff != vSize) {
+        /*
+         * python lists support slice assignment of a different length, but that
+         * gets complicated, so not planning on supporting it until requested
+         */
+        PyErr_Format(PyExc_IndexError,
+                "pyjlist only supports assigning a sequence of the same size as the slice, slice = [%i:%i], value size=%i",
+                (int) i1, (int) i2, (int) vSize);
+        return -1;
+    }
+
+    vi = 0;
+    for(i = i1; i < i2; i++) {
+        PyObject *vVal = PySequence_GetItem(v, vi);
+        if(pyjlist_setitem(o, i, vVal) == -1) {
+            /*
+             * TODO This is not transactional if it fails partially through.
+             * Not sure how to make that safe short of making a copy of o
+             * and then replacing o's underlying jobject on success.  That
+             * would slow it down though....
+             */
+            return -1;
+        }
+        vi++;
+    }
+
+    return 0;
 }
 
 /*
