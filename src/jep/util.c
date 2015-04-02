@@ -1390,9 +1390,23 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
         char     *val;
             
         // none is okay, we'll set a null
-        if(param == Py_None)
+        if(param == Py_None) {
             ret.l = NULL;
-        else {
+        } else if(pyjobject_check(param)) {
+            // if they pass in a pyjobject with java.lang.String inside it
+            jclass strClazz;
+            PyJobject_Object *obj = (PyJobject_Object*) param;
+            strClazz = (*env)->FindClass(env, "java/lang/String");
+            if(!(*env)->IsInstanceOf(env, obj->object, strClazz)) {
+                PyErr_Format(PyExc_TypeError,
+                        "Expected string parameter at %i.",
+                        pos + 1);
+                return ret;
+            }
+
+            ret.l = obj->object;
+            return ret;
+        } else {
             // we could just convert it to a string...
             if(!PyString_Check(param)) {
                 PyErr_Format(PyExc_TypeError,
