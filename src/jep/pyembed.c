@@ -87,7 +87,6 @@ static PyThreadState *mainThreadState = NULL;
 
 static PyObject* pyembed_findclass(PyObject*, PyObject*);
 static PyObject* pyembed_forname(PyObject*, PyObject*);
-static PyObject* pyembed_jimport(PyObject*, PyObject*);
 static PyObject* pyembed_set_print_stack(PyObject*, PyObject*);
 static PyObject* pyembed_jproxy(PyObject*, PyObject*);
 
@@ -97,9 +96,6 @@ static void pyembed_run_pyc(JepThread *jepThread, FILE *);
 
 // ClassLoader.loadClass
 static jmethodID loadClassMethod = 0;
-
-// jep.ClassList.get()
-static jmethodID getClassListMethod = 0;
 
 // jep.Proxy.newProxyInstance
 static jmethodID newProxyMethod = 0;
@@ -141,11 +137,6 @@ static struct PyMethodDef jep_methods[] = {
       "(size, jobject) || "
       "(size, str) || "
       "(size, jarray)" },
-
-    { "jimport",
-      pyembed_jimport,
-      METH_VARARGS,
-      "Same definition as the standard __import__." },
 
     { "printStack",
       pyembed_set_print_stack,
@@ -361,7 +352,7 @@ JepThread* pyembed_get_jepthread(void) {
 }
 
 
-// used by _jimport and _forname
+// used by _forname
 #define LOAD_CLASS_METHOD(env, cl)                                          \
 {                                                                           \
     if(loadClassMethod == 0) {                                              \
@@ -499,242 +490,6 @@ static PyObject* pyembed_set_print_stack(PyObject *self, PyObject *args) {
 
     Py_INCREF(Py_None);
     return Py_None;
-}
-
-
-static PyObject* pyembed_jimport(PyObject *self, PyObject *args) {
-    PyThreadState *_save;
-    JNIEnv        *env = NULL;
-    jstring        jname;
-    jclass         clazz;
-    jobject        cl;
-    JepThread     *jepThread;
-    Py_ssize_t     len, i;
-    jobjectArray   jar;
-
-	char         *name;
-    PyObject     *module     = NULL;
-    PyObject     *addmod     = NULL; /* add object to, may be same as module */
-	PyObject     *globals    = NULL;
-	PyObject     *locals     = NULL;
-	PyObject     *fromlist   = NULL;
-    PyObject     *ret        = NULL;
-
-	if(!PyArg_ParseTuple(args,
-                         "s|OOO:__import__",
-                         &name, &globals, &locals, &fromlist))
-		return NULL;
-
-    // try to let python handle first
-    ret = PyImport_ImportModuleEx(name, globals, locals, fromlist);
-    if(ret != NULL)
-        return ret;
-    PyErr_Clear();
-
-    jepThread = pyembed_get_jepthread();
-    if(!jepThread) {
-        if(!PyErr_Occurred())
-            PyErr_SetString(PyExc_RuntimeError, "Invalid JepThread pointer.");
-        return NULL;
-    }
-    
-    env = jepThread->env;
-    cl  = jepThread->classloader;
-
-    LOAD_CLASS_METHOD(env, cl);
-
-    Py_UNBLOCK_THREADS;
-    clazz = (*env)->FindClass(env, "jep/ClassList");
-    Py_BLOCK_THREADS;
-    if(process_import_exception(env) || !clazz)
-        return NULL;
-
-    if(getClassListMethod == 0) {
-        getClassListMethod =
-            (*env)->GetStaticMethodID(env,
-                                      clazz,
-                                      "get",
-                                      "(Ljava/lang/String;)[Ljava/lang/String;");
-        
-        if(process_import_exception(env) || !getClassListMethod)
-            return NULL;
-    }
-
-    jname = (*env)->NewStringUTF(env, name);
-    Py_UNBLOCK_THREADS;
-    jar = (jobjectArray) (*env)->CallStaticObjectMethod(
-        env,
-        clazz,
-        getClassListMethod,
-        jname);
-    Py_BLOCK_THREADS;
-
-    if(process_import_exception(env) || !jar)
-        return NULL;
-
-    // process module name. foo.bar must be split so 'module' is 'bar'
-    {
-        PyObject *pyname;
-        PyObject *tname;
-        PyObject *modlist;
-
-        pyname  = PyString_FromString(name);
-        modlist = PyObject_CallMethod(pyname, "split", "s", ".");
-        Py_DECREF(pyname);
-
-        if(!PyList_Check(modlist) || PyErr_Occurred()) {
-            return PyErr_Format(PyExc_ImportError,
-                                "Couldn't split package name %s ",
-                                name);
-        }
-
-        // first module gets added a little differently
-        tname  = PyList_GET_ITEM(modlist, 0); /* borrowed */
-        addmod = module = PyImport_AddModule(PyString_AsString(tname));
-
-        if(module == NULL || PyErr_Occurred()) {
-            return PyErr_Format(PyExc_ImportError,
-                                "Couldn't add package %s ",
-                                name);
-        }
-
-        len = (int) PyList_GET_SIZE(modlist);
-        for(i = 1; i < len; i++) {
-            char     *cname;
-            PyObject *globals;  /* shadow parent scope */
-
-            tname = PyList_GET_ITEM(modlist, i); /* borrowed */
-            cname = PyString_AsString(tname);
-            
-            globals = PyModule_GetDict(addmod); /* borrowed */
-
-            Py_InitModule(cname, noop_methods);
-            addmod = PyImport_ImportModuleEx(cname, globals, globals, NULL); /* new ref */
-
-            PyDict_SetItem(globals,
-                           tname,
-                           addmod);     /* ownership */
-            Py_DECREF(addmod);
-        }
-    }
-
-    len = (*env)->GetArrayLength(env, jar);
-    for(i = 0; i < len; i++) {
-        jstring   member     = NULL;
-        jclass    objclazz   = NULL;
-        PyObject *pclass     = NULL;
-        PyObject *memberList = NULL;
-
-        member = (*env)->GetObjectArrayElement(env, jar, (jsize) i);
-        if(process_import_exception(env) || !member) {
-            (*env)->DeleteLocalRef(env, member);
-            continue;
-        }
-
-        // split member into list, member looks like "java.lang.System"
-        {
-            const char *cmember;
-            PyObject   *pymember;
-            
-            cmember    = jstring2char(env, member);
-            pymember   = PyString_FromString(cmember);
-            memberList = PyObject_CallMethod(pymember, "split", "s", ".");
-
-            Py_DECREF(pymember);
-            (*env)->ReleaseStringUTFChars(env, member, cmember);
-
-            if(!PyList_Check(memberList) || PyErr_Occurred()) {
-                THROW_JEP(env, "Couldn't split member name");
-                (*env)->DeleteLocalRef(env, member);
-                continue;
-            }
-        }
-
-        // make sure our class name is in the fromlist (a tuple)
-        if(PyTuple_Check(fromlist) &&
-           PyString_AsString(PyTuple_GET_ITEM(fromlist, 0))[0] != '*') {
-
-            PyObject   *pymember;
-            int         found;
-            Py_ssize_t  i, len;
-
-            pymember = PyList_GET_ITEM(
-                memberList,
-                PyList_GET_SIZE(memberList) - 1); /* last one */
-
-            found = 0;
-            len   = (int) PyTuple_GET_SIZE(fromlist);
-            for(i = 0; i < len && found == 0; i++) {
-                PyObject *el = PyTuple_GET_ITEM(fromlist, i);
-                if(PyObject_Compare(pymember, el) == 0)
-                    found = 1;
-            }
-
-            if(found == 0) {
-                (*env)->DeleteLocalRef(env, member);
-                Py_DECREF(memberList);
-                continue;          /* don't process this class name */
-            }
-        }
-
-        Py_UNBLOCK_THREADS;
-        objclazz = (jclass) (*env)->CallObjectMethod(env,
-                                                     cl,
-                                                     loadClassMethod,
-                                                     member);
-        Py_BLOCK_THREADS;
-
-        if((*env)->ExceptionOccurred(env) != NULL || !objclazz) {
-            // this error we ignore
-            // (*env)->ExceptionDescribe(env);
-            Py_DECREF(memberList);
-            (*env)->DeleteLocalRef(env, member);
-            (*env)->ExceptionClear(env);
-            continue;
-        }
-
-        // make a new class object
-        pclass = (PyObject *) pyjobject_new_class(env, objclazz);
-        if(pclass) {
-            PyModule_AddObject(
-                addmod,
-                PyString_AsString(
-                    PyList_GET_ITEM(
-                        memberList,
-                        PyList_GET_SIZE(memberList) - 1)), /* classname */
-                pclass);                                   /* steals ref */
-        }
-
-        Py_DECREF(memberList);
-        (*env)->DeleteLocalRef(env, member);
-    }
-
-    if(module == NULL)
-        return PyErr_Format(PyExc_ImportError, "No module %s found", name);
-
-    if(PyTuple_Check(fromlist) && PyTuple_GET_SIZE(fromlist) > 0) {
-        // user specified a list of objects.
-        // python's __import__.__doc__ reads:
-
-        /* When importing a module from a package, note that
-         * __import__('A.B', ...) returns package A when fromlist is
-         * empty, but its submodule B when fromlist is not empty.
-         */
-
-        if(addmod == NULL) {
-            return PyErr_Format(
-                PyExc_ImportError,
-                "While importing %s addmod was NULL. I goofed.",
-                name);
-        }
-
-        Py_INCREF(addmod);
-        return addmod;
-    }
-
-    // otherwise, return parent module.
-    Py_INCREF(module);
-    return module;
 }
 
 

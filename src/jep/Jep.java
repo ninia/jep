@@ -112,6 +112,22 @@ public final class Jep {
     public Jep(boolean interactive,
                String includePath,
                ClassLoader cl) throws JepException {
+        this(interactive, includePath, cl, null);        
+    }
+    
+    /**
+     * Creates a new <code>Jep</code> instance.
+     *
+     * @param interactive a <code>boolean</code> value
+     * @param includePath a path separated by File.pathSeparator
+     * @param cl a <code>ClassLoader</code> value
+     * @param ce a <code>ClassEnquirer</code> value, or null for the default ClassList
+     * @exception JepException if an error occurs
+     */
+    public Jep(boolean interactive,
+               String includePath,
+               ClassLoader cl,
+               ClassEnquirer ce) throws JepException {
         
         if(cl == null)
             this.classLoader = this.getClass().getClassLoader();
@@ -128,9 +144,16 @@ public final class Jep {
             eval("sys.path += '" + includePath + "'.split('" +
                  File.pathSeparator + "')");
         }
-
+                   
         eval("import jep");
+        if(ce == null) {         	
+            ce = ClassList.getInstance();
+        }
+        set("classlist", ce);
+        eval("jep.hook.setupImporter(classlist)");
+        eval("del classlist");
     }
+
     
     
     // load shared library

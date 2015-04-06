@@ -29,8 +29,11 @@ class module(ModuleType):
 
 
 class JepImporter(object):
-    def __init__(self):
-        self.classlist = forName('jep.ClassList').getInstance()
+    def __init__(self, classlist=None):
+        if classlist:
+            self.classlist = classlist
+        else:
+            self.classlist = forName('jep.ClassList').getInstance()
 
     def find_module(self, fullname, path=None):
         if self.classlist.contains(fullname):
@@ -49,17 +52,19 @@ class JepImporter(object):
         })
         sys.modules[fullname] = mod
 
-        # list of classes in package
-        classlist = self.classlist.get(fullname)
-        if classlist:
-            for name in classlist:
-                try:
-                    setattr(mod, name.split('.')[-1], forName(name))
-                except Exception:
-                    pass
+        if self.classlist.supportsPackageImport():
+            # list of classes in package
+            classlist = self.classlist.get(fullname)
+            if classlist:
+                for name in classlist:
+                    try:
+                        setattr(mod, name.split('.')[-1], forName(name))
+                    except Exception:
+                        pass
         return mod
 
 
-sys.meta_path = [importer for importer in sys.meta_path if isinstance(importer, JepImporter)]
-sys.meta_path.append(JepImporter())
+def setupImporter(classlist):
+    sys.meta_path = [importer for importer in sys.meta_path if isinstance(importer, JepImporter)]
+    sys.meta_path.append(JepImporter(classlist))
 

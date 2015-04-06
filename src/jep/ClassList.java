@@ -2,8 +2,8 @@ package jep;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
@@ -51,7 +51,8 @@ import java.util.jar.JarFile;
  * @author [mrjohnson0 at sourceforge.net] Mike Johnson
  * @version $Id$
  */
-public class ClassList {
+public class ClassList implements ClassEnquirer {
+	
     private static ClassList inst;
 
     // storage for package, members
@@ -241,7 +242,7 @@ public class ClassList {
     }
 
 
-    private String[] _get(String p) throws JepException {
+    private String[] _get(String p) {
         ArrayList<String> el = packages.get(p);
         if(el == null) {
 
@@ -276,14 +277,20 @@ public class ClassList {
 
 
     /**
-     * get classnames in package
+     * classname contained in package
      *
      * @param p a <code>String</code> value
      * @return <code>String[]</code> array of class names
      * @exception JepException if an error occurs
      */
-    public static boolean contains(String p) throws JepException {
-        return ClassList.getInstance()._get(p) != null;
+    @Override
+    public boolean contains(String p) {
+        return _get(p) != null;
+    }
+    
+    @Override
+    public boolean supportsPackageImport() {
+    	return true;
     }
 
 
