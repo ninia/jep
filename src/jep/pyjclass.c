@@ -64,10 +64,16 @@
 
 staticforward PyTypeObject PyJclass_Type;
 
+static PyObject* pyjclass_add_inner_classes(JNIEnv*, jobject, PyJobject_Object*);
 static void pyjclass_dealloc(PyJclass_Object*);
 
-static jmethodID classGetConstructors = 0;
-static jmethodID classGetParmTypes    = 0;
+static jmethodID classGetConstructors    = 0;
+static jmethodID classGetParmTypes       = 0;
+static jmethodID classGetDeclaredClasses = 0;
+static jmethodID classGetModifiers       = 0;
+static jmethodID classGetSimpleName      = 0;
+static jmethodID modifierIsPublic        = 0;
+
 
 
 PyJclass_Object* pyjclass_new(JNIEnv *env, PyObject *pyjob) {
@@ -168,6 +174,21 @@ PyJclass_Object* pyjclass_new(JNIEnv *env, PyObject *pyjob) {
         pyc->numArgsPerInit[i] = (*env)->GetArrayLength(env, parmArray);
     } // end of optimization
 
+    /*
+     * attempt to add public inner classes as attributes since lots of people
+     * code with public enum.  Note this will not allow the inner class to be
+     * imported separately, it must be accessed through the enclosing class.
+     */
+    if(!pyjclass_add_inner_classes(env, langClass, pyjobject)) {
+        /*
+         * let's just print the error to stderr and continue on without
+         * inner class support, it's not the end of the world
+         */
+        if(PyErr_Occurred()) {
+            PyErr_PrintEx(0);
+        }
+    }
+
     (*env)->PopLocalFrame(env, NULL);
     return pyc;
 
@@ -177,6 +198,118 @@ EXIT_ERROR:
         pyjclass_dealloc(pyc);
     
     return NULL;
+}
+
+/*
+ * Adds a Java class's public inner classes as attributes to the pyjclass.
+ *
+ * @param env the JNI environment
+ * @param langClass the class object for java.lang.Class (reused to boost speed)
+ * @param topClz the pyjobject of the top/outer Class
+ *
+ * @return topClz if successful, otherwise NULL
+ */
+static PyObject* pyjclass_add_inner_classes(JNIEnv *env,
+                                            jobject langClass,
+                                            PyJobject_Object *topClz) {
+    jobjectArray      innerArray    = NULL;
+    jsize             innerSize     = 0;
+
+    /*
+     * the first time through langClass should always be here, after that
+     * there are no guarantees, so we will do some safety checks
+     */
+
+    if(classGetDeclaredClasses == 0) {
+        if(langClass == NULL) {
+            langClass = (*env)->FindClass(env, "java/lang/Class");
+        }
+        classGetDeclaredClasses = (*env)->GetMethodID(env,
+                                                      langClass,
+                                                      "getDeclaredClasses",
+                                                      "()[Ljava/lang/Class;");
+        if(process_java_exception(env) || !classGetDeclaredClasses)
+            return NULL;
+    }
+
+    if(classGetModifiers == 0) {
+        if(langClass == NULL) {
+            langClass = (*env)->FindClass(env, "java/lang/Class");
+        }
+        classGetModifiers = (*env)->GetMethodID(env, langClass, "getModifiers",
+                "()I");
+        if(process_java_exception(env) || !classGetModifiers)
+            return NULL;
+    }
+
+    innerArray = (*env)->CallObjectMethod(env,
+                                        topClz->clazz,
+                                        classGetDeclaredClasses);
+    if(process_java_exception(env) || !innerArray)
+        return NULL;
+
+    innerSize = (*env)->GetArrayLength(env, innerArray);
+    if(innerSize > 0) {
+        jclass    modClz     = NULL;
+        int i;
+
+        // setup to verify this inner class should be available
+        modClz = (*env)->FindClass(env, "java/lang/reflect/Modifier");
+        if(process_java_exception(env) || !modClz)
+            return NULL;
+        if(modifierIsPublic == 0) {
+            modifierIsPublic = (*env)->GetStaticMethodID(env, modClz, "isPublic", "(I)Z");
+            if(process_java_exception(env) || !modifierIsPublic)
+                return NULL;
+        }
+
+        // check each inner class to see if it's public
+        for(i=0; i < innerSize; i++) {
+            jclass    innerClz = NULL;
+            jint      mods;
+            jboolean  public;
+
+            innerClz = (*env)->GetObjectArrayElement(env, innerArray, i);
+            if(process_java_exception(env) || !innerClz)
+                return NULL;
+            mods = (*env)->CallIntMethod(env, innerClz, classGetModifiers);
+            if(process_java_exception(env))
+                return NULL;
+            public = (*env)->CallBooleanMethod(env, modClz, modifierIsPublic, mods);
+            if(process_java_exception(env))
+                return NULL;
+
+            if(public) {
+                PyObject        *attrClz    = NULL;
+                jstring          shortName  = NULL;
+                const char      *charName;
+
+                attrClz = pyjobject_new_class(env, innerClz);
+                if(process_java_exception(env) || !attrClz)
+                    return NULL;
+                if(classGetSimpleName == 0) {
+                    if(langClass == NULL) {
+                        langClass = (*env)->FindClass(env, "java/lang/Class");
+                    }
+                    classGetSimpleName = (*env)->GetMethodID(env, langClass, "getSimpleName", "()Ljava/lang/String;");
+                    if(process_java_exception(env) || !classGetSimpleName)
+                        return NULL;
+                }
+
+                shortName = (*env)->CallObjectMethod(env, innerClz, classGetSimpleName);
+                if(process_java_exception(env) || !shortName)
+                    return NULL;
+                charName = jstring2char(env, shortName);
+
+                if(PyObject_SetAttrString((PyObject*) topClz, charName, attrClz) != -0) {
+                    printf("Error adding inner class %s\n", charName);
+                }
+                release_utf_char(env, shortName, charName);
+            }
+        }
+    }
+
+    return (PyObject*) topClz;
 }
 
 
