@@ -40,6 +40,10 @@
 #ifndef _Included_util
 #define _Included_util
 
+#ifndef USE_NUMPY
+#define USE_NUMPY 1
+#endif
+
 #define JEPEXCEPTION "jep/JepException"
 
 #define THROW_JEP(env, msg)                         \
@@ -125,6 +129,13 @@ jvalue convert_pyarg_jvalue(JNIEnv*, PyObject*, jclass, int, int);
 
 PyObject* tuplelist_getitem(PyObject*, PyObject*);
 
+#if USE_NUMPY
+int npy_array_check(PyObject*);
+int jndarray_check(JNIEnv*, jobject, jclass);
+jobject convert_pyndarray_jndarray(JNIEnv*, PyObject*);
+PyObject* convert_jndarray_pyndarray(JNIEnv*, jobject, jclass);
+#endif
+
 #define JBOOLEAN_ID 0
 #define JINT_ID     1
 #define JLONG_ID    2
@@ -151,5 +162,15 @@ extern jclass JFLOAT_TYPE;
 extern jclass JCHAR_TYPE;
 extern jclass JBYTE_TYPE;
 extern jclass JCLASS_TYPE;
+
+#if USE_NUMPY
+extern jclass JBOOLEAN_ARRAY_TYPE;
+extern jclass JBYTE_ARRAY_TYPE;
+extern jclass JSHORT_ARRAY_TYPE;
+extern jclass JINT_ARRAY_TYPE;
+extern jclass JLONG_ARRAY_TYPE;
+extern jclass JFLOAT_ARRAY_TYPE;
+extern jclass JDOUBLE_ARRAY_TYPE;
+#endif
 
 #endif // ifndef _Included_util

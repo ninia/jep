@@ -178,6 +178,7 @@ static PyObject* initjep(void) {
         PyModule_AddIntConstant(modjep, "JFLOAT_ID", JFLOAT_ID);
         PyModule_AddIntConstant(modjep, "JCHAR_ID", JCHAR_ID);
         PyModule_AddIntConstant(modjep, "JBYTE_ID", JBYTE_ID);
+        PyModule_AddIntConstant(modjep, "USE_NUMPY", USE_NUMPY);
     }
 
     return modjep;
@@ -1105,6 +1106,11 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result) {
         }
     } // end of list and tuple conversion
 
+#if USE_NUMPY
+    if(npy_array_check(result)) {
+        return convert_pyndarray_jndarray(env, result);
+    }
+#endif
 
     // convert everything else to string
     {

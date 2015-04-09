@@ -78,6 +78,9 @@ static PyObject *classnamePyJMethodsDict = NULL;
 PyObject* pyjobject_new(JNIEnv *env, jobject obj) {
     PyJobject_Object *pyjob;
     jclass            listClazz = NULL;
+#if USE_NUMPY
+    jclass            jndaClazz = NULL;
+#endif
     
     if(PyType_Ready(&PyJobject_Type) < 0)
         return NULL;
@@ -85,6 +88,20 @@ PyObject* pyjobject_new(JNIEnv *env, jobject obj) {
         PyErr_Format(PyExc_RuntimeError, "Invalid object.");
         return NULL;
     }
+
+#if USE_NUMPY
+    /*
+     * check for jep/NDArray and autoconvert to numpy.ndarray instead of
+     * pyjobject
+     */
+    jndaClazz = (*env)->FindClass(env, "jep/NDArray");
+    if(jndarray_check(env, obj, jndaClazz)) {
+        return convert_jndarray_pyndarray(env, obj, jndaClazz);
+    }
+    if(PyErr_Occurred()) {
+        return NULL;
+    }
+#endif
 
     listClazz = (*env)->FindClass(env, "java/util/List");
     if((*env)->IsInstanceOf(env, obj, listClazz)) {
@@ -218,17 +235,18 @@ static int pyjobject_init(JNIEnv *env, PyJobject_Object *pyjob) {
      * dictionary at the same time.
      */
     lock = (*env)->FindClass(env, "java/lang/String");
-	if((*env)->MonitorEnter(env, lock) != JNI_OK) {
-	    PyErr_Format(PyExc_RuntimeError, "Couldn't get synchronization lock on class method creation.");
-	}
+    if((*env)->MonitorEnter(env, lock) != JNI_OK) {
+        PyErr_Format(PyExc_RuntimeError,
+                "Couldn't get synchronization lock on class method creation.");
+    }
     if(classnamePyJMethodsDict == NULL) {
-    	classnamePyJMethodsDict = PyDict_New();
+        classnamePyJMethodsDict = PyDict_New();
     }
 
     cachedMethodList = PyDict_GetItem(classnamePyJMethodsDict, pyClassName);
     if(cachedMethodList == NULL) {
-    	PyObject *pyjMethodList = NULL;
-    	pyjMethodList = PyList_New(0);
+        PyObject *pyjMethodList = NULL;
+        pyjMethodList = PyList_New(0);
 
         // - GetMethodID fails when you pass the clazz object, it expects
         //   a java.lang.Class jobject.
@@ -239,23 +257,20 @@ static int pyjobject_init(JNIEnv *env, PyJobject_Object *pyjob) {
         // so what i did here was find the methodid using langClass,
         // but then i call the method using clazz. methodIds for java
         // classes are shared....
-    
-        methodArray = (jobjectArray) (*env)->CallObjectMethod(env,
-                                                              pyjob->clazz,
-                                                              classGetMethods);
+
+        methodArray = (jobjectArray) (*env)->CallObjectMethod(env, pyjob->clazz,
+                classGetMethods);
         if(process_java_exception(env) || !methodArray)
             goto EXIT_ERROR;
-        
+
         // for each method, create a new pyjmethod object
         // and add to the internal methods list.
         len = (*env)->GetArrayLength(env, methodArray);
-        for(i = 0; i < len; i++) {
+        for (i = 0; i < len; i++) {
             PyJmethod_Object *pymethod = NULL;
-            jobject           rmethod  = NULL;
+            jobject rmethod = NULL;
 
-            rmethod = (*env)->GetObjectArrayElement(env,
-                                                    methodArray,
-                                                    i);
+            rmethod = (*env)->GetObjectArrayElement(env, methodArray, i);
 
             // make new PyJmethod_Object, linked to pyjob
             if(pyjob->object)
@@ -267,8 +282,8 @@ static int pyjobject_init(JNIEnv *env, PyJobject_Object *pyjob) {
                 continue;
 
             if(pymethod->pyMethodName && PyString_Check(pymethod->pyMethodName)) {
-                    if(PyList_Append(pyjMethodList, (PyObject*) pymethod) != 0)
-                            printf("WARNING: couldn't add method");
+                if(PyList_Append(pyjMethodList, (PyObject*) pymethod) != 0)
+                    printf("WARNING: couldn't add method");
             }
 
             Py_DECREF(pymethod);
@@ -279,20 +294,23 @@ static int pyjobject_init(JNIEnv *env, PyJobject_Object *pyjob) {
         (*env)->DeleteLocalRef(env, methodArray);
     } // end of setting up cache for this Java Class
     if((*env)->MonitorExit(env, lock) != JNI_OK) {
-    	PyErr_Format(PyExc_RuntimeError, "Couldn't release synchronization lock on class method creation.");
+        PyErr_Format(PyExc_RuntimeError,
+                "Couldn't release synchronization lock on class method creation.");
     }
     // end of synchronization
 
-	len = PyList_Size(cachedMethodList);
-	for(i = 0; i < len; i++) {
-		PyJmethod_Object* pymethod = (PyJmethod_Object*) PyList_GetItem(cachedMethodList, i);
-		if(PyObject_SetAttr((PyObject *) pyjob, pymethod->pyMethodName, (PyObject*) pymethod) != 0) {
-			PyErr_Format(PyExc_RuntimeError, "Couldn't add method as attribute.");
-		}
-		else {
-			pyjobject_addmethod(pyjob, pymethod->pyMethodName);
-		}
-	} // end of cached method optimizations
+    len = PyList_Size(cachedMethodList);
+    for (i = 0; i < len; i++) {
+        PyJmethod_Object* pymethod = (PyJmethod_Object*) PyList_GetItem(
+                cachedMethodList, i);
+        if(PyObject_SetAttr((PyObject *) pyjob, pymethod->pyMethodName,
+                (PyObject*) pymethod) != 0) {
+            PyErr_Format(PyExc_RuntimeError,
+                    "Couldn't add method as attribute.");
+        } else {
+            pyjobject_addmethod(pyjob, pymethod->pyMethodName);
+        }
+    } // end of cached method optimizations
     
 
     // ------------------------------ process fields
