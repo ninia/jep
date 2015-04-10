@@ -38,6 +38,7 @@ public class Run {
     private static boolean swingApp     = false;
     private static String  file         = null;
     private static String  scriptArgv   = null;
+    private static boolean pyInited     = false;
 
     
     private final static String USAGE =
@@ -48,6 +49,8 @@ public class Run {
     
 
     public static int run(boolean eventDispatch) {
+        initPython();
+        
         Jep jep = null;
         
         try {
@@ -155,6 +158,25 @@ public class Run {
         // in case we're run with -Xrs
         if(!swingApp)
             System.exit(ret);
+    }
+    
+    private static void initPython() {
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Jep.pyInitialize();
+                pyInited = true;
+            }
+        });
+        t.start();
+
+        while (!pyInited) {
+            try {
+                Thread.sleep(5);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
     
     

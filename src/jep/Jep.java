@@ -2,6 +2,7 @@ package jep;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 import jep.python.PyModule;
 import jep.python.PyObject;
@@ -43,6 +44,20 @@ import jep.python.PyObject;
  */
 public final class Jep {
     
+    private static final String THREAD_WARN_START = "JEP WARNING: "
+            + "Unsafe reuse of thread ";
+
+    private static final String THREAD_WARN_END = " for another Python interpreter.\n"
+            + " Potential issues can occur if you reuse the thread that JEP was"
+            + " initialized on or have multiple Jep instances on the same thread.";
+
+    /**
+     * Tracks which thread the Jep library was initialized on. That thread
+     * initialized the main python interpreter that all other subinterpreters
+     * will be created from.
+     */
+    private static long initializerThread = -1L;
+      
     private boolean closed = false;
     private long    tstate = 0;
     // all calls must originate from same thread
@@ -52,7 +67,7 @@ public final class Jep {
     private ClassLoader classLoader = null;
     
     // eval() storage.
-    private StringBuffer evalLines   = null;
+    private StringBuilder evalLines   = null;
     private boolean      interactive = false;
     
     // windows requires this as unix newline...
@@ -63,7 +78,33 @@ public final class Jep {
      * crashes in userland if jep is closed.
      *
      */
-    private ArrayList<PyObject> pythonObjects = new ArrayList<PyObject>();
+    private final List<PyObject> pythonObjects = new ArrayList<PyObject>();
+    
+    /**
+     * Tracks if this thread has been used for an interpreter before.  Using
+     * different interpreter instances on the same thread is iffy at best.  If
+     * you make use of CPython extensions (e.g. numpy) that use the GIL, then
+     * this gets even more risky and can potentially deadlock.
+     */
+    private final static ThreadLocal<Boolean> threadUsed = new ThreadLocal<Boolean>(){
+        @Override
+        protected Boolean initialValue(){
+            return false;
+        }
+    };
+    
+    /**
+     * Loads the jep library (e.g. libjep.so or jep.dll) and initializes the
+     * main python interpreter that all subinterpreters will be created from.
+     */
+    public static synchronized Class<Jep> pyInitialize() {
+        if (initializerThread < 0) {
+            System.loadLibrary("jep");
+            initializerThread = Thread.currentThread().getId();
+            threadUsed.set(true);
+        }
+        return Jep.class;
+    }
     
     
     // -------------------------------------------------- constructors
@@ -127,7 +168,20 @@ public final class Jep {
     public Jep(boolean interactive,
                String includePath,
                ClassLoader cl,
-               ClassEnquirer ce) throws JepException {
+               ClassEnquirer ce) throws JepException {        
+        if (initializerThread < 0) {
+            throw new JepException("Jep Library must be initialized first"
+                    + ", please call pyInitialize()");
+    }
+        if (threadUsed.get()) {
+            /*
+             * TODO: Consider throwing an exception here to not allow this
+             * scenario through, as it can result in very-hard-to-diagnose bugs
+             * such as GIL-related freezes.
+             */
+            System.err.println(THREAD_WARN_START
+                    + Thread.currentThread().getName() + THREAD_WARN_END);
+        }
         
         if(cl == null)
             this.classLoader = this.getClass().getClassLoader();
@@ -136,10 +190,11 @@ public final class Jep {
         
         this.interactive = interactive;
         this.tstate = init(this.classLoader);
+        threadUsed.set(true);
         this.thread = Thread.currentThread();
         
         // why write C code if you don't have to? :-)
-        if(includePath != null) {
+        if(includePath != null) {            
             eval("import sys");
             eval("sys.path += '" + includePath + "'.split('" +
                  File.pathSeparator + "')");
@@ -152,14 +207,7 @@ public final class Jep {
         set("classlist", ce);
         eval("jep.hook.setupImporter(classlist)");
         eval("del classlist");
-    }
-
-    
-    
-    // load shared library
-    static {
-        System.loadLibrary("jep");
-    }
+    }        
     
     
     private native long init(ClassLoader classloader) throws JepException;
@@ -306,7 +354,7 @@ public final class Jep {
                 
                 // doesn't compile on it's own, append to eval
                 if(this.evalLines == null)
-                    this.evalLines = new StringBuffer();
+                    this.evalLines = new StringBuilder();
                 else
                     evalLines.append(LINE_SEP);
                 evalLines.append(str);
@@ -509,17 +557,40 @@ public final class Jep {
         if(this.closed)
             throw new JepException("Jep has been closed.");
         isValidThread();
-        
-        if(v instanceof Class)
-            set(tstate, name, (Class) v);
-        else
+
+        /*
+         * TODO: This will force Java Objects representing primitives (and
+         * String) to be auto-converted to their primitive python equivalent
+         * instead of being wrapped as a pyjobject.  Perhaps there should be
+         * a way to enable/disable/choose which you'd prefer?  
+         */
+        if (v instanceof Class) {
+            set(tstate, name, (Class<?>) v);
+        } else if (v instanceof String) {
+            set(name, ((String) v));
+        } else if (v instanceof Float) {
+            set(name, ((Float) v).floatValue());
+        } else if (v instanceof Integer) {
+            set(name, ((Integer) v).intValue());
+        } else if (v instanceof Double) {
+            set(name, ((Double) v).doubleValue());
+        } else if (v instanceof Long) {
+            set(name, ((Long) v).longValue());
+        } else if (v instanceof Byte) {
+            set(name, ((Byte) v).byteValue());
+        } else if (v instanceof Short) {
+            set(name, ((Short) v).shortValue());
+        } else if (v instanceof Boolean) {
+            set(name, ((Boolean) v).booleanValue());
+        } else {
             set(tstate, name, v);
+    }
     }
 
     private native void set(long tstate, String name, Object v)
         throws JepException;
 
-    private native void set(long tstate, String name, Class v)
+    private native void set(long tstate, String name, Class<?> v)
         throws JepException;
 
     /**
@@ -842,6 +913,18 @@ public final class Jep {
         if(this.closed)
             return;
         
+        try {
+            isValidThread();
+        } catch (JepException e) {
+            /*
+             * TODO change to throw JepException?
+             */
+            System.err
+                    .println("Please close Jep instance from the original creating thread: "
+                            + thread.getName());
+            e.printStackTrace();
+        }
+        
         // close all the PyObjects we created
         for(int i = 0; i < this.pythonObjects.size(); i++)
             pythonObjects.get(i).close();
@@ -849,15 +932,19 @@ public final class Jep {
         this.closed = true;
         this.close(tstate);
         this.tstate = 0;
+
+        if(Thread.currentThread().getId() != initializerThread) {
+            threadUsed.set(false);
+        }
     }
 
     private native void close(long tstate);
     
     
-    /**
-     * Describe <code>finalize</code> method here.
-     *
+    /**     
+     * Attempts to close the interpreter if it hasn't been correctly closed.
      */
+    @Override
     protected void finalize() {
         this.close();
     }
