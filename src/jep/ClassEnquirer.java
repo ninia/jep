@@ -8,8 +8,14 @@ package jep;
  * determine if an attempt to import a module/class should be directed
  * to the Python importer or the Java importer.
  * 
+ * TODO: Implement an OSGi class enquirer.  Implement a pseudo-secure
+ * class enquirer.  jep.findClass(name) ignores the import hook and wouldn't
+ * go through the secure enquirer, so it would still require a restricted
+ * ClassLoader to be secure.  However, they could potentially be used in
+ * tandem for faster performance or dynamic behavior. 
+ * 
  *
- * Copyright (c) 2004 - 2011 Mike Johnson.
+ * Copyright (c) 2015 JEP AUTHORS.
  *
  * This file is licenced under the the zlib/libpng License.
  *

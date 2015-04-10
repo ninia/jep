@@ -97,7 +97,7 @@ public class Run {
     /**
      * Describe <code>main</code> method here.
      *
-     * @param args[] a <code>String</code> value
+     * @param args a <code>String</code> value
      * @exception Throwable if an error occurs
      * @exception Exception if an error occurs
      */
@@ -126,7 +126,7 @@ public class Run {
         }
         
         if(file == null) {
-            System.out.println("Run: Invaid file, null");
+            System.out.println("Run: Invalid file, null");
             System.out.println(USAGE);
             System.exit(1);
         }

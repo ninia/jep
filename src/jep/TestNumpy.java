@@ -20,6 +20,8 @@ public class TestNumpy implements Runnable {
 
     private static boolean PRINT = false;
 
+    private static boolean pyInited = false;
+
     @Override
     public void run() {
         try {
@@ -30,7 +32,7 @@ public class TestNumpy implements Runnable {
              * some native memory. Therefore, for now, do NOT new up the
              * interpreter and close it within the for loop.
              */
-            jep = new Jep(true, pwd.getAbsolutePath());
+            jep = new Jep(false, pwd.getAbsolutePath());
             for (int i = 0; i < REPEAT; i++) {
                 testSetAndGet();
             }
@@ -245,6 +247,33 @@ public class TestNumpy implements Runnable {
         return array != null;
     }
 
+    public void testNDArraySafety() {
+        float[][] f = new float[15][];
+        int[] dims = new int[] { 15, 20 };
+        try {
+            NDArray<float[][]> ndarray = new NDArray<>(f, dims);
+            ndarray.getDimensions();
+            throw new RuntimeException(
+                    "NDArray should have failed instantiation");
+        } catch (IllegalArgumentException e) {
+            if (PRINT) {
+                e.printStackTrace();
+            }
+        }
+
+        float[] d = new float[200];
+        try {
+            NDArray<float[]> ndarray = new NDArray<>(d, dims);
+            ndarray.getDimensions();
+            throw new RuntimeException(
+                    "NDArray should have failed instantiation");
+        } catch (IllegalArgumentException e) {
+            if (PRINT) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     /**
      * This main() is for running the tests from Java. If running from the tests
      * from python, use python setup.py test.
@@ -252,9 +281,27 @@ public class TestNumpy implements Runnable {
      * @param args
      */
     public static void main(String[] args) {
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Jep.pyInitialize();
+                pyInited = true;
+            }
+        });
+        t.start();
+
+        while (!pyInited) {
+            try {
+                Thread.sleep(5);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
         TestNumpy test = new TestNumpy();
         test.run();
         test.runPythonSide();
+        test.testNDArraySafety();
     }
 
 }

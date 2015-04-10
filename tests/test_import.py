@@ -23,7 +23,7 @@ class TestImport(unittest.TestCase):
         try:
             vm.setInteractive(True)
             vm.setClassLoader(Test.restrictedClassLoader)
-            with self.assertRaises(JavaException) as e:
+            with self.assertRaises(RuntimeError) as e:
                 vm.eval("from java.io import File")
                 vm.eval('f = File("failed.txt")')
         finally:

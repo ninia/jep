@@ -1,22 +1,26 @@
 package jep;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 /**
  * <pre>
  * NamingConventionClassEnquirer.java - A simple enquirer to see
- * if the package/class name starts following one of the normal
- * Java conventions of package/classnames.
+ * if the package/class to be imported in a Python interpreter should
+ * be considered as a Java package/class.
  * 
- * This class can be used in situations where you want to avoid
- * the overhead of initializing ClassList and/or importing all
- * classes in a package.
+ * This class is useful for the following scenarios:
+ * <ul>
+ * <li>You don't want the overhead of initializing ClassList.getInstance()</li>
+ * <li>You don't want all the classes in a package automatically imported</li>
+ * <li>You don't have python modules that resemble java package names</li>
+ * </ul>
  * 
  * 
- * Copyright (c) 2004 - 2011 Mike Johnson.
+ * Copyright (c) 2015 JEP AUTHORS.
  * 
  * This file is licenced under the the zlib/libpng License.
  * 
@@ -48,74 +52,81 @@ import java.util.Locale;
  */
 public class NamingConventionClassEnquirer implements ClassEnquirer {
 
-	private static final List<String> TOP_LEVEL = Arrays.asList("java",
-			"javax", "com", "gov", "org", "edu", "mil", "net");
-	
-	private List<String> javaNames;
-	
-	private List<String> namesWithDot;
-	
-	/**
-	 * Constructor
-	 */
-	public NamingConventionClassEnquirer() {
-		this(false);
-	}
-	
-	/**
-	 * Constructor
-	 * @param includeCountryCodes whether or not a name starting with a
-	 * 2-letter country code such a uk, de, fr, us, ch should be considered as
-	 * a Java package. 
-	 */
-	public NamingConventionClassEnquirer(boolean includeCountryCodes) {
-		if(includeCountryCodes) {
-			String[] codes = Locale.getISOCountries();
-			javaNames = new ArrayList<String>(TOP_LEVEL.size() + codes.length);
-			javaNames.addAll(TOP_LEVEL);
-			for(String country: codes) {
-				javaNames.add(country.toLowerCase());
-			}			
-		} else {
-			javaNames = new ArrayList<String>(TOP_LEVEL.size());
-			javaNames.addAll(TOP_LEVEL);
-		}
-		
-		namesWithDot = new ArrayList<String>(javaNames.size());
-		for(String javaStart: javaNames) {
-			namesWithDot.add(javaStart.concat("."));
-		}
-	}
-	
-	/**
-	 * Adds a package name to the list of names that should be considered
-	 * as Java packages
-	 * @param pkgStart
-	 */
-	public void addJavaPackageStart(String pkgStart) {
-		javaNames.add(pkgStart);
-		namesWithDot.add(pkgStart.concat("."));
-	}
+    protected static final List<String> TOP_LEVEL = Arrays.asList("java",
+            "javax", "com", "gov", "org", "edu", "mil", "net");
 
-	@Override
-	public boolean contains(String name) {
-		if(name == null) {
-			throw new IllegalArgumentException("name must not be null");
-		}
-		int size = javaNames.size();
-		
-		for(int i=0; i < size; i++) {
-			if(name.equals(javaNames.get(i)) || name.startsWith(namesWithDot.get(i))) {
-				return true;
-			}
-		}
-		
-		return false;
-	}
+    protected Set<String> javaNames;
 
-	@Override
-	public boolean supportsPackageImport() {
-		return false;
-	}
+    /**
+     * Convenience constructor. Includes defaults but not country codes.
+     */
+    public NamingConventionClassEnquirer() {
+        this(true);
+    }
+
+    /**
+     * Constructor
+     * 
+     * @param includeDefaults
+     *            whether or not typical package names such as java, javax, com,
+     *            gov should be considered as a java package.
+     */
+    public NamingConventionClassEnquirer(boolean includeDefaults) {
+        this(includeDefaults, false);
+    }
+
+    /**
+     * Constructor
+     * 
+     * @param includeDefaults
+     *            whether or not typical package names such as java, javax, com,
+     *            gov should be considered as a java package.
+     * @param includeCountryCodes
+     *            whether or not a name starting with a 2-letter country code
+     *            such a uk, de, fr, us, ch should be considered as a Java
+     *            package.
+     */
+    public NamingConventionClassEnquirer(boolean includeDefaults,
+            boolean includeCountryCodes) {
+        if (includeCountryCodes) {
+            String[] codes = Locale.getISOCountries();
+            javaNames = new HashSet<String>(TOP_LEVEL.size() + codes.length);
+            javaNames.addAll(TOP_LEVEL);
+            for (String country : codes) {
+                javaNames.add(country.toLowerCase());
+            }
+        } else {
+            javaNames = new HashSet<String>(TOP_LEVEL.size());
+            javaNames.addAll(TOP_LEVEL);
+        }
+    }
+
+    /**
+     * Adds a top level package name to the list of names that should be
+     * considered as Java packages
+     * 
+     * @param pkgStart
+     */
+    public void addTopLevelPackageName(String pkgStart) {
+        javaNames.add(pkgStart);
+    }
+
+    @Override
+    public boolean contains(String name) {
+        if (name == null) {
+            throw new IllegalArgumentException("name must not be null");
+        }
+        if (javaNames.contains(name)) {
+            return true;
+        } else {
+            String[] split = name.split(".");
+            return (split.length > 0 && javaNames.contains(split[0]));
+        }
+    }
+
+    @Override
+    public boolean supportsPackageImport() {
+        return false;
+    }
 
 }

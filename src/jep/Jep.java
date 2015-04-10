@@ -44,12 +44,12 @@ import jep.python.PyObject;
  */
 public final class Jep {
     
-    private static final String THREAD_WARN_START = "JEP WARNING: "
+    private static final String THREAD_WARN = "JEP WARNING: "
             + "Unsafe reuse of thread ";
 
-    private static final String THREAD_WARN_END = " for another Python interpreter.\n"
-            + " Potential issues can occur if you reuse the thread that JEP was"
-            + " initialized on or have multiple Jep instances on the same thread.";
+    private static final String INIT_WARN = " that initialized JEP.\n" + "Potential GIL issues if you use CPython extensions.";            
+    
+    private static final String REUSE_WARN = " for another Python interpreter.\nPlease close() the previous Jep instance to ensure stability.";            
 
     /**
      * Tracks which thread the Jep library was initialized on. That thread
@@ -171,16 +171,22 @@ public final class Jep {
                ClassEnquirer ce) throws JepException {        
         if (initializerThread < 0) {
             throw new JepException("Jep Library must be initialized first"
-                    + ", please call pyInitialize()");
-    }
+                    + ", please call Jep.pyInitialize()");
+        }
         if (threadUsed.get()) {
             /*
-             * TODO: Consider throwing an exception here to not allow this
-             * scenario through, as it can result in very-hard-to-diagnose bugs
-             * such as GIL-related freezes.
+             * TODO: Consider throwing an exception for one or both of these
+             * cases, as it can result in very-hard-to-diagnose bugs such as
+             * GIL-related freezes.
              */
-            System.err.println(THREAD_WARN_START
-                    + Thread.currentThread().getName() + THREAD_WARN_END);
+            Thread current = Thread.currentThread();
+            String warn = THREAD_WARN + current.getName();
+            if (current.getId() == initializerThread) {
+                warn += INIT_WARN;
+            } else {
+                warn += REUSE_WARN;
+            }
+            System.err.println(warn);
         }
         
         if(cl == null)
@@ -913,17 +919,10 @@ public final class Jep {
         if(this.closed)
             return;
         
-        try {
-            isValidThread();
-        } catch (JepException e) {
-            /*
-             * TODO change to throw JepException?
-             */
-            System.err
-                    .println("Please close Jep instance from the original creating thread: "
-                            + thread.getName());
-            e.printStackTrace();
-        }
+        /*
+         * TODO Investigate. This is the only method not using isValidThread(),
+         * how safe is that?
+         */
         
         // close all the PyObjects we created
         for(int i = 0; i < this.pythonObjects.size(); i++)

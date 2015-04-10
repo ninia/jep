@@ -1,5 +1,6 @@
 package jep;
 
+import java.lang.reflect.Array;
 import java.util.Arrays;
 
 /**
@@ -8,7 +9,7 @@ import java.util.Arrays;
  * seamlessly transition between this representation in Java and
  * a numpy.ndarray representation in Python.
  * 
- * Copyright (c) 2015 Nate Jensen.
+ * Copyright (c) 2015 JEP AUTHORS.
  * 
  * This file is licenced under the the zlib/libpng License.
  * 
@@ -44,7 +45,14 @@ public class NDArray<T extends Object> {
 
     protected final int[] dimensions;
 
-    public NDArray(T data, int[] dimensions) {
+    /**
+     * Constructor for a Java NDArray.
+     * 
+     * @param data a one-dimensional primitive array such as float[], int[]
+     * @param dimensions the conceptual dimensions of the data (corresponds
+     * to the numpy.ndarray dimensions in C-contiguous order)
+     */
+    public NDArray(T data, int... dimensions) {
         this.data = data;
         this.dimensions = dimensions;
 
@@ -59,6 +67,29 @@ public class NDArray<T extends Object> {
                     "NDArray only supports primitive arrays, received "
                             + data.getClass().getName());
         }
+
+        // validate data size matches dimensions size
+        int dataLength = Array.getLength(data);
+        int dimSize = 1;
+        for (int i = 0; i < dimensions.length; i++) {
+            dimSize *= dimensions[i];
+        }
+
+        if (dimSize != dataLength) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("NDArray data length ");
+            sb.append(dataLength);
+            sb.append(" does not match size specified by dimensions [");
+            for (int i = 0; i < dimensions.length; i++) {
+                sb.append(dimensions[i]);
+                if (i < dimensions.length - 1) {
+                    sb.append(" * ");
+                }
+            }
+            sb.append("]");
+            throw new IllegalArgumentException(sb.toString());
+        }
+
     }
 
     public int[] getDimensions() {
@@ -91,11 +122,7 @@ public class NDArray<T extends Object> {
         }
 
         // compare the data
-        if (data == null && other.data == null) {
-            return true;
-        } else if (data == null && other.data != null) {
-            return false;
-        } else if (data != null && other.data == null) {
+        if (other.data == null) {
             return false;
         } else {
             // neither has null, let's compare values
@@ -159,5 +186,7 @@ public class NDArray<T extends Object> {
         result = prime * result + Arrays.hashCode(dimensions);
         return result;
     }
+
+    // TODO override toString() to make it look like ndarray.__str__()
 
 }
