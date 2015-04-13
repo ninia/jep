@@ -1,6 +1,6 @@
 from __future__ import print_function
 import unittest
-from jep import JepImporter, findClass, JavaException
+from jep import JepImporter, findClass
 
 
 Jep = findClass('jep.Jep')

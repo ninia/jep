@@ -2,7 +2,7 @@
 /* 
    jep - Java Embedded Python
 
-   Copyright (c) 2004 - 2011 Mike Johnson.
+   Copyright (c) 2015 JEP AUTHORS.
 
    This file is licenced under the the zlib/libpng License.
 
@@ -306,6 +306,14 @@ void pyembed_thread_close(intptr_t _jepThread) {
         Py_DECREF(jepThread->globals);
     }
     if(jepThread->modjep) {
+    	PyObject *moddict = PyModule_GetDict(jepThread->modjep);
+    	/*
+    	 * we need to clear out the jep module's dictionary, otherwise it
+    	 * can leak references to some of its attributes
+    	 */
+    	if(moddict) {
+            PyDict_Clear(moddict);
+    	}
         Py_DECREF(jepThread->modjep);
     }
     if(jepThread->classloader) {

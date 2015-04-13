@@ -8,15 +8,16 @@ import java.util.concurrent.Executors;
  * ndarrays, and closing/disposing interpreters. This demonstrates the issue
  * where numpy's array2string or array_str reference is lost.
  * 
+ * Created: Autumn 2013
+ * 
  * @author David Gillingham
+ * @version $Id$
  */
 public class TestNumpyArrayToString {
 
     private static final int NUM_ITERATIONS = 10;
 
     public static void main(String[] args) {
-        Jep.pyInitialize();
-
         Runnable disposeThread = new Runnable() {
 
             @Override

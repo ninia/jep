@@ -3,7 +3,9 @@ package jep;
 import java.io.File;
 
 /**
- * Test.java
+ * TestNumpy.java.  Runs a variety of simple tests to verify numpy interactions
+ * are working correctly.  run() is called by setup.py test, or you can call the
+ * java main() method directly for other tests.
  * 
  * 
  * Created: Wed Apr 08 2015
@@ -19,8 +21,6 @@ public class TestNumpy implements Runnable {
     private static final int REPEAT = 1; // 0000000;
 
     private static boolean PRINT = false;
-
-    private static boolean pyInited = false;
 
     @Override
     public void run() {
@@ -280,24 +280,7 @@ public class TestNumpy implements Runnable {
      * 
      * @param args
      */
-    public static void main(String[] args) {
-        Thread t = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Jep.pyInitialize();
-                pyInited = true;
-            }
-        });
-        t.start();
-
-        while (!pyInited) {
-            try {
-                Thread.sleep(5);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
+    public static void main(String[] args) {        
         TestNumpy test = new TestNumpy();
         test.run();
         test.runPythonSide();

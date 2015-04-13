@@ -19,7 +19,7 @@ import java.util.jar.JarFile;
  * <pre>
  * Jep.java - Embeds CPython in Java.
  *
- * Copyright (c) 2004 - 2011 Mike Johnson.
+ * Copyright (c) 2015 JEP AUTHORS.
  *
  * This file is licenced under the the zlib/libpng License.
  *
@@ -71,7 +71,7 @@ public class ClassList implements ClassEnquirer {
      * load jar files from class path
      *
      */
-    private void loadClassPath() throws JepException {
+    private void loadClassPath() {
         StringTokenizer tok = new StringTokenizer(
             System.getProperty("java.class.path"),
             System.getProperty("path.separator"));
@@ -213,7 +213,7 @@ public class ClassList implements ClassEnquirer {
                     reader.close();
             }
             catch(IOException ee) {
-                ;
+                // ignore
             }
         }
     }
@@ -281,7 +281,6 @@ public class ClassList implements ClassEnquirer {
      *
      * @param p a <code>String</code> value
      * @return <code>String[]</code> array of class names
-     * @exception JepException if an error occurs
      */
     @Override
     public boolean contains(String p) {

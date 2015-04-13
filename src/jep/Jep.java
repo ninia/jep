@@ -12,7 +12,7 @@ import jep.python.PyObject;
  * <pre>
  * Jep.java - Embeds CPython in Java.
  *
- * Copyright (c) 2004 - 2011 Mike Johnson.
+ * Copyright (c) 2015 JEP AUTHORS.
  *
  * This file is licenced under the the zlib/libpng License.
  *
@@ -46,17 +46,8 @@ public final class Jep {
     
     private static final String THREAD_WARN = "JEP WARNING: "
             + "Unsafe reuse of thread ";
-
-    private static final String INIT_WARN = " that initialized JEP.\n" + "Potential GIL issues if you use CPython extensions.";            
     
-    private static final String REUSE_WARN = " for another Python interpreter.\nPlease close() the previous Jep instance to ensure stability.";            
-
-    /**
-     * Tracks which thread the Jep library was initialized on. That thread
-     * initialized the main python interpreter that all other subinterpreters
-     * will be created from.
-     */
-    private static long initializerThread = -1L;
+    private static final String REUSE_WARN = " for another Python interpreter.\nPlease close() the previous Jep instance to ensure stability.";
       
     private boolean closed = false;
     private long    tstate = 0;
@@ -95,15 +86,57 @@ public final class Jep {
     
     /**
      * Loads the jep library (e.g. libjep.so or jep.dll) and initializes the
-     * main python interpreter that all subinterpreters will be created from.
+     * main python interpreter that all subinterpreters will be created from.         
      */
-    public static synchronized Class<Jep> pyInitialize() {
-        if (initializerThread < 0) {
-            System.loadLibrary("jep");
-            initializerThread = Thread.currentThread().getId();
-            threadUsed.set(true);
+    private static class TopInterpreter {
+        Throwable error;
+
+        /**
+         * Loads the jep library, which will in turn initialize CPython, ie
+         * Py_Initialize(). We load on a separate thread to try and avoid GIL
+         * issues that come about from a sub-interpreter being on the same
+         * thread as the top/main interpreter.
+         * 
+         * @throws Error
+         */
+        private void initialize() throws Error {
+            Thread thread = new Thread(new Runnable() {
+
+                @Override
+                public void run() {
+                    try {
+                        System.loadLibrary("jep");
+                    } catch (Throwable t) {
+                        error = t;
+                    } finally {
+                        synchronized (TopInterpreter.this) {
+                            TopInterpreter.this.notify();
+                        }
+                    }
+                }
+            });
+            synchronized (this) {
+                thread.start();
+                try {
+                    this.wait();
+                } catch (InterruptedException e) {
+                    if (error != null) {
+                        error = e;
+                    }
+                }
+            }
+            if (error != null) {
+                if (error instanceof UnsatisfiedLinkError) {
+                    throw (UnsatisfiedLinkError) error;
+                }
+                throw new Error(error);
+            }
         }
-        return Jep.class;
+    }
+    
+    static {
+        TopInterpreter python = new TopInterpreter();
+        python.initialize();
     }
     
     
@@ -168,24 +201,15 @@ public final class Jep {
     public Jep(boolean interactive,
                String includePath,
                ClassLoader cl,
-               ClassEnquirer ce) throws JepException {        
-        if (initializerThread < 0) {
-            throw new JepException("Jep Library must be initialized first"
-                    + ", please call Jep.pyInitialize()");
-        }
+               ClassEnquirer ce) throws JepException {                     
         if (threadUsed.get()) {
             /*
-             * TODO: Consider throwing an exception for one or both of these
-             * cases, as it can result in very-hard-to-diagnose bugs such as
-             * GIL-related freezes.
+             * TODO: Consider throwing an exception for this situation instead
+             * of printing a warning, as it can result in very-hard-to-diagnose
+             * bugs such as GIL-related freezes or misleading error messages.
              */
             Thread current = Thread.currentThread();
-            String warn = THREAD_WARN + current.getName();
-            if (current.getId() == initializerThread) {
-                warn += INIT_WARN;
-            } else {
-                warn += REUSE_WARN;
-            }
+            String warn = THREAD_WARN + current.getName() + REUSE_WARN;
             System.err.println(warn);
         }
         
@@ -213,6 +237,7 @@ public final class Jep {
         set("classlist", ce);
         eval("jep.hook.setupImporter(classlist)");
         eval("del classlist");
+        eval(null); // flush
     }        
     
     
@@ -564,12 +589,6 @@ public final class Jep {
             throw new JepException("Jep has been closed.");
         isValidThread();
 
-        /*
-         * TODO: This will force Java Objects representing primitives (and
-         * String) to be auto-converted to their primitive python equivalent
-         * instead of being wrapped as a pyjobject.  Perhaps there should be
-         * a way to enable/disable/choose which you'd prefer?  
-         */
         if (v instanceof Class) {
             set(tstate, name, (Class<?>) v);
         } else if (v instanceof String) {
@@ -590,7 +609,7 @@ public final class Jep {
             set(name, ((Boolean) v).booleanValue());
         } else {
             set(tstate, name, v);
-    }
+        }
     }
 
     private native void set(long tstate, String name, Object v)
@@ -920,21 +939,19 @@ public final class Jep {
             return;
         
         /*
-         * TODO Investigate. This is the only method not using isValidThread(),
-         * how safe is that?
+         * close() seems to get away with not checking isValidThread() since
+         * it does very little JNI interaction, mostly just cpython code
          */
         
         // close all the PyObjects we created
         for(int i = 0; i < this.pythonObjects.size(); i++)
             pythonObjects.get(i).close();
-
+        
         this.closed = true;
         this.close(tstate);
         this.tstate = 0;
-
-        if(Thread.currentThread().getId() != initializerThread) {
-            threadUsed.set(false);
-        }
+        
+        threadUsed.set(false);
     }
 
     private native void close(long tstate);
