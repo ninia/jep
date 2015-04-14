@@ -59,7 +59,7 @@
 #include "pyjobject.h"
 #include "pyembed.h"
 
-staticforward PyTypeObject PyJlist_Type;
+PyAPI_DATA(PyTypeObject) PyJlist_Type;
 
 static Py_ssize_t pyjlist_len(PyObject*);
 static PyObject* pyjlist_add(PyObject*, PyObject*);
@@ -528,20 +528,18 @@ static PySequenceMethods pyjlist_seq_methods = {
 
 
 /*
- * I set tp_base to PyJobject_Type so it has inheritance, but for the life
- * of me I couldn't get it to inherit the methods, so I set the relevant
- * methods directly.
+ * Inherits from PyJobject_Type
  */
-static PyTypeObject PyJlist_Type = {
+PyTypeObject PyJlist_Type = {
     PyObject_HEAD_INIT(0)
     0,
     "jep.PyJlist",
     sizeof(PyJlist_Object),
     0,
-    (destructor) pyjobject_dealloc,           /* tp_dealloc */
+    0,                                        /* tp_dealloc */
     0,                                        /* tp_print */
-    (getattrfunc) pyjobject_getattr,          /* tp_getattr */
-    (setattrfunc) pyjobject_setattr,          /* tp_setattr */
+    0,                                        /* tp_getattr */
+    0,                                        /* tp_setattr */
     0,                                        /* tp_compare */
     0,                                        /* tp_repr */
     0,                                        /* tp_as_number */
@@ -549,7 +547,7 @@ static PyTypeObject PyJlist_Type = {
     0,                                        /* tp_as_mapping */
     0,                                        /* tp_hash  */
     0,                                        /* tp_call */
-    (reprfunc) pyjobject_str,                 /* tp_str */
+    0,                                        /* tp_str */
     0,                                        /* tp_getattro */
     0,                                        /* tp_setattro */
     0,                                        /* tp_as_buffer */

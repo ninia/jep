@@ -24,7 +24,7 @@
 
    3. This notice may not be removed or altered from any source
    distribution.   
-*/ 	
+*/
 
 
 // shut up the compiler
@@ -56,7 +56,7 @@ typedef struct {
                                        the object's Java clazz */
 } PyJobject_Object;
 
-staticforward PyTypeObject PyJobject_Type;
+PyAPI_DATA(PyTypeObject) PyJobject_Type;
 
 PyObject* pyjobject_new(JNIEnv*, jobject);
 PyObject* pyjobject_new_class(JNIEnv*, jclass);

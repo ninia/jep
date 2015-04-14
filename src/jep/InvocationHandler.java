@@ -36,7 +36,7 @@ import jep.python.*;
  * </pre>
  *
  * @author [mrjohnson0 at sourceforge.net] Mike Johnson
- * @version $Id: $	
+ * @version $Id: $
  */
 public class InvocationHandler implements java.lang.reflect.InvocationHandler {
 

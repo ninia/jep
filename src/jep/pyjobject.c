@@ -24,7 +24,7 @@
 
    3. This notice may not be removed or altered from any source
    distribution.   
-*/ 	
+*/
 
 #ifdef WIN32
 # include "winconfig.h"
@@ -774,10 +774,10 @@ PyObject* pyjobject_getattr(PyJobject_Object *obj,
     // method optimizations
     if(pyjmethod_check(ret))
     {
-    	PyJmethodWrapper_Object *wrapper = pyjmethodwrapper_new(obj, (PyJmethod_Object*) ret);
-    	Py_DECREF(ret);
-    	Py_INCREF(wrapper);
-    	ret = (PyObject *) wrapper;
+        PyJmethodWrapper_Object *wrapper = pyjmethodwrapper_new(obj, (PyJmethod_Object*) ret);
+        Py_DECREF(ret);
+        Py_INCREF(wrapper);
+        ret = (PyObject *) wrapper;
     }
 
     if(PyErr_Occurred() || ret == Py_None) {
@@ -883,7 +883,7 @@ static PyMethodDef pyjobject_methods[] = {
 };
 
 
-static PyTypeObject PyJobject_Type = {
+PyTypeObject PyJobject_Type = {
     PyObject_HEAD_INIT(0)
     0,                                        /* ob_size */
     "PyJobject",                              /* tp_name */
@@ -909,7 +909,7 @@ static PyTypeObject PyJobject_Type = {
     "jobject",                                /* tp_doc */
     0,                                        /* tp_traverse */
     0,                                        /* tp_clear */
-    pyjobject_richcompare,                    /* tp_richcompare */
+    (richcmpfunc) pyjobject_richcompare,      /* tp_richcompare */
     0,                                        /* tp_weaklistoffset */
     0,                                        /* tp_iter */
     0,                                        /* tp_iternext */

@@ -24,7 +24,7 @@
 
    3. This notice may not be removed or altered from any source
    distribution.   
-*/ 	
+*/
 
 #ifdef WIN32
 # include "winconfig.h"
@@ -1302,7 +1302,7 @@ int pyarg_matches_jtype(JNIEnv *env,
         break;
         
     case JBOOLEAN_ID:
-        if(PyInt_Check(param))
+        if(PyBool_Check(param))
             return 1;
         break;
     }
@@ -1937,8 +1937,8 @@ jarray convert_pyndarray_jprimitivearray(JNIEnv* env,
      * couldn't allocate the array
      */
     if(process_java_exception(env) || !arr) {
-    	if(copy)
-    		Py_DECREF(copy);
+        if(copy)
+            Py_DECREF(copy);
         return NULL;
     }
 
@@ -1960,11 +1960,11 @@ jarray convert_pyndarray_jprimitivearray(JNIEnv* env,
     }
 
     if(copy)
-    	Py_DECREF(copy);
+        Py_DECREF(copy);
 
     if(process_java_exception(env)) {
-    	PyErr_Format(PyExc_RuntimeError, "Error setting Java primitive array region");
-    	return NULL;
+        PyErr_Format(PyExc_RuntimeError, "Error setting Java primitive array region");
+        return NULL;
     }
 
     return arr;
@@ -2105,7 +2105,7 @@ PyObject* convert_jprimitivearray_pyndarray(JNIEnv *env,
     return pyjob;
 }
 
-/**
+/*
  * Converts a jep.NDArray to a numpy ndarray.
  *
  * @param env    the JNI environment

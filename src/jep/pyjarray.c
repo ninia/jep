@@ -59,7 +59,7 @@
 #include "pyembed.h"
 #include "util.h"
 
-staticforward PyTypeObject PyJarray_Type;
+PyAPI_DATA(PyTypeObject) PyJarray_Type;
 extern PyMethodDef  pyjarray_methods[];
 
 
@@ -1255,7 +1255,7 @@ static PyObject* listindex(PyJarray_Object *self, PyObject *args) {
     PyObject *v;
     
     if(!PyArg_ParseTuple(args, "O", &v))
-		return NULL;
+        return NULL;
 
     pos = pyjarray_index(self, v);
     if(PyErr_Occurred())
@@ -1264,7 +1264,7 @@ static PyObject* listindex(PyJarray_Object *self, PyObject *args) {
     if(pos >= 0)
         return PyInt_FromLong((long) pos);
     
-	PyErr_SetString(PyExc_ValueError, "list.index(x): x not in array");
+    PyErr_SetString(PyExc_ValueError, "list.index(x): x not in array");
     return NULL;
 }
 
@@ -1273,7 +1273,7 @@ static PyObject* pyjarray_commit(PyJarray_Object *self, PyObject *args) {
     PyObject *v;
     
     if(!PyArg_ParseTuple(args, "", &v))
-		return NULL;
+        return NULL;
 
     pyjarray_release_pinned(self, JNI_COMMIT);
 
@@ -1595,7 +1595,7 @@ static PySequenceMethods list_as_sequence = {
 static PyObject* pyjarray_iter(PyObject *);
 
 
-static PyTypeObject PyJarray_Type = {
+PyTypeObject PyJarray_Type = {
     PyObject_HEAD_INIT(0)
     0,                                        /* ob_size */
     "jarray",                                 /* tp_name */

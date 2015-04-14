@@ -38,7 +38,7 @@ import java.lang.reflect.InvocationHandler;
  * </pre>
  *
  * @author [mrjohnson0 at sourceforge.net] Mike Johnson
- * @version $Id: $	
+ * @version $Id: $
  */
 public class Proxy extends java.lang.reflect.Proxy {
 

@@ -36,7 +36,7 @@
    The really interesting stuff is not here. :-) This file simply makes calls
    to the type definitions for pyjobject, etc.
    *****************************************************************************
-*/ 	
+*/
 
 #ifdef WIN32
 # include "winconfig.h"
@@ -306,14 +306,14 @@ void pyembed_thread_close(intptr_t _jepThread) {
         Py_DECREF(jepThread->globals);
     }
     if(jepThread->modjep) {
-    	PyObject *moddict = PyModule_GetDict(jepThread->modjep);
-    	/*
-    	 * we need to clear out the jep module's dictionary, otherwise it
-    	 * can leak references to some of its attributes
-    	 */
-    	if(moddict) {
+        PyObject *moddict = PyModule_GetDict(jepThread->modjep);
+        /*
+         * we need to clear out the jep module's dictionary, otherwise it
+         * can leak references to some of its attributes
+         */
+        if(moddict) {
             PyDict_Clear(moddict);
-    	}
+        }
         Py_DECREF(jepThread->modjep);
     }
     if(jepThread->classloader) {
@@ -399,7 +399,7 @@ static PyObject* pyembed_jproxy(PyObject *self, PyObject *args) {
     Py_ssize_t     inum, i;
     jobject        proxy;
 
-	if(!PyArg_ParseTuple(args, "OO!:jproxy",
+    if(!PyArg_ParseTuple(args, "OO!:jproxy",
                          &pytarget, 
                          &PyList_Type,
                          &interfaces))
@@ -482,7 +482,7 @@ static PyObject* pyembed_set_print_stack(PyObject *self, PyObject *args) {
     JepThread *jepThread;
     char      *print = 0;
 
-	if(!PyArg_ParseTuple(args, "b:setPrintStack", &print))
+    if(!PyArg_ParseTuple(args, "b:setPrintStack", &print))
         return NULL;
 
     jepThread = pyembed_get_jepthread();
@@ -1120,6 +1120,7 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result) {
     }
 #endif
 
+    // TODO find a better solution than this
     // convert everything else to string
     {
         jobject ret;
@@ -1350,7 +1351,7 @@ void pyembed_run(JNIEnv *env,
         ext = file + strlen(file) - 4;
         if (maybe_pyc_file(script, file, ext, 0)) {
             /* Try to run a pyc file. First, re-open in binary */
-			fclose(script);
+            fclose(script);
             if((script = fopen(file, "rb")) == NULL) {
                 THROW_JEP(env, "pyembed_run: Can't reopen .pyc file");
                 goto EXIT;
@@ -1389,73 +1390,69 @@ EXIT:
 // gratuitously copyied from pythonrun.c::run_pyc_file
 static void pyembed_run_pyc(JepThread *jepThread,
                             FILE *fp) {
-	PyCodeObject    *co;
-	PyObject        *v;
-	long             magic;
+    PyCodeObject *co;
+    PyObject *v;
+    long magic;
 
-	long PyImport_GetMagicNumber(void);
+    long PyImport_GetMagicNumber(void);
 
-	magic = PyMarshal_ReadLongFromFile(fp);
-	if(magic != PyImport_GetMagicNumber()) {
-		PyErr_SetString(PyExc_RuntimeError,
-                        "Bad magic number in .pyc file");
-		return;
-	}
-	(void) PyMarshal_ReadLongFromFile(fp);
-	v = (PyObject *) (intptr_t) PyMarshal_ReadLastObjectFromFile(fp);
-	if(v == NULL || !PyCode_Check(v)) {
-		Py_XDECREF(v);
-		PyErr_SetString(PyExc_RuntimeError,
-                        "Bad code object in .pyc file");
-		return;
-	}
-	co = (PyCodeObject *) v;
-	v = PyEval_EvalCode(co, jepThread->globals, jepThread->globals);
-	Py_DECREF(co);
+    magic = PyMarshal_ReadLongFromFile(fp);
+    if (magic != PyImport_GetMagicNumber()) {
+        PyErr_SetString(PyExc_RuntimeError, "Bad magic number in .pyc file");
+        return;
+    }
+    (void) PyMarshal_ReadLongFromFile(fp);
+    v = (PyObject *) (intptr_t) PyMarshal_ReadLastObjectFromFile(fp);
+    if (v == NULL || !PyCode_Check(v)) {
+        Py_XDECREF(v);
+        PyErr_SetString(PyExc_RuntimeError, "Bad code object in .pyc file");
+        return;
+    }
+    co = (PyCodeObject *) v;
+    v = PyEval_EvalCode(co, jepThread->globals, jepThread->globals);
+    Py_DECREF(co);
     Py_XDECREF(v);
 }
 
-
 /* Check whether a file maybe a pyc file: Look at the extension,
-   the file type, and, if we may close it, at the first few bytes. */
+ the file type, and, if we may close it, at the first few bytes. */
 // gratuitously copyied from pythonrun.c::run_pyc_file
-static int maybe_pyc_file(FILE *fp,
-                          const char* filename,
-                          const char* ext,
-                          int closeit) {
-	if(strcmp(ext, ".pyc") == 0 || strcmp(ext, ".pyo") == 0)
-		return 1;
+static int maybe_pyc_file(FILE *fp, const char* filename, const char* ext,
+        int closeit) {
+    if (strcmp(ext, ".pyc") == 0 || strcmp(ext, ".pyo") == 0)
+        return 1;
 
-	/* Only look into the file if we are allowed to close it, since
-	   it then should also be seekable. */
-	if(closeit) {
-		/* Read only two bytes of the magic. If the file was opened in
-		   text mode, the bytes 3 and 4 of the magic (\r\n) might not
-		   be read as they are on disk. */
-		unsigned int halfmagic = (unsigned int) PyImport_GetMagicNumber() & 0xFFFF;
-		unsigned char buf[2];
-		/* Mess:  In case of -x, the stream is NOT at its start now,
-		   and ungetc() was used to push back the first newline,
-		   which makes the current stream position formally undefined,
-		   and a x-platform nightmare.
-		   Unfortunately, we have no direct way to know whether -x
-		   was specified.  So we use a terrible hack:  if the current
-		   stream position is not 0, we assume -x was specified, and
-		   give up.  Bug 132850 on SourceForge spells out the
-		   hopelessness of trying anything else (fseek and ftell
-		   don't work predictably x-platform for text-mode files).
-		*/
-		int ispyc = 0;
-		if(ftell(fp) == 0) {
-			if(fread(buf, 1, 2, fp) == 2 &&
-               (buf[1]<<8 | buf[0]) == halfmagic)
-				ispyc = 1;
-			rewind(fp);
-		}
+    /* Only look into the file if we are allowed to close it, since
+     it then should also be seekable. */
+    if (closeit) {
+        /* Read only two bytes of the magic. If the file was opened in
+         text mode, the bytes 3 and 4 of the magic (\r\n) might not
+         be read as they are on disk. */
+        unsigned int halfmagic = (unsigned int) PyImport_GetMagicNumber()
+                & 0xFFFF;
+        unsigned char buf[2];
+        /* Mess:  In case of -x, the stream is NOT at its start now,
+         and ungetc() was used to push back the first newline,
+         which makes the current stream position formally undefined,
+         and a x-platform nightmare.
+         Unfortunately, we have no direct way to know whether -x
+         was specified.  So we use a terrible hack:  if the current
+         stream position is not 0, we assume -x was specified, and
+         give up.  Bug 132850 on SourceForge spells out the
+         hopelessness of trying anything else (fseek and ftell
+         don't work predictably x-platform for text-mode files).
+         */
+        int ispyc = 0;
+        if (ftell(fp) == 0) {
+            if (fread(buf, 1, 2, fp) == 2
+                    && (buf[1] << 8 | buf[0]) == halfmagic)
+                ispyc = 1;
+            rewind(fp);
+        }
 
-		return ispyc;
-	}
-	return 0;
+        return ispyc;
+    }
+    return 0;
 }
 
 

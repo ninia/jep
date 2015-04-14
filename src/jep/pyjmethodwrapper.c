@@ -59,7 +59,7 @@
 #include "pyjobject.h"
 #include "pyembed.h"
 
-staticforward PyTypeObject PyJmethodWrapper_Type;
+PyAPI_DATA(PyTypeObject) PyJmethodWrapper_Type;
 
 static void pyjmethodwrapper_dealloc(PyJmethodWrapper_Object *self);
 
@@ -103,7 +103,7 @@ static PyObject* pyjmethodwrapper_call(PyJmethodWrapper_Object *self,
                                 PyObject *args,
                                 PyObject *keywords) {
     PyObject *ret;
-	PyJobject_Object* obj;
+    PyJobject_Object* obj;
     
     if(!PyTuple_Check(args)) {
         PyErr_Format(PyExc_RuntimeError, "args is not a valid tuple");
@@ -146,7 +146,7 @@ static PyMethodDef pyjmethodwrapper_methods[] = {
 };
 
 
-static PyTypeObject PyJmethodWrapper_Type = {
+PyTypeObject PyJmethodWrapper_Type = {
     PyObject_HEAD_INIT(0)
     0,
     "jep.PyJmethodWrapper",

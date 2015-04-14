@@ -31,7 +31,7 @@ package jep;
  * </pre>
  *
  * @author [mrjohnson0 at sourceforge.net] Mike Johnson
- * @version $Id: $	
+ * @version $Id: $
  */
 public final class Util {
 

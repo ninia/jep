@@ -231,7 +231,7 @@ public final class Jep {
         }
                    
         eval("import jep");
-        if(ce == null) {         	
+        if(ce == null) {
             ce = ClassList.getInstance();
         }
         set("classlist", ce);

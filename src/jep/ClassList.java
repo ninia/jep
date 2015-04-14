@@ -52,7 +52,7 @@ import java.util.jar.JarFile;
  * @version $Id$
  */
 public class ClassList implements ClassEnquirer {
-	
+
     private static ClassList inst;
 
     // storage for package, members
@@ -289,7 +289,7 @@ public class ClassList implements ClassEnquirer {
     
     @Override
     public boolean supportsPackageImport() {
-    	return true;
+        return true;
     }
 
 

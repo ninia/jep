@@ -24,7 +24,7 @@
 
    3. This notice may not be removed or altered from any source
    distribution.   
-*/ 	
+*/
 
 // shut up the compiler
 #ifdef _POSIX_C_SOURCE

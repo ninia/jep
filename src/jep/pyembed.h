@@ -24,7 +24,7 @@
 
    3. This notice may not be removed or altered from any source
    distribution.   
-*/ 	
+*/
 
 #ifndef _Included_pyembed
 #define _Included_pyembed

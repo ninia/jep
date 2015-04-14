@@ -24,7 +24,7 @@
 
    3. This notice may not be removed or altered from any source
    distribution.   
-*/ 	
+*/
 
 #ifdef WIN32
 # include "winconfig.h"
@@ -60,7 +60,7 @@
 #include "util.h"
 #include "pyembed.h"
 
-staticforward PyTypeObject PyJmethod_Type;
+PyAPI_DATA(PyTypeObject) PyJmethod_Type;
 
 static void pyjmethod_dealloc(PyJmethod_Object *self);
 
@@ -868,7 +868,7 @@ static PyMethodDef pyjmethod_methods[] = {
 };
 
 
-static PyTypeObject PyJmethod_Type = {
+PyTypeObject PyJmethod_Type = {
     PyObject_HEAD_INIT(0)
     0,
     "jep.PyJmethod",
