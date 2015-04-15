@@ -4,10 +4,9 @@ package jep;
  * A test class that illustrates how numpy's floating point error handling can
  * cause python to deadlock trying to acquire the GIL. More specifically,
  * ufunc_object.c calls NPY_ALLOW_C_API which attempts to acquire the GIL.
- * Python is confused about the thread state and GIL state due to the top level
- * interpreter being initialized on the same thread as the sub-interpreter(s).
+ * Python is confused about the thread state and GIL state due to more than
+ * one Jep interpreter on the same thread.
  * 
- * Please see the TODO below for how to trigger the freeze.
  * 
  * Created: Thu Apr 09 2015
  * 
@@ -28,21 +27,12 @@ public class TestNumpyGILFreeze {
      * 
      * @param args
      */
-    public static void main(String[] args) {                
-        /*
-         * TODO: To show the freeze, you need to alter Jep.TopInterpreter to
-         * NOT use a separate thread for System.loadLibrary("jep");
-         */
-        createJepAndUseNumpy();
-        createJepAndUseNumpy();
-
-        System.out.println("java main() finished");
-    }
-
-    public static void createJepAndUseNumpy() {
+    public static void main(String[] args) {   
         Jep jep = null;
         try {
+            Jep jep0 = new Jep(true);
             jep = new Jep(true);
+            jep0.close();
             jep.eval("import numpy");
             /*
              * If error conditions are set to ignore, we will not reach the
@@ -51,7 +41,7 @@ public class TestNumpyGILFreeze {
              */
             jep.eval("numpy.seterr(under='print')");
             jep.eval(UNDERFLOW);
-            jep.eval("forceUnderflow()");
+            jep.eval("forceUnderflow()"); // this line will freeze
             System.out.println("returned from python interpreter");
         } catch (JepException e) {
             e.printStackTrace();
@@ -61,6 +51,7 @@ public class TestNumpyGILFreeze {
                 jep.close();
             }
         }
+        System.out.println("java main() finished");
     }
 
 }

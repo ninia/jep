@@ -1,5 +1,6 @@
 package jep;
 
+import java.io.Closeable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +43,7 @@ import jep.python.PyObject;
  * @author [mrjohnson0 at sourceforge.net] Mike Johnson
  * @version $Id$
  */
-public final class Jep {
+public final class Jep implements Closeable {
     
     private static final String THREAD_WARN = "JEP WARNING: "
             + "Unsafe reuse of thread ";
@@ -204,13 +205,16 @@ public final class Jep {
                ClassEnquirer ce) throws JepException {                     
         if (threadUsed.get()) {
             /*
-             * TODO: Consider throwing an exception for this situation instead
-             * of printing a warning, as it can result in very-hard-to-diagnose
-             * bugs such as GIL-related freezes or misleading error messages.
+             * TODO: Throw a JepException if this is detected.  This is
+             * inherently unsafe, the thread state information inside
+             * Python can get screwed up if there's more than one started/open
+             * Jep on the same thread at any given time.  This remains a 
+             * warning for the time being to provide time for applications
+             * to be updated to avoid this scenario.             
              */
             Thread current = Thread.currentThread();
             String warn = THREAD_WARN + current.getName() + REUSE_WARN;
-            System.err.println(warn);
+            System.err.println(warn);            
         }
         
         if(cl == null)
@@ -934,6 +938,7 @@ public final class Jep {
      * Shutdown python interpreter. Make sure you call this.
      *
      */
+    @Override
     public synchronized void close() {
         if(this.closed)
             return;

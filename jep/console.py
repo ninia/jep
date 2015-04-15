@@ -44,8 +44,10 @@ def prompt(jep):
             ran = True
             try:
                 ran = jep.eval(line)
-            except:
-                traceback.print_exc()
+            except Exception as err:
+                # if a user uses exit(), don't print the error
+                if 'exceptions.SystemExit' not in str(err.message):
+                    traceback.print_exc()
 
             try:
                 if ran:
@@ -62,22 +64,3 @@ def prompt(jep):
             except IOError:
                 pass
 
-
-if __name__ == '__main__':
-    Jep = findClass('jep.Jep')
-    jep = Jep(True)
-
-    # Pass argv to interactive prompt. We can't pass a Python object,
-    # but we can make a new one.
-    jep.eval("argv = %s" % argv)
-
-    # make sure we can import from the current directory
-    jep.eval('import sys; sys.path.append("")')
-
-    try:
-        prompt(jep)
-    except:
-        traceback.print_exc()
-
-    print ''
-    jep.close()

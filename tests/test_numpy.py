@@ -5,8 +5,8 @@ Test = jep.findClass('jep.TestNumpy')
 
 
 class TestNumpy(unittest.TestCase):
-    def setUp(self):
-        self.test = Test()        
+    def setUp(self, test=None):
+        self.test = Test()
         self.printout = False
     
     def testSetGet(self):
@@ -17,7 +17,7 @@ class TestNumpy(unittest.TestCase):
         checks for equality/symmetry.
         """
         if jep.USE_NUMPY:
-            self.test.run()
+            self.test.testSetAndGet()
                 
     def testArgReturn(self):
         """

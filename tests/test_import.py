@@ -8,6 +8,9 @@ Test = findClass('jep.Test')
 
 
 class TestImport(unittest.TestCase):
+    def setUp(self):
+        self.test = Test()
+    
     def test_java_sql(self):
         from java.sql import DriverManager
 
@@ -19,24 +22,11 @@ class TestImport(unittest.TestCase):
 
     def test_restricted_classloader(self):
         # should use the supplied classloader for hooks
-        vm = Jep()
-        try:
-            vm.setInteractive(True)
-            vm.setClassLoader(Test.restrictedClassLoader)
-            with self.assertRaises(RuntimeError) as e:
-                vm.eval("from java.io import File")
-                vm.eval('f = File("failed.txt")')
-        finally:
-            vm.close()
+        self.test.testRestrictedClassLoader()        
 
     def test_without_restricted_classloader(self):
-        vm = Jep()
-        try:
-            vm.setInteractive(True)
-            vm.eval("from java.io import File")
-            vm.eval('f = File("failed.txt")')
-        finally:
-            vm.close()
+        from java.io import File
+        dir(File)
 
     def test_class_import(self):
         from java.lang import System

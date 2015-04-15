@@ -1,5 +1,7 @@
 package jep;
 
+import java.io.File;
+
 /**
  * <pre>
  * Run.java - Execute a Python script.
@@ -50,20 +52,28 @@ public class Run {
     public static int run(boolean eventDispatch) {        
         Jep jep = null;
         
+        
         try {
             jep = new Jep(false, ".");
-            
-            // "set" by eval'ing it
-            jep.eval("import sys; sys.argv = argv = " + scriptArgv);
-            jep.runScript(file);
-        }
-        catch(Throwable t) {
+
+            // "set" by eval'ing it                        
+            jep.eval("import sys; sys.argv = argv = " + scriptArgv);            
+            if (!file.endsWith("jep" + File.separator + "console.py")) {
+                jep.runScript(file);
+            } else {
+                // don't use console's __main__ so we can reuse the interpreter
+                jep.setInteractive(true);                
+                jep.set("jepInstance", jep);
+                jep.eval("from jep import console");
+                jep.eval("console.prompt(jepInstance)");
+            }
+        } catch (Throwable t) {
             t.printStackTrace();
-            if(jep != null)
+            if (jep != null)
                 jep.close();
-            
+
             return 1;
-        }
+        }        
 
         try {
             if(interactive) {

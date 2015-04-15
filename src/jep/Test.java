@@ -16,6 +16,7 @@ import jep.python.*;
  * @version $Id$
  */
 public class Test implements Runnable {
+    
     private Jep jep = null;
     private boolean testEval = false;
 
@@ -451,6 +452,45 @@ public class Test implements Runnable {
     public static Class getStaticClass() {
         return Thread.currentThread().getClass();
     }
+    
+    public static void testRestrictedClassLoader() throws Throwable {
+        final Throwable[] t = new Throwable[1];
+        Thread thread = new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                Jep jep = null;
+                try {
+                    jep = new Jep(true, "", restrictedClassLoader);
+                    jep.eval("from java.io import File");                    
+                } catch (Throwable th) {
+                    t[0] = th;
+                } finally {
+                    if(jep != null) {
+                        jep.close();
+                    }
+                    synchronized (Test.class) {
+                        Test.class.notify();
+                    }
+                }
+            }
+        });
+        
+        synchronized (Test.class) {
+            thread.start();
+            try {
+                Test.class.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        
+        if(t[0] == null) {            
+            throw new RuntimeException("Did not throw classloader exception!");
+        } else if(!t[0].getMessage().contains("ImportError")) {
+            throw t[0];
+        }
+    }    
     
     public static void main(String argv[]) throws Throwable {
         Jep jep = new Jep();

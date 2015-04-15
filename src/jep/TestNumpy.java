@@ -3,9 +3,8 @@ package jep;
 import java.io.File;
 
 /**
- * TestNumpy.java.  Runs a variety of simple tests to verify numpy interactions
- * are working correctly.  run() is called by setup.py test, or you can call the
- * java main() method directly for other tests.
+ * TestNumpy.java. Runs a variety of simple tests to verify numpy interactions
+ * are working correctly.
  * 
  * 
  * Created: Wed Apr 08 2015
@@ -13,38 +12,65 @@ import java.io.File;
  * @author [ndjensen at gmail.com] Nate Jensen
  * @version $Id$
  */
-public class TestNumpy implements Runnable {
-
-    protected Jep jep = null;
+public class TestNumpy {
 
     // set to a high number to test for memory leaks
     private static final int REPEAT = 1; // 0000000;
 
-    private static boolean PRINT = false;
+    private static boolean PRINT = true;
+    
+    /**
+     * Calls testSetAndGet(Jep) on a separate thread to avoid threading
+     * issues.  Waits for those results before returning.
+     * @throws Throwable
+     */
+    public void testSetAndGet() throws Throwable
+    {
+        final Throwable[] t = new Throwable[1];
+        Thread thread = new Thread(new Runnable() {
 
-    @Override
-    public void run() {
-        try {
-            File pwd = new File(".");
-            /*
-             * Anytime you start a new Jep interpreter and import numpy within
-             * it, even if you call close() on the interpreter you will leak
-             * some native memory. Therefore, for now, do NOT new up the
-             * interpreter and close it within the for loop.
-             */
-            jep = new Jep(false, pwd.getAbsolutePath());
-            for (int i = 0; i < REPEAT; i++) {
-                testSetAndGet();
+            @Override
+            public void run() {
+                Jep jep = null;
+                try {
+                    jep = new Jep(true);
+                                        
+                } catch (Throwable th) {
+                    t[0] = th;
+                } finally {
+                    if(jep != null) {
+                        jep.close();
+                    }
+                    synchronized (TestNumpy.this) {
+                        TestNumpy.this.notify();
+                    }
+                }
             }
-        } catch (JepException e) {
-            e.printStackTrace();
-        } finally {
-            if (jep != null)
-                jep.close();
+        });
+        
+        synchronized (TestNumpy.this) {
+            thread.start();
+            try {
+                TestNumpy.this.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
+        
+        if(t[0] != null) {
+            throw t[0];
+        }
+
     }
 
-    public void testSetAndGet() throws JepException {
+    /**
+     * Sets NDArrays in a Jep interpreter, then gets them and verifies
+     * the conversion in both directions is safe, ie produces a symmetrical
+     * object despite a different reference/instance.
+     * @param jep
+     * @throws JepException
+     */
+    public void testSetAndGet(Jep jep) throws JepException {
         int[] dimensions = new int[] { 4 };
 
         // test boolean[]
@@ -178,6 +204,12 @@ public class TestNumpy implements Runnable {
         }
     }
 
+    /**
+     * Called from python to verify that a Java method's return type of NDArray
+     * can be auto-converted to a numpy ndarray.
+     * @param array
+     * @return a copy of the data + 5
+     */
     public NDArray<int[]> testArgAndReturn(NDArray<int[]> array) {
         int[] data = array.getData();
         int[] newData = new int[data.length];
@@ -188,29 +220,32 @@ public class TestNumpy implements Runnable {
         return new NDArray<int[]>(newData, array.getDimensions());
     }
 
-    // should only be called from main(), not from python unittests
-    public void runPythonSide() {
+
+    /**
+     * Helper method to support running the main() method to run from Java
+     * instead of python
+     * @param jep
+     */
+    public void runFromJava(Jep jep) {
         try {
-            File pwd = new File("tests");
-            /*
-             * Anytime you start a new Jep interpreter and import numpy within
-             * it, even if you call close() on the interpreter you will leak
-             * some native memory. Therefore, for now, do NOT new up the
-             * interpreter and close it within the for loop.
-             */
-            jep = new Jep(true, pwd.getAbsolutePath());
             jep.eval("import test_numpy");
-            jep.eval("v = test_numpy.TestNumpy('testArgReturn')");
-            jep.eval("v.setUp()");
+            jep.eval("v = test_numpy.TestNumpy('testArgReturn')");            
+            jep.eval("v.setUp()");            
+            for (int i = 0; i < REPEAT; i++) {
+                this.testSetAndGet(jep);
+            }
             for (int i = 0; i < REPEAT; i++) {
                 jep.eval("v.testArgReturn()");
             }
+            System.out.println("return NDArray from Java checked out ok");
             for (int i = 0; i < REPEAT; i++) {
                 jep.eval("v.testMultiDimensional()");
             }
+            System.out.println("multi dimensional arrays checked out ok");
             for (int i = 0; i < REPEAT; i++) {
-                jep.eval("v.testArrayParams()");
+                jep.eval("v.testArrayParams()");            
             }
+            System.out.println("Passing ndarrays to Java method as Java primitive[] checked out ok");
         } catch (JepException e) {
             e.printStackTrace();
         } finally {
@@ -219,34 +254,79 @@ public class TestNumpy implements Runnable {
         }
     }
 
+    /**
+     * Verifies a numpy.ndarray of bool can automatically convert to a method
+     * arg of boolean[]
+     * @param array
+     * @return true on success
+     */
     public boolean callBooleanMethod(boolean[] array) {
         return array != null;
     }
 
+    /**
+     * Verifies a numpy.ndarray of byte can automatically convert to a method
+     * arg of byte[]
+     * @param array
+     * @return true on success
+     */
     public boolean callByteMethod(byte[] array) {
         return array != null;
     }
 
+    /**
+     * Verifies a numpy.ndarray of int16 can automatically convert to a method
+     * arg of short[]
+     * @param array
+     * @return true on success
+     */
     public boolean callShortMethod(short[] array) {
         return array != null;
     }
 
+    /**
+     * Verifies a numpy.ndarray of int32 can automatically convert to a method
+     * arg of int[]
+     * @param array
+     * @return true on success
+     */
     public boolean callIntMethod(int[] array) {
         return array != null;
     }
 
+    /**
+     * Verifies a numpy.ndarray of int64 can automatically convert to a method
+     * arg of long[]
+     * @param array
+     * @return true on success
+     */
     public boolean callLongMethod(long[] array) {
         return array != null;
     }
 
+    /**
+     * Verifies a numpy.ndarray of float32 can automatically convert to a method
+     * arg of float[]
+     * @param array
+     * @return true on success
+     */
     public boolean callFloatMethod(float[] array) {
         return array != null;
     }
 
+    /**
+     * Verifies a numpy.ndarray of float64 can automatically convert to a method
+     * arg of double[]
+     * @param array
+     * @return true on success
+     */
     public boolean callDoubleMethod(double[] array) {
         return array != null;
     }
 
+    /**
+     * Verifies that an NDArray will not allow bad/dangerous constructor args.
+     */
     public void testNDArraySafety() {
         float[][] f = new float[15][];
         int[] dims = new int[] { 15, 20 };
@@ -257,7 +337,7 @@ public class TestNumpy implements Runnable {
                     "NDArray should have failed instantiation");
         } catch (IllegalArgumentException e) {
             if (PRINT) {
-                e.printStackTrace();
+                System.out.println("NDArray blocked bad type args");
             }
         }
 
@@ -269,7 +349,7 @@ public class TestNumpy implements Runnable {
                     "NDArray should have failed instantiation");
         } catch (IllegalArgumentException e) {
             if (PRINT) {
-                e.printStackTrace();
+                System.out.println("NDArray blocked bad dimensions args");
             }
         }
     }
@@ -281,10 +361,21 @@ public class TestNumpy implements Runnable {
      * @param args
      */
     public static void main(String[] args) {        
-        TestNumpy test = new TestNumpy();
-        test.run();
-        test.runPythonSide();
-        test.testNDArraySafety();
+        File pwd = new File("tests");
+        TestNumpy test = null;
+        Jep jep = null;
+        try {
+            test = new TestNumpy();
+            jep = new Jep(false, pwd.getPath());
+            test.runFromJava(jep);
+            test.testNDArraySafety();
+        } catch (JepException e) {
+            e.printStackTrace();
+        } finally {
+            if (jep != null) {
+                jep.close();
+            }
+        }
     }
 
 }
