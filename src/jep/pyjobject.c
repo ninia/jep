@@ -661,6 +661,7 @@ static PyObject* pyjobject_richcompare(PyJobject_Object *self,
 
     if(PyType_IsSubtype(Py_TYPE(_other), &PyJobject_Type)) {
         PyJobject_Object *other = (PyJobject_Object *) _other;
+        jboolean eq;
 
         jobject target, other_target;
 
@@ -694,7 +695,7 @@ static PyObject* pyjobject_richcompare(PyJobject_Object *self,
                 return NULL;
         }
 
-        jboolean eq = (*env)->CallBooleanMethod(
+        eq = (*env)->CallBooleanMethod(
             env,
             target,
             objectEquals,

@@ -78,11 +78,13 @@ static PyObject* pyjlist_inplace_fill(PyObject*, Py_ssize_t);
  */
 PyJlist_Object* pyjlist_new() {
     /*
-     * some sample code sets this, something about not necessarily being set
-     * at compile time with some compilers, seems to work ok with it commented
-     * out
+     * Some compilers really don't like tp_base being set on the PyTypeObject
+     * definition (at the bottom of this file).  This ensures it will work
+     * with those compilers.
      */
-    //  PyJlist_Type.tp_base = &PyJobject_Type;
+    if(!PyJlist_Type.tp_base) {
+        PyJlist_Type.tp_base = &PyJobject_Type;
+    }
 
     if(PyType_Ready(&PyJlist_Type) < 0)
         return NULL;
@@ -562,7 +564,11 @@ PyTypeObject PyJlist_Type = {
     pyjlist_methods,                          /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
-    &PyJobject_Type,                          /* tp_base */
+    /*
+     * make more compilers happy by setting
+     * tp_base in pyjlist_new
+     */
+    0, // &PyJobject_Type                     /* tp_base */
     0,                                        /* tp_dict */
     0,                                        /* tp_descr_get */
     0,                                        /* tp_descr_set */
