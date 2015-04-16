@@ -1714,7 +1714,7 @@ static int pyjarrayiter_len(PyJarrayIterObject *it) {
 }
 
 static PySequenceMethods pyjarrayiter_as_sequence = {
-    (inquiry) pyjarrayiter_len,               /* sq_length */
+    (lenfunc) pyjarrayiter_len,               /* sq_length */
     0,                                        /* sq_concat */
 };
 
