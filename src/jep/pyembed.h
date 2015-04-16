@@ -43,6 +43,7 @@
 # undef _FILE_OFFSET_BITS
 #endif
 #include "Python.h"
+#include "marshal.h"
 
 #include "util.h"
 

@@ -110,7 +110,7 @@ PyObject* pyjarray_new(JNIEnv *env, jobjectArray obj) {
 //     (size, pyjarray), (list)
 PyObject* pyjarray_new_v(PyObject *isnull, PyObject *args) {
     PyJarray_Object *pyarray;
-    jclass           clazz, componentClass;
+    jclass           clazz     = NULL, componentClass = NULL;
     JNIEnv          *env       = NULL;
     jobjectArray     arrayObj  = NULL;
     long             typeId    = -1;
@@ -1584,8 +1584,8 @@ static PySequenceMethods list_as_sequence = {
     (ssizeargfunc) 0,                         /* sq_repeat */
     (ssizeargfunc) pyjarray_item,             /* sq_item */
     (ssizessizeargfunc) pyjarray_slice,       /* sq_slice */
-    (intobjargproc) pyjarray_setitem,         /* sq_ass_item */
-    (intintobjargproc) 0,                     /* sq_ass_slice */
+    (ssizeobjargproc) pyjarray_setitem,       /* sq_ass_item */
+    (ssizessizeobjargproc) 0,                 /* sq_ass_slice */
     (objobjproc) pyjarray_contains,           /* sq_contains */
     (binaryfunc) 0,                           /* sq_inplace_concat */
     (ssizeargfunc) 0,                         /* sq_inplace_repeat */
