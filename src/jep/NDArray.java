@@ -46,16 +46,25 @@ public class NDArray<T extends Object> {
     protected final int[] dimensions;
 
     /**
+     * Constructor for a Java NDArray. Presumes the data is one dimensional.
+     * 
+     * @param data
+     *            a one-dimensional primitive array such as float[], int[]
+     */
+    public NDArray(T data) {
+        this(data, null);
+    }
+
+    /**
      * Constructor for a Java NDArray.
      * 
-     * @param data a one-dimensional primitive array such as float[], int[]
-     * @param dimensions the conceptual dimensions of the data (corresponds
-     * to the numpy.ndarray dimensions in C-contiguous order)
+     * @param data
+     *            a one-dimensional primitive array such as float[], int[]
+     * @param dimensions
+     *            the conceptual dimensions of the data (corresponds to the
+     *            numpy.ndarray dimensions in C-contiguous order)
      */
     public NDArray(T data, int... dimensions) {
-        this.data = data;
-        this.dimensions = dimensions;
-
         /*
          * java generics don't give us a nice Class that all the primitive
          * arrays extend, so we must enforce the type safety at runtime instead
@@ -68,8 +77,14 @@ public class NDArray<T extends Object> {
                             + data.getClass().getName());
         }
 
-        // validate data size matches dimensions size
         int dataLength = Array.getLength(data);
+        if (dimensions == null) {
+            // presume one dimensional
+            dimensions = new int[1];
+            dimensions[0] = dataLength;
+        }
+
+        // validate data size matches dimensions size
         int dimSize = 1;
         for (int i = 0; i < dimensions.length; i++) {
             dimSize *= dimensions[i];
@@ -90,6 +105,9 @@ public class NDArray<T extends Object> {
             throw new IllegalArgumentException(sb.toString());
         }
 
+        // passed the safety checks
+        this.data = data;
+        this.dimensions = dimensions;
     }
 
     public int[] getDimensions() {
