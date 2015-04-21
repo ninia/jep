@@ -299,7 +299,7 @@ static int pyjobject_init(JNIEnv *env, PyJobject_Object *pyjob) {
     }
     // end of synchronization
 
-    len = PyList_Size(cachedMethodList);
+    len = (int) PyList_Size(cachedMethodList);
     for (i = 0; i < len; i++) {
         PyJmethod_Object* pymethod = (PyJmethod_Object*) PyList_GetItem(
                 cachedMethodList, i);

@@ -370,7 +370,7 @@ int process_py_exception(JNIEnv *env, int printTrace) {
                 }
 
                 stackSize = PyList_Size(pystack);
-                stackArray = (*env)->NewObjectArray(env, stackSize,
+                stackArray = (*env)->NewObjectArray(env, (jsize) stackSize,
                         stackTraceElemClazz, NULL);
                 if((*env)->ExceptionCheck(env) || !stackArray) {
                     PyErr_Format(PyExc_RuntimeError,
@@ -407,7 +407,7 @@ int process_py_exception(JNIEnv *env, int printTrace) {
                         jobject element;
                         jstring pyFile, pyFileNoExt, pyFunc;
 
-                        namelen = strlen(charPyFile);
+                        namelen = (int) strlen(charPyFile);
                         charPyFileNoExt = malloc(sizeof(char) * (namelen + 1));
                         strcpy(charPyFileNoExt, charPyFile);
                         lastDot = strrchr(charPyFileNoExt, '.');
@@ -441,7 +441,7 @@ int process_py_exception(JNIEnv *env, int printTrace) {
                             Py_DECREF(pystack);
                             return 1;
                         }
-                        (*env)->SetObjectArrayElement(env, stackArray, i,
+                        (*env)->SetObjectArrayElement(env, stackArray, (jsize) i,
                                 element);
                         count++;
                         free(charPyFileNoExt);
@@ -457,7 +457,7 @@ int process_py_exception(JNIEnv *env, int printTrace) {
                  * reverse order of stack and ensure no null elements so it will
                  * appear like a java stacktrace
                  */
-                reverse = (*env)->NewObjectArray(env, count,
+                reverse = (*env)->NewObjectArray(env, (jsize) count,
                         stackTraceElemClazz, NULL);
                 if((*env)->ExceptionCheck(env) || !reverse) {
                     PyErr_Format(PyExc_RuntimeError,
@@ -468,9 +468,9 @@ int process_py_exception(JNIEnv *env, int printTrace) {
                 index = 0;
                 for (i = stackSize - 1; i > -1; i--) {
                     jobject element;
-                    element = (*env)->GetObjectArrayElement(env, stackArray, i);
+                    element = (*env)->GetObjectArrayElement(env, stackArray, (jsize) i);
                     if(element != NULL) {
-                        (*env)->SetObjectArrayElement(env, reverse, index,
+                        (*env)->SetObjectArrayElement(env, reverse, (jsize) index,
                                 element);
                         index++;
                     }
@@ -1864,7 +1864,7 @@ jarray convert_pyndarray_jprimitivearray(JNIEnv* env,
     jarray         arr    = NULL;
     PyArrayObject *copy   = NULL;
     enum NPY_TYPES paType;
-    int            sz;
+    jsize          sz;
 
     if(!npy_array_check(param)) {
         PyErr_Format(PyExc_TypeError, "convert_pyndarray must receive an ndarray");
@@ -1872,7 +1872,7 @@ jarray convert_pyndarray_jprimitivearray(JNIEnv* env,
     }
 
     // determine what we can about the pyarray that is to be converted
-    sz = PyArray_Size(param);
+    sz = (jsize) PyArray_Size(param);
     paType = ((PyArrayObject *) param)->descr->type_num;
 
     if(desiredType == NULL) {
@@ -2052,10 +2052,10 @@ PyObject* convert_jprimitivearray_pyndarray(JNIEnv *env,
                                             npy_intp *dims) {
     PyObject *pyjob = NULL;
     int i           = 0;
-    int dimsize     = 1;
+    size_t dimsize  = 1;
 
     for(i = 0; i < ndims; i++) {
-        dimsize *= dims[i];
+        dimsize *= (size_t) dims[i];
     }
 
     if((*env)->IsInstanceOf(env, jo, JBOOLEAN_ARRAY_TYPE)) {
