@@ -9,6 +9,7 @@ from commands import jep_build
 from commands.clean import really_clean
 
 from commands.dist import JepDistribution
+from commands.install_lib import jep_install
 from commands.install import post_install
 from commands.java import build_java, build_javah, get_java_home, get_java_include,\
     get_java_linker_args, build_jar, get_java_lib_folders, get_java_libraries, setup_java
@@ -83,6 +84,7 @@ if __name__ == '__main__':
               'build_jar': build_jar,
               'build': jep_build,
               'build_scripts': build_scripts,
+              'install_lib': jep_install,
               'install_data': post_install,
               'clean': really_clean,
               'test': test,

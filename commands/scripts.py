@@ -67,10 +67,8 @@ class build_scripts(Command):
         )
 
         if not is_osx():
-            context['ld_library_path'] = 'LD_LIBRARY_PATH="' + \
-                                           sysconfig.get_config_var('LIBDIR') + \
-                                           ':{0}"; export LD_LIBRARY_PATH'.format(
-                                           install.install_lib)
+            context['ld_library_path'] = 'LD_LIBRARY_PATH="{0}";  export LD_LIBRARY_PATH'.format(
+                                         sysconfig.get_config_var('LIBDIR'))                                            
             
             # set the LD_PRELOAD environment variable if we can locate the
             # libpython<version>.so library.
