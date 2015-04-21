@@ -10,6 +10,8 @@ import sys
 from commands.util import configure_error, is_osx, shell, CommandFailed, warning
 
 _java_home = None
+# MAC_JAVA_HOME is for the Apple JDK and is consistent in its install directory.
+# For better or for worse, Apple stopped supporting a JDK after Java 1.6.
 MAC_JAVA_HOME = '/System/Library/Frameworks/JavaVM.framework'
 
 
@@ -44,6 +46,11 @@ def get_java_home():
 
 
 def is_apple_jdk():
+    """
+    Checks if the JDK installed is Apple's JDK.  Apple's JDK layout is
+    different than others, while Oracle's JDK layout consistently has
+    a bin, include, and lib dir.
+    """
     return get_java_home() == MAC_JAVA_HOME
 
 
@@ -64,6 +71,8 @@ def get_java_include():
                         "Please check you've installed the JDK properly.".format(jni))
 
     paths = [inc]
+    
+    # Include platform specific headers if found
     include_linux = os.path.join(inc, 'linux')
     if os.path.exists(include_linux):
         paths.append(include_linux)
@@ -76,7 +85,7 @@ def get_java_include():
 
 def get_java_lib():
     lib_name = 'lib'
-    if get_java_home() == MAC_JAVA_HOME:
+    if is_apple_jdk():
         lib_name = 'Libraries'
     lib = os.path.join(get_java_home(), lib_name)
     if not os.path.exists(lib):
@@ -114,6 +123,8 @@ class setup_java(Command):
     Output some useful information about the java environment
     This is useful when people report errors
     """
+
+    user_options = []
 
     def initialize_options(self):
         pass
