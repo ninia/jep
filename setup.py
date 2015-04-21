@@ -11,12 +11,12 @@ from commands.clean import really_clean
 from commands.dist import JepDistribution
 from commands.install import post_install
 from commands.java import build_java, build_javah, get_java_home, get_java_include,\
-    get_java_linker_args, build_jar, get_java_lib_folders, get_java_libraries
+    get_java_linker_args, build_jar, get_java_lib_folders, get_java_libraries, setup_java
 from commands.python import get_python_libs, get_python_linker_args
 from commands.scripts import build_scripts
 from commands.test import test
 
-VERSION = None # shut up pycharm
+VERSION = None  # shut up pycharm
 execfile('jep/version.py')
 
 
@@ -77,6 +77,7 @@ if __name__ == '__main__':
           ],
           distclass=JepDistribution,
           cmdclass={
+              'setup_java': setup_java,
               'build_java': build_java,
               'build_javah': build_javah,
               'build_jar': build_jar,
