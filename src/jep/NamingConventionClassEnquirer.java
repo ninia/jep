@@ -119,7 +119,7 @@ public class NamingConventionClassEnquirer implements ClassEnquirer {
         if (javaNames.contains(name)) {
             return true;
         } else {
-            String[] split = name.split(".");
+            String[] split = name.split("\\.");
             return (split.length > 0 && javaNames.contains(split[0]));
         }
     }
