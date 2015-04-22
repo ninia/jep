@@ -87,6 +87,11 @@ public class NDArray<T extends Object> {
         // validate data size matches dimensions size
         int dimSize = 1;
         for (int i = 0; i < dimensions.length; i++) {
+            if (dimensions[i] < 0) {
+                throw new IllegalArgumentException(
+                        "Dimensions cannot be negative, received "
+                                + dimensions[i]);
+            }
             dimSize *= dimensions[i];
         }
 

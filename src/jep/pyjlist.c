@@ -213,11 +213,11 @@ static PyObject* pyjlist_fill(PyObject *o, Py_ssize_t count) {
  * example, result = o[i]
  */
 static PyObject* pyjlist_getitem(PyObject *o, Py_ssize_t i) {
-    jmethodID         get = NULL;
-    jobject           val = NULL;
-    int              size = 0;
-    PyJobject_Object *obj = (PyJobject_Object*) o;
-    JNIEnv           *env = pyembed_get_env();
+    jmethodID         get  = NULL;
+    jobject           val  = NULL;
+    Py_ssize_t        size = 0;
+    PyJobject_Object *obj  = (PyJobject_Object*) o;
+    JNIEnv           *env  = pyembed_get_env();
 
     get = (*env)->GetMethodID(env, obj->clazz, "get", "(I)Ljava/lang/Object;");
     if(process_java_exception(env) || !get){
@@ -226,7 +226,7 @@ static PyObject* pyjlist_getitem(PyObject *o, Py_ssize_t i) {
 
     size = pyjlist_len(o);
     if((i > size-1) || (i < 0)) {
-        PyErr_Format(PyExc_IndexError, "list index %i out of range, size %i", (int) i, size);
+        PyErr_Format(PyExc_IndexError, "list index %i out of range, size %i", (int) i, (int) size);
         return NULL;
     }
 
@@ -315,8 +315,8 @@ static int pyjlist_setitem(PyObject *o, Py_ssize_t i, PyObject *v) {
 static int pyjlist_setslice(PyObject *o, Py_ssize_t i1, Py_ssize_t i2, PyObject *v) {
    Py_ssize_t oSize;
    Py_ssize_t vSize;
-   int diff;
-   int i, vi;
+   Py_ssize_t diff;
+   Py_ssize_t i, vi;
 
     if(!PySequence_Check(v)) {
         PyErr_Format(PyExc_TypeError,
@@ -340,8 +340,10 @@ static int pyjlist_setslice(PyObject *o, Py_ssize_t i1, Py_ssize_t i2, PyObject 
     diff = i2 - i1;
     if(diff != vSize) {
         /*
-         * python lists support slice assignment of a different length, but that
-         * gets complicated, so not planning on supporting it until requested
+         * TODO: Python lists support slice assignment of a different length,
+         * but that gets complicated, so not planning on supporting it until
+         * requested.  For inspiration look at python's listobject.c's
+         * list_ass_slice().
          */
         PyErr_Format(PyExc_IndexError,
                 "pyjlist only supports assigning a sequence of the same size as the slice, slice = [%i:%i], value size=%i",
