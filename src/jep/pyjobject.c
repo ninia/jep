@@ -729,10 +729,7 @@ static PyObject* pyjobject_richcompare(PyJobject_Object *self,
 PyObject* pyjobject_getattr(PyJobject_Object *obj,
                                    char *name) {
     PyObject *ret, *pyname, *methods, *members;
-    int       listSize, i, found;
-    
     ret = pyname = methods = members = NULL;
-    listSize = i = found = 0;
     
     if(!name) {
         Py_INCREF(Py_None);
