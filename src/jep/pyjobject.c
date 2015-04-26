@@ -899,6 +899,14 @@ static long pyjobject_hash(PyJobject_Object *self) {
         return -1;
     }
 
+    /*
+     * this seems odd but python expects -1 for error occurred and other
+     * built-in types then return -2 if the actual hash is -1
+     */
+    if(hash == -1) {
+        hash = -2;
+    }
+
     return hash;
 }
 
