@@ -1,5 +1,5 @@
 from _jep import forName
-import sys
+import sys, string
 from types import ModuleType
 
 
@@ -19,13 +19,9 @@ class module(ModuleType):
         try:
             return super(module, self).__getattribute__(name)
         except AttributeError as ae:
-            try:
-                clazz = forName('{0}.{1}'.format(self.__name__, name))
-                setattr(self, name, clazz)
-                return clazz
-            except Exception:
-                # should raise AttributeError, not JepException
-                raise ae
+            clazz = forName('{0}.{1}'.format(self.__name__, name))
+            setattr(self, name, clazz)
+            return clazz
 
 
 class JepImporter(object):
@@ -44,23 +40,34 @@ class JepImporter(object):
         if fullname in sys.modules:
             return sys.modules[fullname]
 
-        mod = module(fullname)
-        mod.__dict__.update({
-            '__loader__': self,
-            '__path__': [],
-            '__file__': '<java>',
-        })
-        sys.modules[fullname] = mod
-
-        if self.classlist.supportsPackageImport():
-            # list of classes in package
-            classlist = self.classlist.get(fullname)
-            if classlist:
-                for name in classlist:
-                    try:
-                        setattr(mod, name.split('.')[-1], forName(name))
-                    except Exception:
-                        pass
+        split = fullname.split('.')
+        if split[-1][0].islower():
+            # it's a package/module
+            mod = module(fullname)
+            mod.__dict__.update({
+                '__loader__': self,
+                '__path__': [],
+                '__file__': '<java>',
+            })
+            sys.modules[fullname] = mod
+    
+            if self.classlist.supportsPackageImport():
+                # get the list of classes in package and add them as attributes
+                # to the module
+                classlist = self.classlist.get(fullname)
+                if classlist:
+                    for name in classlist:
+                        try:
+                            setattr(mod, name.split('.')[-1], forName(name))
+                        except Exception:
+                            pass
+        else:
+            # It's a Java class, in general we will only reach here if
+            # self.classlist.supportsPackageImport() is False (ie the class
+            # has not already been imported and set on the module).
+            parentModName = string.join(split[0:-1], '.')
+            parentMod = sys.modules[parentModName]
+            return parentMod.__getattr__(split[-1])
         return mod
 
 

@@ -18,7 +18,7 @@ class TestImport(unittest.TestCase):
         importer = JepImporter()
         mod = importer.load_module('java.lang')
         mod.Integer
-        self.assertRaises(AttributeError, mod.__getattr__, 'asdf')
+        self.assertRaises(ImportError, mod.__getattr__, 'asdf')
 
     def test_restricted_classloader(self):
         # should use the supplied classloader for hooks

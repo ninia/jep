@@ -24,3 +24,56 @@ class TestExceptions(unittest.TestCase):
         except Exception as ex:
             # because it's not a checked exception, mapped exceptions doesn't apply here (all Runtime)            
             self.assertIn('java.lang.NullPointerException', str(ex.message))
+
+
+# the tests below verify that specific java exceptions map to python errors,
+# enabling more precise except blocks when python encounters a java error
+
+    def test_import_error(self):
+        try:
+            from java.lang import ArrayList
+        except ImportError as ex:
+            pass
+
+    def test_index_error(self):
+        x = jep.jarray(3, Integer)
+        try:
+            i = x[5]
+        except IndexError as ex:
+            pass
+
+    def test_io_error(self):
+        try:
+            FileInputStream('asdf')
+        except IOError as ex:
+            pass
+
+    def test_type_error(self):
+        try:
+            from java.util import Collections, ArrayList
+            x = ArrayList()
+            c = Collections.checkedList(x, Integer)
+            c.add(Integer(5))
+            c.add(String("5"))
+        except TypeError as ex:
+            pass
+
+    def test_value_err(self):
+        try:
+            from java.lang import System
+            System.getProperty('', '')
+        except ValueError as ex:
+            pass
+
+    def test_arithmetic_error(self):
+        try:
+            from java.math import BigDecimal
+            d = BigDecimal(3.14159)
+            zero = BigDecimal(0.0)
+            x = d.divide(zero)
+        except ArithmeticError as ex:
+            pass
+        
+    # TODO come up with a way to test MemoryError and AssertionError given
+    # I coded support for that.
+

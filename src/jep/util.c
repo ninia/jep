@@ -71,6 +71,8 @@ static PyObject* convert_jprimitivearray_pyndarray(JNIEnv*, jobject, int, npy_in
 static jarray convert_pyndarray_jprimitivearray(JNIEnv*, PyObject*, jclass);
 #endif
 
+static PyObject* match_exception_type(JNIEnv*, jthrowable);
+
 
 // -------------------------------------------------- primitive class types
 // these are shared for all threads, you shouldn't change them.
@@ -403,10 +405,12 @@ int process_py_exception(JNIEnv *env, int printTrace) {
                      */
                     if(pyLine != Py_None) {
                         char *charPyFileNoExt, *lastDot;
+                        char *charPyFileNoDir, *lastBackslash;
                         int namelen;
                         jobject element;
-                        jstring pyFile, pyFileNoExt, pyFunc;
+                        jstring pyFileNoDir, pyFileNoExt, pyFunc;
 
+                        // remove the .py to look more like a Java StackTraceElement
                         namelen = (int) strlen(charPyFile);
                         charPyFileNoExt = malloc(sizeof(char) * (namelen + 1));
                         strcpy(charPyFileNoExt, charPyFile);
@@ -415,8 +419,18 @@ int process_py_exception(JNIEnv *env, int printTrace) {
                             *lastDot = '\0';
                         }
 
-                        pyFile = (*env)->NewStringUTF(env,
-                                (const char *) charPyFile);
+                        // remove the dir path to look more like a Java StackTraceElement
+                        charPyFileNoDir = malloc(sizeof(char) * (namelen + 1));
+                        // TODO does this work right on Windows?
+                        lastBackslash = strrchr(charPyFile, '/');
+                        if(lastBackslash != NULL) {
+                            strcpy(charPyFileNoDir, lastBackslash + 1);
+                        } else {
+                            strcpy(charPyFileNoDir, charPyFile);
+                        }
+
+                        pyFileNoDir = (*env)->NewStringUTF(env,
+                                (const char *) charPyFileNoDir);
                         pyFileNoExt = (*env)->NewStringUTF(env,
                                 (const char *) charPyFileNoExt);
                         pyFunc = (*env)->NewStringUTF(env,
@@ -428,14 +442,15 @@ int process_py_exception(JNIEnv *env, int printTrace) {
                          * this makes it look best.
                          */
                         element = (*env)->NewObject(env, stackTraceElemClazz,
-                                stackTraceElemInit, pyFileNoExt, pyFunc, pyFile,
+                                stackTraceElemInit, pyFileNoExt, pyFunc, pyFileNoDir,
                                 pyLineNum);
                         if((*env)->ExceptionCheck(env) || !element) {
                             PyErr_Format(PyExc_RuntimeError,
                                     "failed to create java.lang.StackTraceElement for python %s:%i.",
                                     charPyFile, pyLineNum);
-                            release_utf_char(env, pyFile, charPyFile);
+                            release_utf_char(env, pyFileNoDir, charPyFileNoDir);
                             release_utf_char(env, pyFileNoExt, charPyFileNoExt);
+                            free(charPyFileNoDir);
                             free(charPyFileNoExt);
                             release_utf_char(env, pyFunc, charPyFunc);
                             Py_DECREF(pystack);
@@ -444,8 +459,9 @@ int process_py_exception(JNIEnv *env, int printTrace) {
                         (*env)->SetObjectArrayElement(env, stackArray, (jsize) i,
                                 element);
                         count++;
+                        free(charPyFileNoDir);
                         free(charPyFileNoExt);
-                        (*env)->DeleteLocalRef(env, pyFile);
+                        (*env)->DeleteLocalRef(env, pyFileNoDir);
                         (*env)->DeleteLocalRef(env, pyFileNoExt);
                         (*env)->DeleteLocalRef(env, pyFunc);
                         (*env)->DeleteLocalRef(env, element);
@@ -613,10 +629,105 @@ int process_java_exception(JNIEnv *env) {
         return 1;
     }
 
+    pyException = match_exception_type(env, exception);
     PyErr_SetObject(pyException, jpyExc);
     (*env)->DeleteLocalRef(env, clazz);
     (*env)->DeleteLocalRef(env, exception);
     return 1;
+}
+
+/*
+ * Matches a jthrowable to an equivalent built-in python exception type.  This
+ * is to enable more precise except/catch blocks in python for Java exceptions.
+ * This method intentionally does not call process_java_exception as it is only
+ * called when processing java exceptions, and we don't want to infinitely recurse.
+ *
+ */
+static PyObject* match_exception_type(JNIEnv *env, jthrowable exception) {
+    jclass classNotFound, indexBounds, io, classCast;
+    jclass illegalArg, arithmetic, memory, assertion;
+
+    // map ClassNotFoundException to ImportError
+    classNotFound = (*env)->FindClass(env, "java/lang/ClassNotFoundException");
+    if((*env)->ExceptionOccurred(env) || !classNotFound) {
+        goto EXIT_ERROR;
+    }
+    if((*env)->IsInstanceOf(env, exception, classNotFound)) {
+        return PyExc_ImportError;
+    }
+
+    // map IndexOutOfBoundsException exception to IndexError
+    indexBounds = (*env)->FindClass(env, "java/lang/IndexOutOfBoundsException");
+    if((*env)->ExceptionOccurred(env) || !indexBounds) {
+        goto EXIT_ERROR;
+    }
+    if((*env)->IsInstanceOf(env, exception, indexBounds)) {
+        return PyExc_IndexError;
+    }
+
+    // map IOException to IOError
+    io = (*env)->FindClass(env, "java/io/IOException");
+    if((*env)->ExceptionOccurred(env) || !io) {
+        goto EXIT_ERROR;
+    }
+    if((*env)->IsInstanceOf(env, exception, io)) {
+        return PyExc_IOError;
+    }
+
+    // map ClassCastException to TypeError
+    classCast = (*env)->FindClass(env, "java/lang/ClassCastException");
+    if((*env)->ExceptionOccurred(env) || !classCast) {
+        goto EXIT_ERROR;
+    }
+    if((*env)->IsInstanceOf(env, exception, classCast)) {
+        return PyExc_TypeError;
+    }
+
+    // map IllegalArgumentException to ValueError
+    illegalArg = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
+    if((*env)->ExceptionOccurred(env) || !illegalArg) {
+        goto EXIT_ERROR;
+    }
+    if((*env)->IsInstanceOf(env, exception, illegalArg)) {
+        return PyExc_ValueError;
+    }
+
+    // map ArithmeticException to ArithmeticError
+    arithmetic = (*env)->FindClass(env, "java/lang/ArithmeticException");
+    if((*env)->ExceptionOccurred(env) || !arithmetic) {
+        goto EXIT_ERROR;
+    }
+    if((*env)->IsInstanceOf(env, exception, arithmetic)) {
+        return PyExc_ArithmeticError;
+    }
+
+    // map OutOfMemoryError to MemoryError
+    memory = (*env)->FindClass(env, "java/lang/OutOfMemoryError");
+    if((*env)->ExceptionOccurred(env) || !memory) {
+        goto EXIT_ERROR;
+    }
+    if((*env)->IsInstanceOf(env, exception, memory)) {
+        // honestly if you hit this you're probably screwed
+        return PyExc_MemoryError;
+    }
+
+    // map AssertionError to AssertionError
+    assertion = (*env)->FindClass(env, "java/lang/AssertionError");
+    if((*env)->ExceptionOccurred(env) || !assertion) {
+        goto EXIT_ERROR;
+    }
+    if((*env)->IsInstanceOf(env, exception, assertion)) {
+        return PyExc_AssertionError;
+    }
+
+    // default
+    return PyExc_RuntimeError;
+
+EXIT_ERROR:
+    printf("Error mapping exception types\n");
+    (*env)->ExceptionDescribe(env);
+    (*env)->ExceptionClear(env);
+    return PyExc_RuntimeError;
 }
 
 
@@ -1302,7 +1413,7 @@ int pyarg_matches_jtype(JNIEnv *env,
         break;
         
     case JBOOLEAN_ID:
-        if(PyBool_Check(param))
+        if(PyInt_Check(param))
             return 1;
         break;
     }
