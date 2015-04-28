@@ -1,9 +1,6 @@
 Jep 3.2 Release Notes
 *******************
 
-Highlights
-==========
-
 Improved import hook
 ~~~~~~~~~~~~~~~~~~
 The Jep import hook is now more secure, using the supplied ClassLoader to load

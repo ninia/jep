@@ -1,9 +1,6 @@
 Jep 3.3 Release Notes
 *******************
 
-Highlights
-==========
-
 Numpy support
 ~~~~~~~~~~~~~~~~~~
 Jep now supports interactions with numpy through the usage of the jep.NDArray
@@ -32,9 +29,10 @@ Improved distutils build
 Improved exception handling
 ~~~~~~~~~~~~~~~~~~~~~~~~
 Exception handling has been improved in a variety of ways:
+
 * JepException now extends Exception instead of Throwable.
-* When Java exceptions are encountered by the interpreter, the exceptions
-  are passed along to JepException to provide CausedBys.
+* When Java exceptions are encountered by the interpreter, the exceptions are
+  passed along to JepException to provide CausedBys.
 * Python tracebacks are transformed to resemble Java StackTraceElements to
   provide a more complete picture of the stack.
 * Common Java exceptions are correlated to equivalent Python exceptions to
@@ -55,9 +53,9 @@ java.util.List is detected in python.  pyjlist extends pyjobject, enabling the
 exact same functionality, but it also implements Python's sequence protocol.
 This enables commands like "for x in obj:" where obj is a java.util.List.
 
-https://docs.oracle.com/javase/7/docs/api/java/util/List.html
-https://docs.python.org/2/c-api/sequence.html
-https://docs.python.org/2/library/stdtypes.html#sequence-types-str-unicode-list-tuple-bytearray-buffer-xrange
+* https://docs.oracle.com/javase/7/docs/api/java/util/List.html
+* https://docs.python.org/2/c-api/sequence.html
+* https://docs.python.org/2/library/stdtypes.html#sequence-types-str-unicode-list-tuple-bytearray-buffer-xrange
 
 
 Implemented __hash__ on pyjobject
@@ -66,8 +64,8 @@ pyjobject now implements python's __hash__() by delegating to the Java object's
 hashCode(Object) method.
 
 
-More advanced imports
-~~~~~~~~~~~~~~~~~~~
+More precise imports
+~~~~~~~~~~~~~~~~~~
 An interface of ClassEnquirer has been introduced to enable more advanced
 control of imports.  A ClassEnquirer indicates to the import hook if an import
 is expected to be a Java package or class or a Python module.  By default Jep

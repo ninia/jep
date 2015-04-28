@@ -1,9 +1,6 @@
 Jep 3.1 Release Notes
 *******************
 
-Highlights
-==========
-
 Lazy loading of standard JDK packages
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Jep now lazily loads classes with a package name starting with java.*.

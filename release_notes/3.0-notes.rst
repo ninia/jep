@@ -1,9 +1,6 @@
 Jep 3.0 Release Notes
 *******************
 
-Highlights
-==========
-
 distutils support
 ~~~~~~~~~~~~~~~
 
