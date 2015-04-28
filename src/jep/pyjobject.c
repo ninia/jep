@@ -78,10 +78,6 @@ static PyObject *classnamePyJMethodsDict = NULL;
 // called internally to make new PyJobject_Object instances
 PyObject* pyjobject_new(JNIEnv *env, jobject obj) {
     PyJobject_Object *pyjob;
-    jclass            listClazz = NULL;
-#if USE_NUMPY
-    jclass            jndaClazz = NULL;
-#endif
     
     if(PyType_Ready(&PyJobject_Type) < 0)
         return NULL;
@@ -95,17 +91,15 @@ PyObject* pyjobject_new(JNIEnv *env, jobject obj) {
      * check for jep/NDArray and autoconvert to numpy.ndarray instead of
      * pyjobject
      */
-    jndaClazz = (*env)->FindClass(env, "jep/NDArray");
-    if(jndarray_check(env, obj, jndaClazz)) {
-        return convert_jndarray_pyndarray(env, obj, jndaClazz);
+    if(jndarray_check(env, obj)) {
+        return convert_jndarray_pyndarray(env, obj);
     }
     if(PyErr_Occurred()) {
         return NULL;
     }
 #endif
 
-    listClazz = (*env)->FindClass(env, "java/util/List");
-    if((*env)->IsInstanceOf(env, obj, listClazz)) {
+    if((*env)->IsInstanceOf(env, obj, JLIST_TYPE)) {
         pyjob = (PyJobject_Object*) pyjlist_new();
     } else {
         pyjob = PyObject_NEW(PyJobject_Object, &PyJobject_Type);
@@ -234,6 +228,9 @@ static int pyjobject_init(JNIEnv *env, PyJobject_Object *pyjob) {
      *
      * We synchronize to prevent multiple threads from altering the
      * dictionary at the same time.
+     *
+     * TODO Look into removing this synchronization through JNI.  If we have the
+     * GIL here that should be synchronization enough.
      */
     lock = (*env)->FindClass(env, "java/lang/String");
     if((*env)->MonitorEnter(env, lock) != JNI_OK) {

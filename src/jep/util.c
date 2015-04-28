@@ -92,12 +92,18 @@ jclass JCLASS_TYPE   = NULL;
 
 #if USE_NUMPY
 jclass JBOOLEAN_ARRAY_TYPE = NULL;
-jclass JBYTE_ARRAY_TYPE = NULL;
-jclass JSHORT_ARRAY_TYPE = NULL;
-jclass JINT_ARRAY_TYPE = NULL;
-jclass JLONG_ARRAY_TYPE = NULL;
-jclass JFLOAT_ARRAY_TYPE = NULL;
-jclass JDOUBLE_ARRAY_TYPE = NULL;
+jclass JBYTE_ARRAY_TYPE    = NULL;
+jclass JSHORT_ARRAY_TYPE   = NULL;
+jclass JINT_ARRAY_TYPE     = NULL;
+jclass JLONG_ARRAY_TYPE    = NULL;
+jclass JFLOAT_ARRAY_TYPE   = NULL;
+jclass JDOUBLE_ARRAY_TYPE  = NULL;
+#endif
+
+// more cached types
+jclass JLIST_TYPE       = NULL;
+#if USE_NUMPY
+jclass JEP_NDARRAY_TYPE = NULL;
 #endif
 
 // cached methodids
@@ -1108,8 +1114,8 @@ int cache_primitive_classes(JNIEnv *env) {
     return 1;
 }
 
-
 // remove global references setup in above function.
+// TODO is this method used?  Should it be called from pyembed_shutdown()?
 void unref_cache_primitive_classes(JNIEnv *env) {
     if(JINT_TYPE != NULL) {
         (*env)->DeleteGlobalRef(env, JINT_TYPE);
@@ -1190,6 +1196,55 @@ void unref_cache_primitive_classes(JNIEnv *env) {
         JDOUBLE_ARRAY_TYPE = NULL;
     }
 #endif
+}
+
+int cache_frequent_classes(JNIEnv *env) {
+    jclass clazz;
+
+    if(JLIST_TYPE == NULL) {
+        clazz = (*env)->FindClass(env, "java/util/List");
+        if((*env)->ExceptionOccurred(env))
+            return 0;
+
+        JLIST_TYPE = (*env)->NewGlobalRef(env, clazz);
+        (*env)->DeleteLocalRef(env, clazz);
+    }
+
+#if USE_NUMPY
+    if(JEP_NDARRAY_TYPE == NULL) {
+        clazz = (*env)->FindClass(env, "jep/NDArray");
+        if((*env)->ExceptionOccurred(env))
+            return 0;
+
+        JEP_NDARRAY_TYPE = (*env)->NewGlobalRef(env, clazz);
+        (*env)->DeleteLocalRef(env, clazz);
+    }
+#endif
+
+    /*
+     * TODO cache the jclass objects used in pyembed_box_py and jep exception
+     * handling, though those methods are less frequently used and will not
+     * result in as noticeable a speedup
+     */
+
+    return 1;
+
+}
+
+// TODO is this method used?  Should it be called from pyembed_shutdown()?
+void unref_cache_frequent_classes(JNIEnv *env) {
+    if(JLIST_TYPE != NULL) {
+        (*env)->DeleteGlobalRef(env, JLIST_TYPE);
+        JLIST_TYPE = NULL;
+    }
+
+#if USE_NUMPY
+    if(JEP_NDARRAY_TYPE != NULL) {
+        (*env)->DeleteGlobalRef(env, JEP_NDARRAY_TYPE);
+        JEP_NDARRAY_TYPE = NULL;
+    }
+#endif
+
 }
 
 
@@ -1944,13 +1999,12 @@ int npy_array_check(PyObject *obj) {
  *
  * @param env   the JNI environment
  * @param obj   the jobject to check
- * @param ndclz the jclass representing jep/NDArray
  *
  * @return true if it is an NDArray and jep was compiled with numpy support,
  *          otherwise false
  */
-int jndarray_check(JNIEnv *env, jobject obj, jclass ndclz) {
-    int ret = (*env)->IsInstanceOf(env, obj, ndclz);
+int jndarray_check(JNIEnv *env, jobject obj) {
+    int ret = (*env)->IsInstanceOf(env, obj, JEP_NDARRAY_TYPE);
     if(process_java_exception(env)) {
         return JNI_FALSE;
     }
@@ -2221,11 +2275,10 @@ PyObject* convert_jprimitivearray_pyndarray(JNIEnv *env,
  *
  * @param env    the JNI environment
  * @param obj    the jep.NDArray to convert
- * @oaram ndclz  the jclass for jep/NDArray
  *
  * @return       a numpy ndarray, or NULL if there were errors
  */
-PyObject* convert_jndarray_pyndarray(JNIEnv *env, jobject obj, jclass ndclz) {
+PyObject* convert_jndarray_pyndarray(JNIEnv *env, jobject obj) {
     npy_intp  *dims    = NULL;
     jobject    jdimObj = NULL;
     jint      *jdims   = NULL;
@@ -2236,14 +2289,14 @@ PyObject* convert_jndarray_pyndarray(JNIEnv *env, jobject obj, jclass ndclz) {
 
     init_numpy();
     if(ndarrayGetDims == 0) {
-        ndarrayGetDims = (*env)->GetMethodID(env, ndclz, "getDimensions", "()[I");
+        ndarrayGetDims = (*env)->GetMethodID(env, JEP_NDARRAY_TYPE, "getDimensions", "()[I");
         if(process_java_exception(env) || !ndarrayGetDims) {
             return NULL;
         }
     }
 
     if(ndarrayGetData == 0) {
-        ndarrayGetData = (*env)->GetMethodID(env, ndclz, "getData", "()Ljava/lang/Object;");
+        ndarrayGetData = (*env)->GetMethodID(env, JEP_NDARRAY_TYPE, "getData", "()Ljava/lang/Object;");
         if(process_java_exception(env) || !ndarrayGetData) {
             return NULL;
         }

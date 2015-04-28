@@ -236,10 +236,13 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller) {
     jepThread->tstate = PyEval_SaveThread();
     PyEval_RestoreThread(jepThread->tstate);
 
-    // store primitive java.lang.Class objects for later use.
+    // store java.lang.Class objects for later use.
     // it's a noop if already done, but to synchronize, have the lock first
     if(!cache_primitive_classes(env))
         printf("WARNING: failed to get primitive class types.\n");
+    if(!cache_frequent_classes(env))
+        printf("WARNING: failed to get frequent class types.\n");
+
 
     mod_main = PyImport_AddModule("__main__");                      /* borrowed */
     if(mod_main == NULL) {

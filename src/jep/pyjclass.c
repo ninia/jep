@@ -64,7 +64,7 @@
 
 PyAPI_DATA(PyTypeObject) PyJclass_Type;
 
-static PyObject* pyjclass_add_inner_classes(JNIEnv*, jobject, PyJobject_Object*);
+static PyObject* pyjclass_add_inner_classes(JNIEnv*, PyJobject_Object*);
 static void pyjclass_dealloc(PyJclass_Object*);
 
 static jmethodID classGetConstructors    = 0;
@@ -179,7 +179,7 @@ PyJclass_Object* pyjclass_new(JNIEnv *env, PyObject *pyjob) {
      * code with public enum.  Note this will not allow the inner class to be
      * imported separately, it must be accessed through the enclosing class.
      */
-    if(!pyjclass_add_inner_classes(env, langClass, pyjobject)) {
+    if(!pyjclass_add_inner_classes(env, pyjobject)) {
         /*
          * let's just print the error to stderr and continue on without
          * inner class support, it's not the end of the world
@@ -204,13 +204,11 @@ EXIT_ERROR:
  * Adds a Java class's public inner classes as attributes to the pyjclass.
  *
  * @param env the JNI environment
- * @param langClass the class object for java.lang.Class (reused to boost speed)
  * @param topClz the pyjobject of the top/outer Class
  *
  * @return topClz if successful, otherwise NULL
  */
 static PyObject* pyjclass_add_inner_classes(JNIEnv *env,
-                                            jobject langClass,
                                             PyJobject_Object *topClz) {
     jobjectArray      innerArray    = NULL;
     jsize             innerSize     = 0;
@@ -221,11 +219,8 @@ static PyObject* pyjclass_add_inner_classes(JNIEnv *env,
      */
 
     if(classGetDeclaredClasses == 0) {
-        if(langClass == NULL) {
-            langClass = (*env)->FindClass(env, "java/lang/Class");
-        }
         classGetDeclaredClasses = (*env)->GetMethodID(env,
-                                                      langClass,
+                                                      JCLASS_TYPE,
                                                       "getDeclaredClasses",
                                                       "()[Ljava/lang/Class;");
         if(process_java_exception(env) || !classGetDeclaredClasses)
@@ -233,10 +228,7 @@ static PyObject* pyjclass_add_inner_classes(JNIEnv *env,
     }
 
     if(classGetModifiers == 0) {
-        if(langClass == NULL) {
-            langClass = (*env)->FindClass(env, "java/lang/Class");
-        }
-        classGetModifiers = (*env)->GetMethodID(env, langClass, "getModifiers",
+        classGetModifiers = (*env)->GetMethodID(env, JCLASS_TYPE, "getModifiers",
                 "()I");
         if(process_java_exception(env) || !classGetModifiers)
             return NULL;
@@ -288,10 +280,7 @@ static PyObject* pyjclass_add_inner_classes(JNIEnv *env,
                 if(process_java_exception(env) || !attrClz)
                     return NULL;
                 if(classGetSimpleName == 0) {
-                    if(langClass == NULL) {
-                        langClass = (*env)->FindClass(env, "java/lang/Class");
-                    }
-                    classGetSimpleName = (*env)->GetMethodID(env, langClass, "getSimpleName", "()Ljava/lang/String;");
+                    classGetSimpleName = (*env)->GetMethodID(env, JCLASS_TYPE, "getSimpleName", "()Ljava/lang/String;");
                     if(process_java_exception(env) || !classGetSimpleName)
                         return NULL;
                 }
