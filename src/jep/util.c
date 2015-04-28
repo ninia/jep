@@ -71,6 +71,8 @@ static PyObject* convert_jprimitivearray_pyndarray(JNIEnv*, jobject, int, npy_in
 static jarray convert_pyndarray_jprimitivearray(JNIEnv*, PyObject*, jclass);
 #endif
 
+static PyObject* match_exception_type(JNIEnv*, jthrowable);
+
 
 // -------------------------------------------------- primitive class types
 // these are shared for all threads, you shouldn't change them.
@@ -90,12 +92,18 @@ jclass JCLASS_TYPE   = NULL;
 
 #if USE_NUMPY
 jclass JBOOLEAN_ARRAY_TYPE = NULL;
-jclass JBYTE_ARRAY_TYPE = NULL;
-jclass JSHORT_ARRAY_TYPE = NULL;
-jclass JINT_ARRAY_TYPE = NULL;
-jclass JLONG_ARRAY_TYPE = NULL;
-jclass JFLOAT_ARRAY_TYPE = NULL;
-jclass JDOUBLE_ARRAY_TYPE = NULL;
+jclass JBYTE_ARRAY_TYPE    = NULL;
+jclass JSHORT_ARRAY_TYPE   = NULL;
+jclass JINT_ARRAY_TYPE     = NULL;
+jclass JLONG_ARRAY_TYPE    = NULL;
+jclass JFLOAT_ARRAY_TYPE   = NULL;
+jclass JDOUBLE_ARRAY_TYPE  = NULL;
+#endif
+
+// more cached types
+jclass JLIST_TYPE       = NULL;
+#if USE_NUMPY
+jclass JEP_NDARRAY_TYPE = NULL;
 #endif
 
 // cached methodids
@@ -403,10 +411,12 @@ int process_py_exception(JNIEnv *env, int printTrace) {
                      */
                     if(pyLine != Py_None) {
                         char *charPyFileNoExt, *lastDot;
+                        char *charPyFileNoDir, *lastBackslash;
                         int namelen;
                         jobject element;
-                        jstring pyFile, pyFileNoExt, pyFunc;
+                        jstring pyFileNoDir, pyFileNoExt, pyFunc;
 
+                        // remove the .py to look more like a Java StackTraceElement
                         namelen = (int) strlen(charPyFile);
                         charPyFileNoExt = malloc(sizeof(char) * (namelen + 1));
                         strcpy(charPyFileNoExt, charPyFile);
@@ -415,8 +425,18 @@ int process_py_exception(JNIEnv *env, int printTrace) {
                             *lastDot = '\0';
                         }
 
-                        pyFile = (*env)->NewStringUTF(env,
-                                (const char *) charPyFile);
+                        // remove the dir path to look more like a Java StackTraceElement
+                        charPyFileNoDir = malloc(sizeof(char) * (namelen + 1));
+                        // TODO does this work right on Windows?
+                        lastBackslash = strrchr(charPyFile, '/');
+                        if(lastBackslash != NULL) {
+                            strcpy(charPyFileNoDir, lastBackslash + 1);
+                        } else {
+                            strcpy(charPyFileNoDir, charPyFile);
+                        }
+
+                        pyFileNoDir = (*env)->NewStringUTF(env,
+                                (const char *) charPyFileNoDir);
                         pyFileNoExt = (*env)->NewStringUTF(env,
                                 (const char *) charPyFileNoExt);
                         pyFunc = (*env)->NewStringUTF(env,
@@ -428,14 +448,15 @@ int process_py_exception(JNIEnv *env, int printTrace) {
                          * this makes it look best.
                          */
                         element = (*env)->NewObject(env, stackTraceElemClazz,
-                                stackTraceElemInit, pyFileNoExt, pyFunc, pyFile,
+                                stackTraceElemInit, pyFileNoExt, pyFunc, pyFileNoDir,
                                 pyLineNum);
                         if((*env)->ExceptionCheck(env) || !element) {
                             PyErr_Format(PyExc_RuntimeError,
                                     "failed to create java.lang.StackTraceElement for python %s:%i.",
                                     charPyFile, pyLineNum);
-                            release_utf_char(env, pyFile, charPyFile);
+                            release_utf_char(env, pyFileNoDir, charPyFileNoDir);
                             release_utf_char(env, pyFileNoExt, charPyFileNoExt);
+                            free(charPyFileNoDir);
                             free(charPyFileNoExt);
                             release_utf_char(env, pyFunc, charPyFunc);
                             Py_DECREF(pystack);
@@ -444,8 +465,9 @@ int process_py_exception(JNIEnv *env, int printTrace) {
                         (*env)->SetObjectArrayElement(env, stackArray, (jsize) i,
                                 element);
                         count++;
+                        free(charPyFileNoDir);
                         free(charPyFileNoExt);
-                        (*env)->DeleteLocalRef(env, pyFile);
+                        (*env)->DeleteLocalRef(env, pyFileNoDir);
                         (*env)->DeleteLocalRef(env, pyFileNoExt);
                         (*env)->DeleteLocalRef(env, pyFunc);
                         (*env)->DeleteLocalRef(env, element);
@@ -613,10 +635,105 @@ int process_java_exception(JNIEnv *env) {
         return 1;
     }
 
+    pyException = match_exception_type(env, exception);
     PyErr_SetObject(pyException, jpyExc);
     (*env)->DeleteLocalRef(env, clazz);
     (*env)->DeleteLocalRef(env, exception);
     return 1;
+}
+
+/*
+ * Matches a jthrowable to an equivalent built-in python exception type.  This
+ * is to enable more precise except/catch blocks in python for Java exceptions.
+ * This method intentionally does not call process_java_exception as it is only
+ * called when processing java exceptions, and we don't want to infinitely recurse.
+ *
+ */
+static PyObject* match_exception_type(JNIEnv *env, jthrowable exception) {
+    jclass classNotFound, indexBounds, io, classCast;
+    jclass illegalArg, arithmetic, memory, assertion;
+
+    // map ClassNotFoundException to ImportError
+    classNotFound = (*env)->FindClass(env, "java/lang/ClassNotFoundException");
+    if((*env)->ExceptionOccurred(env) || !classNotFound) {
+        goto EXIT_ERROR;
+    }
+    if((*env)->IsInstanceOf(env, exception, classNotFound)) {
+        return PyExc_ImportError;
+    }
+
+    // map IndexOutOfBoundsException exception to IndexError
+    indexBounds = (*env)->FindClass(env, "java/lang/IndexOutOfBoundsException");
+    if((*env)->ExceptionOccurred(env) || !indexBounds) {
+        goto EXIT_ERROR;
+    }
+    if((*env)->IsInstanceOf(env, exception, indexBounds)) {
+        return PyExc_IndexError;
+    }
+
+    // map IOException to IOError
+    io = (*env)->FindClass(env, "java/io/IOException");
+    if((*env)->ExceptionOccurred(env) || !io) {
+        goto EXIT_ERROR;
+    }
+    if((*env)->IsInstanceOf(env, exception, io)) {
+        return PyExc_IOError;
+    }
+
+    // map ClassCastException to TypeError
+    classCast = (*env)->FindClass(env, "java/lang/ClassCastException");
+    if((*env)->ExceptionOccurred(env) || !classCast) {
+        goto EXIT_ERROR;
+    }
+    if((*env)->IsInstanceOf(env, exception, classCast)) {
+        return PyExc_TypeError;
+    }
+
+    // map IllegalArgumentException to ValueError
+    illegalArg = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
+    if((*env)->ExceptionOccurred(env) || !illegalArg) {
+        goto EXIT_ERROR;
+    }
+    if((*env)->IsInstanceOf(env, exception, illegalArg)) {
+        return PyExc_ValueError;
+    }
+
+    // map ArithmeticException to ArithmeticError
+    arithmetic = (*env)->FindClass(env, "java/lang/ArithmeticException");
+    if((*env)->ExceptionOccurred(env) || !arithmetic) {
+        goto EXIT_ERROR;
+    }
+    if((*env)->IsInstanceOf(env, exception, arithmetic)) {
+        return PyExc_ArithmeticError;
+    }
+
+    // map OutOfMemoryError to MemoryError
+    memory = (*env)->FindClass(env, "java/lang/OutOfMemoryError");
+    if((*env)->ExceptionOccurred(env) || !memory) {
+        goto EXIT_ERROR;
+    }
+    if((*env)->IsInstanceOf(env, exception, memory)) {
+        // honestly if you hit this you're probably screwed
+        return PyExc_MemoryError;
+    }
+
+    // map AssertionError to AssertionError
+    assertion = (*env)->FindClass(env, "java/lang/AssertionError");
+    if((*env)->ExceptionOccurred(env) || !assertion) {
+        goto EXIT_ERROR;
+    }
+    if((*env)->IsInstanceOf(env, exception, assertion)) {
+        return PyExc_AssertionError;
+    }
+
+    // default
+    return PyExc_RuntimeError;
+
+EXIT_ERROR:
+    printf("Error mapping exception types\n");
+    (*env)->ExceptionDescribe(env);
+    (*env)->ExceptionClear(env);
+    return PyExc_RuntimeError;
 }
 
 
@@ -997,8 +1114,8 @@ int cache_primitive_classes(JNIEnv *env) {
     return 1;
 }
 
-
 // remove global references setup in above function.
+// TODO is this method used?  Should it be called from pyembed_shutdown()?
 void unref_cache_primitive_classes(JNIEnv *env) {
     if(JINT_TYPE != NULL) {
         (*env)->DeleteGlobalRef(env, JINT_TYPE);
@@ -1079,6 +1196,55 @@ void unref_cache_primitive_classes(JNIEnv *env) {
         JDOUBLE_ARRAY_TYPE = NULL;
     }
 #endif
+}
+
+int cache_frequent_classes(JNIEnv *env) {
+    jclass clazz;
+
+    if(JLIST_TYPE == NULL) {
+        clazz = (*env)->FindClass(env, "java/util/List");
+        if((*env)->ExceptionOccurred(env))
+            return 0;
+
+        JLIST_TYPE = (*env)->NewGlobalRef(env, clazz);
+        (*env)->DeleteLocalRef(env, clazz);
+    }
+
+#if USE_NUMPY
+    if(JEP_NDARRAY_TYPE == NULL) {
+        clazz = (*env)->FindClass(env, "jep/NDArray");
+        if((*env)->ExceptionOccurred(env))
+            return 0;
+
+        JEP_NDARRAY_TYPE = (*env)->NewGlobalRef(env, clazz);
+        (*env)->DeleteLocalRef(env, clazz);
+    }
+#endif
+
+    /*
+     * TODO cache the jclass objects used in pyembed_box_py and jep exception
+     * handling, though those methods are less frequently used and will not
+     * result in as noticeable a speedup
+     */
+
+    return 1;
+
+}
+
+// TODO is this method used?  Should it be called from pyembed_shutdown()?
+void unref_cache_frequent_classes(JNIEnv *env) {
+    if(JLIST_TYPE != NULL) {
+        (*env)->DeleteGlobalRef(env, JLIST_TYPE);
+        JLIST_TYPE = NULL;
+    }
+
+#if USE_NUMPY
+    if(JEP_NDARRAY_TYPE != NULL) {
+        (*env)->DeleteGlobalRef(env, JEP_NDARRAY_TYPE);
+        JEP_NDARRAY_TYPE = NULL;
+    }
+#endif
+
 }
 
 
@@ -1302,7 +1468,7 @@ int pyarg_matches_jtype(JNIEnv *env,
         break;
         
     case JBOOLEAN_ID:
-        if(PyBool_Check(param))
+        if(PyInt_Check(param))
             return 1;
         break;
     }
@@ -1833,13 +1999,12 @@ int npy_array_check(PyObject *obj) {
  *
  * @param env   the JNI environment
  * @param obj   the jobject to check
- * @param ndclz the jclass representing jep/NDArray
  *
  * @return true if it is an NDArray and jep was compiled with numpy support,
  *          otherwise false
  */
-int jndarray_check(JNIEnv *env, jobject obj, jclass ndclz) {
-    int ret = (*env)->IsInstanceOf(env, obj, ndclz);
+int jndarray_check(JNIEnv *env, jobject obj) {
+    int ret = (*env)->IsInstanceOf(env, obj, JEP_NDARRAY_TYPE);
     if(process_java_exception(env)) {
         return JNI_FALSE;
     }
@@ -2110,11 +2275,10 @@ PyObject* convert_jprimitivearray_pyndarray(JNIEnv *env,
  *
  * @param env    the JNI environment
  * @param obj    the jep.NDArray to convert
- * @oaram ndclz  the jclass for jep/NDArray
  *
  * @return       a numpy ndarray, or NULL if there were errors
  */
-PyObject* convert_jndarray_pyndarray(JNIEnv *env, jobject obj, jclass ndclz) {
+PyObject* convert_jndarray_pyndarray(JNIEnv *env, jobject obj) {
     npy_intp  *dims    = NULL;
     jobject    jdimObj = NULL;
     jint      *jdims   = NULL;
@@ -2125,14 +2289,14 @@ PyObject* convert_jndarray_pyndarray(JNIEnv *env, jobject obj, jclass ndclz) {
 
     init_numpy();
     if(ndarrayGetDims == 0) {
-        ndarrayGetDims = (*env)->GetMethodID(env, ndclz, "getDimensions", "()[I");
+        ndarrayGetDims = (*env)->GetMethodID(env, JEP_NDARRAY_TYPE, "getDimensions", "()[I");
         if(process_java_exception(env) || !ndarrayGetDims) {
             return NULL;
         }
     }
 
     if(ndarrayGetData == 0) {
-        ndarrayGetData = (*env)->GetMethodID(env, ndclz, "getData", "()Ljava/lang/Object;");
+        ndarrayGetData = (*env)->GetMethodID(env, JEP_NDARRAY_TYPE, "getData", "()Ljava/lang/Object;");
         if(process_java_exception(env) || !ndarrayGetData) {
             return NULL;
         }

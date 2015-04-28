@@ -99,7 +99,6 @@ PyObject* pyjlist_new_copy(PyObject *toCopy) {
     jmethodID         newInstance = NULL;
     jobject           newList     = NULL;
     jmethodID         addAll      = NULL;
-    jclass            clazz       = NULL;
     PyJobject_Object *obj         = (PyJobject_Object*) toCopy;
     JNIEnv           *env         = pyembed_get_env();
 
@@ -109,11 +108,7 @@ PyObject* pyjlist_new_copy(PyObject *toCopy) {
         return NULL;
     }
 
-    clazz = (*env)->FindClass(env, "java/lang/Class");
-    if(process_java_exception(env) || !clazz){
-        return NULL;
-    }
-    newInstance = (*env)->GetMethodID(env, clazz, "newInstance", "()Ljava/lang/Object;");
+    newInstance = (*env)->GetMethodID(env, JCLASS_TYPE, "newInstance", "()Ljava/lang/Object;");
     if(process_java_exception(env) || !newInstance) {
         return NULL;
     }

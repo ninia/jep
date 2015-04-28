@@ -121,6 +121,8 @@ int process_import_exception(JNIEnv *env);
 // sets up J<BLAH>TYPE
 int cache_primitive_classes(JNIEnv*);
 void unref_cache_primitive_classes(JNIEnv*);
+int cache_frequent_classes(JNIEnv*);
+void unref_cache_frequent_classes(JNIEnv*);
 
 int get_jtype(JNIEnv*, jobject, jclass);
 int pyarg_matches_jtype(JNIEnv*, PyObject*, jclass, int);
@@ -131,9 +133,9 @@ PyObject* tuplelist_getitem(PyObject*, PyObject*);
 
 #if USE_NUMPY
 int npy_array_check(PyObject*);
-int jndarray_check(JNIEnv*, jobject, jclass);
+int jndarray_check(JNIEnv*, jobject);
 jobject convert_pyndarray_jndarray(JNIEnv*, PyObject*);
-PyObject* convert_jndarray_pyndarray(JNIEnv*, jobject, jclass);
+PyObject* convert_jndarray_pyndarray(JNIEnv*, jobject);
 #endif
 
 #define JBOOLEAN_ID 0
@@ -171,6 +173,12 @@ extern jclass JINT_ARRAY_TYPE;
 extern jclass JLONG_ARRAY_TYPE;
 extern jclass JFLOAT_ARRAY_TYPE;
 extern jclass JDOUBLE_ARRAY_TYPE;
+#endif
+
+// cache some frequently looked up classes
+extern jclass JLIST_TYPE;
+#if USE_NUMPY
+extern jclass JEP_NDARRAY_TYPE;
 #endif
 
 #endif // ifndef _Included_util
