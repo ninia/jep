@@ -1,0 +1,41 @@
+Jep 3.0 Release Notes
+*******************
+
+Highlights
+==========
+
+distutils support
+~~~~~~~~~~~~~~~
+
+Jep now supports building, installing, and testing using python's distutils for
+simplified building.
+
+https://docs.python.org/2/distutils/
+
+
+Python import hook
+~~~~~~~~~~~~~~~~
+Jep now uses a python importer hook, PEP 302, for handling imports of Java
+packages and classes and python packages and modules.
+
+https://www.python.org/dev/peps/pep-0302/
+
+
+jep command line script
+~~~~~~~~~~~~~~~~~~~~
+Jep now includes a script for running a Jep interpreter from the command line
+similar to running a Python interpreter from the command line.  The Jep
+interpreter has access to Java classes on the classpath.
+
+
+Implemented rich compare on pyjobject
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pyjobject now implements python's rich compare by delegating to the Java
+object's equals(Object) method.
+
+https://www.python.org/dev/peps/pep-0207/
+
+
+Memory leaks
+~~~~~~~~~~~
+A number of minor memory leaks have been fixed.
