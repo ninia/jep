@@ -17,8 +17,3 @@
 
 /* Define if you want to deallocate objects. */
 #define USE_DEALLOC 1
-
-/* Version number of package */
-#ifndef VERSION
-#define VERSION "3.3"
-#endif

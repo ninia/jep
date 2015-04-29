@@ -84,12 +84,12 @@ if __name__ == '__main__':
           ],
           distclass=JepDistribution,
           cmdclass={
-              'build_ext' : build_ext,
               'setup_java': setup_java,
               'build_java': build_java,
               'build_javah': build_javah,
               'build_jar': build_jar,
               'build': jep_build,
+              'build_ext' : build_ext,
               'build_scripts': build_scripts,
               'install_lib': jep_install,
               'install_data': post_install,

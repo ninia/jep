@@ -67,10 +67,6 @@ class build_scripts(Command):
         )
 
         if is_windows():
-            lib_python = os.path.join(install.prefix + '\\libs\\python' + sysconfig.get_config_var('VERSION') + '.lib')
-            if os.path.exists(lib_python):
-                context['ld_preload'] = 'SET LD_PRELOAD={0}'.format(lib_python)
-            
             context['ld_library_path'] = 'SET LD_LIBRARY_PATH={0}\lib;{1}'.format(
                                            install.prefix, install.install_lib)
         if not is_osx() and not is_windows():

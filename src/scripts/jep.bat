@@ -1,7 +1,6 @@
 SET VIRTUAL_ENV={virtual_env}
 
 {ld_library_path}
-{ld_preload}
 
 IF NOT "%VIRTUAL_ENV%"=="" (
 SET PATH="$VIRTUAL_ENV\bin;%PATH%"
