@@ -7,7 +7,7 @@ import os
 import fnmatch
 import traceback
 import sys
-from commands.util import configure_error, is_osx, shell, CommandFailed, warning
+from commands.util import configure_error, is_osx, shell, CommandFailed, warning, is_windows
 
 _java_home = None
 # MAC_JAVA_HOME is for the Apple JDK and is consistent in its install directory.
@@ -80,6 +80,10 @@ def get_java_include():
     include_darwin = os.path.join(inc, 'darwin')
     if os.path.exists(include_darwin):
         paths.append(include_darwin)
+
+    include_win32 = os.path.join(inc, 'win32')
+    if os.path.exists(include_win32):
+        paths.append(include_win32)
     return paths
 
 
@@ -102,11 +106,18 @@ def get_java_libraries():
 
 def get_java_lib_folders():
     if not is_osx():
-        jre = os.path.join(get_java_home(), 'jre', 'lib')
+        if is_windows():
+            jre = os.path.join(get_java_home(), 'lib')
+        else:
+            jre = os.path.join(get_java_home(), 'jre', 'lib')
         folders = []
         for root, dirnames, filenames in os.walk(jre):
-            for filename in fnmatch.filter(filenames, '*jvm.so'):
-                folders.append(os.path.join(root, os.path.dirname(filename)))
+            if is_windows():
+                for filename in fnmatch.filter(filenames, '*jvm.lib'):
+                    folders.append(os.path.join(root, os.path.dirname(filename)))
+            else:
+                for filename in fnmatch.filter(filenames, '*jvm.so'):
+                    folders.append(os.path.join(root, os.path.dirname(filename)))
 
         return list(set(folders))
     return []
@@ -198,12 +209,12 @@ class build_jar(Command):
 
     def build(self):
         for src in self.extra_jar_files:
-            dest = os.path.join(*['build/java'] + src.split(os.sep)[1:])
+            dest = os.path.join(*['build/java'] + src.split('/')[1:])
             dest_dir = os.path.dirname(dest)
             print('copying {0} to {1}'.format(src, dest))
             if not os.path.exists(dest_dir):
                 os.makedirs(dest_dir)
-            shutil.copyfile(src, dest)
+            shutil.copy(src, dest)
 
         spawn([self.jar, '-cfe', 'build/java/jep.jar', 'jep.Run', '-C', 'build/java/', 'jep'])
 

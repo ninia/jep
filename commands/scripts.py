@@ -10,7 +10,7 @@ from distutils.dep_util import newer
 from distutils.util import convert_path
 from distutils import log
 from distutils import sysconfig
-from commands.util import is_osx
+from commands.util import is_osx, is_windows
 
 
 class build_scripts(Command):
@@ -66,9 +66,18 @@ class build_scripts(Command):
             ld_preload='',
         )
 
-        if not is_osx():
-            context['ld_library_path'] = 'LD_LIBRARY_PATH="{0}";  export LD_LIBRARY_PATH'.format(
-                                         sysconfig.get_config_var('LIBDIR'))                                            
+        if is_windows():
+            lib_python = os.path.join(install.prefix + '\\libs\\python' + sysconfig.get_config_var('VERSION') + '.lib')
+            if os.path.exists(lib_python):
+                context['ld_preload'] = 'SET LD_PRELOAD={0}'.format(lib_python)
+            
+            context['ld_library_path'] = 'SET LD_LIBRARY_PATH={0}\lib;{1}'.format(
+                                           install.prefix, install.install_lib)
+        if not is_osx() and not is_windows():
+            context['ld_library_path'] = 'LD_LIBRARY_PATH="' + \
+                                           sysconfig.get_config_var('LIBDIR') + \
+                                           ':{0}"; export LD_LIBRARY_PATH'.format(
+                                           install.install_lib)
             
             # set the LD_PRELOAD environment variable if we can locate the
             # libpython<version>.so library.
@@ -86,6 +95,8 @@ class build_scripts(Command):
                     context['ld_preload'] = 'LD_PRELOAD="{0}"; export LD_PRELOAD'.format(lib_python)
 
         for script in self.scripts:
+            if is_windows():
+                script='{0}.bat'.format(script)
             script = convert_path(script)
             outfile = os.path.join(self.build_dir, os.path.basename(script))
             outfiles.append(outfile)

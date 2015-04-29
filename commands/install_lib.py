@@ -6,12 +6,13 @@ from commands.util import is_osx, is_windows
 
 class jep_install(install_lib):
     
-    def install(self):                                   
+    def install(self):   
+        py_lib = sysconfig.get_config_var('LIBDIR')    
         if is_windows():
             jep_lib = 'jep.pyd'
+            py_lib = os.path.join(os.environ.get('PYTHONHOME') + '\\DLLs\\')
         else:
             jep_lib = 'jep.so'
-        py_lib = sysconfig.get_config_var('LIBDIR')
         
         if os.path.isdir(self.build_dir):        
             # let's put the file in python/lib where it belongs

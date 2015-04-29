@@ -13,8 +13,8 @@ class post_install(install_data):
 
         # now let's give it a link that works for Java System.loadLibrary("jep")
         if is_windows():
-            # windows actually supports symbolic links now?
-            spawn(['mklink',
+            py_lib = os.path.join(os.environ.get('PYTHONHOME') + '\\DLLs\\')
+            spawn(['mv',
                    '{0}'.format(os.path.join(py_lib, 'jep.pyd')),
                    '{0}'.format(os.path.join(py_lib, 'jep.dll')),
                    ])

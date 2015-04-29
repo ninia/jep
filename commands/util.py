@@ -20,7 +20,7 @@ def is_osx():
 
 
 def is_windows():
-    return 'win32' in get_platform()
+    return 'win' in get_platform()
 
 
 class CommandFailed(Exception):

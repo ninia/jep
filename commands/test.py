@@ -1,5 +1,6 @@
 from distutils.cmd import Command
 from distutils.spawn import spawn
+from commands.util import is_windows
 import os
 
 class test(Command):
@@ -18,5 +19,9 @@ class test(Command):
         pass
 
     def run(self):
-        os.environ['CLASSPATH'] = 'build/java/:tests/lib/sqlitejdbc-v056.jar'
-        spawn(['jep', 'runtests.py'])
+        if is_windows():
+            os.environ['CLASSPATH'] = 'build/java/;tests/lib/sqlitejdbc-v056.jar'
+            spawn(['build\scripts-2.7\jep.bat', 'runtests.py'])
+        else:
+            os.environ['CLASSPATH'] = 'build/java/:tests/lib/sqlitejdbc-v056.jar'
+            spawn(['jep', 'runtests.py'])
