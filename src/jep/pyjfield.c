@@ -177,13 +177,7 @@ static int pyjfield_init(JNIEnv *env, PyJfield_Object *self) {
         goto EXIT_ERROR;
     
     {
-        jclass rclazz;
-
-        rclazz = (*env)->GetObjectClass(env, fieldType);
-        if(process_java_exception(env) || !rclazz)
-            goto EXIT_ERROR;
-
-        self->fieldTypeId = get_jtype(env, fieldType, rclazz);
+        self->fieldTypeId = get_jtype(env, fieldType);
 
         if(process_java_exception(env))
             goto EXIT_ERROR;

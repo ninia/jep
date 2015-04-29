@@ -566,7 +566,6 @@ PyObject* find_method(JNIEnv *env,
         for(parmpos = 0; parmpos < cand[i]->lenParameters; parmpos++) {
             PyObject *param       = PyTuple_GetItem(args, parmpos);
             int       paramTypeId = -1;
-            jclass    pclazz;
             jclass    paramType =
                 (jclass) (*env)->GetObjectArrayElement(env,
                                                        cand[i]->parameters,
@@ -575,11 +574,7 @@ PyObject* find_method(JNIEnv *env,
             if(process_java_exception(env) || !paramType)
                 break;
             
-            pclazz = (*env)->GetObjectClass(env, paramType);
-            if(process_java_exception(env) || !pclazz)
-                break;
-            
-            paramTypeId = get_jtype(env, paramType, pclazz);
+            paramTypeId = get_jtype(env, paramType);
             
             if(pyarg_matches_jtype(env, param, paramType, paramTypeId)) {
                 if(PyErr_Occurred())

@@ -398,7 +398,6 @@ PyObject* pyjclass_call(PyJclass_Object *self,
         for(parmPos = 0; parmPos < parmLen; parmPos++) {
             PyObject *param       = PyTuple_GetItem(args, parmPos);
             int       paramTypeId = -1;
-            jclass    pclazz;
             jobject   paramType   =
                 (jclass) (*env)->GetObjectArrayElement(env,
                                                        parmArray,
@@ -407,11 +406,7 @@ PyObject* pyjclass_call(PyJclass_Object *self,
             if(process_java_exception(env) || !paramType)
                 break;
             
-            pclazz = (*env)->GetObjectClass(env, paramType);
-            if(process_java_exception(env) || !pclazz)
-                goto EXIT_ERROR;
-            
-            paramTypeId = get_jtype(env, paramType, pclazz);
+            paramTypeId = get_jtype(env, paramType);
             if(PyErr_Occurred() || process_java_exception(env))
                 goto EXIT_ERROR;
             

@@ -1251,30 +1251,24 @@ void unref_cache_frequent_classes(JNIEnv *env) {
 // given the Class object, return the const ID.
 // -1 on error or NULL.
 // doesn't process errors!
-int get_jtype(JNIEnv *env, jobject obj, jclass clazz) {
+int get_jtype(JNIEnv *env, jclass clazz) {
     jboolean equals = JNI_FALSE;
     jboolean array  = JNI_FALSE;
 
     // have to find the equals() method.
-    if(objectEquals == 0 || objectIsArray == 0) {
-        jobject super = NULL;
-
-        super = (*env)->GetSuperclass(env, clazz);
-        if((*env)->ExceptionCheck(env) || !super) {
-            (*env)->DeleteLocalRef(env, super);
-            return -1;
-        }
-        
+    if(objectEquals == 0) {
         objectEquals = (*env)->GetMethodID(env,
-                                           super,
+                                           JCLASS_TYPE,
                                            "equals",
                                            "(Ljava/lang/Object;)Z");
-        (*env)->DeleteLocalRef(env, super);
         if((*env)->ExceptionCheck(env) || !objectEquals)
             return -1;
+    }
 
+    // have to find Class.isArray() method
+    if(objectIsArray == 0) {
         objectIsArray = (*env)->GetMethodID(env,
-                                            clazz,
+                                            JCLASS_TYPE,
                                             "isArray",
                                             "()Z");
         if((*env)->ExceptionCheck(env) || !objectIsArray)
@@ -1282,70 +1276,70 @@ int get_jtype(JNIEnv *env, jobject obj, jclass clazz) {
     }
 
     // int
-    equals = (*env)->CallBooleanMethod(env, obj, objectEquals, JINT_TYPE);
+    equals = (*env)->CallBooleanMethod(env, clazz, objectEquals, JINT_TYPE);
     if((*env)->ExceptionCheck(env))
         return -1;
     if(equals)
         return JINT_ID;
     
     // short
-    equals = (*env)->CallBooleanMethod(env, obj, objectEquals, JSHORT_TYPE);
+    equals = (*env)->CallBooleanMethod(env, clazz, objectEquals, JSHORT_TYPE);
     if((*env)->ExceptionCheck(env))
         return -1;
     if(equals)
         return JSHORT_ID;
 
     // double
-    equals = (*env)->CallBooleanMethod(env, obj, objectEquals, JDOUBLE_TYPE);
+    equals = (*env)->CallBooleanMethod(env, clazz, objectEquals, JDOUBLE_TYPE);
     if((*env)->ExceptionCheck(env))
         return -1;
     if(equals)
         return JDOUBLE_ID;
 
     // float
-    equals = (*env)->CallBooleanMethod(env, obj, objectEquals, JFLOAT_TYPE);
+    equals = (*env)->CallBooleanMethod(env, clazz, objectEquals, JFLOAT_TYPE);
     if((*env)->ExceptionCheck(env))
         return -1;
     if(equals)
         return JFLOAT_ID;
 
     // boolean
-    equals = (*env)->CallBooleanMethod(env, obj, objectEquals, JBOOLEAN_TYPE);
+    equals = (*env)->CallBooleanMethod(env, clazz, objectEquals, JBOOLEAN_TYPE);
     if((*env)->ExceptionCheck(env))
         return -1;
     if(equals)
         return JBOOLEAN_ID;
 
     // long
-    equals = (*env)->CallBooleanMethod(env, obj, objectEquals, JLONG_TYPE);
+    equals = (*env)->CallBooleanMethod(env, clazz, objectEquals, JLONG_TYPE);
     if((*env)->ExceptionCheck(env))
         return -1;
     if(equals)
         return JLONG_ID;
 
     // string
-    equals = (*env)->CallBooleanMethod(env, obj, objectEquals, JSTRING_TYPE);
+    equals = (*env)->CallBooleanMethod(env, clazz, objectEquals, JSTRING_TYPE);
     if((*env)->ExceptionCheck(env))
         return -1;
     if(equals)
         return JSTRING_ID;
 
     // void
-    equals = (*env)->CallBooleanMethod(env, obj, objectEquals, JVOID_TYPE);
+    equals = (*env)->CallBooleanMethod(env, clazz, objectEquals, JVOID_TYPE);
     if((*env)->ExceptionCheck(env))
         return -1;
     if(equals)
         return JVOID_ID;
     
     // char
-    equals = (*env)->CallBooleanMethod(env, obj, objectEquals, JCHAR_TYPE);
+    equals = (*env)->CallBooleanMethod(env, clazz, objectEquals, JCHAR_TYPE);
     if((*env)->ExceptionCheck(env))
         return -1;
     if(equals)
         return JCHAR_ID;
 
     // byte
-    equals = (*env)->CallBooleanMethod(env, obj, objectEquals, JBYTE_TYPE);
+    equals = (*env)->CallBooleanMethod(env, clazz, objectEquals, JBYTE_TYPE);
     if((*env)->ExceptionCheck(env))
         return -1;
     if(equals)
@@ -1354,14 +1348,14 @@ int get_jtype(JNIEnv *env, jobject obj, jclass clazz) {
     // object checks
     
     // check if it's an array first
-    array = (*env)->CallBooleanMethod(env, obj, objectIsArray);
+    array = (*env)->CallBooleanMethod(env, clazz, objectIsArray);
     if((*env)->ExceptionCheck(env))
         return -1;
     
     if(array)
         return JARRAY_ID;
 
-    if((*env)->IsAssignableFrom(env, obj, JCLASS_TYPE))
+    if((*env)->IsAssignableFrom(env, clazz, JCLASS_TYPE))
         return JCLASS_ID;
     
     if((*env)->IsAssignableFrom(env, clazz, JOBJECT_TYPE))

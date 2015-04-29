@@ -251,7 +251,6 @@ static int pyjarray_init(JNIEnv *env,
                          int zero,
                          PyObject *value) {
     jobject compType  = NULL;
-    jclass  compClass = NULL;
     int     comp;
 
     // ------------------------------ first, get the array's type
@@ -287,16 +286,12 @@ static int pyjarray_init(JNIEnv *env,
                                             objectComponentType);
         if(process_java_exception(env) || !compType)
             goto EXIT_ERROR;
-    
-        compClass = (*env)->GetObjectClass(env, compType);
-        if(process_java_exception(env) || !compClass)
-            goto EXIT_ERROR;
 
-        comp = get_jtype(env, compType, compClass);
+        comp = get_jtype(env, compType);
         if(process_java_exception(env) || comp < 0)
             goto EXIT_ERROR;
     
-        pyarray->componentClass = (*env)->NewGlobalRef(env, compClass);
+        pyarray->componentClass = (*env)->NewGlobalRef(env, compType);
         pyarray->componentType  = comp;
     }
     
@@ -450,7 +445,6 @@ static int pyjarray_init(JNIEnv *env,
     } // if zero
 
     (*env)->DeleteLocalRef(env, compType);
-    (*env)->DeleteLocalRef(env, compClass);
     
     if(process_java_exception(env))
         return 0;
@@ -459,8 +453,6 @@ static int pyjarray_init(JNIEnv *env,
 EXIT_ERROR:
     if(compType)
         (*env)->DeleteLocalRef(env, compType);
-    if(compClass)
-        (*env)->DeleteLocalRef(env, compClass);
 
     return -1;
 }
