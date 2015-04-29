@@ -19,4 +19,4 @@
 #define USE_DEALLOC 1
 
 /* Version number of package */
-#define VERSION "2.5"
+#define VERSION "3.3"

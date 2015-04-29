@@ -1,14 +1,4 @@
-package jep;
-
-import java.lang.reflect.Method;
-
-import jep.python.*;
-
-
 /**
- * <pre>
- * InvocationHandler.java - Handle Proxy method calls.
- *
  * Copyright (c) 2015 JEP AUTHORS.
  *
  * This file is licenced under the the zlib/libpng License.
@@ -31,30 +21,36 @@ import jep.python.*;
  * 
  *     3. This notice may not be removed or altered from any source
  *     distribution.
- *
- * Created: Sun Jun  6 15:06:34 2004
- * </pre>
- *
+ */
+package jep;
+
+import java.lang.reflect.Method;
+
+import jep.python.PyObject;
+
+/**
+ * Handle Proxy method calls.
+ * 
  * @author [mrjohnson0 at sourceforge.net] Mike Johnson
  * @version $Id: $
  */
 public class InvocationHandler implements java.lang.reflect.InvocationHandler {
 
-    private long    tstate;
-    private long    target;
-    private Jep     jep;
+    private long tstate;
 
+    private long target;
+
+    private Jep jep;
 
     /**
      * Creates a new <code>InvocationHandler</code> instance.
-     *
+     * 
      */
-    public InvocationHandler(long tstate,
-                             long ltarget,
-                             Jep jep) throws JepException {
+    public InvocationHandler(long tstate, long ltarget, Jep jep)
+            throws JepException {
         this.tstate = tstate;
         this.target = ltarget;
-        this.jep    = jep;
+        this.jep = jep;
 
         // track target with jep.
 
@@ -64,84 +60,72 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
         // correction. object is now increfed before being returned to
         // Java since in some cases the garbage collection could run
         // before this.
-        jep.trackObject(new PyObject(this.tstate,
-                                     this.target,
-                                     this.jep),
-                        false);
+        jep.trackObject(new PyObject(this.tstate, this.target, this.jep), false);
     }
 
-
     /**
-     * Processes a method invocation on a proxy instance and returns
-     * the result. This method will be invoked on an invocation
-     * handler when a method is invoked on a proxy instance that it is
-     * associated with.
-     *
-     * @param proxy the proxy instance that the method was invoked on
-     * @param method the Method instance corresponding to the
-     * interface method invoked on the proxy instance. The declaring
-     * class of the Method object will be the interface that the
-     * method was declared in, which may be a superinterface of the
-     * proxy interface that the proxy class inherits the method
-     * through.
-     * @param args an array of objects containing the values of the
-     * arguments passed in the method invocation on the proxy
-     * instance, or null if interface method takes no
-     * arguments. Arguments of primitive types are wrapped in
-     * instances of the appropriate primitive wrapper class, such as
-     * java.lang.Integer or java.lang.Boolean.
-     * @return the value to return from the method invocation on the
-     * proxy instance. If the declared return type of the interface
-     * method is a primitive type, then the value returned by this
-     * method must be an instance of the corresponding primitive
-     * wrapper class; otherwise, it must be a type assignable to the
-     * declared return type. If the value returned by this method is
-     * null and the interface method's return type is primitive, then
-     * a NullPointerException will be thrown by the method invocation
-     * on the proxy instance. If the value returned by this method is
-     * otherwise not compatible with the interface method's declared
-     * return type as described above, a ClassCastException will be
-     * thrown by the method invocation on the proxy instance.
-     * @exception Throwable the exception to throw from the method
-     * invocation on the proxy instance. The exception's type must be
-     * assignable either to any of the exception types declared in the
-     * throws clause of the interface method or to the unchecked
-     * exception types java.lang.RuntimeException or
-     * java.lang.Error. If a checked exception is thrown by this
-     * method that is not assignable to any of the exception types
-     * declared in the throws clause of the interface method, then an
-     * UndeclaredThrowableException containing the exception that was
-     * thrown by this method will be thrown by the method invocation
-     * on the proxy instance.
+     * Processes a method invocation on a proxy instance and returns the result.
+     * This method will be invoked on an invocation handler when a method is
+     * invoked on a proxy instance that it is associated with.
+     * 
+     * @param proxy
+     *            the proxy instance that the method was invoked on
+     * @param method
+     *            the Method instance corresponding to the interface method
+     *            invoked on the proxy instance. The declaring class of the
+     *            Method object will be the interface that the method was
+     *            declared in, which may be a superinterface of the proxy
+     *            interface that the proxy class inherits the method through.
+     * @param args
+     *            an array of objects containing the values of the arguments
+     *            passed in the method invocation on the proxy instance, or null
+     *            if interface method takes no arguments. Arguments of primitive
+     *            types are wrapped in instances of the appropriate primitive
+     *            wrapper class, such as java.lang.Integer or java.lang.Boolean.
+     * @return the value to return from the method invocation on the proxy
+     *         instance. If the declared return type of the interface method is
+     *         a primitive type, then the value returned by this method must be
+     *         an instance of the corresponding primitive wrapper class;
+     *         otherwise, it must be a type assignable to the declared return
+     *         type. If the value returned by this method is null and the
+     *         interface method's return type is primitive, then a
+     *         NullPointerException will be thrown by the method invocation on
+     *         the proxy instance. If the value returned by this method is
+     *         otherwise not compatible with the interface method's declared
+     *         return type as described above, a ClassCastException will be
+     *         thrown by the method invocation on the proxy instance.
+     * @exception Throwable
+     *                the exception to throw from the method invocation on the
+     *                proxy instance. The exception's type must be assignable
+     *                either to any of the exception types declared in the
+     *                throws clause of the interface method or to the unchecked
+     *                exception types java.lang.RuntimeException or
+     *                java.lang.Error. If a checked exception is thrown by this
+     *                method that is not assignable to any of the exception
+     *                types declared in the throws clause of the interface
+     *                method, then an UndeclaredThrowableException containing
+     *                the exception that was thrown by this method will be
+     *                thrown by the method invocation on the proxy instance.
      */
-    public Object invoke(Object proxy,
-                         Method method,
-                         Object[] args) throws Throwable {
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args)
+            throws Throwable {
         this.jep.isValidThread();
 
         // java passes null args sometimes. *shrugs*
-        if(args == null)
+        if (args == null)
             args = new Object[0];
 
         // find typeid for args. it's easier in Java and I'm a lazy
         // bastard.
         int types[] = new int[args.length];
-        for(int i = 0; i < args.length; i++)
+        for (int i = 0; i < args.length; i++)
             types[i] = Util.getTypeId(args[i]);
 
-        return invoke(method.getName(),
-                      this.tstate,
-                      this.target,
-                      args,
-                      types,
-                      Util.getTypeId(method.getReturnType()));
+        return invoke(method.getName(), this.tstate, this.target, args, types,
+                Util.getTypeId(method.getReturnType()));
     }
 
-
-    private static native Object invoke(String name,
-                                        long tstate,
-                                        long target,
-                                        Object[] args,
-                                        int[] types,
-                                        int returnType);
+    private static native Object invoke(String name, long tstate, long target,
+            Object[] args, int[] types, int returnType);
 }

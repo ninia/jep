@@ -1,9 +1,4 @@
-package jep;
-
 /**
- * <pre>
- * JepException.java - it happens.
- *
  * Copyright (c) 2015 JEP AUTHORS.
  *
  * This file is licenced under the the zlib/libpng License.
@@ -26,49 +21,54 @@ package jep;
  * 
  *     3. This notice may not be removed or altered from any source
  *     distribution.
- *
- * Created: Fri Apr 30 10:35:03 2004
- *
- * </pre>
+ */
+package jep;
+
+/**
+ * JepException.java - it happens.
+ * 
  * @author [mrjohnson0 at sourceforge.net] Mike Johnson
  * @version $Id$
  */
 public class JepException extends Exception {
 
+    private static final long serialVersionUID = 1L;
+
     /**
      * Creates a new <code>JepException</code> instance.
-     *
+     * 
      */
     public JepException() {
         super();
     }
 
-    
     /**
      * Creates a new <code>JepException</code> instance.
-     *
-     * @param s a <code>String</code> value
+     * 
+     * @param s
+     *            a <code>String</code> value
      */
     public JepException(String s) {
         super(s);
     }
-    
-    
+
     /**
      * Creates a new <code>JepException</code> instance.
-     *
-     * @param t a <code>Throwable</code> value
+     * 
+     * @param t
+     *            a <code>Throwable</code> value
      */
     public JepException(Throwable t) {
         super(t);
     }
 
-
     /**
      * Creates a new <code>JepException</code> instance.
-     *
-     * @param s a <code>String</code> value
-     * @param t a <code>Throwable</code> value
+     * 
+     * @param s
+     *            a <code>String</code> value
+     * @param t
+     *            a <code>Throwable</code> value
      */
     public JepException(String s, Throwable t) {
         super(s, t);

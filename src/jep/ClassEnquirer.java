@@ -1,27 +1,8 @@
-package jep;
-
 /**
- * <pre>
- * ClassEnquirer.java - Interface to enquire if a name is available
- * to be imported from Java.  Used by JEP's importer hook (PEP 302) to
- * determine if an attempt to import a module/class should be directed
- * to the Python importer or the Java importer.
- * 
- * TODO: Implement an OSGi class enquirer.  Implement a pseudo-secure
- * class enquirer.  jep.findClass(name) ignores the import hook and wouldn't
- * go through the secure enquirer, so it would still require a restricted
- * ClassLoader to be secure.  However, they could potentially be used in
- * tandem for faster performance or dynamic behavior.
- * 
- * TODO Potentially add a method to get a list of sub-packages.  However,
- * for the most part that won't work for any implementations except ClassList
- * so perhaps it shouldn't be on the interface.
- * 
- * 
  * Copyright (c) 2015 JEP AUTHORS.
- * 
+ *
  * This file is licenced under the the zlib/libpng License.
- * 
+ *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any
  * damages arising from the use of this software.
@@ -40,15 +21,32 @@ package jep;
  * 
  *     3. This notice may not be removed or altered from any source
  *     distribution.
- * 
- * Created: Thurs Apr 02 2015
- * 
- * </pre>
+ */
+package jep;
+
+/**
+ * Interface to enquire if a name is available to be imported from Java. Used by
+ * JEP's importer hook (see <a
+ * href="https://www.python.org/dev/peps/pep-0302/">PEP 302</a>) to determine if
+ * an attempt to import a module/package or class should be directed to the
+ * Python importer or the Java importer. *
  * 
  * @author [ndjensen at gmail.com] Nate Jensen
  * @version $Id$
  */
 public interface ClassEnquirer {
+
+    /*
+     * TODO: Implement an OSGi class enquirer. Implement a pseudo-secure class
+     * enquirer. jep.findClass(name) ignores the import hook and wouldn't go
+     * through the secure enquirer, so it would still require a restricted
+     * ClassLoader to be secure. However, they could potentially be used in
+     * tandem for faster performance or dynamic behavior.
+     * 
+     * TODO Look into adding a method to get sub-packages, though there's not a
+     * good way to implement that in Java short of pre-determination of what is
+     * available.
+     */
 
     /**
      * Checks if the name is likely available in Java. A return value of true

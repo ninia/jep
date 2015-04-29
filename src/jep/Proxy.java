@@ -1,15 +1,4 @@
-package jep;
-
-import jep.*;
-import jep.python.*;
-
-import java.lang.reflect.InvocationHandler;
-
-
 /**
- * <pre>
- * Proxy.java - Extend java.lang.reflect.Proxy for callbacks.
- *
  * Copyright (c) 2015 JEP AUTHORS.
  *
  * This file is licenced under the the zlib/libpng License.
@@ -32,74 +21,77 @@ import java.lang.reflect.InvocationHandler;
  * 
  *     3. This notice may not be removed or altered from any source
  *     distribution.
- *
- *  Created: Sat Dec 16 08:11:10 2006
- *
- * </pre>
- *
+ */
+package jep;
+
+import java.lang.reflect.InvocationHandler;
+
+/**
+ * Proxy.java - Extend java.lang.reflect.Proxy for callbacks.
+ * 
  * @author [mrjohnson0 at sourceforge.net] Mike Johnson
  * @version $Id: $
  */
 public class Proxy extends java.lang.reflect.Proxy {
 
+    private static final long serialVersionUID = 1L;
+
     /**
-     * Constructs a new Proxy instance from a subclass (typically, a
-     * dynamic proxy class) with the specified value for its
-     * invocation handler.
-     *
-     * @param h an <code>InvocationHandler</code> value
+     * Constructs a new Proxy instance from a subclass (typically, a dynamic
+     * proxy class) with the specified value for its invocation handler.
+     * 
+     * @param h
+     *            an <code>InvocationHandler</code> value
      */
     protected Proxy(InvocationHandler h) {
         super(h);
     }
-
 
     /**
      * <pre>
      * Returns an instance of a proxy class for the specified
      * interfaces that dispatches method invocations to the specified
      * invocation handler. This method is equivalent to:
-     *
+     * 
      * Proxy.getProxyClass(loader, interfaces).
      *     getConstructor(new Class[] { InvocationHandler.class }).
      *     newInstance(new Object[] { handler });
-     *
-     *
+     * 
+     * 
      * Proxy.newProxyInstance throws IllegalArgumentException for the
      * same reasons that Proxy.getProxyClass does.
      * </pre>
-     *
-     * @param tstate a <code>long</code> value
-     * @param ltarget a <code>long</code> value
-     * @param jep a <code>Jep</code> value
-     * @param loader the class loader to define the proxy class
-     * @param interfaces the list of interfaces to implement
+     * 
+     * @param tstate
+     *            a <code>long</code> value
+     * @param ltarget
+     *            a <code>long</code> value
+     * @param jep
+     *            a <code>Jep</code> value
+     * @param loader
+     *            the class loader to define the proxy class
+     * @param interfaces
+     *            the list of interfaces to implement
      * @return an <code>Object</code> value
-     * @exception IllegalArgumentException if an error occurs
+     * @exception IllegalArgumentException
+     *                if an error occurs
      */
-    public static Object newProxyInstance(long tstate,
-                                          long ltarget,
-                                          Jep jep,
-                                          ClassLoader loader,
-                                          String[] interfaces)
-        throws IllegalArgumentException {
+    public static Object newProxyInstance(long tstate, long ltarget, Jep jep,
+            ClassLoader loader, String[] interfaces)
+            throws IllegalArgumentException {
 
         InvocationHandler ih = null;
         try {
-            ih = new jep.InvocationHandler(tstate,
-                                           ltarget,
-                                           jep);
-        }
-        catch(JepException e) {
+            ih = new jep.InvocationHandler(tstate, ltarget, jep);
+        } catch (JepException e) {
             throw new IllegalArgumentException(e);
         }
 
         Class classes[] = new Class[interfaces.length];
         try {
-            for(int i = 0; i < interfaces.length; i++)
+            for (int i = 0; i < interfaces.length; i++)
                 classes[i] = loader.loadClass(interfaces[i]);
-        }
-        catch(ClassNotFoundException e) {
+        } catch (ClassNotFoundException e) {
             throw new IllegalArgumentException(e);
         }
 

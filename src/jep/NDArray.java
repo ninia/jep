@@ -1,18 +1,8 @@
-package jep;
-
-import java.lang.reflect.Array;
-import java.util.Arrays;
-
 /**
- * <pre>
- * NDArray.java - Represents a numpy.ndarray in Java.  Should
- * seamlessly transition between this representation in Java and
- * a numpy.ndarray representation in Python.
- * 
  * Copyright (c) 2015 JEP AUTHORS.
- * 
+ *
  * This file is licenced under the the zlib/libpng License.
- * 
+ *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any
  * damages arising from the use of this software.
@@ -31,10 +21,19 @@ import java.util.Arrays;
  * 
  *     3. This notice may not be removed or altered from any source
  *     distribution.
- * 
- * Created: Tues Apr 07 2015
- * 
- * </pre>
+ */
+package jep;
+
+import java.lang.reflect.Array;
+import java.util.Arrays;
+
+/**
+ * NDArray.java - Represents a <a href=
+ * "http://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html"
+ * >numpy.ndarray</a> in Java. If Jep was compiled with numpy support, this
+ * object will not be wrapped as a pyjobject in the python interpreter(s), it
+ * will instead be transformed into a numpy.ndarray automatically (and vice
+ * versa).
  * 
  * @author [ndjensen at gmail.com] Nate Jensen
  * @version $Id$
