@@ -236,17 +236,10 @@ int pyjmethod_init(JNIEnv *env, PyJmethod_Object *self) {
     if(process_java_exception(env) || !returnType)
         goto EXIT_ERROR;
     
-    {
-        jclass rclazz;
+    self->returnTypeId = get_jtype(env, returnType);
+    if(process_java_exception(env))
+        goto EXIT_ERROR;
 
-        rclazz = (*env)->GetObjectClass(env, returnType);
-        if(process_java_exception(env) || !rclazz)
-            goto EXIT_ERROR;
-
-        self->returnTypeId = get_jtype(env, returnType, rclazz);
-        if(process_java_exception(env))
-            goto EXIT_ERROR;
-    }
     
     // ------------------------------ get parameter array
 
@@ -404,7 +397,6 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
     for(pos = 0; pos < self->lenParameters; pos++) {
         PyObject *param = NULL;
         int paramTypeId = -1;
-        jclass pclazz = NULL;
         jclass paramType = (jclass) (*env)->GetObjectArrayElement(env,
                 self->parameters, pos);
 
@@ -412,15 +404,8 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
         if(PyErr_Occurred()) {                                /* borrowed */
             goto EXIT_ERROR;
         }
-        
-        pclazz = (*env)->GetObjectClass(env, paramType);
-        if(process_java_exception(env) || !pclazz) {
-            goto EXIT_ERROR;
-        }
-        
-        paramTypeId = get_jtype(env, paramType, pclazz);
-        (*env)->DeleteLocalRef(env, pclazz);
 
+        paramTypeId = get_jtype(env, paramType);
         if(paramTypeId == JARRAY_ID)
             foundArray = 1;
         
@@ -563,10 +548,28 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
                                                 self->methodId,
                                                 jargs);
         }
-        
+
         Py_BLOCK_THREADS;
-        if(!process_java_exception(env) && obj != NULL)
-            result = pyjobject_new(env, obj);
+        if(!process_java_exception(env) && obj != NULL) {
+            jclass retClazz;
+            int type_id = -1;
+
+            /*
+             * TODO: Potentially we should have pyjobject_new handle this checking,
+             * much like it is already checking for Class, List, NDArray so then
+             * the checks will be centralized.  It is a little weird to call
+             * pyjobject_new and not get back a pyjobject though.
+             */
+            retClazz = (*env)->GetObjectClass(env, obj);
+            type_id = get_jtype(env, retClazz);
+            if(type_id == -1) {
+              process_java_exception(env);
+            } else if(type_id == JARRAY_ID){
+                result = pyjarray_new(env, obj);
+            } else {
+                result = pyjobject_new(env, obj);
+            }
+        }
         
         break;
     }
