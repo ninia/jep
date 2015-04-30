@@ -551,24 +551,7 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
 
         Py_BLOCK_THREADS;
         if(!process_java_exception(env) && obj != NULL) {
-            jclass retClazz;
-            int type_id = -1;
-
-            /*
-             * TODO: Potentially we should have pyjobject_new handle this checking,
-             * much like it is already checking for Class, List, NDArray so then
-             * the checks will be centralized.  It is a little weird to call
-             * pyjobject_new and not get back a pyjobject though.
-             */
-            retClazz = (*env)->GetObjectClass(env, obj);
-            type_id = get_jtype(env, retClazz);
-            if(type_id == -1) {
-              process_java_exception(env);
-            } else if(type_id == JARRAY_ID){
-                result = pyjarray_new(env, obj);
-            } else {
-                result = pyjobject_new(env, obj);
-            }
+            result = pyjobject_new(env, obj);
         }
         
         break;
