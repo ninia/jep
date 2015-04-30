@@ -1,7 +1,7 @@
 
 history_file = None
 
-import traceback
+import traceback, os
 import jep
 from jep import *
 
@@ -11,8 +11,7 @@ try:
     import readline
 
     try:
-        has_readline = True
-        import os
+        has_readline = True        
         history_file = os.path.join(os.environ['HOME'], '.jep')
         if not os.path.exists(history_file):
             readline.write_history_file(history_file)
@@ -21,16 +20,22 @@ try:
     except IOError as e:
         pass
 except ImportError:
-    print """
+    msg = """
     No readline available.
+    """
+    if os.name == "posix":
+        msg += """
     You may want to set the LD_PRELOAD environment variable, see the
     README file for details.
 
+    i.e.: export LD_PRELOAD=/usr/lib/libpython2.7.so.1.0
+    """
 
-    i.e.: export LD_PRELOAD=/usr/lib/libpython2.3.so.1.0
-
+    msg += """
     If your platform really doesn't have readline, try this:
-    http://newcenturycomputers.net/projects/readline.html """
+    http://newcenturycomputers.net/projects/readline.html
+    """
+    print msg
 
 
 PS1 = ">>> "

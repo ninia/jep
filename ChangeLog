@@ -1,4 +1,7 @@
-2014-12-126 3.1.0 - Mike Johnson <mike@mrj0.com>
+2015-04-30 3.3.0 - Nate Jensen
+    * Switched to release_notes folder
+
+2014-12-16 3.1.0 - Mike Johnson <mike@mrj0.com>
 	* osx yet again changed their compiler flags
 
 2012-06-10 3.1.0 - Mike Johnson <mike@mrj0.com>
