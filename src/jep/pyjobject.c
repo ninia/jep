@@ -60,6 +60,7 @@
 #include "pyjfield.h"
 #include "pyjclass.h"
 #include "util.h"
+#include "pyjarray.h"
 #include "pyjmethodwrapper.h"
 #include "pyjlist.h"
 
@@ -78,6 +79,8 @@ static PyObject *classnamePyJMethodsDict = NULL;
 // called internally to make new PyJobject_Object instances
 PyObject* pyjobject_new(JNIEnv *env, jobject obj) {
     PyJobject_Object *pyjob;
+    jclass            objClz;
+    int               jtype;
     
     if(PyType_Ready(&PyJobject_Type) < 0)
         return NULL;
@@ -86,24 +89,41 @@ PyObject* pyjobject_new(JNIEnv *env, jobject obj) {
         return NULL;
     }
 
-#if USE_NUMPY
+    objClz = (*env)->GetObjectClass(env, obj);
+
     /*
-     * check for jep/NDArray and autoconvert to numpy.ndarray instead of
-     * pyjobject
+     * There exist situations where a Java method signature has a return
+     * type of Object but actually returns a Class or array.  Also if you
+     * call Jep.set(String, Object[]) it should be treated as an array, not
+     * an object.  Hence this check here to build the optimal jep type in
+     * the interpreter regardless of signature.
      */
-    if(jndarray_check(env, obj)) {
-        return convert_jndarray_pyndarray(env, obj);
-    }
-    if(PyErr_Occurred()) {
-        return NULL;
-    }
+    jtype = get_jtype(env, objClz);
+    if(jtype == JARRAY_ID) {
+        return pyjarray_new(env, obj);
+    } else if(jtype == JCLASS_ID) {
+        return pyjobject_new_class(env, obj);
+    } else {
+#if USE_NUMPY
+        /*
+         * check for jep/NDArray and autoconvert to numpy.ndarray instead of
+         * pyjobject
+         */
+        if(jndarray_check(env, obj)) {
+            return convert_jndarray_pyndarray(env, obj);
+        }
+        if(PyErr_Occurred()) {
+            return NULL;
+        }
 #endif
 
-    if((*env)->IsInstanceOf(env, obj, JLIST_TYPE)) {
-        pyjob = (PyJobject_Object*) pyjlist_new();
-    } else {
-        pyjob = PyObject_NEW(PyJobject_Object, &PyJobject_Type);
+        if((*env)->IsInstanceOf(env, obj, JLIST_TYPE)) {
+            pyjob = (PyJobject_Object*) pyjlist_new();
+        } else {
+            pyjob = PyObject_NEW(PyJobject_Object, &PyJobject_Type);
+        }
     }
+
 
     pyjob->object      = (*env)->NewGlobalRef(env, obj);
     pyjob->clazz       = (*env)->NewGlobalRef(env, (*env)->GetObjectClass(env, obj));

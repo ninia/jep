@@ -108,7 +108,6 @@ jclass JEP_NDARRAY_TYPE = NULL;
 
 // cached methodids
 jmethodID objectToString     = 0;
-jmethodID objectEquals       = 0;
 jmethodID objectIsArray      = 0;
 
 // for convert_jobject
@@ -1255,16 +1254,6 @@ int get_jtype(JNIEnv *env, jclass clazz) {
     jboolean equals = JNI_FALSE;
     jboolean array  = JNI_FALSE;
 
-    // have to find the equals() method.
-    if(objectEquals == 0) {
-        objectEquals = (*env)->GetMethodID(env,
-                                           JCLASS_TYPE,
-                                           "equals",
-                                           "(Ljava/lang/Object;)Z");
-        if((*env)->ExceptionCheck(env) || !objectEquals)
-            return -1;
-    }
-
     // have to find Class.isArray() method
     if(objectIsArray == 0) {
         objectIsArray = (*env)->GetMethodID(env,
@@ -1275,92 +1264,103 @@ int get_jtype(JNIEnv *env, jclass clazz) {
             return -1;
     }
 
+    // object checks
+    if((*env)->IsAssignableFrom(env, clazz, JOBJECT_TYPE)) {
+        // check for string
+        equals = (*env)->IsSameObject(env, clazz, JSTRING_TYPE);
+        if((*env)->ExceptionCheck(env))
+            return -1;
+        if(equals)
+            return JSTRING_ID;
+
+
+        // check if it's an array first
+        array = (*env)->CallBooleanMethod(env, clazz, objectIsArray);
+        if((*env)->ExceptionCheck(env))
+            return -1;
+
+        if(array)
+            return JARRAY_ID;
+
+        // check for class
+        if((*env)->IsAssignableFrom(env, clazz, JCLASS_TYPE))
+            return JCLASS_ID;
+
+        /*
+         * TODO: contemplate adding List and jep.NDArray check in here
+         */
+
+        // ok it's not a string, array, or class, so let's call it object
+        return JOBJECT_ID;
+    }
+
+    /*
+     * check primitive types
+     */
+
     // int
-    equals = (*env)->CallBooleanMethod(env, clazz, objectEquals, JINT_TYPE);
+    equals = (*env)->IsSameObject(env, clazz, JINT_TYPE);
     if((*env)->ExceptionCheck(env))
         return -1;
     if(equals)
         return JINT_ID;
-    
-    // short
-    equals = (*env)->CallBooleanMethod(env, clazz, objectEquals, JSHORT_TYPE);
-    if((*env)->ExceptionCheck(env))
-        return -1;
-    if(equals)
-        return JSHORT_ID;
 
     // double
-    equals = (*env)->CallBooleanMethod(env, clazz, objectEquals, JDOUBLE_TYPE);
+    equals = (*env)->IsSameObject(env, clazz, JDOUBLE_TYPE);
     if((*env)->ExceptionCheck(env))
         return -1;
     if(equals)
         return JDOUBLE_ID;
 
     // float
-    equals = (*env)->CallBooleanMethod(env, clazz, objectEquals, JFLOAT_TYPE);
+    equals = (*env)->IsSameObject(env, clazz, JFLOAT_TYPE);
     if((*env)->ExceptionCheck(env))
         return -1;
     if(equals)
         return JFLOAT_ID;
 
-    // boolean
-    equals = (*env)->CallBooleanMethod(env, clazz, objectEquals, JBOOLEAN_TYPE);
-    if((*env)->ExceptionCheck(env))
-        return -1;
-    if(equals)
-        return JBOOLEAN_ID;
-
     // long
-    equals = (*env)->CallBooleanMethod(env, clazz, objectEquals, JLONG_TYPE);
+    equals = (*env)->IsSameObject(env, clazz, JLONG_TYPE);
     if((*env)->ExceptionCheck(env))
         return -1;
     if(equals)
         return JLONG_ID;
 
-    // string
-    equals = (*env)->CallBooleanMethod(env, clazz, objectEquals, JSTRING_TYPE);
+    // boolean
+    equals = (*env)->IsSameObject(env, clazz, JBOOLEAN_TYPE);
     if((*env)->ExceptionCheck(env))
         return -1;
     if(equals)
-        return JSTRING_ID;
+        return JBOOLEAN_ID;
 
     // void
-    equals = (*env)->CallBooleanMethod(env, clazz, objectEquals, JVOID_TYPE);
+    equals = (*env)->IsSameObject(env, clazz, JVOID_TYPE);
     if((*env)->ExceptionCheck(env))
         return -1;
     if(equals)
         return JVOID_ID;
     
     // char
-    equals = (*env)->CallBooleanMethod(env, clazz, objectEquals, JCHAR_TYPE);
+    equals = (*env)->IsSameObject(env, clazz, JCHAR_TYPE);
     if((*env)->ExceptionCheck(env))
         return -1;
     if(equals)
         return JCHAR_ID;
 
     // byte
-    equals = (*env)->CallBooleanMethod(env, clazz, objectEquals, JBYTE_TYPE);
+    equals = (*env)->IsSameObject(env, clazz, JBYTE_TYPE);
     if((*env)->ExceptionCheck(env))
         return -1;
     if(equals)
         return JBYTE_ID;
-
-    // object checks
     
-    // check if it's an array first
-    array = (*env)->CallBooleanMethod(env, clazz, objectIsArray);
+    // short
+    equals = (*env)->IsSameObject(env, clazz, JSHORT_TYPE);
     if((*env)->ExceptionCheck(env))
         return -1;
-    
-    if(array)
-        return JARRAY_ID;
+    if(equals)
+        return JSHORT_ID;
 
-    if((*env)->IsAssignableFrom(env, clazz, JCLASS_TYPE))
-        return JCLASS_ID;
-    
-    if((*env)->IsAssignableFrom(env, clazz, JOBJECT_TYPE))
-        return JOBJECT_ID;
-    
     return -1;
 }
 
