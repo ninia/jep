@@ -1,0 +1,11 @@
+Jep 2.1 Release Notes
+*********************
+
+.pyc and .pyo files
+~~~~~~~~~~~~~~~~~~~
+Jep now supports running .pyc and .pyc files for improved performance.
+
+
+Minor fixes
+~~~~~~~~~~~
+A variety of minor issues have been fixed.

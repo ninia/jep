@@ -1,0 +1,19 @@
+Jep 1.0 Release Notes
+*********************
+
+Initial Release
+~~~~~~~~~~~~~~~
+Jep (Java Embedded Python) is built on CPython Extensions and JNI to provide
+the ability to embed a Python interpreter inside a JVM.  Both Python objects
+and Java objects can be used inside the embedded interpreter to enable
+applications to take advantage of the strengths and packages of each language.
+
+https://docs.python.org/2/extending/extending.html
+https://docs.oracle.com/javase/6/docs/technotes/guides/jni/spec/jniTOC.html
+
+
+Interactive Console
+~~~~~~~~~~~~~~~~~~~
+Jep provides console.py to provide an interactive console similar to Python's
+interactive console, but adding the ability to import and use Java classes and
+objects.
