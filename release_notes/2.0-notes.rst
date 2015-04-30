@@ -1,0 +1,28 @@
+Jep 2.0 Release Notes
+*********************
+
+Autoboxing and unboxing
+~~~~~~~~~~~~~~~~~~~~~~~
+Jep will attempt to autobox and unbox between Java and Python for commonly
+used types (String and primitives).  For example, retrieving a Python int
+from the interpreter will automatically return a Java Integer.  Passing a
+Java primitive int to the interpreter will automatically be converted to a
+Python int.
+
+
+Python implementing Java interfaces
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+By using Jep's Proxy class, Python can now implement Java interfaces to enable
+callbacks and more advanced cross-language techniques.
+
+
+Script Engine
+~~~~~~~~~~~~~
+Jep now provides a script engine based on the javax.script package.
+
+http://docs.oracle.com/javase/7/docs/api/javax/script/package-summary.html
+
+
+Minor fixes
+~~~~~~~~~~~
+A variety of minor issues have been fixed.

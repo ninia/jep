@@ -1,0 +1,7 @@
+Jep 2.3 Release Notes
+*********************
+
+Java primitive arrays
+~~~~~~~~~~~~~~~~~~~~~
+A Jep instance can now set Java primitive arrays inside the interpreter.  For
+example, Jep.set(String, float[]) or Jep.set(String, byte[]).

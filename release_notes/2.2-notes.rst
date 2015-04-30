@@ -1,0 +1,6 @@
+Jep 2.2 Release Notes
+*********************
+
+Import Errors
+~~~~~~~~~~~~~
+Jep now throws a Python ImportError when it cannot load a Java class.

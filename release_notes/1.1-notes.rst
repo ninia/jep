@@ -1,0 +1,11 @@
+Jep 1.1 Release Notes
+*********************
+
+Updated license
+~~~~~~~~~~~~~~~
+Each file in Jep's source code now includes the license information.
+
+
+Minor fixes
+~~~~~~~~~~~
+Minor memory leaks and issues have been fixed.

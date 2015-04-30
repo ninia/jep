@@ -1,13 +1,15 @@
 Jep 3.3 Release Notes
-*******************
+*********************
 
 Numpy support
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
 Jep now supports interactions with numpy through the usage of the jep.NDArray
 class.  jep.NDArrays only support Java primitive arrays for their underlying
 types.  When jep.NDArray objects are detected, Jep will automatically convert
-them to their equivalent in Python and vice versa.  The following scenarios are
-examples of automatic conversion (memcpy):
+them to their equivalent in Python and vice versa.  This currently uses memcpy
+so changes to the array in one language will not be automatically reflected in
+the other language.  The following scenarios are examples of automatic
+conversion:
 
 * jep.NDArray can be passed to Jep.setValue(String, Object)
 * jep.NDArray can be returned from Jep.getValue(String)
@@ -21,13 +23,13 @@ http://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html
 
 
 Improved distutils build
-~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
 * The distutils build now supports building with the Oracle JDK on Mac OS X.
 * The distutils build now supports building on Windows.
 
 
 Improved exception handling
-~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Exception handling has been improved in a variety of ways:
 
 * JepException now extends Exception instead of Throwable.
@@ -40,16 +42,16 @@ Exception handling has been improved in a variety of ways:
 
 
 Faster pyjobject instantiation and wrapping
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Jep has been optimized to more quickly instantiate Java objects from the python
-interpreter and more quickly wrap Java objects that the python interpreter
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Jep has been optimized to more quickly instantiate Java objects from the Python
+interpreter and more quickly wrap Java objects that the Python interpreter
 receives.
 
 
 Added pyjlist type
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 A new type pyjlist is automatically created when an instance of the interface
-java.util.List is detected in python.  pyjlist extends pyjobject, enabling the
+java.util.List is detected in Python.  pyjlist extends pyjobject, enabling the
 exact same functionality, but it also implements Python's sequence protocol.
 This enables commands like "for x in obj:" where obj is a java.util.List.
 
@@ -59,7 +61,7 @@ This enables commands like "for x in obj:" where obj is a java.util.List.
 
 
 Implemented __hash__ on pyjobject
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 pyjobject now implements python's __hash__() by delegating to the Java object's
 hashCode(Object) method.
 
@@ -76,6 +78,6 @@ https://www.python.org/dev/peps/pep-0302/
 
 
 Minor fixes
-~~~~~~~~~~
+~~~~~~~~~~~
 A few minor memory leaks and bugs have been fixed.
 

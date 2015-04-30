@@ -1,16 +1,18 @@
 Jep 3.1 Release Notes
-*******************
+*********************
 
 Lazy loading of standard JDK packages
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Jep now lazily loads classes with a package name starting with java.*.
 
 
 JDBC support
-~~~~~~~~~~~
+~~~~~~~~~~~~
 Jep now includes a jdbc module for JDBC interactions.
+
+http://www.oracle.com/technetwork/java/javase/jdbc/index.html
 
 
 Minor fixes
-~~~~~~~~~~
+~~~~~~~~~~~
 A few minor issues have been fixed.
