@@ -1,7 +1,9 @@
-package jep;
+package jep.test.numpy;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import jep.Jep;
+import jep.JepException;
 
 /**
  * Tests multiple threads using numpy simultaneously, printing out numpy

@@ -66,9 +66,6 @@ class build_scripts(Command):
             ld_preload='',
         )
 
-        if is_windows():
-            context['ld_library_path'] = 'SET LD_LIBRARY_PATH={0}\lib;{1}'.format(
-                                           install.prefix, install.install_lib)
         if not is_osx() and not is_windows():
             context['ld_library_path'] = 'LD_LIBRARY_PATH="' + \
                                            sysconfig.get_config_var('LIBDIR') + \

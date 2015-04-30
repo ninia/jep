@@ -1,7 +1,7 @@
 import unittest
 
 import jep
-Test = jep.findClass('jep.TestNumpy')
+Test = jep.findClass('jep.test.numpy.TestNumpy')
 
 
 class TestNumpy(unittest.TestCase):

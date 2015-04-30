@@ -1,4 +1,7 @@
-package jep;
+package jep.test.numpy;
+
+import jep.Jep;
+import jep.JepException;
 
 /**
  * A test class that illustrates how numpy's floating point error handling can

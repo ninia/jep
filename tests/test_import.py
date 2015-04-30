@@ -4,7 +4,7 @@ from jep import JepImporter, findClass
 
 
 Jep = findClass('jep.Jep')
-Test = findClass('jep.Test')
+Test = findClass('jep.test.Test')
 
 
 class TestImport(unittest.TestCase):

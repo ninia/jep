@@ -1,6 +1,9 @@
-package jep;
+package jep.test.numpy;
 
 import java.io.File;
+import jep.Jep;
+import jep.JepException;
+import jep.NDArray;
 
 /**
  * TestNumpy.java. Runs a variety of simple tests to verify numpy interactions

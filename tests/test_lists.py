@@ -1,7 +1,7 @@
 import unittest
 
 import jep
-Test = jep.findClass('jep.Test')
+Test = jep.findClass('jep.test.Test')
 from java.util import ArrayList
 from java.lang import Integer
 

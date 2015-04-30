@@ -159,7 +159,8 @@ class setup_java(Command):
 
 class build_java(Command):
     outdir = None
-
+    testoutdir = None
+    
     user_options = [
         ('javac=', None, 'use javac (default: {0}/bin/javac)'.format(get_java_home())),
     ]
@@ -168,6 +169,9 @@ class build_java(Command):
         build_java.outdir = os.path.join('build', 'java')
         if not os.path.exists(build_java.outdir):
             os.makedirs(build_java.outdir)
+        build_java.testoutdir = os.path.join(build_java.outdir, 'test')
+        if not os.path.exists(build_java.testoutdir):
+            os.makedirs(build_java.testoutdir)
 
         self.java_files = []
         if is_apple_jdk():
@@ -179,7 +183,11 @@ class build_java(Command):
         self.java_files = self.distribution.java_files
 
     def build(self, *jclasses):
-        spawn([self.javac, '-deprecation', '-d', build_java.outdir, '-classpath', 'src/'] + list(*jclasses))
+        jep = [x for x in list(*jclasses) if not x.startswith('src{0}jep{0}test{0}'.format(os.sep))]
+        tests = [x for x in list(*jclasses) if x.startswith('src{0}jep{0}test{0}'.format(os.sep))]
+        spawn([self.javac, '-deprecation', '-d', build_java.outdir, '-classpath', 'src'] + jep)
+        spawn([self.javac, '-deprecation', '-d', build_java.testoutdir, '-classpath', '{0}{1}src'.format(build_java.outdir, os.pathsep)] + tests)
+        
 
     def run(self):
         self.build(self.java_files)
@@ -217,6 +225,7 @@ class build_jar(Command):
             shutil.copy(src, dest)
 
         spawn([self.jar, '-cfe', 'build/java/jep.jar', 'jep.Run', '-C', 'build/java/', 'jep'])
+        spawn([self.jar, '-cfe', 'build/java/jep.test.jar', 'test.jep.Test', '-C', 'build/java/test/', 'jep'])
 
     def run(self):
         self.build()

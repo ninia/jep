@@ -1,7 +1,7 @@
 import unittest
 
 import jep
-Test = jep.findClass('jep.Test')
+Test = jep.findClass('jep.test.Test')
 
 class TestTypes(unittest.TestCase):
     def setUp(self):

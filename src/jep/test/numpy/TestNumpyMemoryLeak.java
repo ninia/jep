@@ -1,4 +1,7 @@
-package jep;
+package jep.test.numpy;
+
+import jep.Jep;
+import jep.JepException;
 
 /**
  * Illustrates a tiny leak somewhere in numpy. This is really hard to spot but

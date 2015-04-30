@@ -1,10 +1,12 @@
-package jep;
+package jep.test;
 
 import java.io.*;
 import java.util.ArrayList;
 
 import jep.python.*;
 
+import jep.Jep;
+import jep.JepException;
 
 /**
  * Test.java
