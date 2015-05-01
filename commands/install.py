@@ -9,7 +9,15 @@ class post_install(install_data):
     def run(self):        
         install_data.run(self)        
 
-        py_lib = py_lib = sysconfig.get_config_var('LIBDIR')
+        py_lib = sysconfig.get_config_var('LIBDIR')
+
+        # Get the "--root" directory supplied to the "install" command,
+        # and use it as a prefix to LIBDIR.
+        install_root = self.get_finalized_command('install').root
+        if install_root is not None:
+            py_lib = os.path.join(install_root + py_lib)
+            if not os.path.exists(py_lib):
+                os.makedirs(py_lib)
 
         # now let's give it a link that works for Java System.loadLibrary("jep")
         if is_windows():
