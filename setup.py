@@ -23,6 +23,19 @@ VERSION = None  # shut up pycharm
 execfile('jep/version.py')
 
 
+numpy_include = []
+numpy_found = 0
+try:
+   import numpy
+   include_path = os.path.join(numpy.__path__[0], 'core', 'include')
+   if os.path.exists(include_path):
+      print('numpy include found at', include_path)
+      numpy_found = 1
+      numpy_include = [include_path]
+except ImportError:
+   print('numpy not found, building without numpy support')
+
+
 def get_files(pattern):
     ret = []
     for root, dirs, files in os.walk('src'):
@@ -42,7 +55,7 @@ if __name__ == '__main__':
     defines=[
               ('PACKAGE', 'jep'),
               ('USE_DEALLOC', 1),
-              ('USE_NUMPY', 1),
+              ('USE_NUMPY', numpy_found),
               ('VERSION', '"{0}"'.format(VERSION)),
           ]
     if is_windows():
@@ -68,7 +81,8 @@ if __name__ == '__main__':
                   libraries=get_java_libraries() + get_python_libs(),
                   library_dirs=get_java_lib_folders(),
                   extra_link_args=get_java_linker_args() + get_python_linker_args(),
-                  include_dirs=get_java_include() + ['src/jep', 'build/include'] + get_python_include(),
+                  #include_dirs=get_java_include() + ['src/jep', 'build/include'] + get_python_include(numpy_path),
+                  include_dirs=get_java_include() + ['src/jep', 'build/include'] + numpy_include,
               )
           ],
 
