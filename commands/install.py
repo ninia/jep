@@ -3,13 +3,14 @@ from distutils import sysconfig
 from distutils.spawn import spawn
 import os
 from commands.util import is_osx, is_windows
+from commands.python import get_python_lib_dir
 
 
 class post_install(install_data):
     def run(self):        
         install_data.run(self)        
 
-        py_lib = sysconfig.get_config_var('LIBDIR')
+        py_lib = get_python_lib_dir()
 
         # Get the "--root" directory supplied to the "install" command,
         # and use it as a prefix to LIBDIR.
@@ -21,7 +22,6 @@ class post_install(install_data):
 
         # now let's give it a link that works for Java System.loadLibrary("jep")
         if is_windows():
-            py_lib = os.path.join(os.environ.get('PYTHONHOME') + '\\DLLs\\')
             spawn(['mv',
                    '{0}'.format(os.path.join(py_lib, 'jep.pyd')),
                    '{0}'.format(os.path.join(py_lib, 'jep.dll')),

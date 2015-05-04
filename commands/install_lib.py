@@ -2,15 +2,15 @@ from distutils.command.install_lib import install_lib
 from distutils import sysconfig
 import os
 from commands.util import is_osx, is_windows
+from commands.python import get_python_lib_dir
 
 
 class jep_install(install_lib):
     
     def install(self):   
-        py_lib = sysconfig.get_config_var('LIBDIR')    
+        py_lib = get_python_lib_dir()
         if is_windows():
             jep_lib = 'jep.pyd'
-            py_lib = os.path.join(os.environ.get('PYTHONHOME') + '\\DLLs\\')
         else:
             jep_lib = 'jep.so'
 
