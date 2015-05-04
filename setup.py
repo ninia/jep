@@ -13,7 +13,7 @@ from commands.install_lib import jep_install
 from commands.install import post_install
 from commands.java import build_java, build_javah, get_java_home, get_java_include,\
     get_java_linker_args, build_jar, get_java_lib_folders, get_java_libraries, setup_java
-from commands.python import get_python_libs, get_python_linker_args, get_python_include
+from commands.python import get_python_libs, get_python_linker_args
 from commands.scripts import build_scripts
 from commands.test import test
 from commands.util import is_windows
@@ -72,7 +72,11 @@ if __name__ == '__main__':
           scripts=['src/scripts/jep'],
           keywords='java',
           license='zlib/libpng',
-          classifiers=['License :: OSI Approved :: zlib/libpng License'],
+          classifiers=[
+                       'License :: OSI Approved :: zlib/libpng License',
+                       'Development Status :: 5 - Production/Stable',
+                       'Intended Audience :: Developers',
+                      ],
           ext_modules=[
               Extension(
                   name='jep',
@@ -81,7 +85,6 @@ if __name__ == '__main__':
                   libraries=get_java_libraries() + get_python_libs(),
                   library_dirs=get_java_lib_folders(),
                   extra_link_args=get_java_linker_args() + get_python_linker_args(),
-                  #include_dirs=get_java_include() + ['src/jep', 'build/include'] + get_python_include(numpy_path),
                   include_dirs=get_java_include() + ['src/jep', 'build/include'] + numpy_include,
               )
           ],
