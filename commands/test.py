@@ -19,7 +19,7 @@ class test(Command):
         pass
 
     def run(self):
-        os.environ['CLASSPATH'] = 'build/java/jep.test.jar{0}tests/lib/sqlitejdbc-v056.jar'.format(os.pathsep)
+        os.environ['CLASSPATH'] = 'build/java/jep.test-{0}.jar{1}tests/lib/sqlitejdbc-v056.jar'.format(self.distribution.metadata.get_version(), os.pathsep)
         if is_windows():
             # Use full path as spawn will only search the system PATH for *.exe on Windows
             spawn(['{0}\Scripts\jep.bat'.format(os.environ['PYTHONHOME']), 'runtests.py'], search_path=0)

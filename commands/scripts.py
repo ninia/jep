@@ -58,6 +58,7 @@ class build_scripts(Command):
         install = self.get_finalized_command('install')
         context = dict(
             prefix=install.prefix,
+            version=self.distribution.metadata.get_version(),
             install_base=install.install_base,
             install_platbase=install.install_platbase,
             install_lib=install.install_lib,

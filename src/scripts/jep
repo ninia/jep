@@ -13,7 +13,7 @@ if test "x$VIRTUAL_ENV" != "x"; then
   export PYTHONHOME
 fi
 
-cp="{prefix}/lib/jep/jep.jar"
+cp="{prefix}/lib/jep/jep-{version}.jar"
 if test "x$CLASSPATH" != "x"; then
     cp="$cp":"$CLASSPATH"
 fi

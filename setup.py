@@ -122,7 +122,7 @@ if __name__ == '__main__':
 
           # a list of other files to install
           data_files=[
-              ('lib/jep', ['build/java/jep.jar']),
+              ('lib/jep', ['build/java/jep-{0}.jar'.format(VERSION)]),
           ]
     )
 

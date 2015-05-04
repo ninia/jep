@@ -214,6 +214,7 @@ class build_jar(Command):
         if not os.path.exists(build_jar.outdir):
             os.makedirs(build_jar.outdir)
 
+        self.version = []
         self.java_files = []
         self.extra_jar_files = []
         if is_apple_jdk():
@@ -223,6 +224,7 @@ class build_jar(Command):
 
     def finalize_options(self):
         self.extra_jar_files = self.distribution.extra_jar_files
+        self.version = self.distribution.metadata.get_version()
 
     def build(self):
         for src in self.extra_jar_files:
@@ -233,10 +235,10 @@ class build_jar(Command):
                 os.makedirs(dest_dir)
             shutil.copy(src, dest)
 
-        spawn([self.jar, '-cf', 'build/java/jep.src.jar', '-C', 'build/java/jep.src', 'jep'])
-        spawn([self.jar, '-cfe', 'build/java/jep.jar', 'jep.Run', '-C', 'build/java/', 'jep'])
-        spawn([self.jar, '-cf', 'build/java/jep.test.src.jar', '-C', 'build/java/jep.test.src', 'jep'])
-        spawn([self.jar, '-cfe', 'build/java/jep.test.jar', 'test.jep.Test', '-C', 'build/java/test/', 'jep'])
+        spawn([self.jar, '-cf', 'build/java/jep.src-{0}.jar'.format(self.version), '-C', 'build/java/jep.src', 'jep'])
+        spawn([self.jar, '-cfe', 'build/java/jep-{0}.jar'.format(self.version), 'jep.Run', '-C', 'build/java/', 'jep'])
+        spawn([self.jar, '-cf', 'build/java/jep.test.src-{0}.jar'.format(self.version), '-C', 'build/java/jep.test.src', 'jep'])
+        spawn([self.jar, '-cfe', 'build/java/jep.test-{0}.jar'.format(self.version), 'test.jep.Test', '-C', 'build/java/test/', 'jep'])
 
     def run(self):
         self.build()
