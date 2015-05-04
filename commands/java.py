@@ -187,11 +187,20 @@ class build_java(Command):
         tests = [x for x in list(*jclasses) if x.startswith('src{0}jep{0}test{0}'.format(os.sep))]
         spawn([self.javac, '-deprecation', '-d', build_java.outdir, '-classpath', 'src'] + jep)
         spawn([self.javac, '-deprecation', '-d', build_java.testoutdir, '-classpath', '{0}{1}src'.format(build_java.outdir, os.pathsep)] + tests)
-        
+        # Copy the source files over to the build directory to make src.jar's.
+        self.copySrc('jep', jep)
+        self.copySrc('jep.test', tests)
 
     def run(self):
         self.build(self.java_files)
-
+    
+    def copySrc(self, app, files):
+        for src in files:
+            dest = os.path.join(build_java.outdir, '{0}.{1}'.format(app, src))
+            print('copying {0} to {1}'.format(src, dest))
+            if not os.path.exists(os.path.dirname(dest)):
+                os.makedirs(os.path.dirname(dest))
+            shutil.copy(src, dest)
 
 class build_jar(Command):
     outdir = None
@@ -203,7 +212,7 @@ class build_jar(Command):
     def initialize_options(self):
         build_jar.outdir = os.path.join('build', 'java')
         if not os.path.exists(build_jar.outdir):
-            os.makedirs(build_java.outdir)
+            os.makedirs(build_jar.outdir)
 
         self.java_files = []
         self.extra_jar_files = []
@@ -224,7 +233,9 @@ class build_jar(Command):
                 os.makedirs(dest_dir)
             shutil.copy(src, dest)
 
+        spawn([self.jar, '-cf', 'build/java/jep.src.jar', '-C', 'build/java/jep.src', 'jep'])
         spawn([self.jar, '-cfe', 'build/java/jep.jar', 'jep.Run', '-C', 'build/java/', 'jep'])
+        spawn([self.jar, '-cf', 'build/java/jep.test.src.jar', '-C', 'build/java/jep.test.src', 'jep'])
         spawn([self.jar, '-cfe', 'build/java/jep.test.jar', 'test.jep.Test', '-C', 'build/java/test/', 'jep'])
 
     def run(self):
