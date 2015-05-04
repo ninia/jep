@@ -19,7 +19,8 @@ def get_python_linker_args():
     return ['-L{0}'.format(sysconfig.get_config_var('LIBDIR'))]
 
 def get_python_lib_dir():
-        if is_windows():
-            return os.path.join(os.environ.get('PYTHONHOME'), 'DLLs')
+    if is_windows():
+        return os.path.join(os.environ.get('PYTHONHOME'), 'DLLs')
 
-        return sysconfig.get_config_var('LIBDIR')
+    return sysconfig.get_config_var('LIBDIR')
+

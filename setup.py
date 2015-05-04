@@ -65,7 +65,7 @@ if __name__ == '__main__':
           version=VERSION,
           description='Jep embeds CPython in Java',
           long_description=read_file('README.rst'),
-          author='Mike Johnson',
+          author='Jep Developers',
           author_email='mike@mrj0.com',
           url='http://www.mrj0.com/projects/jep/',
           packages=['jep'],
@@ -75,7 +75,13 @@ if __name__ == '__main__':
           classifiers=[
                        'License :: OSI Approved :: zlib/libpng License',
                        'Development Status :: 5 - Production/Stable',
-                       'Intended Audience :: Developers',
+                       'Intended Audience :: Developers'
+                       'Topic :: Software Development',
+                       'Programming Language :: Java',
+                       'Programming Language :: Python',
+                       'Programming Language :: Python :: 2.6',
+                       'Programming Language :: Python :: 2.7',
+                       'Programming Language :: Python :: Implementation :: CPython',
                       ],
           ext_modules=[
               Extension(
