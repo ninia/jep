@@ -62,7 +62,13 @@
 #include "pyembed.h"
 
 #if USE_NUMPY
+// get numpy config so we can check the version of numpy
+#include "numpy/numpyconfig.h"
 #define PY_ARRAY_UNIQUE_SYMBOL JEP_ARRAY_API
+// if we have at least numpy 1.7, let's force the code to be 1.7 compliant
+#ifdef NPY_1_7_API_VERSION
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#endif
 #include "numpy/arrayobject.h"
 
 static void init_numpy(void);
@@ -2032,7 +2038,7 @@ jarray convert_pyndarray_jprimitivearray(JNIEnv* env,
 
     // determine what we can about the pyarray that is to be converted
     sz = (jsize) PyArray_Size(param);
-    paType = ((PyArrayObject *) param)->descr->type_num;
+    paType = PyArray_TYPE((PyArrayObject *) param);
 
     if(desiredType == NULL) {
         if(paType == NPY_BOOL) {
@@ -2103,19 +2109,19 @@ jarray convert_pyndarray_jprimitivearray(JNIEnv* env,
 
     // if arr was allocated, we already know it matched the python array type
     if(paType == NPY_BOOL) {
-        (*env)->SetBooleanArrayRegion(env, arr, 0, sz, (const jboolean *) copy->data);
+        (*env)->SetBooleanArrayRegion(env, arr, 0, sz, (const jboolean *) PyArray_DATA(copy));
     } else if(paType == NPY_BYTE) {
-        (*env)->SetByteArrayRegion(env, arr, 0, sz, (const jbyte *) copy->data);
+        (*env)->SetByteArrayRegion(env, arr, 0, sz, (const jbyte *) PyArray_DATA(copy));
     } else if(paType == NPY_INT16) {
-        (*env)->SetShortArrayRegion(env, arr, 0, sz, (const jshort *) copy->data);
+        (*env)->SetShortArrayRegion(env, arr, 0, sz, (const jshort *) PyArray_DATA(copy));
     } else if(paType == NPY_INT32) {
-        (*env)->SetIntArrayRegion(env, arr, 0, sz, (const jint *) copy->data);
+        (*env)->SetIntArrayRegion(env, arr, 0, sz, (const jint *) PyArray_DATA(copy));
     } else if(paType == NPY_INT64) {
-        (*env)->SetLongArrayRegion(env, arr, 0, sz, (const jlong *) copy->data);
+        (*env)->SetLongArrayRegion(env, arr, 0, sz, (const jlong *) PyArray_DATA(copy));
     } else if(paType == NPY_FLOAT32) {
-        (*env)->SetFloatArrayRegion(env, arr, 0, sz, (const jfloat *) copy->data);
+        (*env)->SetFloatArrayRegion(env, arr, 0, sz, (const jfloat *) PyArray_DATA(copy));
     } else if(paType == NPY_FLOAT64) {
-        (*env)->SetDoubleArrayRegion(env, arr, 0, sz, (const jdouble *) copy->data);
+        (*env)->SetDoubleArrayRegion(env, arr, 0, sz, (const jdouble *) PyArray_DATA(copy));
     }
 
     if(copy)
@@ -2209,7 +2215,7 @@ PyObject* convert_jprimitivearray_pyndarray(JNIEnv *env,
                                             jobject jo,
                                             int ndims,
                                             npy_intp *dims) {
-    PyObject *pyjob = NULL;
+    PyObject *pyob = NULL;
     int i           = 0;
     size_t dimsize  = 1;
 
@@ -2219,49 +2225,49 @@ PyObject* convert_jprimitivearray_pyndarray(JNIEnv *env,
 
     if((*env)->IsInstanceOf(env, jo, JBOOLEAN_ARRAY_TYPE)) {
         jboolean *dataBool = NULL;
-        pyjob = PyArray_SimpleNew(ndims, dims, NPY_BOOL);
+        pyob = PyArray_SimpleNew(ndims, dims, NPY_BOOL);
         dataBool = (*env)->GetBooleanArrayElements(env, jo, 0);
-        memcpy(((PyArrayObject *) pyjob)->data, dataBool, dimsize * 1);
+        memcpy(PyArray_DATA((PyArrayObject *) pyob), dataBool, dimsize * 1);
         (*env)->ReleaseBooleanArrayElements(env, jo, dataBool, JNI_ABORT);
     } else if((*env)->IsInstanceOf(env, jo, JBYTE_ARRAY_TYPE)) {
         jbyte *dataByte = NULL;
-        pyjob = PyArray_SimpleNew(ndims, dims, NPY_BYTE);
+        pyob = PyArray_SimpleNew(ndims, dims, NPY_BYTE);
         dataByte = (*env)->GetByteArrayElements(env, jo, 0);
-        memcpy(((PyArrayObject *) pyjob)->data, dataByte, dimsize * 1);
+        memcpy(PyArray_DATA((PyArrayObject *) pyob), dataByte, dimsize * 1);
         (*env)->ReleaseByteArrayElements(env, jo, dataByte, JNI_ABORT);
     } else if((*env)->IsInstanceOf(env, jo, JSHORT_ARRAY_TYPE)) {
         jshort *dataShort = NULL;
-        pyjob = PyArray_SimpleNew(ndims, dims, NPY_INT16);
+        pyob = PyArray_SimpleNew(ndims, dims, NPY_INT16);
         dataShort = (*env)->GetShortArrayElements(env, jo, 0);
-        memcpy(((PyArrayObject *) pyjob)->data, dataShort, dimsize * 2);
+        memcpy(PyArray_DATA((PyArrayObject *) pyob), dataShort, dimsize * 2);
         (*env)->ReleaseShortArrayElements(env, jo, dataShort, JNI_ABORT);
     } else if((*env)->IsInstanceOf(env, jo, JINT_ARRAY_TYPE)) {
         jint *dataInt = NULL;
-        pyjob = PyArray_SimpleNew(ndims, dims, NPY_INT32);
+        pyob = PyArray_SimpleNew(ndims, dims, NPY_INT32);
         dataInt = (*env)->GetIntArrayElements(env, jo, 0);
-        memcpy(((PyArrayObject *) pyjob)->data, dataInt, dimsize * 4);
+        memcpy(PyArray_DATA((PyArrayObject *) pyob), dataInt, dimsize * 4);
         (*env)->ReleaseIntArrayElements(env, jo, dataInt, JNI_ABORT);
     } else if((*env)->IsInstanceOf(env, jo, JLONG_ARRAY_TYPE)) {
         jlong *dataLong = NULL;
-        pyjob = PyArray_SimpleNew(ndims, dims, NPY_INT64);
+        pyob = PyArray_SimpleNew(ndims, dims, NPY_INT64);
         dataLong = (*env)->GetLongArrayElements(env, jo, 0);
-        memcpy(((PyArrayObject *) pyjob)->data, dataLong, dimsize * 8);
+        memcpy(PyArray_DATA((PyArrayObject *) pyob), dataLong, dimsize * 8);
         (*env)->ReleaseLongArrayElements(env, jo, dataLong, JNI_ABORT);
     } else if((*env)->IsInstanceOf(env, jo, JFLOAT_ARRAY_TYPE)) {
         jfloat *dataFloat = NULL;
-        pyjob = PyArray_SimpleNew(ndims, dims, NPY_FLOAT32);
+        pyob = PyArray_SimpleNew(ndims, dims, NPY_FLOAT32);
         dataFloat = (*env)->GetFloatArrayElements(env, jo, 0);
-        memcpy(((PyArrayObject *) pyjob)->data, dataFloat, dimsize * 4);
+        memcpy(PyArray_DATA((PyArrayObject *) pyob), dataFloat, dimsize * 4);
         (*env)->ReleaseFloatArrayElements(env, jo, dataFloat, JNI_ABORT);
     } else if((*env)->IsInstanceOf(env, jo, JDOUBLE_ARRAY_TYPE)) {
         jdouble *dataDouble = NULL;
-        pyjob = PyArray_SimpleNew(ndims, dims, NPY_FLOAT64);
+        pyob = PyArray_SimpleNew(ndims, dims, NPY_FLOAT64);
         dataDouble = (*env)->GetDoubleArrayElements(env, jo, 0);
-        memcpy(((PyArrayObject *) pyjob)->data, dataDouble, dimsize * 8);
+        memcpy(PyArray_DATA((PyArrayObject *) pyob), dataDouble, dimsize * 8);
         (*env)->ReleaseDoubleArrayElements(env, jo, dataDouble, JNI_ABORT);
     }
 
-    return pyjob;
+    return pyob;
 }
 
 /*
