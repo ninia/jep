@@ -323,7 +323,9 @@ public final class Jep implements Closeable {
      * Invokes a Python function.
      * 
      * @param name
-     *            must be a valid Python function name in globals dict.
+     *            must be a valid Python function name in globals dict
+     * @param args
+     *            args to pass to the function in order
      * @return an <code>Object</code> value
      * @exception JepException
      *                if an error occurs
@@ -359,11 +361,12 @@ public final class Jep implements Closeable {
      * Non-interactive mode is faster, but code blocks must be complete.
      * 
      * For Example:
-     * <blockquote>eval("if(Test):\n\tprint 'w00t'")</blockquote>
+     * <code>eval("if(Test):\n\tprint 'w00t'")</code>
      * This is a limitation on the Python interpreter and unlikely to change.
      * 
      * Also, Python does not readly return object values from eval(). Use
      * {@link #getValue(java.lang.String)} instead.
+     * </pre>
      * 
      * @param str a <code>String</code> value
      * @return true if statement complete and was executed.
@@ -425,8 +428,10 @@ public final class Jep implements Closeable {
      *  the implementation currently returns a String.
      * 
      *  Python is pretty picky about what it excepts here. The general syntax:
-     *  <blockquote>eval("a = 5")
-     * String a = (String) getValue("a")</blockquote>
+     *  <code>
+     *  eval("a = 5")
+     *  String a = (String) getValue("a")
+     *  </code>
      *  will work.
      * </pre>
      * 

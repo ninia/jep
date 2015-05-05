@@ -59,6 +59,7 @@ public class JepScriptEngine implements ScriptEngine {
      * Make a new JepScriptEngine
      * 
      * @throws ScriptException
+     *             if an error occurs
      */
     public JepScriptEngine() throws ScriptException {
         try {
@@ -164,6 +165,7 @@ public class JepScriptEngine implements ScriptEngine {
      *            a <code>ScriptContext</code> value
      * @return an <code>Object</code> value
      * @exception ScriptException
+     *                if an error occurs
      * @see javax.script.ScriptEngine#eval(java.io.Reader,
      *      javax.script.ScriptContext)
      */
@@ -186,6 +188,7 @@ public class JepScriptEngine implements ScriptEngine {
      *            a <code>Bindings</code> value
      * @return an <code>Object</code> value
      * @exception ScriptException
+     *                if an error occurs
      * @see javax.script.ScriptEngine#eval(java.io.Reader,
      *      javax.script.Bindings)
      */
@@ -207,6 +210,7 @@ public class JepScriptEngine implements ScriptEngine {
      *            a <code>String</code> value
      * @return an <code>Object</code> value
      * @exception ScriptException
+     *                if an error occurs
      * @see javax.script.ScriptEngine#eval(java.lang.String)
      */
     @Override

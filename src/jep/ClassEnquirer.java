@@ -69,28 +69,22 @@ public interface ClassEnquirer {
      * ClassLoader JEP should always be able to successfully import Java classes
      * with syntax such as:
      * 
-     * <p>
-     * <blockquote>
-     * 
      * <pre>
+     * <code>
      * from java.util import ArrayList
      * o = ArrayList()
-     * 
-     * </p>
-     * </blockquote></pre>
+     * </code>
+     * </pre>
      * 
      * However, only in some scenarios can the package be imported separately
      * without the fully qualified name, such as:
      * 
-     * <p>
-     * <blockquote>
-     * 
      * <pre>
+     * <code>
      * import java.util as ju
      * o = ju.ArrayList()
-     * 
-     * </p>
-     * </blockquote></pre>
+     * </code>
+     * </pre>
      * 
      * This also roughly corresponds to whether or not dir(javaPackage) will
      * return a list of available classes or only the classes that have been

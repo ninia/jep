@@ -276,6 +276,8 @@ public class ClassList implements ClassEnquirer {
      * get ClassList instance
      * 
      * @return <code>ClassList</code> instance
+     * @exception JepException
+     *                if an error occurs
      */
     public static synchronized ClassList getInstance() throws JepException {
         if (ClassList.inst == null)
@@ -284,8 +286,12 @@ public class ClassList implements ClassEnquirer {
     }
 
     /**
-     * 
-     * testing only
+     * for testing only
+     *
+     * @param argv
+     *            command line arguments
+     * @throws Throwable
+     *                if an error occurs
      */
     public static void main(String argv[]) throws Throwable {
         if (argv.length > 0) {

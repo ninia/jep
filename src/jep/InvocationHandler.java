@@ -44,7 +44,15 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
 
     /**
      * Creates a new <code>InvocationHandler</code> instance.
-     * 
+     *
+     * @param tstate
+     *            the thread state id
+     * @param ltarget
+     *            the python object's id
+     * @param jep
+     *            the jep interpreter
+     * @exception JepException
+     *                if an error occurs
      */
     public InvocationHandler(long tstate, long ltarget, Jep jep)
             throws JepException {
