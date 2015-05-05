@@ -60,6 +60,8 @@ if __name__ == '__main__':
           ]
     if is_windows():
         defines.append(('WIN32', 1))
+        #Disable warnings about Secure CRT Functions in util.c and pyembed.c.
+        defines.append(('_CRT_SECURE_NO_WARNINGS', 1))
 
     setup(name='jep',
           version=VERSION,
