@@ -59,9 +59,6 @@
 #include "pyembed.h"
 #include "util.h"
 
-
-extern PyMethodDef  pyjarray_methods[];
-
 jmethodID objectComponentType = 0;
 
 static void pyjarray_dealloc(PyJarray_Object *self);

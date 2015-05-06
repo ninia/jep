@@ -1,62 +1,74 @@
 Jep - Java Embedded Python
 ===========================
 
-Jep embeds CPython in Java. It is safe to use in a heavily threaded
-environment, it is quite fast and its stability is a main feature and
-goal.
+Jep embeds CPython in Java through JNI. It is safe to use in a heavily
+threaded environment.  It is quite fast and its stability is a main
+feature and goal.
 
-Some benefits of CPython over Java-based languages:
+Some benefits of embedding CPython in a JVM:
 
-* Using the native Python interpreter may be much faster.
+* Using the native Python interpreter may be much faster than
+  alternatives.
 
-* Python is mature and well supported, so there's no fear the
-  interpreter will suddenly change widely-used features.
+* Python is mature, well supported, and well documented.
 
-* Access to the high quality Python modules, both native and
-  Python-based.
+* Access to high quality Python modules, both native CPython
+  extensions and Python-based.
 
 * Compilers and assorted Python tools are as mature as the language.
 
-* Python is an ideal language for your business logic. It is easy to
-  learn, readable and generally immune to programming gotchas.
+* Python is an interpreted language, enabling runtime customizations
+  and plugins that do not require a compilation step.
 
-Patches, comments and other help is greatly appreciated. If you need
-help, post to the `SourceForge mailing list <http://sourceforge.net/mailarchive/forum.php?forum_name=jepp-users>`_
-or forums. Please include code snippets for the most accurate
-response.
+* Both Java and Python are cross platform, enabling deployment to 
+  different operating systems.
 
+License
+-------
 Jep is licensed zlib/libpng license to avoid linking issues.
 
 Installation
 ------------
-
 Simply run ``pip install jep``.
 
 Dependencies
 ------------
-* Python version >= 2.6
+* Python >= 2.6
+* Java >= 1.6
 * JNI >= 1.4
+* Numpy (optional) >= 1.5 ( numpy >= 1.7 recommended) 
 
-*Building on Mac OS X*
+*Building*
+Simply run ``python setup.py build``. Building requires the JDK, Python, and
+optionally numpy to already be installed.
 
-OS X requires the `Java Developer Package and Xcode
-<http://developer.apple.com/java/>`_ from Apple. They are free to download.
+*Build support*
+Due to the variety of configurations of operating system, Java version, Python
+version, and Numpy version, we cannot test all configurations.  The build
+should work correctly for Linux, Windows, and OS X.
+
+*OS X*
+The OS X build requires Xcode.  In recent versions of OS X, running the build
+will automatically prompt you to download Xcode if it is not found.
 
 *Windows*
 
-You'll need to use the same compiler that your Python is built
-with. That's usually MSVC.
+CPython extensions generally need to be built with the same compiler that
+built Python. That's usually MSVC.  MSVC needs to be installed prior to
+building Jep, or you can attempt your own build with MinGW.
 
-Note that Oracle is now building Java with a MSVCRT version that is
-not easily linked with using tools that I have. Using native modules
-on Windows has not worked in recent years because the compilers are
-not widely available. If an OpenJDK build used MinGW, that'd be
-much more likely to work.
+Installing from a build
+-----------------------
+Simply run ``python setup.py install`` after the build has successfully
+completed.  The install will move the shared library to the appropriate
+location for Python libraries and create a jep script.
 
-Running scripts
----------------
-
-The ``setup.py`` script will provide a ``jep`` shortcut to make launching Java and Python easier.
+Running the jep script
+----------------------
+The ``setup.py`` script will provide a ``jep`` script to make launching Java
+and Python easier.  It can be run with an argument of a script file to run.  If
+run with no arguments, it will provide an interactive console that combines
+the Python language with access to Java classes on the classpath.
 
 ::
 
@@ -77,10 +89,12 @@ See the contents of the installed ``jep`` script for an example how to do this.
 The script should have the correct values for your interpreter and virtualenv
 (if present).
 
+In general if you see fatal python errors when first using Jep, that implies
+the PATH, LD_PRELOAD, or LD_LIBRARY_PATH environment variables are incorrect or
+inconsistent.
 
 Running the tests
 -----------------
-
 The tests are run from setup.py:
 
 ::
@@ -89,14 +103,22 @@ The tests are run from setup.py:
 
 Support
 -------
-
 For issues and source control, use github:
 
 https://github.com/mrj0/jep/
 
-There's also a Sourceforge mailing list that is the best way to get support for Jep:
+There's also a Sourceforge mailing list that is the best way to get support
+for Jep:
 
 https://sourceforge.net/mail/?group_id=109839
 
+Note the project page and mailing list will be moving in the future.  A wiki
+will be forthcoming.
 
-Mike Johnson
+Contributions
+-------------
+We welcome comments, contributions, bug reports, wiki documentation, etc.
+Please use the mailing list and/or github's tools.
+
+
+Jep Team
