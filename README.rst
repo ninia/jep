@@ -25,7 +25,7 @@ Some benefits of embedding CPython in a JVM:
 
 License
 -------
-Jep is licensed zlib/libpng license to avoid linking issues.
+Jep is licensed **zlib/libpng** license to avoid linking issues.
 
 Installation
 ------------
@@ -35,19 +35,21 @@ Dependencies
 ------------
 * Python >= 2.6
 * Java >= 1.6
-* JNI >= 1.4
-* Numpy (optional) >= 1.5 ( numpy >= 1.7 recommended) 
+* Numpy (optional) >= 1.5 (numpy >= 1.7 recommended) 
 
-*Building*
+Building
+--------
 Simply run ``python setup.py build``. Building requires the JDK, Python, and
 optionally numpy to already be installed.
 
 *Build support*
+
 Due to the variety of configurations of operating system, Java version, Python
 version, and Numpy version, we cannot test all configurations.  The build
 should work correctly for Linux, Windows, and OS X.
 
 *OS X*
+
 The OS X build requires Xcode.  In recent versions of OS X, running the build
 will automatically prompt you to download Xcode if it is not found.
 
@@ -65,10 +67,10 @@ location for Python libraries and create a jep script.
 
 Running the jep script
 ----------------------
-The ``setup.py`` script will provide a ``jep`` script to make launching Java
-and Python easier.  It can be run with an argument of a script file to run.  If
-run with no arguments, it will provide an interactive console that combines
-the Python language with access to Java classes on the classpath.
+The ``setup.py`` script will provide a ``jep`` or ``jep.bat`` script to make
+launching Java and Python easier.  It can be run with an argument of a script
+file to run.  If run with no arguments, it will provide an interactive console
+that combines the Python language with access to Java classes on the classpath.
 
 ::
 
@@ -95,11 +97,7 @@ inconsistent.
 
 Running the tests
 -----------------
-The tests are run from setup.py:
-
-::
-
-    $ python setup.py test
+Simply run ``python setup.py test``.
 
 Support
 -------
@@ -121,4 +119,4 @@ We welcome comments, contributions, bug reports, wiki documentation, etc.
 Please use the mailing list and/or github's tools.
 
 
-Jep Team
+*Jep Team*
