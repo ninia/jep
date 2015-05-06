@@ -42,6 +42,8 @@
 #include "pyjobject.h"
 #include "pyjmethod.h"
 
+PyAPI_DATA(PyTypeObject) PyJmethodWrapper_Type;
+
 /*
  * PyJmethodWrapper_Object enables the ability to reuse a pyjmethod for
  * multiple instances of pyjobjects of the same underlying Java type.

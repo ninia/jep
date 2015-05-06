@@ -39,6 +39,8 @@
 
 #include "pyjclass.h"
 
+PyAPI_DATA(PyTypeObject) PyJobject_Type;
+
 // c storage for our stuff, managed by python interpreter.
 // doesn't need much, just a dictionary for attributes and
 // a jobject reference.
@@ -55,8 +57,6 @@ typedef struct {
     PyObject        *javaClassName; /* string of the fully-qualified name of
                                        the object's Java clazz */
 } PyJobject_Object;
-
-PyAPI_DATA(PyTypeObject) PyJobject_Type;
 
 PyObject* pyjobject_new(JNIEnv*, jobject);
 PyObject* pyjobject_new_class(JNIEnv*, jclass);

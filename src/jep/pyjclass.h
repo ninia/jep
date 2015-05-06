@@ -36,6 +36,8 @@
 #ifndef _Included_pyjclass
 #define _Included_pyjclass
 
+PyAPI_DATA(PyTypeObject) PyJclass_Type;
+
 typedef struct {
     PyObject_HEAD
     jobjectArray      initArray;    /* constructor array */

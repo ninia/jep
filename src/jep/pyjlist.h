@@ -40,6 +40,8 @@
 #ifndef _Included_pyjlist
 #define _Included_pyjlist
 
+PyAPI_DATA(PyTypeObject) PyJlist_Type;
+
 /*
  * A pyjlist is just a pyjobject with some extra methods attached to it to meet
  * the python Sequence protocol (interface).  It should only be used where

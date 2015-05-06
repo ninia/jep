@@ -59,7 +59,7 @@
 #include "pyjobject.h"
 #include "pyembed.h"
 
-PyAPI_DATA(PyTypeObject) PyJmethodWrapper_Type;
+
 
 static void pyjmethodwrapper_dealloc(PyJmethodWrapper_Object *self);
 

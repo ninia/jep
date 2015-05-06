@@ -40,6 +40,8 @@
 #include "pyjobject.h"
 #include "pyjclass.h"
 
+PyAPI_DATA(PyTypeObject) PyJfield_Type;
+
 // i needed an object to store methods in. this is a callable
 // object and instances of these are dynamically added to a PyJobject
 // using setattr.

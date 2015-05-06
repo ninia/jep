@@ -62,8 +62,6 @@
 #include "pyjarray.h"
 #include "util.h"
 
-PyAPI_DATA(PyTypeObject) PyJclass_Type;
-
 static PyObject* pyjclass_add_inner_classes(JNIEnv*, PyJobject_Object*);
 static void pyjclass_dealloc(PyJclass_Object*);
 

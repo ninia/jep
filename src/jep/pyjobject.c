@@ -76,6 +76,8 @@ static jmethodID classGetFields  = 0;
 static jmethodID classGetName    = 0;
 static PyObject *classnamePyJMethodsDict = NULL;
 
+
+
 // called internally to make new PyJobject_Object instances
 PyObject* pyjobject_new(JNIEnv *env, jobject obj) {
     PyJobject_Object *pyjob;

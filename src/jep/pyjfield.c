@@ -65,8 +65,6 @@
 #include "pyjclass.h"
 #include "util.h"
 
-PyAPI_DATA(PyTypeObject) PyJfield_Type;
-
 static void pyjfield_dealloc(PyJfield_Object *self);
 
 static jmethodID classGetName = 0;

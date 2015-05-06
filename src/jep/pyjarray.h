@@ -36,6 +36,8 @@
 #ifndef _Included_pyjarray
 #define _Included_pyjarray
 
+PyAPI_DATA(PyTypeObject) PyJarray_Type;
+
 // c storage for our stuff, managed by python interpreter.
 typedef struct {
     PyObject_HEAD

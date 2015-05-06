@@ -59,16 +59,15 @@
 #include "pyembed.h"
 #include "util.h"
 
-PyAPI_DATA(PyTypeObject) PyJarray_Type;
+
 extern PyMethodDef  pyjarray_methods[];
 
-
 jmethodID objectComponentType = 0;
-
 
 static void pyjarray_dealloc(PyJarray_Object *self);
 static int pyjarray_init(JNIEnv*, PyJarray_Object*, int, PyObject*);
 static int pyjarray_length(PyObject *self);
+
 
 
 // called internally to make new PyJarray_Object instances

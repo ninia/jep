@@ -59,8 +59,6 @@
 #include "pyjobject.h"
 #include "pyembed.h"
 
-PyAPI_DATA(PyTypeObject) PyJlist_Type;
-
 static Py_ssize_t pyjlist_len(PyObject*);
 static PyObject* pyjlist_add(PyObject*, PyObject*);
 static PyObject* pyjlist_fill(PyObject*, Py_ssize_t);
@@ -71,6 +69,8 @@ static int pyjlist_setslice(PyObject*, Py_ssize_t, Py_ssize_t, PyObject*);
 static int pyjlist_contains(PyObject*, PyObject*);
 static PyObject* pyjlist_inplace_add(PyObject*, PyObject*);
 static PyObject* pyjlist_inplace_fill(PyObject*, Py_ssize_t);
+
+
 
 /*
  * News up a pyjlist, which is just a pyjobject with some sequence methods

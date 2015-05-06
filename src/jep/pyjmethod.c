@@ -60,8 +60,6 @@
 #include "util.h"
 #include "pyembed.h"
 
-PyAPI_DATA(PyTypeObject) PyJmethod_Type;
-
 static void pyjmethod_dealloc(PyJmethod_Object *self);
 
 // cache methodIds
@@ -69,6 +67,8 @@ static jmethodID classGetName        = 0;
 static jmethodID methodGetType       = 0;
 static jmethodID methodGetParmTypes  = 0;
 static jmethodID methodGetModifiers  = 0;
+
+
 
 // called internally to make new PyJmethod_Object instances.
 // throws java exception and returns NULL on error.
