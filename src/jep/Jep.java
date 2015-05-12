@@ -246,6 +246,12 @@ public final class Jep implements Closeable {
 
         // why write C code if you don't have to? :-)
         if (includePath != null) {
+
+            // Added for compatibility with Windows file system
+            if (includePath.contains("\\")) {
+                includePath = includePath.replace("\\", "/");
+            }
+
             eval("import sys");
             eval("sys.path += '" + includePath + "'.split('"
                     + File.pathSeparator + "')");
