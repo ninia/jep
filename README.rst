@@ -65,6 +65,10 @@ Simply run ``python setup.py install`` after the build has successfully
 completed.  The install will move the shared library to the appropriate
 location for Python libraries and create a jep script.
 
+Running the tests
+-----------------
+Simply run ``python setup.py test``.
+
 Running the jep script
 ----------------------
 The ``setup.py`` script will provide a ``jep`` or ``jep.bat`` script to make
@@ -98,16 +102,13 @@ Common Errors
 -------------
 If you see Unsatisfied Link Errors, that implies Java cannot find the shared
 library that you built for your platform.  You can fix this by setting
-LD_LIBRARY_PATH or using the argument -Djava.library.path=pathToLib.
+LD_LIBRARY_PATH or the JVM argument java.library.path.
 
 If you see fatal python errors when first using Jep, that implies
 the PATH, LD_PRELOAD, or LD_LIBRARY_PATH environment variables are incorrect or
 inconsistent.  This is often seen if multiple versions of python are installed
 on a system.
 
-Running the tests
------------------
-Simply run ``python setup.py test``.
 
 Support
 -------
