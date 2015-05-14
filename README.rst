@@ -1,9 +1,8 @@
 Jep - Java Embedded Python
 ===========================
 
-Jep embeds CPython in Java through JNI. It is safe to use in a heavily
-threaded environment.  It is quite fast and its stability is a main
-feature and goal.
+Jep embeds CPython in Java through JNI and is safe to use in a heavily
+threaded environment. 
 
 Some benefits of embedding CPython in a JVM:
 
@@ -40,13 +39,14 @@ Dependencies
 Building
 --------
 Simply run ``python setup.py build``. Building requires the JDK, Python, and
-optionally numpy to already be installed.
+optionally numpy to already be installed.  The build will produce the jep jar,
+a test jar, a src jar, and the native library compiled for your platform.
 
 *Build support*
 
-Due to the variety of configurations of operating system, Java version, Python
-version, and Numpy version, we cannot test all configurations.  The build
-should work correctly for Linux, Windows, and OS X.
+Due to the variety of configurations of operating systems, Java versions,
+Python versions, and Numpy versions, we cannot test all configurations. The
+build has been tested on Linux, Windows, and OS X.
 
 *OS X*
 
@@ -68,9 +68,11 @@ location for Python libraries and create a jep script.
 Running the jep script
 ----------------------
 The ``setup.py`` script will provide a ``jep`` or ``jep.bat`` script to make
-launching Java and Python easier.  It can be run with an argument of a script
-file to run.  If run with no arguments, it will provide an interactive console
-that combines the Python language with access to Java classes on the classpath.
+launching Jep easier.  The jep script is very similar to running python from
+a terminal/command line.  If run with an argument of a file path, it will run
+the script at that path.  If run with no arguments, it will provide an
+interactive console that combines the Python language with access to Java
+classes on the classpath.
 
 ::
 
@@ -91,9 +93,17 @@ See the contents of the installed ``jep`` script for an example how to do this.
 The script should have the correct values for your interpreter and virtualenv
 (if present).
 
-In general if you see fatal python errors when first using Jep, that implies
+
+Common Errors
+-------------
+If you see Unsatisfied Link Errors, that implies Java cannot find the shared
+library that you built for your platform.  You can fix this by setting
+LD_LIBRARY_PATH or using the argument -Djava.library.path=pathToLib.
+
+If you see fatal python errors when first using Jep, that implies
 the PATH, LD_PRELOAD, or LD_LIBRARY_PATH environment variables are incorrect or
-inconsistent.
+inconsistent.  This is often seen if multiple versions of python are installed
+on a system.
 
 Running the tests
 -----------------
@@ -111,7 +121,7 @@ for Jep:
 https://sourceforge.net/mail/?group_id=109839
 
 Note the project page and mailing list will be moving in the future.  A wiki
-will be forthcoming.
+will be forthcoming.  We will be consolidating as much as possible on github.
 
 Contributions
 -------------
