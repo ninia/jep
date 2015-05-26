@@ -77,7 +77,7 @@ if __name__ == '__main__':
           classifiers=[
                        'License :: OSI Approved :: zlib/libpng License',
                        'Development Status :: 5 - Production/Stable',
-                       'Intended Audience :: Developers'
+                       'Intended Audience :: Developers',
                        'Topic :: Software Development',
                        'Programming Language :: Java',
                        'Programming Language :: Python',
