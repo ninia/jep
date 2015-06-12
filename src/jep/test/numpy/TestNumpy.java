@@ -77,7 +77,7 @@ public class TestNumpy {
         int[] dimensions = new int[] { 4 };
 
         // test boolean[]
-        NDArray<boolean[]> zarray = new NDArray<>(new boolean[] { true, false,
+        NDArray<boolean[]> zarray = new NDArray<boolean[]>(new boolean[] { true, false,
                 true, true }, dimensions);
         jep.set("zarray", zarray);
         String z_dtype = (String) jep.getValue("zarray.dtype");
@@ -95,7 +95,7 @@ public class TestNumpy {
         }
 
         // test byte[]
-        NDArray<byte[]> barray = new NDArray<>(new byte[] { 0x10, 0x00, 0x54,
+        NDArray<byte[]> barray = new NDArray<byte[]>(new byte[] { 0x10, 0x00, 0x54,
                 032 }, dimensions);
         jep.set("barray", barray);
         String b_dtype = (String) jep.getValue("barray.dtype");
@@ -113,7 +113,7 @@ public class TestNumpy {
         }
 
         // test short[]
-        NDArray<short[]> sarray = new NDArray<>(new short[] { 5, 3, 1, 8 },
+        NDArray<short[]> sarray = new NDArray<short[]>(new short[] { 5, 3, 1, 8 },
                 dimensions);
         jep.set("sarray", sarray);
         String s_dtype = (String) jep.getValue("sarray.dtype");
@@ -131,7 +131,7 @@ public class TestNumpy {
         }
 
         // test int[]
-        NDArray<int[]> iarray = new NDArray<>(
+        NDArray<int[]> iarray = new NDArray<int[]>(
                 new int[] { 547, 232, -675, 101 }, dimensions);
         jep.set("iarray", iarray);
         String i_dtype = (String) jep.getValue("iarray.dtype");
@@ -149,7 +149,7 @@ public class TestNumpy {
         }
 
         // test long[]
-        NDArray<long[]> larray = new NDArray<>(new long[] { 62724764L,
+        NDArray<long[]> larray = new NDArray<long[]>(new long[] { 62724764L,
                 3424637L, 3426734242L, -3429234L }, dimensions);
         jep.set("larray", larray);
         String l_dtype = (String) jep.getValue("larray.dtype");
@@ -167,7 +167,7 @@ public class TestNumpy {
         }
 
         // test float[]
-        NDArray<float[]> farray = new NDArray<>(new float[] { 4.32f, -0.0001f,
+        NDArray<float[]> farray = new NDArray<float[]>(new float[] { 4.32f, -0.0001f,
                 349.285f, 3201.0f }, dimensions);
         jep.set("farray", farray);
         String f_dtype = (String) jep.getValue("farray.dtype");
@@ -185,7 +185,7 @@ public class TestNumpy {
         }
 
         // test double[]
-        NDArray<double[]> darray = new NDArray<>(new double[] { 0.44321,
+        NDArray<double[]> darray = new NDArray<double[]>(new double[] { 0.44321,
                 0.00015, -9.34278, 235574.53 }, dimensions);
         jep.set("darray", darray);
         String d_dtype = (String) jep.getValue("darray.dtype");
@@ -334,7 +334,7 @@ public class TestNumpy {
         float[][] f = new float[15][];
         int[] dims = new int[] { 15, 20 };
         try {
-            NDArray<float[][]> ndarray = new NDArray<>(f, dims);
+            NDArray<float[][]> ndarray = new NDArray<float[][]>(f, dims);
             ndarray.getDimensions();
             throw new RuntimeException(
                     "NDArray should have failed instantiation");
@@ -346,7 +346,7 @@ public class TestNumpy {
 
         float[] d = new float[200];
         try {
-            NDArray<float[]> ndarray = new NDArray<>(d, dims);
+            NDArray<float[]> ndarray = new NDArray<float[]>(d, dims);
             ndarray.getDimensions();
             throw new RuntimeException(
                     "NDArray should have failed instantiation");
