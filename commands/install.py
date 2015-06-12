@@ -8,8 +8,6 @@ from commands.python import get_python_lib_dir
 
 class post_install(install_data):
     def run(self):        
-        install_data.run(self)        
-
         py_lib = get_python_lib_dir()
 
         # Get the "--root" directory supplied to the "install" command,

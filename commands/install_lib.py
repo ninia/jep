@@ -8,6 +8,7 @@ from commands.python import get_python_lib_dir
 class jep_install(install_lib):
     
     def install(self):   
+        version = self.distribution.metadata.get_version()
         py_lib = get_python_lib_dir()
         if is_windows():
             jep_lib = 'jep.pyd'
@@ -27,6 +28,14 @@ class jep_install(install_lib):
             lib_copied = self.copy_file(
                                         os.path.join(self.build_dir, jep_lib),
                                         os.path.join(py_lib, jep_lib))
+
+            # let's copy the jar file too
+            jar_dir = os.path.join(py_lib, 'jep')
+            if not os.path.exists(jar_dir):
+                os.makedirs(jar_dir)
+            jar_copied = self.copy_file(
+                                        os.path.join('build', 'java', 'jep-{0}.jar'.format(version)),
+                                        os.path.join(jar_dir, 'jep-{0}.jar'.format(version)))
         
             # let's copy the jep package to site-packages        
             return self.copy_tree(
