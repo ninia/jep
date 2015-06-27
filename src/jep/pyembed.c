@@ -153,6 +153,20 @@ static struct PyMethodDef jep_methods[] = {
     { NULL, NULL }
 };
 
+#if PY_MAJOR_VERSION >= 3
+ static struct PyModuleDef jep_module_def = {
+    PyModuleDef_HEAD_INIT,
+    "_jep",              /* m_name */
+    "_jep",              /* m_doc */
+    -1,                  /* m_size */
+    jep_methods,         /* m_methods */
+    NULL,                /* m_reload */
+    NULL,                /* m_traverse */
+    NULL,                /* m_clear */
+    NULL,                /* m_free */
+  };
+#endif
+
 
 static struct PyMethodDef noop_methods[] = {
     { NULL, NULL }
@@ -163,7 +177,12 @@ static PyObject* initjep(void) {
     PyObject *modjep;
 
     PyImport_AddModule("_jep");
+#if PY_MAJOR_VERSION >= 3
+    PyModule_Create(&jep_module_def);
+#else
     Py_InitModule((char *) "_jep", jep_methods);
+#endif
+
     modjep = PyImport_ImportModule("_jep");
     if(modjep == NULL)
         printf("WARNING: couldn't import module _jep.\n");
@@ -265,7 +284,11 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller) {
     if((tdict = PyThreadState_GetDict()) != NULL) {
         PyObject *key, *t;
         
+#if PY_MAJOR_VERSION >= 3
+        t   = PyCapsule_New((void *) jepThread, NULL, NULL);
+#else
         t   = (PyObject *) PyCObject_FromVoidPtr((void *) jepThread, NULL);
+#endif
         key = PyString_FromString(DICT_KEY);
         
         PyDict_SetItem(tdict, key, t);   /* takes ownership */
@@ -355,8 +378,13 @@ JepThread* pyembed_get_jepthread(void) {
     key = PyString_FromString(DICT_KEY);
     if((tdict = PyThreadState_GetDict()) != NULL && key != NULL) {
         t = PyDict_GetItem(tdict, key); /* borrowed */
-        if(t != NULL && !PyErr_Occurred())
+        if(t != NULL && !PyErr_Occurred()) {
+#if PY_MAJOR_VERSION >= 3
+            ret = (JepThread*) PyCapsule_GetPointer(t, NULL);
+#else
             ret = (JepThread*) PyCObject_AsVoidPtr(t);
+#endif
+        }
     }
     
     Py_DECREF(key);

@@ -35,7 +35,7 @@ except ImportError:
     If your platform really doesn't have readline, try this:
     http://newcenturycomputers.net/projects/readline.html
     """
-    print msg
+    print(msg)
 
 
 PS1 = ">>> "
