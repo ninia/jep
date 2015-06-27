@@ -81,7 +81,9 @@ def shell(command, capture=True):
         p = subprocess.Popen(cmd_arg, shell=True, stdout=out_stream, stderr=err_stream)
         stdout, stderr = p.communicate()
     except Exception:
-        raise CommandFailed('command failed'), sys.exc_info()[1], sys.exc_info()[2]
+        e = CommandFailed('command failed', sys.exc_info()[1])
+        e.__traceback__ = sys.exc_info()[2]
+        raise e
 
     # Handle error condition (deal with stdout being None, too)
     out = stdout.strip() if stdout else ""

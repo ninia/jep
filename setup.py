@@ -20,8 +20,8 @@ from commands.util import is_windows
 from commands.build_ext import build_ext
 
 VERSION = None  # shut up pycharm
-execfile('jep/version.py')
-
+with open('jep/version.py') as f:
+   exec(f.read())
 
 numpy_include = []
 numpy_found = 0
