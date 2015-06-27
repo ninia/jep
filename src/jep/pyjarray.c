@@ -1584,8 +1584,7 @@ static PyObject* pyjarray_iter(PyObject *);
 
 
 PyTypeObject PyJarray_Type = {
-    PyObject_HEAD_INIT(0)
-    0,                                        /* ob_size */
+    PyVarObject_HEAD_INIT(NULL, 0)
     "jarray",                                 /* tp_name */
     sizeof(PyJarray_Object),                  /* tp_basicsize */
     0,                                        /* tp_itemsize */
@@ -1711,8 +1710,7 @@ PyObject* pyjarrayiter_getattr(PyObject *one, PyObject *two) {
 }
 
 PyTypeObject PyJarrayIter_Type = {
-    PyObject_HEAD_INIT(0)
-    0,                                        /* ob_size */
+    PyVarObject_HEAD_INIT(NULL, 0)
     "pyjarrayiterator",                       /* tp_name */
     sizeof(PyJarrayIterObject),               /* tp_basicsize */
     0,                                        /* tp_itemsize */

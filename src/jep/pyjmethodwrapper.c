@@ -147,8 +147,7 @@ static PyMethodDef pyjmethodwrapper_methods[] = {
 
 
 PyTypeObject PyJmethodWrapper_Type = {
-    PyObject_HEAD_INIT(0)
-    0,
+    PyVarObject_HEAD_INIT(NULL, 0)
     "jep.PyJmethodWrapper",
     sizeof(PyJmethodWrapper_Object),
     0,

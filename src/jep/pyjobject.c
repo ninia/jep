@@ -931,8 +931,7 @@ static PyMethodDef pyjobject_methods[] = {
 
 
 PyTypeObject PyJobject_Type = {
-    PyObject_HEAD_INIT(0)
-    0,                                        /* ob_size */
+    PyVarObject_HEAD_INIT(NULL, 0)
     "PyJobject",                              /* tp_name */
     sizeof(PyJobject_Object),                 /* tp_basicsize */
     0,                                        /* tp_itemsize */

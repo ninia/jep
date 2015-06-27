@@ -529,8 +529,7 @@ static PySequenceMethods pyjlist_seq_methods = {
  * Inherits from PyJobject_Type
  */
 PyTypeObject PyJlist_Type = {
-    PyObject_HEAD_INIT(0)
-    0,
+    PyVarObject_HEAD_INIT(NULL, 0)
     "jep.PyJlist",
     sizeof(PyJlist_Object),
     0,

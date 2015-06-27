@@ -40,6 +40,10 @@
 #ifndef _Included_util
 #define _Included_util
 
+#if PY_MAJOR_VERSION >= 3
+#define Py_TPFLAGS_HAVE_ITER 0
+#endif 
+
 #ifndef USE_NUMPY
 #define USE_NUMPY 1
 #endif
@@ -77,7 +81,7 @@ typedef long long jeplong;
 
 // was added in python 2.2
 #ifndef PyObject_TypeCheck
-# define PyObject_TypeCheck(ob, tp) ((ob)->ob_type == (tp))
+# define PyObject_TypeCheck(ob, tp) (Py_TYPE(ob) == (tp))
 #endif
 
 // added in python 2.3

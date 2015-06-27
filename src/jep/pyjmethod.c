@@ -855,8 +855,7 @@ static PyMethodDef pyjmethod_methods[] = {
 
 
 PyTypeObject PyJmethod_Type = {
-    PyObject_HEAD_INIT(0)
-    0,
+    PyVarObject_HEAD_INIT(NULL, 0)
     "jep.PyJmethod",
     sizeof(PyJmethod_Object),
     0,
