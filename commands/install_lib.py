@@ -7,13 +7,11 @@ from commands.python import get_python_lib_dir
 
 class jep_install(install_lib):
     
-    def install(self):   
+    def install(self):
+        build_ext = self.get_finalized_command('build_ext')
+        jep_lib = build_ext.get_outputs()[0]
         version = self.distribution.metadata.get_version()
         py_lib = get_python_lib_dir()
-        if is_windows():
-            jep_lib = 'jep.pyd'
-        else:
-            jep_lib = 'jep.so'
 
         # Get the "--root" directory supplied to the "install" command,
         # and use it as a prefix to LIBDIR.
@@ -26,8 +24,8 @@ class jep_install(install_lib):
         if os.path.isdir(self.build_dir):        
             # let's put the file in python/lib where it belongs
             lib_copied = self.copy_file(
-                                        os.path.join(self.build_dir, jep_lib),
-                                        os.path.join(py_lib, jep_lib))
+                                        jep_lib,
+                                        os.path.join(py_lib, os.path.basename(jep_lib)))
 
             # let's copy the jar file too
             jar_dir = os.path.join(py_lib, 'jep')
