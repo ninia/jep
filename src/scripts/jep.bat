@@ -10,9 +10,11 @@ IF DEFINED CLASSPATH (
 SET cp="%cp%;%CLASSPATH%"
 )
 
+SET jni_path={install_lib}jep
+
 SET args=%*
 IF "%args%"=="" (
 SET args="{install_lib}jep\console.py"
 )
 
-java -classpath %cp% jep.Run %args%
+java -classpath %cp% -Djava.library.path=%jni_path% jep.Run %args%
