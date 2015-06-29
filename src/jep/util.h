@@ -42,6 +42,12 @@
 
 #if PY_MAJOR_VERSION >= 3
 #define Py_TPFLAGS_HAVE_ITER 0
+// TODO investigate calls to the methods below and ensure it's what we want
+#define PyString_FromString(str)          PyBytes_FromString(str)
+#define PyString_AsString(str)            PyBytes_AsString(str)
+#define PyString_Check(str)               PyBytes_Check(str)
+#define PyString_FromFormat(fmt, args...) PyBytes_FromFormat(fmt, args)
+#define PyInt_AsLong(i)                   PyLong_AsLong(i)
 #endif 
 
 #ifndef USE_NUMPY
