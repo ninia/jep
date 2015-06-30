@@ -13,14 +13,16 @@ if test "x$VIRTUAL_ENV" != "x"; then
   export PYTHONHOME
 fi
 
-cp="{prefix}/lib/jep/jep-{version}.jar"
+cp="{install_lib}jep/jep-{version}.jar"
 if test "x$CLASSPATH" != "x"; then
     cp="$cp":"$CLASSPATH"
 fi
+
+jni_path="{install_lib}jep"
 
 args=$*
 if test "x$args" = "x"; then
   args="{install_lib}jep/console.py"
 fi
 
-exec java -classpath "$cp" jep.Run $args
+exec java -classpath "$cp" -Djava.library.path="$jni_path" jep.Run $args
