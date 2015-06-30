@@ -65,6 +65,6 @@ class jep_install(install_lib):
             spawn(['ln',
                    '-sf',
                    '{0}'.format(jep_lib),
-                   '{0}'.format(os.path.join(jep_lib, 'libjep.so')),
+                   '{0}'.format(os.path.join(jep_dir, 'libjep.so')),
                    ])
  
