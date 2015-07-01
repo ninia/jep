@@ -233,6 +233,30 @@ PyObject* pystring_split_last(PyObject *str, char *split) {
     return ret;
 }
 
+// support for python 3.0, 3.1, and 3.2
+// unnecessary for python 2.6, 2.7, and 3.3+
+char* pyunicode_to_utf8(PyObject *unicode) {
+    PyObject *bytesObj;
+    char     *c;
+    bytesObj = PyUnicode_AsUTF8String(unicode);
+    if(bytesObj == NULL) {
+         if(PyErr_Occurred()) {
+            printf("Error converting PyUnicode to PyBytes\n");
+            PyErr_Print();
+         }
+       return NULL;
+    }
+    
+    c = PyBytes_AsString(bytesObj);
+    Py_DECREF(bytesObj);
+    if(PyErr_Occurred()) {
+       PyErr_Print();
+       return NULL;
+    }
+    return c;
+}
+
+
 
 // convert python exception to java.
 int process_py_exception(JNIEnv *env, int printTrace) {
@@ -355,6 +379,13 @@ int process_py_exception(JNIEnv *env, int printTrace) {
                 if(modTB != NULL && extract != NULL) {
                     pystack = PyObject_CallMethodObjArgs(modTB, extract, ptrace,
                             NULL);
+                }
+                if(PyErr_Occurred()) {
+                  /*
+                   * well this isn't good, we got an error while we're trying
+                   * to process errors, let's just print it out
+                   */
+                  PyErr_Print();
                 }
                 if(modTB != NULL) {
                     Py_DECREF(modTB);

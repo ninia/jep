@@ -42,12 +42,16 @@
 
 #if PY_MAJOR_VERSION >= 3
 #define Py_TPFLAGS_HAVE_ITER 0
-// TODO investigate calls to the methods below and ensure it's what we want
-#define PyString_FromString(str)          PyBytes_FromString(str)
-#define PyString_AsString(str)            PyBytes_AsString(str)
-#define PyString_Check(str)               PyBytes_Check(str)
-#define PyString_FromFormat(fmt, args...) PyBytes_FromFormat(fmt, args)
+
+#define PyString_FromString(str)          PyUnicode_FromString(str)
+// PyString_AsString is defined further down because we need a custom function
+#define PyString_Check(str)               PyUnicode_Check(str)
+#define PyString_FromFormat(fmt, args...) PyUnicode_FromFormat(fmt, args)
+// TODO missing some more PyString methods in python 3
+
 #define PyInt_AsLong(i)                   PyLong_AsLong(i)
+// TODO missing some more PyInt methods in python 3
+// TODO determine best path forward for int/long
 #endif 
 
 #ifndef USE_NUMPY
@@ -95,6 +99,18 @@ typedef long long jeplong;
 # define PyDoc_VAR(name)         static char name[]
 # define PyDoc_STR(str)          (str)
 # define PyDoc_STRVAR(name, str) PyDoc_VAR(name) = PyDoc_STR(str)
+#endif
+
+// this function exists solely to support python 3.0, 3.1, and 3.2 only
+char* pyunicode_to_utf8(PyObject *unicode);
+
+// use built-ins for python 2.6, 2.7, and 3.3+
+#if PY_MAJOR_VERSION >= 3
+ #if PY_MINOR_VERSION <= 2
+  #define PyString_AsString(str)            pyunicode_to_utf8(str)
+ #else
+  #define PyString_AsString(str)            PyUnicode_AsUTF8(str)
+ #endif
 #endif
 
 // call toString() on jobject, make a python string and return
