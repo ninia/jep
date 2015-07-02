@@ -52,7 +52,6 @@ JNIEXPORT jobject JNICALL Java_jep_InvocationHandler_invoke
  jintArray types,
  jint returnType) {
 
-    PyThreadState *prevThread;
     JepThread     *jepThread;
     jobject        ret;
     const char    *cname;
@@ -69,8 +68,7 @@ JNIEXPORT jobject JNICALL Java_jep_InvocationHandler_invoke
         return NULL;
     }
 
-    PyEval_AcquireLock();
-    prevThread = PyThreadState_Swap(jepThread->tstate);
+    PyEval_AcquireThread(jepThread->tstate);
 
     // now get the callable object
     cname = jstring2char(env, jname);
@@ -84,8 +82,7 @@ JNIEXPORT jobject JNICALL Java_jep_InvocationHandler_invoke
     ret = pyembed_invoke(env, callable, args, types);
 
 EXIT:
-    PyThreadState_Swap(prevThread);
-    PyEval_ReleaseLock();
+    PyEval_ReleaseThread(jepThread->tstate);
 
     return ret;
 }

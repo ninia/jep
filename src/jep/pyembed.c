@@ -176,13 +176,15 @@ static struct PyMethodDef noop_methods[] = {
 static PyObject* initjep(void) {
     PyObject *modjep;
 
-    PyImport_AddModule("_jep");
 #if PY_MAJOR_VERSION >= 3
-    PyModule_Create(&jep_module_def);
+    PyObject *sysmodules;
+    modjep = PyModule_Create(&jep_module_def);
+    sysmodules = PyImport_GetModuleDict();
+    PyDict_SetItemString(sysmodules, "_jep", modjep);
 #else
+    PyImport_AddModule("_jep");
     Py_InitModule((char *) "_jep", jep_methods);
 #endif
-
     modjep = PyImport_ImportModule("_jep");
     if(modjep == NULL)
         printf("WARNING: couldn't import module _jep.\n");
@@ -305,7 +307,6 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller) {
 
 
 void pyembed_thread_close(intptr_t _jepThread) {
-    PyThreadState *prevThread;
     JepThread     *jepThread;
     PyObject      *tdict, *key;
     JNIEnv        *env;
@@ -322,8 +323,7 @@ void pyembed_thread_close(intptr_t _jepThread) {
         return;
     }
 
-    PyEval_AcquireLock();
-    prevThread = PyThreadState_Swap(jepThread->tstate);
+    PyEval_AcquireThread(jepThread->tstate);
 
     key = PyString_FromString(DICT_KEY);
     if((tdict = PyThreadState_GetDict()) != NULL && key != NULL)
@@ -354,7 +354,6 @@ void pyembed_thread_close(intptr_t _jepThread) {
     Py_EndInterpreter(jepThread->tstate);
     
     PyMem_Free(jepThread);
-    PyThreadState_Swap(prevThread);
     PyEval_ReleaseLock();
 }
 
@@ -611,7 +610,6 @@ jobject pyembed_invoke_method(JNIEnv *env,
                               const char *cname,
                               jobjectArray args,
                               jintArray types) {
-    PyThreadState    *prevThread;
     PyObject         *callable;
     JepThread        *jepThread;
     jobject           ret;
@@ -624,8 +622,7 @@ jobject pyembed_invoke_method(JNIEnv *env,
         return ret;
     }
 
-    PyEval_AcquireLock();
-    prevThread = PyThreadState_Swap(jepThread->tstate);
+    PyEval_AcquireThread(jepThread->tstate);
 
     callable = PyDict_GetItemString(jepThread->globals, (char *) cname);
     if(!callable) {
@@ -638,8 +635,7 @@ jobject pyembed_invoke_method(JNIEnv *env,
     ret = pyembed_invoke(env, callable, args, types);
 
 EXIT:
-    PyThreadState_Swap(prevThread);
-    PyEval_ReleaseLock();
+    PyEval_ReleaseThread(jepThread->tstate);
 
     return ret;
 }
@@ -725,7 +721,6 @@ EXIT:
 void pyembed_eval(JNIEnv *env,
                   intptr_t _jepThread,
                   char *str) {
-    PyThreadState    *prevThread;
     PyObject         *result;
     JepThread        *jepThread;
     
@@ -736,8 +731,6 @@ void pyembed_eval(JNIEnv *env,
     }
 
     PyEval_AcquireThread(jepThread->tstate);
-    //PyEval_AcquireLock();
-    //prevThread = PyThreadState_Swap(jepThread->tstate);
     
     if(str == NULL)
         goto EXIT;
@@ -761,8 +754,6 @@ void pyembed_eval(JNIEnv *env,
     }
 
 EXIT:
-    //PyThreadState_Swap(prevThread);
-    //PyEval_ReleaseLock();
     PyEval_ReleaseThread(jepThread->tstate);
 }
 
@@ -771,7 +762,6 @@ EXIT:
 int pyembed_compile_string(JNIEnv *env,
                            intptr_t _jepThread,
                            char *str) {
-    PyThreadState  *prevThread;
     PyObject       *code;
     int             ret = -1;
     JepThread      *jepThread;
@@ -785,8 +775,7 @@ int pyembed_compile_string(JNIEnv *env,
     if(str == NULL)
         return 0;
 
-    PyEval_AcquireLock();
-    prevThread = PyThreadState_Swap(jepThread->tstate);
+    PyEval_AcquireThread(jepThread->tstate);
     
     code = Py_CompileString(str, "<stdin>", Py_single_input);
     
@@ -801,8 +790,7 @@ int pyembed_compile_string(JNIEnv *env,
     else
         process_py_exception(env, 0);
 
-    PyThreadState_Swap(prevThread);
-    PyEval_ReleaseLock();
+    PyEval_ReleaseThread(jepThread->tstate);
     return ret;
 }
 
@@ -810,7 +798,6 @@ int pyembed_compile_string(JNIEnv *env,
 intptr_t pyembed_create_module(JNIEnv *env,
                                intptr_t _jepThread,
                                char *str) {
-    PyThreadState  *prevThread;
     PyObject       *module;
     JepThread      *jepThread;
     intptr_t        ret;
@@ -827,8 +814,7 @@ intptr_t pyembed_create_module(JNIEnv *env,
     if(str == NULL)
         return 0;
 
-    PyEval_AcquireLock();
-    prevThread = PyThreadState_Swap(jepThread->tstate);
+    PyEval_AcquireThread(jepThread->tstate);
 
     if(PyImport_AddModule(str) == NULL || process_py_exception(env, 1))
         goto EXIT;
@@ -853,8 +839,7 @@ intptr_t pyembed_create_module(JNIEnv *env,
         ret = (intptr_t) module;
 
 EXIT:
-    PyThreadState_Swap(prevThread);
-    PyEval_ReleaseLock();
+    PyEval_ReleaseThread(jepThread->tstate);
 
     return ret;
 }
@@ -864,7 +849,6 @@ intptr_t pyembed_create_module_on(JNIEnv *env,
                                   intptr_t _jepThread,
                                   intptr_t _onModule,
                                   char *str) {
-    PyThreadState  *prevThread;
     PyObject       *module, *onModule;
     JepThread      *jepThread;
     intptr_t        ret;
@@ -883,8 +867,7 @@ intptr_t pyembed_create_module_on(JNIEnv *env,
     if(str == NULL)
         return 0;
 
-    PyEval_AcquireLock();
-    prevThread = PyThreadState_Swap(jepThread->tstate);
+    PyEval_AcquireThread(jepThread->tstate);
 
     onModule = (PyObject *) _onModule;
     if(!PyModule_Check(onModule)) {
@@ -918,8 +901,7 @@ EXIT:
         Py_DECREF(globals);
     }
 
-    PyThreadState_Swap(prevThread);
-    PyEval_ReleaseLock();
+    PyEval_ReleaseThread(jepThread->tstate);
 
     return ret;
 }
@@ -1174,7 +1156,6 @@ jobject pyembed_getvalue_on(JNIEnv *env,
                             intptr_t _jepThread,
                             intptr_t _onModule,
                             char *str) {
-    PyThreadState  *prevThread;
     PyObject       *dict, *result, *onModule;
     jobject         ret = NULL;
     JepThread      *jepThread;
@@ -1190,8 +1171,7 @@ jobject pyembed_getvalue_on(JNIEnv *env,
     if(str == NULL)
         return NULL;
     
-    PyEval_AcquireLock();
-    prevThread = PyThreadState_Swap(jepThread->tstate);
+    PyEval_AcquireThread(jepThread->tstate);
     
     if(process_py_exception(env, 1))
         goto EXIT;
@@ -1219,8 +1199,7 @@ jobject pyembed_getvalue_on(JNIEnv *env,
     ret = pyembed_box_py(env, result);
     
 EXIT:
-    PyThreadState_Swap(prevThread);
-    PyEval_ReleaseLock();
+    PyEval_ReleaseThread(jepThread->tstate);
 
     if(result != NULL) {
         Py_DECREF(result);
@@ -1230,7 +1209,6 @@ EXIT:
 
 
 jobject pyembed_getvalue(JNIEnv *env, intptr_t _jepThread, char *str) {
-    PyThreadState  *prevThread;
     PyObject       *result;
     jobject         ret = NULL;
     JepThread      *jepThread;
@@ -1246,8 +1224,7 @@ jobject pyembed_getvalue(JNIEnv *env, intptr_t _jepThread, char *str) {
     if(str == NULL)
         return NULL;
     
-    PyEval_AcquireLock();
-    prevThread = PyThreadState_Swap(jepThread->tstate);
+    PyEval_AcquireThread(jepThread->tstate);
     
     if(process_py_exception(env, 1))
         goto EXIT;
@@ -1266,8 +1243,7 @@ jobject pyembed_getvalue(JNIEnv *env, intptr_t _jepThread, char *str) {
     ret = pyembed_box_py(env, result);
     
 EXIT:
-    PyThreadState_Swap(prevThread);
-    PyEval_ReleaseLock();
+    PyEval_ReleaseThread(jepThread->tstate);
 
     if(result != NULL) {
         Py_DECREF(result);
@@ -1278,7 +1254,6 @@ EXIT:
 
 
 jobject pyembed_getvalue_array(JNIEnv *env, intptr_t _jepThread, char *str, int typeId) {
-    PyThreadState  *prevThread;
     PyObject       *result;
     jobject         ret = NULL;
     JepThread      *jepThread;
@@ -1294,8 +1269,7 @@ jobject pyembed_getvalue_array(JNIEnv *env, intptr_t _jepThread, char *str, int 
     if(str == NULL)
         return NULL;
     
-    PyEval_AcquireLock();
-    prevThread = PyThreadState_Swap(jepThread->tstate);
+    PyEval_AcquireThread(jepThread->tstate);
     
     if(process_py_exception(env, 1))
         goto EXIT;
@@ -1345,8 +1319,7 @@ jobject pyembed_getvalue_array(JNIEnv *env, intptr_t _jepThread, char *str, int 
     
     
 EXIT:
-    PyThreadState_Swap(prevThread);
-    PyEval_ReleaseLock();
+    PyEval_ReleaseThread(jepThread->tstate);
 
     if(result != NULL) {
         Py_DECREF(result);
@@ -1362,7 +1335,6 @@ EXIT:
 void pyembed_run(JNIEnv *env,
                  intptr_t _jepThread,
                  char *file) {
-    PyThreadState *prevThread;
     JepThread     *jepThread;
     const char    *ext;
     
@@ -1372,8 +1344,7 @@ void pyembed_run(JNIEnv *env,
         return;
     }
 
-    PyEval_AcquireLock();
-    prevThread = PyThreadState_Swap(jepThread->tstate);
+    PyEval_AcquireThread(jepThread->tstate);
     
     if(file != NULL) {
         FILE *script = fopen(file, "r");
@@ -1417,8 +1388,7 @@ void pyembed_run(JNIEnv *env,
     }
 
 EXIT:
-    PyThreadState_Swap(prevThread);
-    PyEval_ReleaseLock();
+    PyEval_ReleaseThread(jepThread->tstate);
 }
 
 
@@ -1507,8 +1477,7 @@ static int maybe_pyc_file(FILE *fp, const char* filename, const char* ext,
         return;                                                     \
     }                                                               \
                                                                     \
-    PyEval_AcquireLock();                                           \
-    prevThread = PyThreadState_Swap(jepThread->tstate);             \
+    PyEval_AcquireThread(jepThread->tstate);                        \
                                                                     \
     pymodule = NULL;                                                \
     if(module != 0)                                                 \
@@ -1522,7 +1491,6 @@ void pyembed_setparameter_object(JNIEnv *env,
                                  const char *name,
                                  jobject value) {
     PyObject      *pyjob;
-    PyThreadState *prevThread;
     PyObject      *pymodule;
     
     // does common things
@@ -1551,8 +1519,7 @@ void pyembed_setparameter_object(JNIEnv *env,
         }
     }
 
-    PyThreadState_Swap(prevThread);
-    PyEval_ReleaseLock();
+    PyEval_ReleaseThread(jepThread->tstate);
     return;
 }
 
@@ -1563,7 +1530,6 @@ void pyembed_setparameter_array(JNIEnv *env,
                                 const char *name,
                                 jobjectArray obj) {
     PyObject      *pyjob;
-    PyThreadState *prevThread;
     PyObject      *pymodule;
 
     // does common things
@@ -1592,8 +1558,7 @@ void pyembed_setparameter_array(JNIEnv *env,
         }
     }
 
-    PyThreadState_Swap(prevThread);
-    PyEval_ReleaseLock();
+    PyEval_ReleaseThread(jepThread->tstate);
     return;
 }
 
@@ -1604,7 +1569,6 @@ void pyembed_setparameter_class(JNIEnv *env,
                                 const char *name,
                                 jclass value) {
     PyObject      *pyjob;
-    PyThreadState *prevThread;
     PyObject      *pymodule;
     
     // does common things
@@ -1633,8 +1597,7 @@ void pyembed_setparameter_class(JNIEnv *env,
         }
     }
 
-    PyThreadState_Swap(prevThread);
-    PyEval_ReleaseLock();
+    PyEval_ReleaseThread(jepThread->tstate);
     return;
 }
 
@@ -1645,7 +1608,6 @@ void pyembed_setparameter_string(JNIEnv *env,
                                  const char *name,
                                  const char *value) {
     PyObject      *pyvalue;
-    PyThreadState *prevThread;
     PyObject      *pymodule;
     
     // does common things
@@ -1672,8 +1634,7 @@ void pyembed_setparameter_string(JNIEnv *env,
                            pyvalue); // steals reference
     }
 
-    PyThreadState_Swap(prevThread);
-    PyEval_ReleaseLock();
+    PyEval_ReleaseThread(jepThread->tstate);
     return;
 }
 
@@ -1684,7 +1645,6 @@ void pyembed_setparameter_int(JNIEnv *env,
                               const char *name,
                               int value) {
     PyObject      *pyvalue;
-    PyThreadState *prevThread;
     PyObject      *pymodule;
     
     // does common things
@@ -1709,8 +1669,7 @@ void pyembed_setparameter_int(JNIEnv *env,
                            pyvalue); // steals reference
     }
 
-    PyThreadState_Swap(prevThread);
-    PyEval_ReleaseLock();
+    PyEval_ReleaseThread(jepThread->tstate);
     return;
 }
 
@@ -1721,7 +1680,6 @@ void pyembed_setparameter_long(JNIEnv *env,
                                const char *name,
                                jeplong value) {
     PyObject      *pyvalue;
-    PyThreadState *prevThread;
     PyObject      *pymodule;
     
     // does common things
@@ -1746,8 +1704,7 @@ void pyembed_setparameter_long(JNIEnv *env,
                            pyvalue); // steals reference
     }
 
-    PyThreadState_Swap(prevThread);
-    PyEval_ReleaseLock();
+    PyEval_ReleaseThread(jepThread->tstate);
     return;
 }
 
@@ -1758,7 +1715,6 @@ void pyembed_setparameter_double(JNIEnv *env,
                                  const char *name,
                                  double value) {
     PyObject      *pyvalue;
-    PyThreadState *prevThread;
     PyObject      *pymodule;
     
     // does common things
@@ -1783,8 +1739,7 @@ void pyembed_setparameter_double(JNIEnv *env,
                            pyvalue); // steals reference
     }
 
-    PyThreadState_Swap(prevThread);
-    PyEval_ReleaseLock();
+    PyEval_ReleaseThread(jepThread->tstate);
     return;
 }
 
@@ -1795,7 +1750,6 @@ void pyembed_setparameter_float(JNIEnv *env,
                                 const char *name,
                                 float value) {
     PyObject      *pyvalue;
-    PyThreadState *prevThread;
     PyObject      *pymodule;
 
     // does common things
@@ -1820,7 +1774,6 @@ void pyembed_setparameter_float(JNIEnv *env,
                            pyvalue); // steals reference
     }
 
-    PyThreadState_Swap(prevThread);
-    PyEval_ReleaseLock();
+    PyEval_ReleaseThread(jepThread->tstate);
     return;
 }
