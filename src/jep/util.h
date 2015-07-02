@@ -44,16 +44,14 @@
 #define Py_TPFLAGS_HAVE_ITER 0
 
 #define PyString_FromString(str)          PyUnicode_FromString(str)
-// PyString_AsString is defined further down because we need a custom function
 #define PyString_Check(str)               PyUnicode_Check(str)
 #define PyString_FromFormat(fmt, args...) PyUnicode_FromFormat(fmt, args)
-// TODO missing some more PyString methods in python 3
+// more string methods are defined for compatibility farther down...
 
 #define PyInt_AsLong(i)                   PyLong_AsLong(i)
 #define PyInt_AS_LONG(i)                  PyLong_AsLong(i)
 #define PyInt_Check(i)                    PyLong_Check(i)
-// TODO missing some more PyInt methods in python 3
-// TODO determine best path forward for int/long
+#define PyInt_FromLong(i)                 PyLong_FromLong(i)
 #endif 
 
 #ifndef USE_NUMPY
@@ -106,12 +104,18 @@ typedef long long jeplong;
 // this function exists solely to support python 3.0, 3.1, and 3.2 only
 char* pyunicode_to_utf8(PyObject *unicode);
 
-// use built-ins for python 2.6, 2.7, and 3.3+
+// 3.3 reworked unicode so we have special handling for 3.0, 3.1, and 3.2
 #if PY_MAJOR_VERSION >= 3
  #if PY_MINOR_VERSION <= 2
   #define PyString_AsString(str)            pyunicode_to_utf8(str)
+  #define PyString_AS_STRING(str)           pyunicode_to_utf8(str)
+  #define PyString_Size(str)                PyUnicode_GetSize(str)
+  #define PyString_GET_SIZE(str)            PyUnicode_GET_SIZE(str)
  #else
   #define PyString_AsString(str)            PyUnicode_AsUTF8(str)
+  #define PyString_AS_STRING(str)           PyUnicode_AsUTF8(str)
+  #define PyString_Size(str)                PyUnicode_GetLength(str)
+  #define PyString_GET_SIZE(str)            PyUnicode_GET_LENGTH(str)
  #endif
 #endif
 

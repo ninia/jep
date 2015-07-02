@@ -54,7 +54,7 @@ class TestTypes(unittest.TestCase):
 
     def test_float_array(self):
         obj = self.test.getFloatArray()
-        self.assertAlmostEquals(123.12300109863281, obj[0])
+        self.assertAlmostEqual(123.12300109863281, obj[0])
 
     def test_object_array(self):
         obj = self.test.getObjectArray()

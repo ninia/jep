@@ -49,11 +49,11 @@ class TestFields(unittest.TestCase):
         self.assertEqual(.3, self.test.getDoubleField())
 
     def test_float_field(self):
-        self.assertAlmostEquals(3.4028234663852886e+38, self.test.floatField)
-        self.assertAlmostEquals(3.4028234663852886e+38, self.test.getFloatField())
+        self.assertAlmostEqual(3.4028234663852886e+38, self.test.floatField)
+        self.assertAlmostEqual(3.4028234663852886e+38, self.test.getFloatField())
         self.test.floatField = .1
-        self.assertAlmostEquals(.1, self.test.floatField)
-        self.assertAlmostEquals(.1, self.test.getFloatField())
+        self.assertAlmostEqual(.1, self.test.floatField)
+        self.assertAlmostEqual(.1, self.test.getFloatField())
 
     def test_byte_field(self):
         self.assertEqual(43, self.test.byteField)
@@ -119,11 +119,11 @@ class TestFields(unittest.TestCase):
         self.assertEqual(.3, self.test.getStaticDouble())
 
     def test_static_float_field(self):
-        self.assertAlmostEquals(3.4028234663852886e+38, self.test.staticFloat)
-        self.assertAlmostEquals(3.4028234663852886e+38, self.test.getStaticFloat())
+        self.assertAlmostEqual(3.4028234663852886e+38, self.test.staticFloat)
+        self.assertAlmostEqual(3.4028234663852886e+38, self.test.getStaticFloat())
         self.test.staticFloat = .1
-        self.assertAlmostEquals(.1, self.test.staticFloat)
-        self.assertAlmostEquals(.1, self.test.getStaticFloat())
+        self.assertAlmostEqual(.1, self.test.staticFloat)
+        self.assertAlmostEqual(.1, self.test.getStaticFloat())
 
     def test_static_byte_field(self):
         self.assertEqual(125, self.test.staticByte)
@@ -140,11 +140,11 @@ class TestFields(unittest.TestCase):
         self.assertEqual('a', self.test.getStaticChar())
 
     def test_static_class_field(self):
-        self.assertNotEquals(None, self.test.staticClass)
-        self.assertNotEquals(None, self.test.getStaticClass())
+        self.assertNotEqual(None, self.test.staticClass)
+        self.assertNotEqual(None, self.test.getStaticClass())
         self.test.staticClass = Integer
         self.assertEqual(Integer, self.test.staticClass)
-        self.assertNotEquals(Integer, self.test.getStaticClass())
+        self.assertNotEqual(Integer, self.test.getStaticClass())
 
     def test_equals(self):
         self.assertEqual(self.test, self.test)

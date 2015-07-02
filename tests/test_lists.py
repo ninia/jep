@@ -9,13 +9,13 @@ COUNT = 17
 
 def makeJavaList():
     jlist = ArrayList()
-    for i in xrange(COUNT):
+    for i in range(COUNT):
         jlist.add(Integer(i))
     return jlist
 
 def makePythonList():
     pylist = []    
-    for i in xrange(COUNT):
+    for i in range(COUNT):
         # At present have to make it a java.lang.Integer for
         # assertSequenceEqual to work. If in the future a  
         # java.lang.Integer can compare equality to a python int,
