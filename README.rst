@@ -5,19 +5,19 @@
     :target: https://pypi.python.org/pypi/jep
 
 .. image:: https://img.shields.io/pypi/v/Jep.svg
-    :target https://pypie.python.org/pypi/jep
+    :target: https://pypie.python.org/pypi/jep
 
 .. image:: https://img.shields.io/pypi/dm/Jep.svg
     :target: https://pypi.python.org/pypi/jep
 	
 .. image:: https://img.shields.io/badge/docs-wiki-orange.svg
-    :target https://github.com/mrj0/jep/wiki
+    :target: https://github.com/mrj0/jep/wiki
 
 
 Jep - Java Embedded Python
 ===========================
 
-[Jep](https://github.com/mrj0/jep/) embeds CPython in Java through JNI and is safe to use in a heavily
+Jep embeds CPython in Java through JNI and is safe to use in a heavily
 threaded environment. 
 
 Some benefits of embedding CPython in a JVM:
@@ -70,9 +70,10 @@ classes on the classpath.
 
 Help
 ----
-* [Documentation](https://github.com/mrj0/jep/wiki)
-* [Mailing List](https://sourceforge.net/mail/?group_id=109839)
-* [Known Issues](https://github.com/mrj0/jep/issues)
+* Documentation: https://github.com/mrj0/jep/wiki
+* Mailing List: https://sourceforge.net/mail/?group_id=109839
+* Known Issues: https://github.com/mrj0/jep/issues
+* Project Page: https://github.com/mrj0/jep
 
 We welcome comments, contributions, bug reports, wiki documentation, etc.
 
