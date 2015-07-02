@@ -116,11 +116,11 @@ class TestJdbc(unittest.TestCase):
         ''')
 
         cursor.execute('insert into dt values (?, ?, ?, ?, ?)',
-                       dbapi.Date(2012, 06, 01),
-                       Date(1338534000000L),
+                       dbapi.Date(2012, 6, 1),
+                       Date(1338534000000),
                        Time(1),
                        dbapi.Time(1, 2, 3),
-                       dbapi.Timestamp(2012, 06, 01, 1, 2, 3),
+                       dbapi.Timestamp(2012, 6, 1, 1, 2, 3),
                        )
         cursor.execute('select * from dt')
 
@@ -136,7 +136,7 @@ class TestJdbc(unittest.TestCase):
         row = cursor.fetchone()
 
         self.assertEqual(row[0].toString(), '2012-06-01')
-        self.assertEqual(row[1].getTime(), 1338534000000L)
+        self.assertEqual(row[1].getTime(), 1338534000000)
         self.assertEqual(row[2].getTime(), 1)
         self.assertEqual(row[3].toString(), '01:02:03')
         self.assertEqual(row[4].toString(), '2012-06-01 01:02:03.0')

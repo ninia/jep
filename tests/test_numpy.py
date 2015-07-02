@@ -52,9 +52,9 @@ class TestNumpy(unittest.TestCase):
             y += 5
             self.assertEqual(repr(y), repr(z))
             if self.printout:
-                print ""
-                print repr(y)
-                print repr(z)
+                print("")
+                print(repr(y))
+                print(repr(z))
 
     
     def testArrayParams(self):

@@ -50,6 +50,8 @@
 // TODO missing some more PyString methods in python 3
 
 #define PyInt_AsLong(i)                   PyLong_AsLong(i)
+#define PyInt_AS_LONG(i)                  PyLong_AsLong(i)
+#define PyInt_Check(i)                    PyLong_Check(i)
 // TODO missing some more PyInt methods in python 3
 // TODO determine best path forward for int/long
 #endif 

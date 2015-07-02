@@ -2003,7 +2003,7 @@ PyObject* tuplelist_getitem(PyObject *list, PyObject *pyname) {
             if(!key || !PyString_Check(key))
                 continue;
             
-            if(PyObject_Compare(key, pyname) == 0) {
+            if(PyObject_RichCompareBool(key, pyname, Py_EQ)) {
                 ret   = PyTuple_GetItem(tuple, 1);        /* borrowed */
                 break;
             }

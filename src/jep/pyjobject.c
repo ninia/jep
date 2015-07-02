@@ -517,7 +517,7 @@ PyObject* find_method(JNIEnv *env,
             if(!key || !PyString_Check(key))
                 continue;
             
-            if(PyObject_Compare(key, methodName) == 0) {
+            if(PyObject_RichCompareBool(key, methodName, Py_EQ)) {
                 PyObject *method = PyTuple_GetItem(tuple, 1);    /* borrowed */
                 if(pyjmethod_check(method))
                     cand[pos++] = (PyJmethod_Object *) method;
@@ -754,7 +754,7 @@ PyObject* pyjobject_getattr(PyJobject_Object *obj,
     methods = PyString_FromString("__methods__");
     members = PyString_FromString("__members__");
     
-    if(PyObject_Compare(pyname, methods) == 0) {
+    if(PyObject_RichCompareBool(pyname, methods, Py_EQ)) {
         Py_DECREF(pyname);
         Py_DECREF(methods);
         Py_DECREF(members);
@@ -764,7 +764,7 @@ PyObject* pyjobject_getattr(PyJobject_Object *obj,
     }
     Py_DECREF(methods);
     
-    if(PyObject_Compare(pyname, members) == 0) {
+    if(PyObject_RichCompareBool(pyname, members, Py_EQ)) {
         Py_DECREF(pyname);
         Py_DECREF(members);
         
