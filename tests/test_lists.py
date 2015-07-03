@@ -91,7 +91,7 @@ class TestLists(unittest.TestCase):
     def test_add(self):
         jlist = makeJavaList()
         x = jlist + [1, 2, 3]
-        self.assertEqual(str(type(x)),"<type 'jep.PyJlist'>")
+        self.assertIn('jep.PyJlist', str(type(x)))
         self.assertEqual(len(x), COUNT + 3)
 
     def test_addequals(self):
@@ -108,7 +108,7 @@ class TestLists(unittest.TestCase):
     def test_multiply(self):
         jlist = makeJavaList()
         x = jlist * 3
-        self.assertEqual(str(type(x)), "<type 'jep.PyJlist'>")
+        self.assertIn('jep.PyJlist', str(type(x)))
         self.assertEqual(len(x), COUNT * 3)        
 
     def test_multiplyequals(self):        

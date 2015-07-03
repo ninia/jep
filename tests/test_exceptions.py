@@ -8,14 +8,14 @@ class TestExceptions(unittest.TestCase):
     def test_number_format(self):
         try:
             Integer.parseInt('asdf')
-        except Exception as ex:            
-            self.assertIn('java.lang.NumberFormatException', str(ex.message))
+        except Exception as ex:
+            self.assertIn('java.lang.NumberFormatException', str(ex))
 
     def test_io_exception(self):
         try:
             FileInputStream('asdf')
         except Exception as ex:
-            self.assertIn('java.io.FileNotFoundException', str(ex.message))
+            self.assertIn('java.io.FileNotFoundException', str(ex))
 
     def test_null_pointer_exception(self):
         try:
@@ -23,7 +23,7 @@ class TestExceptions(unittest.TestCase):
             String.valueOf(None)
         except Exception as ex:
             # because it's not a checked exception, mapped exceptions doesn't apply here (all Runtime)            
-            self.assertIn('java.lang.NullPointerException', str(ex.message))
+            self.assertIn('java.lang.NullPointerException', str(ex))
 
 
 # the tests below verify that specific java exceptions map to python errors,

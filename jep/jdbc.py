@@ -134,7 +134,7 @@ def connect(url, user=None, password=None, timeout=0):
         java.sql.DriverManager.setLoginTimeout(timeout)
         return JDBCConnection(java.sql.DriverManager.getConnection(url, user, password))
     except Exception as e:
-        raise Error(e.message)
+        raise Error(e.args)
 
 
 class JDBCConnection(object):
@@ -146,19 +146,19 @@ class JDBCConnection(object):
         try:
             self.conn.close()
         except Exception as e:
-            raise DatabaseError(e.message)
+            raise DatabaseError(e.args)
 
     def commit(self):
         try:
             self.conn.commit()
         except Exception as e:
-            raise DatabaseError(e.message)
+            raise DatabaseError(e.args)
 
     def rollback(self):
         try:
             self.conn.rollback()
         except Exception as e:
-            raise DatabaseError(e.message)
+            raise DatabaseError(e.args)
 
     def cursor(self):
         return JDBCCursor(self)
@@ -193,7 +193,7 @@ class JDBCCursor(object):
                 self.statement.setLong(index, arg)
             elif isinstance(arg, float):
                 self.statement.setDouble(index, arg)
-            elif isinstance(arg, basestring):
+            elif isinstance(arg, str):
                 self.statement.setString(index, arg)
             else:
                 self.statement.setObject(index, arg)
@@ -228,7 +228,7 @@ class JDBCCursor(object):
                 self.description = tuple(desc)
 
         except Exception as e:
-            raise DatabaseError(e.message)
+            raise DatabaseError(e.args)
 
     def executemany(self, operation, seq_of_parameters):
         if log.isEnabledFor(logging.DEBUG):
@@ -272,7 +272,7 @@ class JDBCCursor(object):
                 return self.rs.getObject(col)
             except Exception as e:
                 log.exception("Failed to map ResultSet type")
-                raise DatabaseError(e.message)
+                raise DatabaseError(e.args)
 
             #public static final int 	BLOB 	2004
             #public static final int 	CLOB 	2005
