@@ -1519,12 +1519,12 @@ static PyObject* pyjarray_str(PyJarray_Object *self) {
 
     switch(self->componentType) {
     case JBYTE_ID:
-        ret = PyString_FromStringAndSize((const char *) self->pinnedArray,
+        ret = PyBytes_FromStringAndSize((const char *) self->pinnedArray,
                                          self->length);
         return ret;
 
     case JFLOAT_ID:
-        ret = PyString_FromStringAndSize((const char *) self->pinnedArray,
+        ret = PyBytes_FromStringAndSize((const char *) self->pinnedArray,
                                          self->length * SIZEOF_FLOAT);
         return ret;
 

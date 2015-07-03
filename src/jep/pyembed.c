@@ -168,11 +168,6 @@ static struct PyMethodDef jep_methods[] = {
 #endif
 
 
-static struct PyMethodDef noop_methods[] = {
-    { NULL, NULL }
-};
-
-
 static PyObject* initjep(void) {
     PyObject *modjep;
 
@@ -819,7 +814,7 @@ intptr_t pyembed_create_module(JNIEnv *env,
     if(PyImport_AddModule(str) == NULL || process_py_exception(env, 1))
         goto EXIT;
 
-    Py_InitModule(str, noop_methods);
+    PyImport_AddModule(str);
     module = PyImport_ImportModuleEx(str,
                                      jepThread->globals,
                                      jepThread->globals,
@@ -881,7 +876,7 @@ intptr_t pyembed_create_module_on(JNIEnv *env,
     if(PyImport_AddModule(str) == NULL || process_py_exception(env, 1))
         goto EXIT;
 
-    Py_InitModule(str, noop_methods);
+    PyImport_AddModule(str);
     module = PyImport_ImportModuleEx(str, globals, globals, NULL); /* new ref */
 
     key = PyString_FromString(str);
@@ -1284,9 +1279,21 @@ jobject pyembed_getvalue_array(JNIEnv *env, intptr_t _jepThread, char *str, int 
     if(result == NULL || result == Py_None)
         goto EXIT;              /* don't return, need to release GIL */
     
-    if(PyString_Check(result)) {
-        void *s = (void*) PyString_AS_STRING(result);
-        Py_ssize_t n = PyString_Size(result);
+#if PY_MAJOR_VERSION >= 3
+    if(PyBytes_Check(result) == 0) {
+        PyObject *temp = PyBytes_FromObject(result);
+        if(process_py_exception(env, 1) || result == NULL) {
+            goto EXIT;
+        } else {
+            Py_DECREF(result);
+            result = temp;
+        }
+    }
+#endif
+
+    if(PyBytes_Check(result)) {
+        void *s = (void*) PyBytes_AS_STRING(result);
+        Py_ssize_t n = PyBytes_Size(result);
 
         switch (typeId) {
         case JFLOAT_ID:
@@ -1395,7 +1402,7 @@ EXIT:
 // gratuitously copyied from pythonrun.c::run_pyc_file
 static void pyembed_run_pyc(JepThread *jepThread,
                             FILE *fp) {
-    PyCodeObject *co;
+    PyObject *co;
     PyObject *v;
     long magic;
 
@@ -1413,8 +1420,12 @@ static void pyembed_run_pyc(JepThread *jepThread,
         PyErr_SetString(PyExc_RuntimeError, "Bad code object in .pyc file");
         return;
     }
-    co = (PyCodeObject *) v;
+    co = v;
+#if PY_MAJOR_VERSION >= 3
     v = PyEval_EvalCode(co, jepThread->globals, jepThread->globals);
+#else
+    v = PyEval_EvalCode((PyCodeObject *) co, jepThread->globals, jepThread->globals);
+#endif
     Py_DECREF(co);
     Py_XDECREF(v);
 }

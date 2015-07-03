@@ -94,7 +94,7 @@ class NotSupportedError(DatabaseError):
 
 
 def Date(year, month, day):
-    return java.sql.Date(long(time.mktime(datetime.date(year, month, day).timetuple())) * 1000)
+    return java.sql.Date(int(time.mktime(datetime.date(year, month, day).timetuple())) * 1000)
 
 
 def Time(hour, minute, second):
@@ -103,7 +103,7 @@ def Time(hour, minute, second):
 
 def Timestamp(year, month, day, hour, minute, second):
     return java.sql.Timestamp(
-        long(time.mktime(datetime.datetime(year, month, day, hour, minute, second).timetuple())) * 1000)
+        int(time.mktime(datetime.datetime(year, month, day, hour, minute, second).timetuple())) * 1000)
 
 
 def DateFromTicks(ticks):
