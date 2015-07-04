@@ -209,6 +209,9 @@ extern jclass JDOUBLE_ARRAY_TYPE;
 
 // cache some frequently looked up classes
 extern jclass JLIST_TYPE;
+extern jclass JMAP_TYPE;
+extern jclass JITERABLE_TYPE;
+extern jclass JITERATOR_TYPE;
 #if USE_NUMPY
 extern jclass JEP_NDARRAY_TYPE;
 #endif

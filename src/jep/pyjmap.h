@@ -35,28 +35,25 @@
 #include <jni.h>
 #include <Python.h>
 #include "pyjobject.h"
-#include "pyjiterable.h"
 
 
-#ifndef _Included_pyjlist
-#define _Included_pyjlist
+#ifndef _Included_pyjmap
+#define _Included_pyjmap
 
-PyAPI_DATA(PyTypeObject) PyJlist_Type;
+PyAPI_DATA(PyTypeObject) PyJmap_Type;
 
 /*
- * A pyjlist is just a pyjiterable with some extra methods attached to it to meet
- * the python Sequence protocol (interface).  It should only be used where
- * the underlying jobject of the pyjobject is an implementation of java.util.List.
+ * A pyjmap is just a pyjobject with some extra methods attached to it to meet
+ * the python Mapping protocol (interface).  It should only be used where
+ * the underlying jobject of the pyjobject is an implementation of java.util.Map.
  */
-// TODO make pyjlist extend pyjiterable
 typedef struct {
     PyJobject_Object obj; /* magic inheritance */
-} PyJlist_Object;
+} PyJmap_Object;
 
 
-PyJlist_Object* pyjlist_new(void);
-PyObject* pyjlist_new_copy(PyObject*);
-int pyjlist_check(PyObject*);
+PyJmap_Object* pyjmap_new(void);
+int pyjmap_check(PyObject*);
 
 
-#endif // ndef pyjlist
+#endif // ndef pyjmap

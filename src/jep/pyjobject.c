@@ -62,7 +62,10 @@
 #include "util.h"
 #include "pyjarray.h"
 #include "pyjmethodwrapper.h"
+#include "pyjiterable.h"
+#include "pyjiterator.h"
 #include "pyjlist.h"
+#include "pyjmap.h"
 
 static int pyjobject_init(JNIEnv *env, PyJobject_Object*);
 static void pyjobject_addmethod(PyJobject_Object*, PyObject*);
@@ -119,8 +122,22 @@ PyObject* pyjobject_new(JNIEnv *env, jobject obj) {
         }
 #endif
 
+        // check for some of our extensions to pyjobject
         if((*env)->IsInstanceOf(env, obj, JLIST_TYPE)) {
+            // TODO pyjlist should extend iterable and therefore be checked below
             pyjob = (PyJobject_Object*) pyjlist_new();
+        }
+        else if((*env)->IsInstanceOf(env, obj, JITERABLE_TYPE)) {
+            //if((*env)->IsInstanceOf(env, obj, JLIST_TYPE)) {
+            //    pyjob = (PyJobject_Object*) pyjlist_new();
+            //} else {
+                // an Iterable we have less support for
+                pyjob = (PyJobject_Object*) pyjiterable_new();
+            //}   
+        } else if((*env)->IsInstanceOf(env, obj, JMAP_TYPE)) { 
+            pyjob = (PyJobject_Object*) pyjmap_new();
+        } else if((*env)->IsInstanceOf(env, obj, JITERATOR_TYPE)) {
+            pyjob = (PyJobject_Object*) pyjiterator_new();
         } else {
             pyjob = PyObject_NEW(PyJobject_Object, &PyJobject_Type);
         }

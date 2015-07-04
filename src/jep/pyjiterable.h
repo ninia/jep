@@ -35,28 +35,26 @@
 #include <jni.h>
 #include <Python.h>
 #include "pyjobject.h"
-#include "pyjiterable.h"
 
 
-#ifndef _Included_pyjlist
-#define _Included_pyjlist
+#ifndef _Included_pyjiterable
+#define _Included_pyjiterable
 
-PyAPI_DATA(PyTypeObject) PyJlist_Type;
+PyAPI_DATA(PyTypeObject) PyJiterable_Type;
 
 /*
- * A pyjlist is just a pyjiterable with some extra methods attached to it to meet
- * the python Sequence protocol (interface).  It should only be used where
- * the underlying jobject of the pyjobject is an implementation of java.util.List.
+ * A pyjiterable is just a pyjobject that has tp_iter implemented. It should
+ * only be used where the underlying jobject of the pyjobject is an
+ * implementation of java.util.Iterable.
  */
-// TODO make pyjlist extend pyjiterable
 typedef struct {
     PyJobject_Object obj; /* magic inheritance */
-} PyJlist_Object;
+} PyJiterable_Object;
 
 
-PyJlist_Object* pyjlist_new(void);
-PyObject* pyjlist_new_copy(PyObject*);
-int pyjlist_check(PyObject*);
+PyJiterable_Object* pyjiterable_new(void);
+int pyjiterable_check(PyObject*);
+PyObject* pyjiterable_getiter(PyObject*);
 
 
-#endif // ndef pyjlist
+#endif // ndef pyjiterable

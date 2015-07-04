@@ -81,6 +81,7 @@ PyJlist_Object* pyjlist_new() {
      * MSVC requires tp_base to be set here
      * See https://docs.python.org/2/extending/newtypes.html
      */
+    // TODO make pyjlist extend pyjiterable
     if(!PyJlist_Type.tp_base) {
         PyJlist_Type.tp_base = &PyJobject_Type;
     }
@@ -215,7 +216,7 @@ static PyObject* pyjlist_getitem(PyObject *o, Py_ssize_t i) {
     JNIEnv           *env  = pyembed_get_env();
 
     get = (*env)->GetMethodID(env, obj->clazz, "get", "(I)Ljava/lang/Object;");
-    if(process_java_exception(env) || !get){
+    if(process_java_exception(env) || !get) {
         return NULL;
     }
 
@@ -230,7 +231,7 @@ static PyObject* pyjlist_getitem(PyObject *o, Py_ssize_t i) {
         return NULL;
     }
 
-    if(val == NULL){
+    if(val == NULL) {
         Py_INCREF(Py_None);
         return Py_None;
     } else {
@@ -481,7 +482,7 @@ static PyObject* pyjlist_inplace_fill(PyObject *o, Py_ssize_t count) {
         if(process_java_exception(env)) {
             return NULL;
         }
-    } else if (count > 1){
+    } else if (count > 1) {
         int               i     = 0;
         PyObject         *copy  = pyjlist_new_copy(o);
         if(copy == NULL) {
@@ -526,7 +527,7 @@ static PySequenceMethods pyjlist_seq_methods = {
 
 
 /*
- * Inherits from PyJobject_Type
+ * Inherits from PyJiterable_Type which in turns inherits from PyJobject_Type
  */
 PyTypeObject PyJlist_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
@@ -559,7 +560,7 @@ PyTypeObject PyJlist_Type = {
     pyjlist_methods,                          /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
-    0, // &PyJobject_Type                     /* tp_base */
+    0, // &PyJiterable_Type                   /* tp_base */
     0,                                        /* tp_dict */
     0,                                        /* tp_descr_get */
     0,                                        /* tp_descr_set */
