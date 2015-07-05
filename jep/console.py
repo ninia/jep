@@ -1,7 +1,11 @@
 
 history_file = None
 
-import traceback, os
+import traceback, os, sys
+
+# python 3 renamed raw_input to input
+if sys.version_info[0] >= 3:
+    raw_input = input
 
 has_readline = False
 
@@ -49,7 +53,7 @@ def prompt(jep):
                 ran = jep.eval(line)
             except Exception as err:
                 # if a user uses exit(), don't print the error
-                if 'exceptions.SystemExit' not in str(err.message):
+                if 'exceptions.SystemExit' not in str(err):
                     traceback.print_exc()
 
             try:
