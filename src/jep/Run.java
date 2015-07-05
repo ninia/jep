@@ -57,31 +57,18 @@ public class Run {
             if (!file.endsWith("jep" + File.separator + "console.py")) {
                 jep.runScript(file);
             } else {
-                // don't use console's __main__ so we can reuse the interpreter
-                jep.setInteractive(true);
+                interactive = true;
+            }
+            if (interactive) {
                 jep.set("jepInstance", jep);
                 jep.eval("from jep import console");
+                jep.setInteractive(true);
                 jep.eval("console.prompt(jepInstance)");
             }
         } catch (Throwable t) {
             t.printStackTrace();
             if (jep != null)
                 jep.close();
-
-            return 1;
-        }
-
-        try {
-            if (interactive) {
-                jep.set("jep", jep);
-                jep.eval("from jep import *");
-                jep.eval("import console");
-                jep.setInteractive(true);
-                jep.eval("console.prompt(jep)");
-            }
-        } catch (Throwable t) {
-            t.printStackTrace();
-            jep.close();
 
             return 1;
         }
