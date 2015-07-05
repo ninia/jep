@@ -1718,6 +1718,35 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid) {
     return NULL;
 }
 
+/*
+ * Converts java object to python.  Use this to unbox jobject.
+ * Wraps convert_jobject() method above to provide for situations
+ * where you don't know the jobject's type beforehand.
+ */
+PyObject* convert_jobject_pyobject(JNIEnv *env, jobject val) {
+    int typeId         = -1;
+
+    if(val != NULL) {
+        jclass    objClass = NULL;
+        jclass    retClass = NULL;
+        jmethodID getClass = NULL;
+
+        objClass = (*env)->FindClass(env, "java/lang/Object");
+        getClass = (*env)->GetMethodID(env, objClass, "getClass", "()Ljava/lang/Class;");
+        if(process_java_exception(env) || !getClass) {
+            return NULL;
+        }
+
+        retClass = (*env)->CallObjectMethod(env, val, getClass);
+        if(process_java_exception(env) || !retClass) {
+            return NULL;
+        }
+        typeId = get_jtype(env, retClass);
+    }
+
+    return convert_jobject(env, val, typeId);
+}
+
 
 // for parsing args.
 // takes a python object and sets the right jvalue member for the given java type.

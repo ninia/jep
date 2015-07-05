@@ -159,6 +159,7 @@ void unref_cache_frequent_classes(JNIEnv*);
 int get_jtype(JNIEnv*, jclass);
 int pyarg_matches_jtype(JNIEnv*, PyObject*, jclass, int);
 PyObject* convert_jobject(JNIEnv*, jobject, int);
+PyObject* convert_jobject_pyobject(JNIEnv*, jobject);
 jvalue convert_pyarg_jvalue(JNIEnv*, PyObject*, jclass, int, int);
 
 PyObject* tuplelist_getitem(PyObject*, PyObject*);

@@ -132,10 +132,10 @@ static PyObject* pyjmap_getitem(PyObject *o, PyObject *key) {
     if(pyjobject_check(key)) {
         jkey = ((PyJobject_Object*) key)->object;
     } else {
-        // TODO improve pyarg_jvalue to not require a pos arg
+        // TODO improve convert_pyarg_jvalue to not require a pos arg
         jvalue jvkey = convert_pyarg_jvalue(env, key, JOBJECT_TYPE, JOBJECT_ID, -1);
         jkey = jvkey.l;
-        if(process_java_exception(env) || jkey) {
+        if(process_java_exception(env) || !jkey) {
            return NULL;
         }
     }
@@ -145,28 +145,7 @@ static PyObject* pyjmap_getitem(PyObject *o, PyObject *key) {
         return NULL;
     }
 
-    if(val == NULL) {
-        Py_INCREF(Py_None);
-        return Py_None;
-    } else {
-        jclass    objClass = NULL;
-        jclass    retClass = NULL;
-        jmethodID getClass = NULL;
-        int typeId         = -1;
-        
-        objClass = (*env)->FindClass(env, "java/lang/Object");
-        getClass = (*env)->GetMethodID(env, objClass, "getClass", "()Ljava/lang/Class;");
-        if(process_java_exception(env) || !getClass) {
-            return NULL;
-        }
-
-        retClass = (*env)->CallObjectMethod(env, objClass, getClass, val);
-        if(process_java_exception(env) || !retClass) {
-            return NULL;
-        }
-        typeId = get_jtype(env, retClass);
-        return convert_jobject(env, val, typeId);
-    }
+    return convert_jobject_pyobject(env, val);
 }
 
 /*
@@ -201,7 +180,7 @@ static int pyjmap_setitem(PyObject *o, PyObject *key, PyObject *v) {
     if(pyjobject_check(key)) {
         jkey = ((PyJobject_Object*) key)->object;
     } else {
-       // TODO improve pyarg_jvalue to not require a pos arg
+       // TODO improve convert_pyarg_jvalue to not require a pos arg
         jvalue jvkey = convert_pyarg_jvalue(env, key, JOBJECT_TYPE, JOBJECT_ID, -1);
         jkey = jvkey.l;
         if(process_java_exception(env) || !jkey) {

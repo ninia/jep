@@ -114,8 +114,8 @@ PyObject* pyjiterator_next(PyObject* self) {
         jobject   nextItem;
         jmethodID next;
 
-        next = (*env)->GetMethodID(env, pyjob->clazz, "next", "()Ljava.lang.Object;");
-        if(process_java_exception(env)) {
+        next = (*env)->GetMethodID(env, pyjob->clazz, "next", "()Ljava/lang/Object;");
+        if(process_java_exception(env) || !next) {
             return NULL;
         }
         
@@ -124,7 +124,7 @@ PyObject* pyjiterator_next(PyObject* self) {
             return NULL;
         }
         
-        return pyjobject_new(env, nextItem);
+        return convert_jobject_pyobject(env, nextItem);
     }
 
     return NULL;
