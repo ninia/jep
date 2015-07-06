@@ -69,17 +69,7 @@ static int pyjmap_setitem(PyObject*, PyObject*, PyObject*);
  * attached to it.  This should only be called from pyjobject_new().
  */
 PyJmap_Object* pyjmap_new() {
-    /*
-     * MSVC requires tp_base to be set here
-     * See https://docs.python.org/2/extending/newtypes.html
-     */
-    if(!PyJmap_Type.tp_base) {
-        PyJmap_Type.tp_base = &PyJobject_Type;
-    }
-
-    if(PyType_Ready(&PyJmap_Type) < 0)
-        return NULL;
-
+    // pyjobject will have already initialized PyJmap_Type
     return PyObject_NEW(PyJmap_Object, &PyJmap_Type);
 }
 

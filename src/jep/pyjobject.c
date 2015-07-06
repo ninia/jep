@@ -70,6 +70,7 @@
 static int pyjobject_init(JNIEnv *env, PyJobject_Object*);
 static void pyjobject_addmethod(PyJobject_Object*, PyObject*);
 static void pyjobject_addfield(PyJobject_Object*, PyObject*);
+static void pyjobject_init_subtypes();
 
 static jmethodID objectGetClass  = 0;
 static jmethodID objectEquals    = 0;
@@ -80,6 +81,43 @@ static jmethodID classGetName    = 0;
 static PyObject *classnamePyJMethodsDict = NULL;
 
 
+/*
+ * MSVC requires tp_base to be set at runtime instead of in
+ * the type declaration. :/  Since we are building an
+ * inheritance tree of types, we need to ensure that all the
+ * tp_base are set for the subtypes before we possibly use
+ * those subtypes.
+ *
+ * See https://docs.python.org/2/extending/newtypes.html
+ *     https://docs.python.org/3/extending/newtypes.html
+ */
+static void pyjobject_init_subtypes() {
+    // start at the top with object
+    if(PyType_Ready(&PyJobject_Type) < 0)
+        return;
+
+    // next do iterable
+    if(!PyJiterable_Type.tp_base) {
+        PyJiterable_Type.tp_base = &PyJobject_Type;
+    }
+    if(PyType_Ready(&PyJiterable_Type) < 0)
+        return;
+
+    // next do list
+    if(!PyJlist_Type.tp_base) {
+        PyJlist_Type.tp_base = &PyJiterable_Type;
+    }
+    if(PyType_Ready(&PyJlist_Type) < 0)
+        return;
+
+    // last do map
+    if(!PyJmap_Type.tp_base) {
+        PyJmap_Type.tp_base = &PyJobject_Type;
+    }
+    if(PyType_Ready(&PyJmap_Type) < 0)
+        return;
+}
+
 
 // called internally to make new PyJobject_Object instances
 PyObject* pyjobject_new(JNIEnv *env, jobject obj) {
@@ -87,8 +125,7 @@ PyObject* pyjobject_new(JNIEnv *env, jobject obj) {
     jclass            objClz;
     int               jtype;
     
-    if(PyType_Ready(&PyJobject_Type) < 0)
-        return NULL;
+    pyjobject_init_subtypes();
     if(!obj) {
         PyErr_Format(PyExc_RuntimeError, "Invalid object.");
         return NULL;

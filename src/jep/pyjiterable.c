@@ -65,17 +65,7 @@
  * This should only be called from pyjobject_new().
  */
 PyJiterable_Object* pyjiterable_new() {
-    /*
-     * MSVC requires tp_base to be set here
-     * See https://docs.python.org/2/extending/newtypes.html
-     */
-    if(!PyJiterable_Type.tp_base) {
-        PyJiterable_Type.tp_base = &PyJobject_Type;
-    }
-
-    if(PyType_Ready(&PyJiterable_Type) < 0)
-        return NULL;
-
+    // pyjobject will have already initialized PyJiterable_Type
     return PyObject_NEW(PyJiterable_Object, &PyJiterable_Type);
 }
 

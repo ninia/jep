@@ -77,18 +77,7 @@ static PyObject* pyjlist_inplace_fill(PyObject*, Py_ssize_t);
  * attached to it.  This should only be called from pyjobject_new().
  */
 PyJlist_Object* pyjlist_new() {
-    /*
-     * MSVC requires tp_base to be set here
-     * See https://docs.python.org/2/extending/newtypes.html
-     */
-    // TODO make pyjlist extend pyjiterable
-    if(!PyJlist_Type.tp_base) {
-        PyJlist_Type.tp_base = &PyJobject_Type;
-    }
-
-    if(PyType_Ready(&PyJlist_Type) < 0)
-        return NULL;
-
+    // pyjobject will have already initialized PyJlist_Type
     return PyObject_NEW(PyJlist_Object, &PyJlist_Type);
 }
 
@@ -527,7 +516,7 @@ static PySequenceMethods pyjlist_seq_methods = {
 
 
 /*
- * Inherits from PyJiterable_Type which in turns inherits from PyJobject_Type
+ * Inherits from PyJiterable_Type
  */
 PyTypeObject PyJlist_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)

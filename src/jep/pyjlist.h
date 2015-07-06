@@ -48,9 +48,8 @@ PyAPI_DATA(PyTypeObject) PyJlist_Type;
  * the python Sequence protocol (interface).  It should only be used where
  * the underlying jobject of the pyjobject is an implementation of java.util.List.
  */
-// TODO make pyjlist extend pyjiterable
 typedef struct {
-    PyJobject_Object obj; /* magic inheritance */
+    PyJiterable_Object obj; /* magic inheritance */
 } PyJlist_Object;
 
 
