@@ -160,17 +160,13 @@ PyObject* pyjobject_new(JNIEnv *env, jobject obj) {
 #endif
 
         // check for some of our extensions to pyjobject
-        if((*env)->IsInstanceOf(env, obj, JLIST_TYPE)) {
-            // TODO pyjlist should extend iterable and therefore be checked below
-            pyjob = (PyJobject_Object*) pyjlist_new();
-        }
-        else if((*env)->IsInstanceOf(env, obj, JITERABLE_TYPE)) {
-            //if((*env)->IsInstanceOf(env, obj, JLIST_TYPE)) {
-            //    pyjob = (PyJobject_Object*) pyjlist_new();
-            //} else {
+        if((*env)->IsInstanceOf(env, obj, JITERABLE_TYPE)) {
+            if((*env)->IsInstanceOf(env, obj, JLIST_TYPE)) {
+                pyjob = (PyJobject_Object*) pyjlist_new();
+            } else {
                 // an Iterable we have less support for
                 pyjob = (PyJobject_Object*) pyjiterable_new();
-            //}   
+            }
         } else if((*env)->IsInstanceOf(env, obj, JMAP_TYPE)) { 
             pyjob = (PyJobject_Object*) pyjmap_new();
         } else if((*env)->IsInstanceOf(env, obj, JITERATOR_TYPE)) {
@@ -721,12 +717,7 @@ PyObject* pyjobject_str(PyJobject_Object *self) {
 static PyObject* pyjobject_richcompare(PyJobject_Object *self,
                                        PyObject *_other,
                                        int opid) {
-    JNIEnv *env = pyembed_get_env();
-
-    if(opid != Py_EQ && opid != Py_NE) {
-        Py_INCREF(Py_NotImplemented);
-        return Py_NotImplemented;
-    }
+    JNIEnv *env       = pyembed_get_env();
 
     if(PyType_IsSubtype(Py_TYPE(_other), &PyJobject_Type)) {
         PyJobject_Object *other = (PyJobject_Object *) _other;
@@ -753,6 +744,9 @@ static PyObject* pyjobject_richcompare(PyJobject_Object *self,
             return Py_False;
         }
 
+        // TODO micro-optimization: we could get slightly faster execution
+        // if we skipped equals when opid is Py_GT or Py_LT
+
         // get the methodid for Object.equals()
         if(objectEquals == 0) {
             objectEquals = (*env)->GetMethodID(
@@ -773,20 +767,71 @@ static PyObject* pyjobject_richcompare(PyJobject_Object *self,
         if(process_java_exception(env))
             return NULL;
 
-        if(opid == Py_NE) {
-            // watch out, jboolean is actually 8-bit
-            eq = eq ? JNI_FALSE : JNI_TRUE;
-        }
-
-        if(eq) {
+        if(((eq == JNI_TRUE) && (opid == Py_EQ || opid == Py_LE || opid == Py_GE)) ||
+            (eq == JNI_FALSE && opid == Py_NE)) {
             Py_INCREF(Py_True);
             return Py_True;
-        }
+        } else if(opid == Py_EQ || opid == Py_NE) {
+            Py_INCREF(Py_False);
+            return Py_False;
+        } else {
+            /*
+             * All Java objects have equals, but we must rely on Comparable for
+             * the more advanced operators.  Java generics cannot actually
+             * enforce the type of other in self.compareTo(other) at runtime,
+             * but for simplicity let's assume if they got it to compile, the two
+             * types match.  Even if they don't match, they will just get a
+             * ClassCastException when the method is invoked.
+             */
+            jclass comparable;
+            jmethodID compareTo;
+            jint result;
 
-        Py_INCREF(Py_False);
-        return Py_False;
+            comparable = (*env)->FindClass(env, "java/lang/Comparable");
+            if(!(*env)->IsInstanceOf(env, self->object, comparable)) {
+                char* jname = PyString_AsString(self->javaClassName);
+                PyErr_Format(PyExc_TypeError, "Invalid comparison operation for Java type %s", jname);
+                return NULL;
+            }
+
+            if(comparable == NULL) {
+                comparable = (*env)->FindClass(env, "java/lang/Comparable");
+            }
+
+            compareTo = (*env)->GetMethodID(env, comparable, "compareTo", "(Ljava/lang/Object;)I");
+            if(process_java_exception(env) || !compareTo) {
+                return NULL;
+            }
+
+            result = (*env)->CallIntMethod(env, target, compareTo, other_target);
+            if(process_java_exception(env)) {
+                return NULL;
+            }
+
+            if((result == -1 && opid == Py_LT) || (result == -1 && opid == Py_LE) ||
+               (result == 1 && opid == Py_GT) || (result == 1 && opid == Py_GE)) {
+                Py_INCREF(Py_True);
+                return Py_True;
+            } else {
+                Py_INCREF(Py_False);
+                return Py_False;
+            }
+        }
     }
 
+    /*
+     * Reaching this point means we are comparing a Java object to a Python
+     * object.  You might think that's not allowed, but the python doc on
+     * richcompare indicates that when encountering NotImplemented, allow the
+     * reverse comparison in the hopes that that's implemented.  This works
+     * suprisingly well because it enables python comparison operations on
+     * things such as pyjobject != Py_None or
+     * assertSequenceEqual(pyjlist, pylist) where each list has the same
+     * contents.  This saves us from having to worry about if the java object
+     * is on the left side or the right side of the operator.
+     *
+     * In short, this is intentional to keep comparisons working well.
+     */
     Py_INCREF(Py_NotImplemented);
     return Py_NotImplemented;
 }
