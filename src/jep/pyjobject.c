@@ -735,13 +735,11 @@ static PyObject* pyjobject_richcompare(PyJobject_Object *self,
         }
 
         if(self == other) {
-            Py_INCREF(Py_True);
-            return Py_True;
+            Py_RETURN_TRUE;
         }
 
         if(!target) {
-            Py_INCREF(Py_False);
-            return Py_False;
+            Py_RETURN_FALSE;
         }
 
         // TODO micro-optimization: we could get slightly faster execution
@@ -769,11 +767,9 @@ static PyObject* pyjobject_richcompare(PyJobject_Object *self,
 
         if(((eq == JNI_TRUE) && (opid == Py_EQ || opid == Py_LE || opid == Py_GE)) ||
             (eq == JNI_FALSE && opid == Py_NE)) {
-            Py_INCREF(Py_True);
-            return Py_True;
+            Py_RETURN_TRUE;
         } else if(opid == Py_EQ || opid == Py_NE) {
-            Py_INCREF(Py_False);
-            return Py_False;
+            Py_RETURN_FALSE;
         } else {
             /*
              * All Java objects have equals, but we must rely on Comparable for
@@ -782,6 +778,12 @@ static PyObject* pyjobject_richcompare(PyJobject_Object *self,
              * but for simplicity let's assume if they got it to compile, the two
              * types match.  Even if they don't match, they will just get a
              * ClassCastException when the method is invoked.
+             * 
+             * TODO: To properly meet the richcompare docs we should detect
+             * or catch the ClassCastException and return NotImplemented,
+             * enabling Python to try the reverse operation of
+             * other.compareTo(self). That will almost never come up in Java,
+             * so delaying implementation until someone needs it.
              */
             jclass comparable;
             jmethodID compareTo;
@@ -792,10 +794,6 @@ static PyObject* pyjobject_richcompare(PyJobject_Object *self,
                 char* jname = PyString_AsString(self->javaClassName);
                 PyErr_Format(PyExc_TypeError, "Invalid comparison operation for Java type %s", jname);
                 return NULL;
-            }
-
-            if(comparable == NULL) {
-                comparable = (*env)->FindClass(env, "java/lang/Comparable");
             }
 
             compareTo = (*env)->GetMethodID(env, comparable, "compareTo", "(Ljava/lang/Object;)I");
@@ -810,11 +808,9 @@ static PyObject* pyjobject_richcompare(PyJobject_Object *self,
 
             if((result == -1 && opid == Py_LT) || (result == -1 && opid == Py_LE) ||
                (result == 1 && opid == Py_GT) || (result == 1 && opid == Py_GE)) {
-                Py_INCREF(Py_True);
-                return Py_True;
+                Py_RETURN_TRUE;
             } else {
-                Py_INCREF(Py_False);
-                return Py_False;
+                Py_RETURN_FALSE;
             }
         }
     }
