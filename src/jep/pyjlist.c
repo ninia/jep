@@ -497,6 +497,77 @@ static PyObject* pyjlist_inplace_fill(PyObject *o, Py_ssize_t count) {
     return o;
 }
 
+static PyObject* pyjlist_subscript(PyObject *self, PyObject *item) {
+    if(PyInt_Check(item)) {
+        long i = PyInt_AS_LONG(item);
+        if (i < 0)
+            i += pyjlist_len(self);
+        return pyjlist_getitem(self, (Py_ssize_t) i);
+    }
+    else if(PyLong_Check(item)) {
+        long i = PyLong_AsLong(item);
+        if (i == -1 && PyErr_Occurred())
+            return NULL;
+        if (i < 0)
+            i += pyjlist_len(self);
+        return pyjlist_getitem(self, (Py_ssize_t) i);
+    } else if(PySlice_Check(item)) {
+        Py_ssize_t start, stop, step, slicelength;
+        if(PySlice_GetIndicesEx(item, pyjlist_len(self), &start, &stop, &step, &slicelength) < 0) {
+            // error will already be set
+            return NULL;
+        }
+
+        if(slicelength <= 0) {
+            return pyjlist_getslice(self, 0, 0);
+        } else if(step != 1) {
+            PyErr_SetString(PyExc_TypeError, "pyjlist slices must have step of 1");
+            return NULL;
+        } else {
+            return pyjlist_getslice(self, start, stop);
+        }
+    } else {
+        PyErr_SetString(PyExc_TypeError, "list indices must be integers, longs, or slices");
+        return NULL;
+    }
+}
+
+static int pyjlist_set_subscript(PyObject* self, PyObject* item, PyObject* value) {
+    if(PyInt_Check(item)) {
+        long i = PyInt_AS_LONG(item);
+        if (i < 0)
+            i += pyjlist_len(self);
+        return pyjlist_setitem(self, (Py_ssize_t) i, value);
+    }
+    else if(PyLong_Check(item)) {
+        long i = PyLong_AsLong(item);
+        if (i == -1 && PyErr_Occurred())
+            return -1;
+        if (i < 0)
+            i += pyjlist_len(self);
+        return pyjlist_setitem(self, (Py_ssize_t) i, value);
+    } else if(PySlice_Check(item)) {
+        Py_ssize_t start, stop, step, slicelength;
+        if(PySlice_GetIndicesEx(item, pyjlist_len(self), &start, &stop, &step, &slicelength) < 0) {
+            // error will already be set
+            return -1;
+        }
+
+        if(slicelength <= 0) {
+            return 0;
+        } else if(step != 1) {
+            PyErr_SetString(PyExc_TypeError, "pyjlist slices must have step of 1");
+            return -1;
+        } else {
+            return pyjlist_setslice(self, start, stop, value);
+        }
+    } else {
+        PyErr_SetString(PyExc_TypeError, "list indices must be integers, longs, or slices");
+        return -1;
+    }
+
+}
+
 static PyMethodDef pyjlist_methods[] = {
     {NULL, NULL, 0, NULL}
 };
@@ -512,6 +583,12 @@ static PySequenceMethods pyjlist_seq_methods = {
         pyjlist_contains,     /* sq_contains */
         pyjlist_inplace_add,  /* sq_inplace_concat */
         pyjlist_inplace_fill, /* sq_inplace_repeat */
+};
+
+static PyMappingMethods pyjlist_map_methods = {
+    (lenfunc) pyjlist_len,                /* mp_length */
+    (binaryfunc) pyjlist_subscript,          /* mp_subscript */
+    (objobjargproc) pyjlist_set_subscript,    /* mp_ass_subscript */
 };
 
 
@@ -531,7 +608,7 @@ PyTypeObject PyJlist_Type = {
     0,                                        /* tp_repr */
     0,                                        /* tp_as_number */
     &pyjlist_seq_methods,                     /* tp_as_sequence */
-    0,                                        /* tp_as_mapping */
+    &pyjlist_map_methods,                     /* tp_as_mapping */
     0,                                        /* tp_hash  */
     0,                                        /* tp_call */
     0,                                        /* tp_str */

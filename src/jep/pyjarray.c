@@ -63,7 +63,7 @@ jmethodID objectComponentType = 0;
 
 static void pyjarray_dealloc(PyJarray_Object *self);
 static int pyjarray_init(JNIEnv*, PyJarray_Object*, int, PyObject*);
-static int pyjarray_length(PyObject *self);
+static Py_ssize_t pyjarray_length(PyObject *self);
 
 
 
@@ -1501,9 +1501,23 @@ static PyObject* pyjarray_subscript(PyJarray_Object *self, PyObject *item) {
         if (i < 0)
             i += self->length;
         return pyjarray_item(self, (Py_ssize_t) i);
-    }
-    else {
-        PyErr_SetString(PyExc_TypeError, "list indices must be integers");
+    } else if(PySlice_Check(item)) {
+        Py_ssize_t start, stop, step, slicelength;
+        if(PySlice_GetIndicesEx(item, pyjarray_length((PyObject*) self), &start, &stop, &step, &slicelength) < 0) {
+            // error will already be set
+            return NULL;
+        }
+
+        if(slicelength <= 0) {
+            return pyjarray_slice((PyObject*) self, 0, 0);
+        } else if(step != 1) {
+            PyErr_SetString(PyExc_TypeError, "pyjarray slices must have step of 1");
+            return NULL;
+        } else {
+            return pyjarray_slice((PyObject*) self, start, stop);
+        }
+    } else {
+        PyErr_SetString(PyExc_TypeError, "pyjarray indices must be integers, longs, or slices");
         return NULL;
     }
 }
@@ -1538,7 +1552,7 @@ static PyObject* pyjarray_str(PyJarray_Object *self) {
 
 // -------------------------------------------------- sequence methods
 
-static int pyjarray_length(PyObject *self) {
+static Py_ssize_t pyjarray_length(PyObject *self) {
     if(self && pyjarray_check(self))
         return ((PyJarray_Object *) self)->length;
     return 0;
@@ -1579,6 +1593,12 @@ static PySequenceMethods list_as_sequence = {
     (ssizeargfunc) 0,                         /* sq_inplace_repeat */
 };
 
+static PyMappingMethods pyjarray_map_methods = {
+    (lenfunc) pyjarray_length,                /* mp_length */
+    (binaryfunc) pyjarray_subscript,          /* mp_subscript */
+    0,                                        /* mp_ass_subscript */
+};
+
 
 static PyObject* pyjarray_iter(PyObject *);
 
@@ -1596,7 +1616,7 @@ PyTypeObject PyJarray_Type = {
     0,                                        /* tp_repr */
     0,                                        /* tp_as_number */
     &list_as_sequence,                        /* tp_as_sequence */
-    0,                                        /* tp_as_mapping */
+    &pyjarray_map_methods,                    /* tp_as_mapping */
     0,                                        /* tp_hash  */
     0,                                        /* tp_call */
     (reprfunc) pyjarray_str,                  /* tp_str */
