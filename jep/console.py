@@ -52,9 +52,7 @@ def prompt(jep):
             try:
                 ran = jep.eval(line)
             except Exception as err:
-                # if a user uses exit(), don't print the error
-                if 'exceptions.SystemExit' not in str(err):
-                    traceback.print_exc()
+                traceback.print_exc()
 
             try:
                 if ran:

@@ -275,13 +275,19 @@ int process_py_exception(JNIEnv *env, int printTrace) {
     if(!PyErr_Occurred())
         return 0;
 
-    // we only care about ptype and pvalue.
-    // many people consider it a security vulnerability
-    // to have the source code printed to the user's
-    // screen. (i do.)
-    //
-    // so we pull relevant info and print strace to the
-    // console.
+    // let's not turn this into a Java exception if the user exited
+    if(PyErr_ExceptionMatches(PyExc_SystemExit))
+         return 0;
+
+    /*
+     * We only care about ptype and pvalue for the message.
+     * Many people consider it a security vulnerability
+     * to have the source code printed to the user's
+     * screen.  We'll try and attach the trace as the
+     * cause on the JepException so the application
+     * can determine if/how traces should be logged or
+     * shown.
+     */
 
     PyErr_Fetch(&ptype, &pvalue, &ptrace);
 
@@ -330,10 +336,13 @@ int process_py_exception(JNIEnv *env, int printTrace) {
                 v = PyObject_Str(pvalue);
             }
 
-            m = PyString_AsString(message);
             if(v != NULL && PyString_Check(v)) {
                 PyObject *t;
-                t = PyString_FromFormat("%s: %s", m, PyString_AsString(v));
+#if PY_MAJOR_VERSION >= 3
+                t = PyUnicode_FromFormat("%U: %U", message, v);
+#else
+                t = PyString_FromFormat("%s: %s", PyString_AsString(message), PyString_AsString(v));
+#endif
                 Py_DECREF(v);
                 Py_DECREF(message);
                 message = t;

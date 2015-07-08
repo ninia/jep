@@ -70,7 +70,7 @@
 static int pyjobject_init(JNIEnv *env, PyJobject_Object*);
 static void pyjobject_addmethod(PyJobject_Object*, PyObject*);
 static void pyjobject_addfield(PyJobject_Object*, PyObject*);
-static void pyjobject_init_subtypes();
+static void pyjobject_init_subtypes(void);
 
 static jmethodID objectGetClass  = 0;
 static jmethodID objectEquals    = 0;
@@ -91,7 +91,7 @@ static PyObject *classnamePyJMethodsDict = NULL;
  * See https://docs.python.org/2/extending/newtypes.html
  *     https://docs.python.org/3/extending/newtypes.html
  */
-static void pyjobject_init_subtypes() {
+static void pyjobject_init_subtypes(void) {
     // start at the top with object
     if(PyType_Ready(&PyJobject_Type) < 0)
         return;
