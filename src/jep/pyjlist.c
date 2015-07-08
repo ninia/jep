@@ -548,6 +548,10 @@ static int pyjlist_set_subscript(PyObject* self, PyObject* item, PyObject* value
         return pyjlist_setitem(self, (Py_ssize_t) i, value);
     } else if(PySlice_Check(item)) {
         Py_ssize_t start, stop, step, slicelength;
+        /*
+         * ignore compile warning on the next line, they fixed the
+         * method signature in python 3.2
+         */
         if(PySlice_GetIndicesEx(item, pyjlist_len(self), &start, &stop, &step, &slicelength) < 0) {
             // error will already be set
             return -1;

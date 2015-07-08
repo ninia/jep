@@ -14,7 +14,7 @@ def makeJavaList():
     return jlist
 
 def makePythonList():
-    pylist = []    
+    pylist = []
     for i in range(COUNT):
         # At present have to make it a java.lang.Integer for
         # assertSequenceEqual to work. If in the future a  
@@ -26,30 +26,30 @@ def makePythonList():
 
 class TestLists(unittest.TestCase):
     def setUp(self):
-        self.test = Test()        
+        self.test = Test()
     
     def test_sequence(self):
         jlist = makeJavaList()
         pylist = makePythonList()
         self.assertSequenceEqual(jlist, pylist)
 
-    def test_len(self):        
+    def test_len(self):
         jlist = makeJavaList()
-        self.assertEqual(len(jlist), COUNT)        
+        self.assertEqual(len(jlist), COUNT)
         
     def test_loop(self):
         n = 0
-        jlist = makeJavaList()        
+        jlist = makeJavaList()
         for i in jlist:
             n += 1
-        self.assertEqual(n, COUNT)        
+        self.assertEqual(n, COUNT)
 
     def test_contains(self):
-        jlist = makeJavaList()        
+        jlist = makeJavaList()
         self.assertTrue(Integer(14) in jlist)
         self.assertFalse(Integer(20) in jlist)
         self.assertFalse("abc" in jlist)
-        self.assertFalse("0" in jlist)                
+        self.assertFalse("0" in jlist)
 
     def test_getitem(self):
         jlist = makeJavaList()
@@ -72,11 +72,11 @@ class TestLists(unittest.TestCase):
         jlist[5] = Integer(55)
         pylist[5] = Integer(55)
         jlist[-3] = Integer(99)
-        pylist[-3] = Integer(99)        
+        pylist[-3] = Integer(99)
         self.assertSequenceEqual(jlist, pylist)
 
     def test_setslice(self):
-        jlist = makeJavaList()        
+        jlist = makeJavaList()
         pylist = makePythonList()
         jlist[2:4] = [Integer(7), Integer(1)]
         pylist[2:4] = [Integer(7), Integer(1)]
@@ -109,15 +109,11 @@ class TestLists(unittest.TestCase):
         jlist = makeJavaList()
         x = jlist * 3
         self.assertIn('jep.PyJlist', str(type(x)))
-        self.assertEqual(len(x), COUNT * 3)        
+        self.assertEqual(len(x), COUNT * 3)
 
-    def test_multiplyequals(self):        
+    def test_multiplyequals(self):
         jlist = makeJavaList()
         pylist = makePythonList()
         jlist *= 2
         pylist *= 2
-        self.assertSequenceEqual(jlist, pylist)    
-    
-
-
-
+        self.assertSequenceEqual(jlist, pylist)

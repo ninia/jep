@@ -1503,6 +1503,10 @@ static PyObject* pyjarray_subscript(PyJarray_Object *self, PyObject *item) {
         return pyjarray_item(self, (Py_ssize_t) i);
     } else if(PySlice_Check(item)) {
         Py_ssize_t start, stop, step, slicelength;
+        /*
+         * ignore compile warning on the next line, they fixed the
+         * method signature in python 3.2
+         */
         if(PySlice_GetIndicesEx(item, pyjarray_length((PyObject*) self), &start, &stop, &step, &slicelength) < 0) {
             // error will already be set
             return NULL;

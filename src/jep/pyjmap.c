@@ -192,9 +192,65 @@ static int pyjmap_setitem(PyObject *o, PyObject *key, PyObject *v) {
     return 0;
 }
 
+static int pyjmap_contains_key(PyObject *self, PyObject *key) {
+    jmethodID         containsKey = NULL;
+    jboolean          result      = JNI_FALSE;
+    PyJobject_Object *obj         = (PyJobject_Object*) self;
+    JNIEnv           *env         = pyembed_get_env();
+    jobject           jkey       = NULL;
+
+    if(key == Py_None) {
+        jkey = NULL;
+    } else {
+        jkey = pyembed_box_py(env, key);
+        if(process_java_exception(env)) {
+            return -1;
+        } else if(!jkey) {
+            /*
+             * with the way pyembed_box_py is currently implemented, shouldn't
+             * be able to get here
+             */
+            PyErr_Format(PyExc_TypeError,
+                        "__contains__ received an incompatible type: %s",
+                        PyString_AsString(PyObject_Str((PyObject*) Py_TYPE(key))));
+            return -1;
+        }
+    }
+
+    containsKey = (*env)->GetMethodID(env, obj->clazz, "containsKey", "(Ljava/lang/Object;)Z");
+    if(process_java_exception(env) || !containsKey) {
+        return -1;
+    }
+
+    result = (*env)->CallBooleanMethod(env, obj->object, containsKey, jkey);
+    if(process_java_exception(env)) {
+        return -1;
+    }
+
+    if(result) {
+        return 1;
+    } else {
+        return 0;
+    }
+
+}
+
 
 static PyMethodDef pyjmap_methods[] = {
     {NULL, NULL, 0, NULL}
+};
+
+static PySequenceMethods pyjmap_seq_methods = {
+    0,                          /* sq_length */
+    0,                          /* sq_concat */
+    0,                          /* sq_repeat */
+    0,                          /* sq_item */
+    0,                          /* sq_slice */
+    0,                          /* sq_ass_item */
+    0,                          /* sq_ass_slice */
+    pyjmap_contains_key,        /* sq_contains */
+    0,                          /* sq_inplace_concat */
+    0,                          /* sq_inplace_repeat */
 };
 
 static PyMappingMethods pyjmap_map_methods = {
@@ -219,8 +275,8 @@ PyTypeObject PyJmap_Type = {
     0,                                        /* tp_compare */
     0,                                        /* tp_repr */
     0,                                        /* tp_as_number */
-    0,                                        /* tp_as_sequence */
-    &pyjmap_map_methods,                       /* tp_as_mapping */
+    &pyjmap_seq_methods,                      /* tp_as_sequence */
+    &pyjmap_map_methods,                      /* tp_as_mapping */
     0,                                        /* tp_hash  */
     0,                                        /* tp_call */
     0,                                        /* tp_str */

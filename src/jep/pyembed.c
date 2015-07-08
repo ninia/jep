@@ -116,6 +116,10 @@ static jmethodID booleanBConstructor = 0;
 static jmethodID arraylistIConstructor = 0;
 static jmethodID arraylistAdd = 0;
 
+// HashMap(int)
+static jmethodID hashmapIConstructor = 0;
+static jmethodID hashmapPut = 0;
+
 static struct PyMethodDef jep_methods[] = {
     { "findClass",
       pyembed_findclass,
@@ -1036,6 +1040,9 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result) {
 
     if(PyList_Check(result) || PyTuple_Check(result)) {
         jclass clazz;
+        jobject list;
+        Py_ssize_t i;
+        Py_ssize_t size;
         int modifiable = PyList_Check(result);
 
         clazz = (*env)->FindClass(env, "java/util/ArrayList");
@@ -1052,79 +1059,124 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result) {
                                                "(Ljava/lang/Object;)Z");
         }
 
-        if(!process_java_exception(env) && arraylistIConstructor && arraylistAdd) {
-            jobject list;
-            Py_ssize_t i;
-            Py_ssize_t size;
+        if(process_java_exception(env) || !arraylistIConstructor || !arraylistAdd) {
+            return NULL;
+        }
+
+        if(modifiable) {
+            size = PyList_Size(result);
+        } else {
+            size = PyTuple_Size(result);
+        }
+        list = (*env)->NewObject(env, clazz, arraylistIConstructor, (int) size);
+        if(process_java_exception(env) || !list) {
+            return NULL;
+        }
+
+        for(i=0; i < size; i++) {
+            PyObject *item;
+            jobject value;
 
             if(modifiable) {
-                size = PyList_Size(result);
+                item = PyList_GetItem(result, i);
             } else {
-                size = PyTuple_Size(result);
+                item = PyTuple_GetItem(result, i);
             }
-            list = (*env)->NewObject(env, clazz, arraylistIConstructor, (int) size);
-            if(process_java_exception(env) || !list) {
+            value = pyembed_box_py(env, item);
+            if(value == NULL && PyErr_Occurred()) {
+                /*
+                 * java exceptions will have been transformed to python
+                 * exceptions by this point
+                 */
+                (*env)->DeleteLocalRef(env, list);
+                return NULL;
+            }
+            (*env)->CallBooleanMethod(env, list, arraylistAdd, value);
+            if(process_java_exception(env)) {
+                (*env)->DeleteLocalRef(env, list);
+                return NULL;
+            }
+        }
+
+        if(modifiable) {
+            return list;
+        } else {
+            // make the tuple unmodifiable in Java
+            jclass collections;
+            jmethodID unmodifiableList;
+
+            collections = (*env)->FindClass(env, "java/util/Collections");
+            if(process_java_exception(env) || !collections) {
                 return NULL;
             }
 
-            for(i=0; i < size; i++) {
-                PyObject *item;
-                jobject value;
-
-                if(modifiable) {
-                    item = PyList_GetItem(result, i);
-                } else {
-                    item = PyTuple_GetItem(result, i);
-                }
-                value = pyembed_box_py(env, item);
-                if(value == NULL && PyErr_Occurred()) {
-                    /*
-                     * java exceptions will have been transformed to python
-                     * exceptions by this point
-                     */
-                    (*env)->DeleteLocalRef(env, list);
-                    return NULL;
-                }
-                (*env)->CallBooleanMethod(env, list, arraylistAdd, value);
-                if(process_java_exception(env)) {
-                    (*env)->DeleteLocalRef(env, list);
-                    return NULL;
-                }
+            unmodifiableList = (*env)->GetStaticMethodID(env,
+                                                         collections,
+                                                         "unmodifiableList",
+                                                         "(Ljava/util/List;)Ljava/util/List;");
+            if(process_java_exception(env) || !unmodifiableList) {
+                return NULL;
             }
-
-            if(modifiable) {
-                return list;
-            } else {
-                // make the tuple unmodifiable in Java
-                jclass collections;
-                jmethodID unmodifiableList;
-
-                collections = (*env)->FindClass(env, "java/util/Collections");
-                if(process_java_exception(env) || !collections) {
-                    return NULL;
-                }
-
-                unmodifiableList = (*env)->GetStaticMethodID(env,
-                                                             collections,
-                                                             "unmodifiableList",
-                                                             "(Ljava/util/List;)Ljava/util/List;");
-                if(process_java_exception(env) || !unmodifiableList) {
-                    return NULL;
-                }
-                list = (*env)->CallStaticObjectMethod(env,
-                                                      collections,
-                                                      unmodifiableList,
-                                                      list);
-                if(process_java_exception(env) || !list) {
-                    return NULL;
-                }
-                return list;
+            list = (*env)->CallStaticObjectMethod(env,
+                                                  collections,
+                                                  unmodifiableList,
+                                                  list);
+            if(process_java_exception(env) || !list) {
+                return NULL;
             }
-        }
-        else {
-            return NULL;
+            return list;
         }
     } // end of list and tuple conversion
+
+    if(PyDict_Check(result)) {
+        jclass clazz;
+        jobject map, jkey, jvalue;
+        Py_ssize_t size, pos;
+        PyObject *key, *value;
+
+        clazz = (*env)->FindClass(env, "java/util/HashMap");
+        if(hashmapIConstructor == 0) {
+            hashmapIConstructor = (*env)->GetMethodID(env,
+                                                    clazz,
+                                                    "<init>",
+                                                    "(I)V");
+        }
+        if(hashmapPut == 0) {
+            hashmapPut = (*env)->GetMethodID(env,
+                                               clazz,
+                                               "put",
+                                               "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+        }
+
+        if(process_java_exception(env) || !hashmapIConstructor || !hashmapPut) {
+            return NULL;
+        }
+
+        size = PyDict_Size(result);
+        map = (*env)->NewObject(env, clazz, hashmapIConstructor, (jint) size);
+        if(process_java_exception(env) || !map) {
+            return NULL;
+        }
+
+        pos = 0;
+        while(PyDict_Next(result, &pos, &key, &value)) {
+            jkey = pyembed_box_py(env, key);
+            if(!jkey) {
+                return NULL;
+            }
+            jvalue = pyembed_box_py(env, value);
+            if(!jvalue) {
+                return NULL;
+            }
+
+            (*env)->CallObjectMethod(env, map, hashmapPut, jkey, jvalue);
+            if(process_java_exception(env)) {
+                return NULL;
+            }
+        }
+
+        return map;
+    }
 
 #if USE_NUMPY
     if(npy_array_check(result)) {
