@@ -45,10 +45,13 @@ class jep_install(install_lib):
     def link_native_lib(self, jep_dir, jep_lib):
         # we'll put the jep_dir as -Djava.library.path in the jep script
         if is_windows():
-            spawn(['mv',
-                   '{0}'.format(os.path.join(jep_dir, jep_lib)),
-                   '{0}'.format(os.path.join(jep_dir, 'jep.dll')),
-                   ])
+            jep_dll = os.path.join(jep_dir, 'jep.dll')
+            # Remove the old DLL if it exists to avoid a file move error.
+            if os.path.exists(jep_dll):
+                os.remove(jep_dll)
+            # Do not use 'spawn' as that will run as a non-administrative user
+            # that may no longer have access to the destination directory.
+            self.move_file(os.path.join(jep_dir, jep_lib), jep_dll)
 
         elif is_osx():
             # Apple says to put the file at /Library/Java/Extensions/libjep.jnilib,

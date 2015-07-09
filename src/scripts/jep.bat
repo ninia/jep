@@ -5,12 +5,12 @@ SET PATH="$VIRTUAL_ENV\bin;%PATH%"
 SET PYTHONHOME="$VIRTUAL_ENV"
 )
 
-SET cp={prefix}\lib\jep\jep-{version}.jar
+SET cp="{install_lib}\jep\jep-{version}.jar"
 IF DEFINED CLASSPATH (
-SET cp="%cp%;%CLASSPATH%"
+SET cp=%cp%;%CLASSPATH%
 )
 
-SET jni_path={install_lib}jep
+SET jni_path="{install_lib}jep"
 
 SET args=%*
 IF "%args%"=="" (
