@@ -213,6 +213,7 @@ extern jclass JLIST_TYPE;
 extern jclass JMAP_TYPE;
 extern jclass JITERABLE_TYPE;
 extern jclass JITERATOR_TYPE;
+extern jclass JCOLLECTION_TYPE;
 #if USE_NUMPY
 extern jclass JEP_NDARRAY_TYPE;
 #endif

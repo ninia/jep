@@ -34,27 +34,26 @@
 #endif
 #include <jni.h>
 #include <Python.h>
-#include "pyjcollection.h"
+#include "pyjiterable.h"
 
 
-#ifndef _Included_pyjlist
-#define _Included_pyjlist
+#ifndef _Included_pyjcollection
+#define _Included_pyjcollection
 
-PyAPI_DATA(PyTypeObject) PyJlist_Type;
+PyAPI_DATA(PyTypeObject) PyJcollection_Type;
 
 /*
- * A pyjlist is just a pyjcollection with some extra methods attached to it to meet
- * the python Sequence protocol (interface).  It should only be used where
- * the underlying jobject of the pyjobject is an implementation of java.util.List.
+ * A pyjcollection is just a pyjiterable with the contains(o) and len() methods.
+ * It should only be used where the underlying jobject of the pyjobject is an
+ * implementation of java.util.Collection.
  */
 typedef struct {
-    PyJcollection_Object obj; /* magic inheritance */
-} PyJlist_Object;
+    PyJiterable_Object obj; /* magic inheritance */
+} PyJcollection_Object;
 
 
-PyJlist_Object* pyjlist_new(void);
-PyObject* pyjlist_new_copy(PyObject*);
-int pyjlist_check(PyObject*);
+PyJcollection_Object* pyjcollection_new(void);
+int pyjcollection_check(PyObject*);
 
 
-#endif // ndef pyjlist
+#endif // ndef pyjcollection

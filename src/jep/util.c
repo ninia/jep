@@ -111,6 +111,7 @@ jclass JLIST_TYPE       = NULL;
 jclass JMAP_TYPE        = NULL;
 jclass JITERABLE_TYPE   = NULL;
 jclass JITERATOR_TYPE   = NULL;
+jclass JCOLLECTION_TYPE = NULL;
 #if USE_NUMPY
 jclass JEP_NDARRAY_TYPE = NULL;
 #endif
@@ -1285,6 +1286,16 @@ int cache_frequent_classes(JNIEnv *env) {
         (*env)->DeleteLocalRef(env, clazz);
     }
 
+    if(JCOLLECTION_TYPE == NULL) {
+        clazz = (*env)->FindClass(env, "java/util/Collection");
+        if((*env)->ExceptionOccurred(env))
+            return 0;
+
+        JCOLLECTION_TYPE = (*env)->NewGlobalRef(env, clazz);
+        (*env)->DeleteLocalRef(env, clazz);
+    }
+
+
 #if USE_NUMPY
     if(JEP_NDARRAY_TYPE == NULL) {
         clazz = (*env)->FindClass(env, "jep/NDArray");
@@ -1326,6 +1337,11 @@ void unref_cache_frequent_classes(JNIEnv *env) {
     if(JITERATOR_TYPE != NULL) {
         (*env)->DeleteGlobalRef(env, JITERATOR_TYPE);
         JITERATOR_TYPE = NULL;
+    }
+
+    if(JCOLLECTION_TYPE != NULL) {
+        (*env)->DeleteGlobalRef(env, JCOLLECTION_TYPE);
+        JCOLLECTION_TYPE = NULL;
     }
 
 #if USE_NUMPY

@@ -64,6 +64,7 @@
 #include "pyjmethodwrapper.h"
 #include "pyjiterable.h"
 #include "pyjiterator.h"
+#include "pyjcollection.h"
 #include "pyjlist.h"
 #include "pyjmap.h"
 
@@ -103,9 +104,16 @@ static void pyjobject_init_subtypes(void) {
     if(PyType_Ready(&PyJiterable_Type) < 0)
         return;
 
+    // next do collection
+    if(!PyJcollection_Type.tp_base) {
+        PyJcollection_Type.tp_base = &PyJiterable_Type;
+    }
+    if(PyType_Ready(&PyJcollection_Type) < 0)
+        return;
+
     // next do list
     if(!PyJlist_Type.tp_base) {
-        PyJlist_Type.tp_base = &PyJiterable_Type;
+        PyJlist_Type.tp_base = &PyJcollection_Type;
     }
     if(PyType_Ready(&PyJlist_Type) < 0)
         return;
@@ -161,8 +169,13 @@ PyObject* pyjobject_new(JNIEnv *env, jobject obj) {
 
         // check for some of our extensions to pyjobject
         if((*env)->IsInstanceOf(env, obj, JITERABLE_TYPE)) {
-            if((*env)->IsInstanceOf(env, obj, JLIST_TYPE)) {
-                pyjob = (PyJobject_Object*) pyjlist_new();
+            if((*env)->IsInstanceOf(env, obj, JCOLLECTION_TYPE)) {
+                if((*env)->IsInstanceOf(env, obj, JLIST_TYPE)) {
+                    pyjob = (PyJobject_Object*) pyjlist_new();
+                } else {
+                    // a Collection we have less support for
+                    pyjob = (PyJobject_Object*) pyjcollection_new();
+                }
             } else {
                 // an Iterable we have less support for
                 pyjob = (PyJobject_Object*) pyjiterable_new();

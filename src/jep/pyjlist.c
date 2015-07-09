@@ -59,14 +59,12 @@
 #include "pyjobject.h"
 #include "pyembed.h"
 
-static Py_ssize_t pyjlist_len(PyObject*);
 static PyObject* pyjlist_add(PyObject*, PyObject*);
 static PyObject* pyjlist_fill(PyObject*, Py_ssize_t);
 static PyObject* pyjlist_getitem(PyObject*, Py_ssize_t);
 static PyObject* pyjlist_getslice(PyObject*, Py_ssize_t, Py_ssize_t);
 static int pyjlist_setitem(PyObject*, Py_ssize_t, PyObject*);
 static int pyjlist_setslice(PyObject*, Py_ssize_t, Py_ssize_t, PyObject*);
-static int pyjlist_contains(PyObject*, PyObject*);
 static PyObject* pyjlist_inplace_add(PyObject*, PyObject*);
 static PyObject* pyjlist_inplace_fill(PyObject*, Py_ssize_t);
 
@@ -130,26 +128,6 @@ int pyjlist_check(PyObject *obj) {
     return 0;
 }
 
-/*
- * Gets the size of the list.
- */
-static Py_ssize_t pyjlist_len(PyObject* self) {
-    jmethodID         size  = NULL;
-    Py_ssize_t        len   = 0;
-    PyJobject_Object *pyjob = (PyJobject_Object*) self;
-    JNIEnv           *env   = pyembed_get_env();
-
-    size = (*env)->GetMethodID(env, pyjob->clazz, "size", "()I");
-    if(process_java_exception(env) || !size) {
-        return -1;
-    }
-
-    len = (*env)->CallIntMethod(env, pyjob->object, size);
-    if(process_java_exception(env)) {
-        return -1;
-    }
-    return len;
-}
 
 /*
  * Method for the + operator on pyjlist.  For example, result = o1 + o2, where
@@ -209,7 +187,7 @@ static PyObject* pyjlist_getitem(PyObject *o, Py_ssize_t i) {
         return NULL;
     }
 
-    size = pyjlist_len(o);
+    size = PyObject_Size(o);
     if((i > size-1) || (i < 0)) {
         PyErr_Format(PyExc_IndexError, "list index %i out of range, size %i", (int) i, (int) size);
         return NULL;
@@ -354,51 +332,6 @@ static int pyjlist_setslice(PyObject *o, Py_ssize_t i1, Py_ssize_t i2, PyObject 
     return 0;
 }
 
-/*
- * Method for the __contains__() method on pyjlist, frequently used by the
- * in operator.  For example, if v in o:
- */
-static int pyjlist_contains(PyObject *o, PyObject *v) {
-    jmethodID         contains = NULL;
-    jboolean          result   = JNI_FALSE;
-    PyJobject_Object *obj      = (PyJobject_Object*) o;
-    JNIEnv           *env      = pyembed_get_env();
-    jobject           value    = NULL;
-
-    if(v == Py_None) {
-        value = NULL;
-    } else {
-        value = pyembed_box_py(env, v);
-        if(process_java_exception(env)) {
-            return -1;
-        } else if(!value) {
-            /*
-             * with the way pyembed_box_py is currently implemented, shouldn't
-             * be able to get here
-             */
-            PyErr_Format(PyExc_TypeError,
-                        "__contains__ received an incompatible type: %s",
-                        PyString_AsString(PyObject_Str((PyObject*) Py_TYPE(v))));
-            return -1;
-        }
-    }
-
-    contains = (*env)->GetMethodID(env, obj->clazz, "contains", "(Ljava/lang/Object;)Z");
-    if(process_java_exception(env) || !contains) {
-        return -1;
-    }
-
-    result = (*env)->CallBooleanMethod(env, obj->object, contains, value);
-    if(process_java_exception(env)) {
-        return -1;
-    }
-
-    if(result) {
-        return 1;
-    } else {
-        return 0;
-    }
-}
 
 /*
  * Method for the += operator on pyjlist.  For example, o1 += o2, where
@@ -501,7 +434,7 @@ static PyObject* pyjlist_subscript(PyObject *self, PyObject *item) {
     if(PyInt_Check(item)) {
         long i = PyInt_AS_LONG(item);
         if (i < 0)
-            i += pyjlist_len(self);
+            i += PyObject_Size(self);
         return pyjlist_getitem(self, (Py_ssize_t) i);
     }
     else if(PyLong_Check(item)) {
@@ -509,11 +442,15 @@ static PyObject* pyjlist_subscript(PyObject *self, PyObject *item) {
         if (i == -1 && PyErr_Occurred())
             return NULL;
         if (i < 0)
-            i += pyjlist_len(self);
+            i += PyObject_Size(self);
         return pyjlist_getitem(self, (Py_ssize_t) i);
     } else if(PySlice_Check(item)) {
         Py_ssize_t start, stop, step, slicelength;
-        if(PySlice_GetIndicesEx(item, pyjlist_len(self), &start, &stop, &step, &slicelength) < 0) {
+        /*
+         * ignore compile warning on the next line, they fixed the
+         * method signature in python 3.2
+         */
+        if(PySlice_GetIndicesEx(item, PyObject_Size(self), &start, &stop, &step, &slicelength) < 0) {
             // error will already be set
             return NULL;
         }
@@ -536,7 +473,7 @@ static int pyjlist_set_subscript(PyObject* self, PyObject* item, PyObject* value
     if(PyInt_Check(item)) {
         long i = PyInt_AS_LONG(item);
         if (i < 0)
-            i += pyjlist_len(self);
+            i += PyObject_Size(self);
         return pyjlist_setitem(self, (Py_ssize_t) i, value);
     }
     else if(PyLong_Check(item)) {
@@ -544,7 +481,7 @@ static int pyjlist_set_subscript(PyObject* self, PyObject* item, PyObject* value
         if (i == -1 && PyErr_Occurred())
             return -1;
         if (i < 0)
-            i += pyjlist_len(self);
+            i += PyObject_Size(self);
         return pyjlist_setitem(self, (Py_ssize_t) i, value);
     } else if(PySlice_Check(item)) {
         Py_ssize_t start, stop, step, slicelength;
@@ -552,7 +489,7 @@ static int pyjlist_set_subscript(PyObject* self, PyObject* item, PyObject* value
          * ignore compile warning on the next line, they fixed the
          * method signature in python 3.2
          */
-        if(PySlice_GetIndicesEx(item, pyjlist_len(self), &start, &stop, &step, &slicelength) < 0) {
+        if(PySlice_GetIndicesEx(item, PyObject_Size(self), &start, &stop, &step, &slicelength) < 0) {
             // error will already be set
             return -1;
         }
@@ -577,27 +514,27 @@ static PyMethodDef pyjlist_methods[] = {
 };
 
 static PySequenceMethods pyjlist_seq_methods = {
-        pyjlist_len,          /* sq_length */
+        0, // inherited       /* sq_length */
         pyjlist_add,          /* sq_concat */
         pyjlist_fill,         /* sq_repeat */
         pyjlist_getitem,      /* sq_item */
         pyjlist_getslice,     /* sq_slice */
         pyjlist_setitem,      /* sq_ass_item */
         pyjlist_setslice,     /* sq_ass_slice */
-        pyjlist_contains,     /* sq_contains */
+        0, // inherited       /* sq_contains */
         pyjlist_inplace_add,  /* sq_inplace_concat */
         pyjlist_inplace_fill, /* sq_inplace_repeat */
 };
 
 static PyMappingMethods pyjlist_map_methods = {
-    (lenfunc) pyjlist_len,                /* mp_length */
-    (binaryfunc) pyjlist_subscript,          /* mp_subscript */
+    0,                                        /* mp_length */
+    (binaryfunc) pyjlist_subscript,           /* mp_subscript */
     (objobjargproc) pyjlist_set_subscript,    /* mp_ass_subscript */
 };
 
 
 /*
- * Inherits from PyJiterable_Type
+ * Inherits from PyJcollection_Type
  */
 PyTypeObject PyJlist_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
@@ -625,12 +562,12 @@ PyTypeObject PyJlist_Type = {
     0,                                        /* tp_clear */
     0,                                        /* tp_richcompare */
     0,                                        /* tp_weaklistoffset */
-    0,                                        /* tp_iter */
+    0, // inherited                           /* tp_iter */
     0,                                        /* tp_iternext */
     pyjlist_methods,                          /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
-    0, // &PyJiterable_Type                   /* tp_base */
+    0, // &PyJcollection_Type                 /* tp_base */
     0,                                        /* tp_dict */
     0,                                        /* tp_descr_get */
     0,                                        /* tp_descr_set */
