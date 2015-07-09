@@ -32,21 +32,24 @@
 #endif
 #include <jni.h>
 #include <Python.h>
+#include "pyjobject.h"
 
 #ifndef _Included_pyjclass
 #define _Included_pyjclass
 
 PyAPI_DATA(PyTypeObject) PyJclass_Type;
-
+/*
+ * a pyjclass is a pyjobject with a __call__ method attached, where
+ * the call method will invoke constructors.
+ */
 typedef struct {
-    PyObject_HEAD
-    jobjectArray      initArray;    /* constructor array */
-    int               initLen;      /* length of initArray */
-    PyObject         *pyjobject;    /* pointer to parent */
+    PyJobject_Object  obj;            /* magic inheritance */
+    jobjectArray      initArray;      /* constructor array */
+    int               initLen;        /* length of initArray */
     int              *numArgsPerInit; /* pointer to init arg count */
 } PyJclass_Object;
 
-PyJclass_Object* pyjclass_new(JNIEnv*, PyObject*);
+int pyjclass_init(JNIEnv*, PyObject*);
 PyObject* pyjclass_call(PyJclass_Object*, PyObject*, PyObject*);
 int pyjclass_check(PyObject*);
 

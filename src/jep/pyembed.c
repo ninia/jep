@@ -70,6 +70,7 @@
 
 #include "pyembed.h"
 #include "pyjobject.h"
+#include "pyjclass.h"
 #include "pyjarray.h"
 #include "util.h"
 

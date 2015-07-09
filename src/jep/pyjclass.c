@@ -74,7 +74,7 @@ static jmethodID modifierIsPublic        = 0;
 
 
 
-PyJclass_Object* pyjclass_new(JNIEnv *env, PyObject *pyjob) {
+int pyjclass_init(JNIEnv *env, PyObject *pyjob) {
     PyJclass_Object  *pyc         = NULL;
     jobject           langClass   = NULL;
     jobjectArray      initArray   = NULL;
@@ -84,18 +84,14 @@ PyJclass_Object* pyjclass_new(JNIEnv *env, PyObject *pyjob) {
     jobjectArray      parmArray   = NULL;
     int               i;
 
-    if(PyType_Ready(&PyJclass_Type) < 0)
-        return NULL;
-
-    pyc             = PyObject_NEW(PyJclass_Object, &PyJclass_Type);
+    pyc = (PyJclass_Object*) pyjob;
     pyc->initArray  = NULL;
-    pyc->pyjobject  = pyjob;
     
     pyjobject = (PyJobject_Object *) pyjob;
 
     (*env)->PushLocalFrame(env, 5);
     if(process_java_exception(env))
-        return NULL;
+        return 0;
     
     // ------------------------------ call Class.getConstructors()
 
@@ -188,14 +184,14 @@ PyJclass_Object* pyjclass_new(JNIEnv *env, PyObject *pyjob) {
     }
 
     (*env)->PopLocalFrame(env, NULL);
-    return pyc;
+    return 1;
 
 EXIT_ERROR:
     (*env)->PopLocalFrame(env, NULL);
     if(pyc)
         pyjclass_dealloc(pyc);
     
-    return NULL;
+    return 0;
 }
 
 /*
@@ -301,7 +297,10 @@ static PyObject* pyjclass_add_inner_classes(JNIEnv *env,
 
 
 int pyjclass_check(PyObject *obj) {
-    return pyjobject_check(obj) && ((PyJobject_Object *) obj)->pyjclass != NULL;
+    if(PyObject_TypeCheck(obj, &PyJclass_Type)) {
+        return 1;
+    }
+    return 0;
 }
 
 
@@ -445,7 +444,7 @@ PyObject* pyjclass_call(PyJclass_Object *self,
                 
             Py_UNBLOCK_THREADS;
             obj = (*env)->NewObjectA(env,
-                                     ((PyJobject_Object* ) self->pyjobject)->clazz,
+                                     ((PyJobject_Object*) self)->clazz,
                                      methodId,
                                      jargs);
             Py_BLOCK_THREADS;
@@ -515,7 +514,7 @@ PyTypeObject PyJclass_Type = {
     0,                                        /* tp_as_sequence */
     0,                                        /* tp_as_mapping */
     0,                                        /* tp_hash  */
-    0,                                        /* tp_call */
+    (ternaryfunc) pyjclass_call,              /* tp_call */
     0,                                        /* tp_str */
     0,                                        /* tp_getattro */
     0,                                        /* tp_setattro */
@@ -531,7 +530,7 @@ PyTypeObject PyJclass_Type = {
     pyjclass_methods,                         /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
-    0,                                        /* tp_base */
+    0, // PyJobject_Type                      /* tp_base */
     0,                                        /* tp_dict */
     0,                                        /* tp_descr_get */
     0,                                        /* tp_descr_set */

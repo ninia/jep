@@ -122,8 +122,7 @@ static PyObject* pyjmap_getitem(PyObject *o, PyObject *key) {
     if(pyjobject_check(key)) {
         jkey = ((PyJobject_Object*) key)->object;
     } else {
-        // TODO improve convert_pyarg_jvalue to not require a pos arg
-        jvalue jvkey = convert_pyarg_jvalue(env, key, JOBJECT_TYPE, JOBJECT_ID, -1);
+        jvalue jvkey = convert_pyarg_jvalue(env, key, JOBJECT_TYPE, JOBJECT_ID, 1);
         jkey = jvkey.l;
         if(process_java_exception(env) || !jkey) {
            return NULL;
@@ -170,8 +169,7 @@ static int pyjmap_setitem(PyObject *o, PyObject *key, PyObject *v) {
     if(pyjobject_check(key)) {
         jkey = ((PyJobject_Object*) key)->object;
     } else {
-       // TODO improve convert_pyarg_jvalue to not require a pos arg
-        jvalue jvkey = convert_pyarg_jvalue(env, key, JOBJECT_TYPE, JOBJECT_ID, -1);
+        jvalue jvkey = convert_pyarg_jvalue(env, key, JOBJECT_TYPE, JOBJECT_ID, 1);
         jkey = jvkey.l;
         if(process_java_exception(env) || !jkey) {
            return -1;

@@ -192,7 +192,6 @@ PyObject* pyjobject_new(JNIEnv *env, jobject obj) {
 
     pyjob->object      = (*env)->NewGlobalRef(env, obj);
     pyjob->clazz       = (*env)->NewGlobalRef(env, (*env)->GetObjectClass(env, obj));
-    pyjob->pyjclass    = NULL;
     pyjob->attr        = PyList_New(0);
     pyjob->methods     = PyList_New(0);
     pyjob->fields      = PyList_New(0);
@@ -206,13 +205,21 @@ PyObject* pyjobject_new(JNIEnv *env, jobject obj) {
 
 PyObject* pyjobject_new_class(JNIEnv *env, jclass clazz) {
     PyJobject_Object *pyjob;
+    PyJclass_Object  *pyjclass;  // same object as pyjob, just casted
     
     if(!clazz) {
         PyErr_Format(PyExc_RuntimeError, "Invalid class object.");
         return NULL;
     }
 
-    pyjob              = PyObject_NEW(PyJobject_Object, &PyJobject_Type);
+   if(!PyJclass_Type.tp_base) {
+       PyJclass_Type.tp_base = &PyJobject_Type;
+   }
+   if(PyType_Ready(&PyJclass_Type) < 0)
+        return NULL;
+
+    pyjclass           = PyObject_NEW(PyJclass_Object, &PyJclass_Type);
+    pyjob              = (PyJobject_Object*) pyjclass;
     pyjob->object      = NULL;
     pyjob->clazz       = (*env)->NewGlobalRef(env, clazz);
     pyjob->attr        = PyList_New(0);
@@ -220,10 +227,10 @@ PyObject* pyjobject_new_class(JNIEnv *env, jclass clazz) {
     pyjob->fields      = PyList_New(0);
     pyjob->finishAttr  = 0;
 
-    pyjob->pyjclass    = pyjclass_new(env, (PyObject *) pyjob);
-    
-    if(pyjobject_init(env, pyjob))
-        return (PyObject *) pyjob;
+    if(pyjclass_init(env, (PyObject *) pyjob)) {
+        if(pyjobject_init(env, pyjob))
+            return (PyObject *) pyjob;
+    }
     return NULL;
 }
 
@@ -476,26 +483,10 @@ void pyjobject_dealloc(PyJobject_Object *self) {
         Py_DECREF(self->methods);
         Py_DECREF(self->fields);
         Py_DECREF(self->javaClassName);
-        if(self->pyjclass) {
-            Py_DECREF(self->pyjclass);
-        }
     }
     
     PyObject_Del(self);
 #endif
-}
-
-
-static PyObject* pyjobject_call(PyJobject_Object *self,
-                                PyObject *args,
-                                PyObject *keywords) {
-    
-    if(!self->pyjclass) {
-        PyErr_Format(PyExc_RuntimeError, "Not a class.");
-        return NULL;
-    }
-    
-    return pyjclass_call(self->pyjclass, args, keywords);
 }
 
 
@@ -714,11 +705,14 @@ PyObject* pyjobject_str(PyJobject_Object *self) {
     JNIEnv     *env;
 
     env   = pyembed_get_env();
-    pyres = jobject_topystring(env, self->object, self->clazz);
+    if(self->object)
+        pyres = jobject_topystring(env, self->object, self->clazz);
+    else
+        pyres = jobject_topystring(env, self->clazz, self->clazz);
 
     if(process_java_exception(env))
         return NULL;
-    
+
     // python doesn't like Py_None here...
     if(pyres == NULL)
         return Py_BuildValue("s", "");
@@ -739,20 +733,18 @@ static PyObject* pyjobject_richcompare(PyJobject_Object *self,
         jobject target, other_target;
 
         target = self->object;
-        if(self->pyjclass) {
+        other_target = other->object;
+
+        // lack of object indicates it's a pyjclass
+        if(!target) {
             target = self->clazz;
         }
-        other_target = other->object;
-        if(other->pyjclass) {
+        if(!other_target) {
             other_target = other->clazz;
         }
 
-        if(self == other) {
+        if(opid == Py_EQ && (self == other || target == other_target)) {
             Py_RETURN_TRUE;
-        }
-
-        if(!target) {
-            Py_RETURN_FALSE;
         }
 
         // TODO micro-optimization: we could get slightly faster execution
@@ -1053,7 +1045,7 @@ PyTypeObject PyJobject_Type = {
     0,                                        /* tp_as_sequence */
     0,                                        /* tp_as_mapping */
     (hashfunc) pyjobject_hash,                /* tp_hash  */
-    (ternaryfunc) pyjobject_call,             /* tp_call */
+    0,                                        /* tp_call */
     (reprfunc) pyjobject_str,                 /* tp_str */
     0,                                        /* tp_getattro */
     0,                                        /* tp_setattro */

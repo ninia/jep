@@ -37,7 +37,6 @@
 #ifndef _Included_pyjobject
 #define _Included_pyjobject
 
-#include "pyjclass.h"
 
 PyAPI_DATA(PyTypeObject) PyJobject_Type;
 
@@ -47,8 +46,6 @@ PyAPI_DATA(PyTypeObject) PyJobject_Type;
 typedef struct {
     PyObject_HEAD
     jobject          object;      /* the jni object */
-    PyJclass_Object *pyjclass;    /* pointer to pyjclass if this
-                                     object represents a type */
     jclass           clazz;       /* java class object */
     PyObject        *attr;        /* list of tuples for get/set attr */
     PyObject        *methods;     /* list of method names */
