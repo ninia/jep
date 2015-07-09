@@ -41,7 +41,6 @@ class jep_install(install_lib):
                                   os.path.join(self.build_dir, 'jep'),
                                   os.path.join(self.install_dir, 'jep'))
 
-            # now let's give it a link that works for Java System.loadLibrary("jep")
             self.link_native_lib(py_lib) 
         else: 
             self.warn("'%s' does not exist -- no Python modules to install" %
