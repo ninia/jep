@@ -138,6 +138,7 @@ public final class Jep implements Closeable {
                     }
                 }
             });
+            thread.setDaemon(true);
             synchronized (this) {
                 thread.start();
                 try {
