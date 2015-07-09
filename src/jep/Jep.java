@@ -122,8 +122,23 @@ public final class Jep implements Closeable {
                             TopInterpreter.this.notify();
                         }
                     }
+                    /*
+                     * We need to keep this top interpreter thread around. It's
+                     * not going to be used again but if its thread shuts down
+                     * while another thread is in python, then the thread state
+                     * can get messed up leading to stability/GIL issues.
+                     */
+                    Object initLock = new Object();
+                    synchronized (initLock) {
+                        try {
+                            initLock.wait();
+                        } catch (InterruptedException e) {
+                            // ignore
+                        }
+                    }
                 }
             });
+            thread.setDaemon(true);
             synchronized (this) {
                 thread.start();
                 try {
@@ -374,9 +389,11 @@ public final class Jep implements Closeable {
      * {@link #getValue(java.lang.String)} instead.
      * </pre>
      * 
-     * @param str a <code>String</code> value
+     * @param str
+     *            a <code>String</code> value
      * @return true if statement complete and was executed.
-     * @exception JepException if an error occurs
+     * @exception JepException
+     *                if an error occurs
      */
     public boolean eval(String str) throws JepException {
         if (this.closed)
