@@ -50,3 +50,9 @@ class MSVCCompiler(old_MSVCCompiler) :
     # load the DLL. This returns the unmodified manifest file.
     def _remove_visual_c_ref(self, manifest_file):
         return manifest_file
+
+    # Escape any backslash in the Windows path as a trailing backslash
+    # will escape a end quote in the link command.
+    def library_dir_option (self, dir):
+        dir = dir.replace('\\', '\\\\')
+        return old_MSVCCompiler.library_dir_option(self, dir)
