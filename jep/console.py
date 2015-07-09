@@ -2,8 +2,6 @@
 history_file = None
 
 import traceback, os
-import jep
-from jep import *
 
 has_readline = False
 
