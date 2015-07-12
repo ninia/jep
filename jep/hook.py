@@ -72,6 +72,11 @@ class JepImporter(object):
 
 
 def setupImporter(classlist):
-    sys.meta_path = [importer for importer in sys.meta_path if isinstance(importer, JepImporter)]
-    sys.meta_path.append(JepImporter(classlist))
+    alreadySetup = False
+    for importer in sys.meta_path:
+        if isinstance(importer, JepImporter):
+           alreadySetup = True
+           break
+    if not alreadySetup:
+        sys.meta_path.append(JepImporter(classlist))
 
