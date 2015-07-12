@@ -32,7 +32,7 @@ try:
       numpy_found = 1
       numpy_include = [include_path]
 except ImportError:
-   print('numpy not found, building without numpy support')
+   print('numpy not found, running without numpy support')
 
 
 def get_files(pattern):
@@ -67,8 +67,8 @@ if __name__ == '__main__':
           description='Jep embeds CPython in Java',
           long_description=read_file('README.rst'),
           author='Jep Developers',
-          author_email='mike@mrj0.com',
-          url='http://www.mrj0.com/projects/jep/',
+          author_email='jep-project@googlegroups.com',
+          url='https://github.com/mrj0/jep',
           packages=['jep'],
           scripts=['src/scripts/jep'],
           keywords='java',
@@ -82,8 +82,6 @@ if __name__ == '__main__':
                        'Programming Language :: Python',
                        'Programming Language :: Python :: 2.6',
                        'Programming Language :: Python :: 2.7',
-                       'Programming Language :: Python :: 3.0',
-                       'Programming Language :: Python :: 3.1',
                        'Programming Language :: Python :: 3.2',
                        'Programming Language :: Python :: Implementation :: CPython',
                       ],
