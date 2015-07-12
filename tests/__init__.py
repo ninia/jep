@@ -8,5 +8,6 @@ from .test_array import *
 from .test_lists import *
 from .test_maps import *
 from .test_compare import *
+from .test_dir import *
 from .test_numpy import *
 
