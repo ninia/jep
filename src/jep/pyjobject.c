@@ -1032,9 +1032,40 @@ static long pyjobject_hash(PyJobject_Object *self) {
 static PyObject* pyjobject_dir(PyObject *o, PyObject* ignore) {
     PyObject* attrs;
     PyJobject_Object *self = (PyJobject_Object*) o;
+    Py_ssize_t size, i, contains;
 
-    // TODO this can contain duplicates based on Java overloaded methods
-    attrs = PySequence_Concat(self->methods, self->fields);
+    attrs = PyList_New(0);
+    size = PySequence_Size(self->methods);
+    for(i = 0; i < size; i++) {
+        PyObject *item = PySequence_GetItem(self->methods, i);
+        contains = PySequence_Contains(attrs, item);
+        if(contains < 0) {
+           Py_DECREF(attrs);
+           return NULL;
+        } else if(contains == 0) {
+            if(PyList_Append(attrs, item) < 0) {
+               Py_DECREF(attrs);
+               return NULL; 
+            }
+        }
+    }
+
+    // TODO copy/paste is bad, turn it into a method
+    size = PySequence_Size(self->fields);
+    for(i = 0; i < size; i++) {
+        PyObject *item = PySequence_GetItem(self->fields, i);
+        contains = PySequence_Contains(attrs, item);
+        if(contains < 0) {
+           Py_DECREF(attrs);
+           return NULL;
+        } else if(contains == 0) {
+            if(PyList_Append(attrs, item) < 0) {
+               Py_DECREF(attrs);
+               return NULL;
+            }
+        }
+    }
+ 
     if(PyList_Sort(attrs) < 0) {
        Py_DECREF(attrs);
        return NULL;
