@@ -1025,8 +1025,33 @@ static long pyjobject_hash(PyJobject_Object *self) {
 }
 
 
-static PyMethodDef pyjobject_methods[] = {
-    {NULL, NULL, 0, NULL}
+/*
+ * Implements PyObject_Dir(PyObject*) for pyjobjects. This is required for
+ * Python 3.3+ for dir(pyjobject) to work correctly.
+ */
+static PyObject* pyjobject_dir(PyObject *o, PyObject* ignore) {
+    PyObject* attrs;
+    PyJobject_Object *self = (PyJobject_Object*) o;
+
+    // TODO this can contain duplicates based on Java overloaded methods
+    attrs = PySequence_Concat(self->methods, self->fields);
+    if(PyList_Sort(attrs) < 0) {
+       Py_DECREF(attrs);
+       return NULL;
+    }
+
+    return attrs;
+}
+
+
+static struct PyMethodDef pyjobject_methods[] = {
+    { "__dir__",
+      (PyCFunction) pyjobject_dir,
+      METH_NOARGS,
+      "__dir__ for pyjobjects"
+    },
+
+    { NULL, NULL }
 };
 
 
