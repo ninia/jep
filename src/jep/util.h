@@ -101,10 +101,10 @@ typedef long long jeplong;
 # define PyDoc_STRVAR(name, str) PyDoc_VAR(name) = PyDoc_STR(str)
 #endif
 
-// this function exists solely to support python 3.0, 3.1, and 3.2 only
+// this function exists solely to support python 3.2
 char* pyunicode_to_utf8(PyObject *unicode);
 
-// 3.3 reworked unicode so we have special handling for 3.0, 3.1, and 3.2
+// 3.3 reworked unicode so we have special handling for 3.2
 #if PY_MAJOR_VERSION >= 3
  #if PY_MINOR_VERSION <= 2
   #define PyString_AsString(str)            pyunicode_to_utf8(str)

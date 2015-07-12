@@ -237,7 +237,7 @@ PyObject* pystring_split_last(PyObject *str, char *split) {
     return ret;
 }
 
-// support for python 3.0, 3.1, and 3.2
+// support for python 3.2
 // unnecessary for python 2.6, 2.7, and 3.3+
 char* pyunicode_to_utf8(PyObject *unicode) {
     PyObject *bytesObj;
