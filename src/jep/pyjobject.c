@@ -724,7 +724,7 @@ PyObject* pyjobject_str(PyJobject_Object *self) {
 static PyObject* pyjobject_richcompare(PyJobject_Object *self,
                                        PyObject *_other,
                                        int opid) {
-    JNIEnv *env       = pyembed_get_env();
+    JNIEnv *env;
 
     if(PyType_IsSubtype(Py_TYPE(_other), &PyJobject_Type)) {
         PyJobject_Object *other = (PyJobject_Object *) _other;
@@ -747,25 +747,27 @@ static PyObject* pyjobject_richcompare(PyJobject_Object *self,
             Py_RETURN_TRUE;
         }
 
-        // TODO micro-optimization: we could get slightly faster execution
-        // if we skipped equals when opid is Py_GT or Py_LT
+        env = pyembed_get_env();
+        eq = JNI_FALSE;
+        // skip calling Object.equals() if op is > or <
+        if(opid != Py_GT && opid != Py_LT) {
+            // get the methodid for Object.equals()
+            if(objectEquals == 0) {
+                objectEquals = (*env)->GetMethodID(
+                    env,
+                    self->clazz,
+                    "equals",
+                    "(Ljava/lang/Object;)Z");
+                if(process_java_exception(env) || !objectEquals)
+                    return NULL;
+            }
 
-        // get the methodid for Object.equals()
-        if(objectEquals == 0) {
-            objectEquals = (*env)->GetMethodID(
+            eq = (*env)->CallBooleanMethod(
                 env,
-                self->clazz,
-                "equals",
-                "(Ljava/lang/Object;)Z");
-            if(process_java_exception(env) || !objectEquals)
-                return NULL;
+                target,
+                objectEquals,
+                other_target);
         }
-
-        eq = (*env)->CallBooleanMethod(
-            env,
-            target,
-            objectEquals,
-            other_target);
 
         if(process_java_exception(env))
             return NULL;
