@@ -252,8 +252,6 @@ static int pyjobject_init(JNIEnv *env, PyJobject_Object *pyjob) {
     PyObject         *pyAttrName  = NULL;
 
     PyObject    *cachedMethodList = NULL;
-    jclass                   lock = NULL;
-
 
     (*env)->PushLocalFrame(env, 20);
     // ------------------------------ call Class.getMethods()
@@ -775,19 +773,27 @@ static PyObject* pyjobject_richcompare(PyJobject_Object *self,
              * All Java objects have equals, but we must rely on Comparable for
              * the more advanced operators.  Java generics cannot actually
              * enforce the type of other in self.compareTo(other) at runtime,
-             * but for simplicity let's assume if they got it to compile, the two
-             * types match.  Even if they don't match, they will just get a
-             * ClassCastException when the method is invoked.
-             * 
-             * TODO: To properly meet the richcompare docs we should detect
-             * or catch the ClassCastException and return NotImplemented,
-             * enabling Python to try the reverse operation of
-             * other.compareTo(self). That will almost never come up in Java,
-             * so delaying implementation until someone needs it.
+             * but for simplicity let's assume if they got it to compile, the
+             * two types can be compared. If the types aren't comparable to
+             * one another, a ClassCastException will be thrown.
+             *
+             * In Python 2 we will allow the ClassCastException to halt the
+             * comparison, because it will most likely return
+             * NotImplemented in both directions and Python 2 will devolve to
+             * comparing the pointer address.
+             *
+             * In Python 3 we will catch the ClassCastException and return
+             * NotImplemented, because there's a chance the reverse comparison
+             * of other.compareTo(self) will work.  If both directions return
+             * NotImplemented (due to ClassCastException), Python 3 will
+             * raise a TypeError.
              */
             jclass comparable;
             jmethodID compareTo;
             jint result;
+#if PY_MAJOR_VERSION >= 3
+            jthrowable exc;
+#endif
 
             comparable = (*env)->FindClass(env, "java/lang/Comparable");
             if(!(*env)->IsInstanceOf(env, self->object, comparable)) {
@@ -802,6 +808,24 @@ static PyObject* pyjobject_richcompare(PyJobject_Object *self,
             }
 
             result = (*env)->CallIntMethod(env, target, compareTo, other_target);
+#if PY_MAJOR_VERSION >= 3
+            exc = (*env)->ExceptionOccurred(env);
+            if(exc != NULL) {
+                jclass castExc = (*env)->FindClass(env, "java/lang/ClassCastException");
+                if((*env)->IsInstanceOf(env, exc, castExc)) {
+                    /*
+                     * To properly meet the richcompare docs we detect
+                     * ClassException and return NotImplemented, enabling
+                     * Python to try the reverse operation of
+                     * other.compareTo(self).  Unfortunately this only safely
+                     * works in Python 3.
+                     */
+                     (*env)->ExceptionClear(env);
+                     Py_INCREF(Py_NotImplemented);
+                     return Py_NotImplemented; 
+                }
+            }
+#endif
             if(process_java_exception(env)) {
                 return NULL;
             }
