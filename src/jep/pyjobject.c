@@ -72,6 +72,7 @@ static int pyjobject_init(JNIEnv *env, PyJobject_Object*);
 static void pyjobject_addmethod(PyJobject_Object*, PyObject*);
 static void pyjobject_addfield(PyJobject_Object*, PyObject*);
 static void pyjobject_init_subtypes(void);
+static int  subtypes_initialized = 0;
 
 static jmethodID objectGetClass  = 0;
 static jmethodID objectEquals    = 0;
@@ -124,6 +125,8 @@ static void pyjobject_init_subtypes(void) {
     }
     if(PyType_Ready(&PyJmap_Type) < 0)
         return;
+    
+    subtypes_initialized = 1;
 }
 
 
@@ -133,7 +136,9 @@ PyObject* pyjobject_new(JNIEnv *env, jobject obj) {
     jclass            objClz;
     int               jtype;
     
-    pyjobject_init_subtypes();
+    if(!subtypes_initialized) {
+        pyjobject_init_subtypes();
+    }
     if(!obj) {
         PyErr_Format(PyExc_RuntimeError, "Invalid object.");
         return NULL;
@@ -318,17 +323,10 @@ static int pyjobject_init(JNIEnv *env, PyJobject_Object *pyjob) {
      * enabling the reuse of the pyjmethod for this particular object instance.
      * For more info, see pyjmethodwrapper.
      *
-     * We synchronize to prevent multiple threads from altering the
-     * dictionary at the same time.
-     *
-     * TODO Look into removing this synchronization through JNI.  If we have the
-     * GIL here that should be synchronization enough.
+     * We have the GIL at this point, so we can safely assume we're
+     * synchronized and multiple threads will not alter the dictionary at the
+     * same time.
      */
-    lock = (*env)->FindClass(env, "java/lang/String");
-    if((*env)->MonitorEnter(env, lock) != JNI_OK) {
-        PyErr_Format(PyExc_RuntimeError,
-                "Couldn't get synchronization lock on class method creation.");
-    }
     if(classnamePyJMethodsDict == NULL) {
         classnamePyJMethodsDict = PyDict_New();
     }
@@ -383,11 +381,6 @@ static int pyjobject_init(JNIEnv *env, PyJobject_Object *pyjob) {
         cachedMethodList = pyjMethodList;
         (*env)->DeleteLocalRef(env, methodArray);
     } // end of setting up cache for this Java Class
-    if((*env)->MonitorExit(env, lock) != JNI_OK) {
-        PyErr_Format(PyExc_RuntimeError,
-                "Couldn't release synchronization lock on class method creation.");
-    }
-    // end of synchronization
 
     len = (int) PyList_Size(cachedMethodList);
     for (i = 0; i < len; i++) {
