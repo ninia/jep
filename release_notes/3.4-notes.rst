@@ -1,0 +1,74 @@
+Jep 3.4 Release Notes
+*********************
+
+Python 3 support
+~~~~~~~~~~~~~~~~
+Jep now supports Python 3.2, 3.3, and 3.4 in addition to Python 2.6 and Python
+2.7.  Please make sure to build Jep against the version of Python you intend
+to run.  Note that some unit tests will fail against Python 2.6 since they
+make use of 2.7 improvements added to unittest.
+
+
+More modular install
+~~~~~~~~~~~~~~~~~~~~
+Jep 3.3 installed the jep library (jep.so, libjep.so, or jep.dll) and Jep
+jar to the Python lib directory.  3.4 instead installs the library and jar
+to the site-packages/jep directory.  The only file that is installed
+outside of site-packages is the jep script which is placed in the python/bin
+directory.
+
+
+Improved PyJobject rich compare
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The previous implementation of rich compare only supported the == and !=
+operators when comparing two PyJobjects.  If Jep detects the PyJobject is
+an instance of java.lang.Comparable, it will also support the other rich compare
+operators of <, <=, >, >=.
+
+
+Added PyJmap type
+~~~~~~~~~~~~~~~~~
+A new type PyJmap is automatically created when an instance of the interface
+java.util.Map is detected in Python.  PyJmap extends PyJobject, enabling the
+exact same functionality, but it also implements Python's mapping protocol.
+This enables syntax that is more pythonic, such as
+
+* x = obj[key]
+* obj[key] = x
+* if key in obj:
+
+where obj is a PyJmap and key is a PyJobject.
+
+
+Added PyJiterable, PyJiterator, and PyJcollection types
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+New types have been created to more closely match python syntax when working
+with Java Iterables and Collections.  All of the new types extend PyJobject
+to ensure access to methods and fields where necessary.  The type hierarchy
+matches Java in that
+
+* PyJiterable extends PyJobject
+
+  * Supports iter() such as for i in obj:
+
+* PyJcollection extends PyJiterable
+
+  * Supports iter() through inheritance
+  * Supports len() such as len(obj)
+  * Supports contains() such as if x in obj:
+
+* PyJlist extends PyJcollection
+
+  * Supports the above through inheritance
+  * Supports indexing, slicing, etc
+
+
+Minor changes
+~~~~~~~~~~~~~
+* Jep.getValue(String) will return a HashMap if it detects a Python dictionary
+* PyJclass now extends PyJobject for code simplification
+* PyJlist and PyJarray slicing updated to support Python 3
+* PyJobject now implements __dir__ to support Python 3.3+
+* Thread locking changes to support Python 3
+* Unicode changes to support Python 3
+* Other changes to support Python 3
