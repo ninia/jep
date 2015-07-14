@@ -85,8 +85,10 @@
 
 #ifdef WIN32
 typedef __int64 jeplong;
+#define FILE_SEP               '\\'
 #else
 typedef long long jeplong;
+#define FILE_SEP               '/'
 #endif
 
 // was added in python 2.2

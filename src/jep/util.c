@@ -476,8 +476,7 @@ int process_py_exception(JNIEnv *env, int printTrace) {
 
                         // remove the dir path to look more like a Java StackTraceElement
                         charPyFileNoDir = malloc(sizeof(char) * (namelen + 1));
-                        // TODO does this work right on Windows?
-                        lastBackslash = strrchr(charPyFile, '/');
+                        lastBackslash = strrchr(charPyFile, FILE_SEP);
                         if(lastBackslash != NULL) {
                             strcpy(charPyFileNoDir, lastBackslash + 1);
                         } else {

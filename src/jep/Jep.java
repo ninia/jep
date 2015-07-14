@@ -264,7 +264,7 @@ public final class Jep implements Closeable {
 
             // Added for compatibility with Windows file system
             if (includePath.contains("\\")) {
-                includePath = includePath.replace("\\", "/");
+                includePath = includePath.replace("\\", "\\\\");
             }
 
             eval("import sys");
