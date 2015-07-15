@@ -1,5 +1,8 @@
 Jep 3.1 Release Notes
 *********************
+This release emphasized JDBC support and bug fixes. It is compatible with
+Python 2.6 and 2.7.
+
 
 Lazy loading of standard JDK packages
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -12,7 +15,3 @@ Jep now includes a jdbc module for JDBC interactions.
 
 http://www.oracle.com/technetwork/java/javase/jdbc/index.html
 
-
-Minor fixes
-~~~~~~~~~~~
-A few minor issues have been fixed.

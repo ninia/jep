@@ -1,5 +1,9 @@
 Jep 3.4 Release Notes
 *********************
+This release emphasized Python 3 compatability and more pythonic syntax when
+using java.lang.Iterable and java.util.Collection instances in the Python
+interpreter.  It is compatible with Python 2.6, 2.7, 3.2, 3.3, and 3.4.
+
 
 Python 3 support
 ~~~~~~~~~~~~~~~~
@@ -49,13 +53,13 @@ matches Java in that
 
 * PyJiterable extends PyJobject
 
-  * Supports iter() such as for i in obj:
+  * Supports iter() such as *for i in obj:*
 
 * PyJcollection extends PyJiterable
 
   * Supports iter() through inheritance
-  * Supports len() such as len(obj)
-  * Supports contains() such as if x in obj:
+  * Supports len() such as *len(obj)*
+  * Supports contains() such as *if x in obj:*
 
 * PyJlist extends PyJcollection
 
@@ -63,12 +67,10 @@ matches Java in that
   * Supports indexing, slicing, etc
 
 
-Minor changes
+Other changes
 ~~~~~~~~~~~~~
 * Jep.getValue(String) will return a HashMap if it detects a Python dictionary
 * PyJclass now extends PyJobject for code simplification
-* PyJlist and PyJarray slicing updated to support Python 3
 * PyJobject now implements __dir__ to support Python 3.3+
-* Thread locking changes to support Python 3
-* Unicode changes to support Python 3
-* Other changes to support Python 3
+* Thread locking, unicode, PyJlist/PyJarray slice, and more changes to support Python 3
+

@@ -1,10 +1,15 @@
 Jep 3.0 Release Notes
 *********************
+This release emphasized building with Python's distutils and using a
+Python import hook for importing Java classes.  It is compatible with
+Python 2.6 and 2.7.
+
 
 distutils support
 ~~~~~~~~~~~~~~~~~
-Jep now supports building, installing, and testing using python's distutils for
-simplified building and installation.
+Jep now supports building, installing, and testing using Python's distutils for
+simplified building and installation.  Use setup.py to build and install with
+distutils.
 
 https://docs.python.org/2/distutils/
 
@@ -24,14 +29,10 @@ similar to running a Python interpreter from the command line.  The Jep
 interpreter has access to Java classes on the classpath.
 
 
-Implemented rich compare on pyjobject
+Implemented rich compare on PyJobject
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-pyjobject now implements python's rich compare by delegating to the Java
+PyJobject now implements python's rich compare by delegating to the Java
 object's equals(Object) method.
 
 https://www.python.org/dev/peps/pep-0207/
 
-
-Minor fixes
-~~~~~~~~~~~
-A few minor memory leaks and issues have been fixed.
