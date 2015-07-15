@@ -50,7 +50,7 @@ public class TestGetByteArray {
         byte[] b2 = null;
         try {
             jep = new Jep(false);
-            jep.eval("f = open('" + output.getAbsolutePath() + "')");
+            jep.eval("f = open('" + output.getAbsolutePath() + "', 'rb')");
             jep.eval("x = f.read()");
             jep.eval("f.close()");
             b2 = jep.getValue_bytearray("x");
@@ -75,9 +75,10 @@ public class TestGetByteArray {
             }
         }
 
-        System.out.println("Bytes properly retrieved from Jep");
+        System.out.println("byte[] properly retrieved from Jep");
     }
 
+    @SuppressWarnings("deprecation")
     public static void testGetFloatArray() throws Exception {
         File output = File.createTempFile("testFloatArrayGet", ".bin");
         byte[] b = new byte[SIZE * 4];
@@ -101,7 +102,7 @@ public class TestGetByteArray {
         float[] f2 = null;
         try {
             jep = new Jep(false);
-            jep.eval("f = open('" + output.getAbsolutePath() + "')");
+            jep.eval("f = open('" + output.getAbsolutePath() + "', 'rb')");
             jep.eval("x = f.read()");
             jep.eval("f.close()");
             f2 = jep.getValue_floatarray("x");

@@ -476,6 +476,8 @@ public final class Jep implements Closeable {
 
     /**
      * Retrieves a python string object as a java array.
+     * @deprecated use getValue_bytearray and ByteBuffer.asFloatBuffer() or
+     *                 use numpy.ndarray with float32 to get a jep.NDArray
      * 
      * @param str
      *            a <code>String</code>
@@ -483,7 +485,7 @@ public final class Jep implements Closeable {
      * @exception JepException
      *                if an error occurs
      */
-
+    @Deprecated
     public float[] getValue_floatarray(String str) throws JepException {
         if (this.closed)
             throw new JepException("Jep has been closed.");
