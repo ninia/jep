@@ -8,10 +8,14 @@ def get_python_libs():
 
     See python-config
     """
-    if is_windows():
-        return ['python' + sysconfig.get_config_var('VERSION')]
-
-    return ['python' + sysconfig.get_config_var('VERSION'), 'dl']
+    v = sysconfig.get_config_var('VERSION')
+    ldv = sysconfig.get_config_var('LDVERSION')
+    if ldv:
+        v = ldv
+    libs = ['python' + v]
+    if not is_windows():
+        libs.append('dl')
+    return libs
 
 def get_python_linker_args():
     if is_osx() or is_windows():
