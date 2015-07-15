@@ -37,11 +37,13 @@ java.util.Map is detected in Python.  PyJmap extends PyJobject, enabling the
 exact same functionality, but it also implements Python's mapping protocol.
 This enables syntax that is more pythonic, such as
 
-* x = obj[key]
-* obj[key] = x
-* if key in obj:
+* *x = obj[key]*
+* *obj[key] = x*
+* *if key in obj:*
 
 where obj is a PyJmap and key is a PyJobject.
+
+http://docs.oracle.com/javase/7/docs/api/java/util/Map.html
 
 
 Added PyJiterable, PyJiterator, and PyJcollection types
@@ -65,6 +67,9 @@ matches Java in that
 
   * Supports the above through inheritance
   * Supports indexing, slicing, etc
+
+http://docs.oracle.com/javase/7/docs/api/java/lang/Iterable.html
+http://docs.oracle.com/javase/7/docs/api/java/util/Collection.html
 
 
 Other changes
