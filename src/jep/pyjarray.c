@@ -1530,6 +1530,11 @@ static PyObject* pyjarray_subscript(PyJarray_Object *self, PyObject *item) {
 static PyObject* pyjarray_str(PyJarray_Object *self) {
     PyObject *ret;
 
+#if PY_MAJOR_VERSION >= 3
+    ret = jobject_to_pystring(env, self->object, self->clazz);
+    return ret;
+#else
+    // retained to not break former behavior
     if(!self->pinnedArray) {
         PyErr_SetString(PyExc_RuntimeError, "No pinned array.");
         return NULL;
@@ -1551,6 +1556,7 @@ static PyObject* pyjarray_str(PyJarray_Object *self) {
                         "Unsupported type for str operation.");
         return NULL;
     }
+#endif
 }
 
 
