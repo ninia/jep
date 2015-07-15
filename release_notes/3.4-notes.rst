@@ -69,17 +69,10 @@ matches Java in that
   * Supports indexing, slicing, etc
 
 
-
-* http://docs.oracle.com/javase/7/docs/api/java/lang/Iterable.html
-* http://docs.oracle.com/javase/7/docs/api/java/util/Collection.html
-* http://docs.oracle.com/javase/7/docs/api/java/util/Iterator.html
-* http://docs.oracle.com/javase/7/docs/api/java/util/List.html
-
-
 Other changes
 ~~~~~~~~~~~~~
 * Jep.getValue(String) will return a HashMap if it detects a Python dictionary
 * PyJclass now extends PyJobject for code simplification
-* PyJobject now implements __dir__ to support Python 3.3+
+* PyJobject now implements __dir__() to support Python 3.3+
 * Thread locking, unicode, PyJlist/PyJarray slice, and more changes to support Python 3
 
