@@ -1529,9 +1529,10 @@ static PyObject* pyjarray_subscript(PyJarray_Object *self, PyObject *item) {
 
 static PyObject* pyjarray_str(PyJarray_Object *self) {
     PyObject *ret;
-
 #if PY_MAJOR_VERSION >= 3
-    ret = jobject_to_pystring(env, self->object, self->clazz);
+    JNIEnv   *env = pyembed_get_env();
+
+    ret = jobject_topystring(env, self->object, self->clazz);
     return ret;
 #else
     // retained to not break former behavior
