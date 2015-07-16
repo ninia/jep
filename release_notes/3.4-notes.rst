@@ -32,41 +32,39 @@ operators of <, <=, >, >=.
 
 Added PyJmap type
 ~~~~~~~~~~~~~~~~~
-A new type PyJmap is automatically created when an instance of the interface
-java.util.Map is detected in Python.  PyJmap extends PyJobject, enabling the
-exact same functionality, but it also implements Python's mapping protocol.
-This enables syntax that is more pythonic, such as
+A new type PyJmap has been created to enable developers to more closely match
+Python syntax when working with Java Maps.  PyJmap extends PyJobject to retain
+all previous functionality.  PyJmap implements the following Python methods:
 
-* *x = obj[key]*
-* *obj[key] = x*
-* *if key in obj:*
-
-where obj is a PyJmap and key is a PyJobject.
+* Supports __len__() such as *len(obj)*
+* Supports __getitem__() such as *x = obj[key]*
+* Supports __setitem__() such as *obj[key] = x*
+* Supports __contains__() such as *if key in obj:*
 
 http://docs.oracle.com/javase/7/docs/api/java/util/Map.html
 
 
 Added PyJiterable, PyJiterator, and PyJcollection types
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-New types have been created to more closely match python syntax when working
-with Java Iterables and Collections.  All of the new types extend PyJobject
-to ensure access to methods and fields where necessary.  The type hierarchy
+New types have been created to enable developers to more closely match Python
+syntax when working with Java Iterables and Collections.  All of the new types
+extend PyJobject to retain all previous functionality.  The type hierarchy
 matches Java in that
 
 * PyJiterable extends PyJobject
 
-  * Supports iter() such as *for i in obj:*
+  * Supports __iter__() such as *for i in obj:*
 
 * PyJcollection extends PyJiterable
 
-  * Supports iter() through inheritance
-  * Supports len() such as *len(obj)*
-  * Supports contains() such as *if x in obj:*
+  * Inherits __iter__() from PyJiterable
+  * Supports __len__() such as *len(obj)*
+  * Supports __contains__() such as *if x in obj:*
 
 * PyJlist extends PyJcollection
 
-  * Supports the above through inheritance
-  * Supports indexing, slicing, etc
+  * Inherits __iter__(), __len__(), and __contains()__ from PyJcollection
+  * Supports indexing and slicing with __getitem__() and __setitem__()
 
 
 Other changes
@@ -74,5 +72,4 @@ Other changes
 * Jep.getValue(String) will return a HashMap if it detects a Python dictionary
 * PyJclass now extends PyJobject for code simplification
 * PyJobject now implements __dir__() to support Python 3.3+
-* Thread locking, unicode, PyJlist/PyJarray slice, and more changes to support Python 3
 

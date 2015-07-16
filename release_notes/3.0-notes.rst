@@ -17,7 +17,7 @@ https://docs.python.org/2/distutils/
 Python import hook
 ~~~~~~~~~~~~~~~~~~
 Jep now uses a Python importer hook, PEP 302, for handling imports of Java
-packages and classes and python packages and modules.
+packages and classes and Python packages and modules.
 
 https://www.python.org/dev/peps/pep-0302/
 
@@ -31,7 +31,7 @@ interpreter has access to Java classes on the classpath.
 
 Implemented rich compare on PyJobject
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-PyJobject now implements python's rich compare by delegating to the Java
+PyJobject now implements Python's rich compare by delegating to the Java
 object's equals(Object) method.
 
 https://www.python.org/dev/peps/pep-0207/

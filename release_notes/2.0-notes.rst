@@ -22,7 +22,3 @@ Jep now provides a script engine based on the javax.script package.
 
 http://docs.oracle.com/javase/7/docs/api/javax/script/package-summary.html
 
-
-Minor fixes
-~~~~~~~~~~~
-A variety of minor issues have been fixed.

@@ -55,10 +55,10 @@ receives.
 
 Added PyJlist type
 ~~~~~~~~~~~~~~~~~~
-A new type PyJlist is automatically created when an instance of the interface
-java.util.List is detected in Python.  PyJlist extends PyJobject, enabling the
-exact same functionality, but it also implements Python's sequence protocol.
-This enables commands like *for x in obj:* where obj is a java.util.List.
+A new type PyJlist has been created to enable developers to more closely match
+Python syntax when working with Java Lists.  PyJlist extends PyJobject to retain
+all previous functionality while also implementing Python's sequence protocol.
+This enables commands such as *for x in obj:* where obj is a java.util.List.
 
 * https://docs.oracle.com/javase/7/docs/api/java/util/List.html
 
