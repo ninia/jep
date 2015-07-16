@@ -118,7 +118,7 @@ public class ClassList implements ClassEnquirer {
      * 
      */
     private void loadPackages() throws JepException {
-        ClassLoader cl = this.getClass().getClassLoader();
+        ClassLoader cl = Jep.class.getClassLoader();
 
         Package[] ps = Package.getPackages();
         for (Package p : ps) {
@@ -154,7 +154,7 @@ public class ClassList implements ClassEnquirer {
     private void loadClassList() throws JepException {
         String version = System.getProperty("java.version");
 
-        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        ClassLoader cl = Jep.class.getClassLoader();
         InputStream in = null;
 
         BufferedReader reader = null;
@@ -287,11 +287,11 @@ public class ClassList implements ClassEnquirer {
 
     /**
      * for testing only
-     *
+     * 
      * @param argv
      *            command line arguments
      * @throws Throwable
-     *                if an error occurs
+     *             if an error occurs
      */
     public static void main(String argv[]) throws Throwable {
         if (argv.length > 0) {
