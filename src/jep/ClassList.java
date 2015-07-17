@@ -118,7 +118,7 @@ public class ClassList implements ClassEnquirer {
      * 
      */
     private void loadPackages() throws JepException {
-        ClassLoader cl = Jep.class.getClassLoader();
+        ClassLoader cl = this.getClass().getClassLoader();
 
         Package[] ps = Package.getPackages();
         for (Package p : ps) {
@@ -153,18 +153,34 @@ public class ClassList implements ClassEnquirer {
      */
     private void loadClassList() throws JepException {
         String version = System.getProperty("java.version");
+        ClassLoader[] classloadersToTry = new ClassLoader[] {
+                Thread.currentThread().getContextClassLoader(),
+                Jep.class.getClassLoader() };
+        String rsc = "jep/classlist_";
+        if (version.startsWith("1.8")) {
+            rsc += "8";
+        } else if (version.startsWith("1.7")) {
+            rsc += "7";
+        } else {
+            rsc += "6";
+        }
+        rsc += ".txt";
 
-        ClassLoader cl = Jep.class.getClassLoader();
         InputStream in = null;
-
         BufferedReader reader = null;
+        ClassLoader cl = null;
+        int i = 0;
         try {
-            if (version.startsWith("1.8"))
-                in = cl.getResourceAsStream("jep/classlist_8.txt");
-            else if (version.startsWith("1.7"))
-                in = cl.getResourceAsStream("jep/classlist_7.txt");
-            else
-                in = cl.getResourceAsStream("jep/classlist_6.txt");
+            while (in == null && i < classloadersToTry.length) {
+                cl = classloadersToTry[i];
+                in = cl.getResourceAsStream(rsc);
+            }
+
+            if (in == null) {
+                throw new JepException(
+                        "ClassLoader couldn't find resource "
+                                + rsc);
+            }
 
             reader = new BufferedReader(new InputStreamReader(in));
 
@@ -180,7 +196,7 @@ public class ClassList implements ClassEnquirer {
                 StringBuilder pname = new StringBuilder();
                 String cname = parts[parts.length - 1];
 
-                for (int i = 0; i < parts.length - 1; i++) {
+                for (i = 0; i < parts.length - 1; i++) {
                     pname.append(parts[i]);
                     if (i < parts.length - 2)
                         pname.append(".");
