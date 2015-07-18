@@ -174,11 +174,12 @@ public class ClassList implements ClassEnquirer {
             while (in == null && i < classloadersToTry.length) {
                 cl = classloadersToTry[i];
                 in = cl.getResourceAsStream(rsc);
+                i++;
             }
 
             if (in == null) {
                 throw new JepException(
-                        "ClassLoader couldn't find resource "
+                        "ClassList couldn't find resource "
                                 + rsc);
             }
 
