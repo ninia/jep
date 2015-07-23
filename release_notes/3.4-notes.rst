@@ -1,6 +1,6 @@
 Jep 3.4 Release Notes
 *********************
-This release emphasized Python 3 compatability and more pythonic syntax when
+This release emphasized Python 3 compatibility and more pythonic syntax when
 using java.lang.Iterable and java.util.Collection instances in the Python
 interpreter.  It is compatible with Python 2.6, 2.7, 3.2, 3.3, and 3.4.
 
