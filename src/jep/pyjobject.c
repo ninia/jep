@@ -80,8 +80,6 @@ static jmethodID objectHashCode  = 0;
 static jmethodID classGetMethods = 0;
 static jmethodID classGetFields  = 0;
 static jmethodID classGetName    = 0;
-static PyObject *classnamePyJMethodsDict = NULL;
-
 
 /*
  * MSVC requires tp_base to be set at runtime instead of in
@@ -251,6 +249,7 @@ static int pyjobject_init(JNIEnv *env, PyJobject_Object *pyjob) {
     PyObject         *pyClassName = NULL;
     PyObject         *pyAttrName  = NULL;
 
+    JepThread   *jepThread;
     PyObject    *cachedMethodList = NULL;
 
     (*env)->PushLocalFrame(env, 20);
@@ -325,11 +324,17 @@ static int pyjobject_init(JNIEnv *env, PyJobject_Object *pyjob) {
      * synchronized and multiple threads will not alter the dictionary at the
      * same time.
      */
-    if(classnamePyJMethodsDict == NULL) {
-        classnamePyJMethodsDict = PyDict_New();
+    jepThread = pyembed_get_jepthread();
+    if(jepThread == NULL) {
+        goto EXIT_ERROR;
+    }
+    if(jepThread->fqnToPyJmethods == NULL) {
+        PyObject *methodCache = PyDict_New();
+        Py_INCREF(methodCache);
+        jepThread->fqnToPyJmethods = methodCache;
     }
 
-    cachedMethodList = PyDict_GetItem(classnamePyJMethodsDict, pyClassName);
+    cachedMethodList = PyDict_GetItem(jepThread->fqnToPyJmethods, pyClassName);
     if(cachedMethodList == NULL) {
         PyObject *pyjMethodList = NULL;
         pyjMethodList = PyList_New(0);
@@ -375,7 +380,7 @@ static int pyjobject_init(JNIEnv *env, PyJobject_Object *pyjob) {
             Py_DECREF(pymethod);
             (*env)->DeleteLocalRef(env, rmethod);
         } // end of looping over available methods
-        PyDict_SetItem(classnamePyJMethodsDict, pyClassName, pyjMethodList);
+        PyDict_SetItem(jepThread->fqnToPyJmethods, pyClassName, pyjMethodList);
         cachedMethodList = pyjMethodList;
         (*env)->DeleteLocalRef(env, methodArray);
     } // end of setting up cache for this Java Class

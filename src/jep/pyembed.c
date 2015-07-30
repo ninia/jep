@@ -278,12 +278,13 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller) {
     Py_INCREF(globals);
 
     // init static module
-    jepThread->modjep      = initjep();
-    jepThread->globals     = globals;
-    jepThread->env         = env;
-    jepThread->classloader = (*env)->NewGlobalRef(env, cl);
-    jepThread->caller      = (*env)->NewGlobalRef(env, caller);
-    jepThread->printStack  = 0;
+    jepThread->modjep          = initjep();
+    jepThread->globals         = globals;
+    jepThread->env             = env;
+    jepThread->classloader     = (*env)->NewGlobalRef(env, cl);
+    jepThread->caller          = (*env)->NewGlobalRef(env, caller);
+    jepThread->printStack      = 0;
+    jepThread->fqnToPyJmethods = NULL;
 
     if((tdict = PyThreadState_GetDict()) != NULL) {
         PyObject *key, *t;
@@ -332,6 +333,10 @@ void pyembed_thread_close(intptr_t _jepThread) {
 
     if(jepThread->globals) {
         Py_DECREF(jepThread->globals);
+    }
+    if(jepThread->fqnToPyJmethods) {
+       PyDict_Clear(jepThread->fqnToPyJmethods);
+       Py_DECREF(jepThread->fqnToPyJmethods); 
     }
     if(jepThread->modjep) {
         PyObject *moddict = PyModule_GetDict(jepThread->modjep);
