@@ -31,9 +31,9 @@ import java.util.Locale;
 import java.util.Set;
 
 /**
- * NamingConventionClassEnquirer.java - A simple enquirer to see
- * if the package/class to be imported in a Python interpreter should
- * be considered as a Java package/class.
+ * NamingConventionClassEnquirer.java - A simple enquirer to see if the
+ * package/class to be imported in a Python interpreter should be considered as
+ * a Java package/class.
  * 
  * This class is useful for the following scenarios:
  * <ul>
@@ -100,7 +100,9 @@ public class NamingConventionClassEnquirer implements ClassEnquirer {
      * Adds a top level package name to the list of names that should be
      * considered as Java packages
      * 
-     * @param pkgStart the start of a java package name to check, e.g. com, gov, us, it, fr
+     * @param pkgStart
+     *            the start of a java package name to check, e.g. com, gov, us,
+     *            it, fr
      */
     public void addTopLevelPackageName(String pkgStart) {
         javaNames.add(pkgStart);
@@ -122,6 +124,11 @@ public class NamingConventionClassEnquirer implements ClassEnquirer {
     @Override
     public boolean supportsPackageImport() {
         return false;
+    }
+
+    @Override
+    public String[] getClassNames(String pkgName) {
+        return null;
     }
 
 }

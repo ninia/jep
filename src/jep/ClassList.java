@@ -178,9 +178,8 @@ public class ClassList implements ClassEnquirer {
             }
 
             if (in == null) {
-                throw new JepException(
-                        "ClassList couldn't find resource "
-                                + rsc);
+                throw new JepException("ClassList couldn't find resource "
+                        + rsc);
             }
 
             reader = new BufferedReader(new InputStreamReader(in));
@@ -265,11 +264,10 @@ public class ClassList implements ClassEnquirer {
      * @param p
      *            a <code>String</code> value
      * @return <code>String[]</code> array of class names
-     * @exception JepException
-     *                if an error occurs
      */
-    public static String[] get(String p) throws JepException {
-        return ClassList.getInstance()._get(p);
+    @Override
+    public String[] getClassNames(String p) {
+        return _get(p);
     }
 
     /**
@@ -313,15 +311,15 @@ public class ClassList implements ClassEnquirer {
     public static void main(String argv[]) throws Throwable {
         if (argv.length > 0) {
             for (String arg : argv) {
-                for (String c : ClassList.get(arg))
+                for (String c : ClassList.getInstance().getClassNames(arg))
                     System.out.println(c);
             }
         } else {
-            for (String c : ClassList.get("java.lang"))
+            for (String c : ClassList.getInstance().getClassNames("java.lang"))
                 System.out.println(c);
 
             // test loadPackages
-            for (String c : ClassList.get("jep"))
+            for (String c : ClassList.getInstance().getClassNames("jep"))
                 System.out.println(c);
         }
     }

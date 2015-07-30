@@ -29,7 +29,7 @@ package jep;
  * JEP's importer hook (see <a
  * href="https://www.python.org/dev/peps/pep-0302/">PEP 302</a>) to determine if
  * an attempt to import a module/package or class should be directed to the
- * Python importer or the Java importer. *
+ * Python importer or the Java importer.
  * 
  * @author [ndjensen at gmail.com] Nate Jensen
  * @version $Id$
@@ -37,11 +37,14 @@ package jep;
 public interface ClassEnquirer {
 
     /*
-     * TODO: Implement an OSGi class enquirer. Implement a pseudo-secure class
-     * enquirer. jep.findClass(name) ignores the import hook and wouldn't go
-     * through the secure enquirer, so it would still require a restricted
-     * ClassLoader to be secure. However, they could potentially be used in
-     * tandem for faster performance or dynamic behavior.
+     * TODO: Implement an OSGi class enquirer.
+     * 
+     * TODO Implement a pseudo-secure class enquirer. A normal import would go
+     * through the enquirer, but that can be stepped around by using
+     * jep.findClass(name). So a ClassEnquirer can't enforce security and Jep
+     * would still require a restricted ClassLoader to be secure. However, they
+     * could potentially be used in tandem for faster performance or dynamic
+     * behavior.
      * 
      * TODO Look into adding a method to get sub-packages, though there's not a
      * good way to implement that in Java short of pre-determination of what is
@@ -95,5 +98,17 @@ public interface ClassEnquirer {
      *         importing classes.
      */
     public boolean supportsPackageImport();
+
+    /**
+     * Given a Java package name, gets the fully-qualified classnames available
+     * for import in the package. In general this method should return null if
+     * {@code supportsPackageImport()} returns false.
+     * 
+     * @param pkgName
+     *            the name of a package the ClassEnquirer supports, such as
+     *            java.util
+     * @return the list of classnames in the package
+     */
+    public String[] getClassNames(String pkgName);
 
 }

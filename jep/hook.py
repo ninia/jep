@@ -54,8 +54,8 @@ class JepImporter(object):
             if self.classlist.supportsPackageImport():
                 # get the list of classes in package and add them as attributes
                 # to the module
-                classlist = self.classlist.get(fullname)
-                if classlist:
+                classlist = self.classlist.getClassNames(fullname)
+                if classlist:                    
                     for name in classlist:
                         try:
                             setattr(mod, name.split('.')[-1], forName(name))
