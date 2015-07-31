@@ -330,7 +330,6 @@ static int pyjobject_init(JNIEnv *env, PyJobject_Object *pyjob) {
     }
     if(jepThread->fqnToPyJmethods == NULL) {
         PyObject *methodCache = PyDict_New();
-        Py_INCREF(methodCache);
         jepThread->fqnToPyJmethods = methodCache;
     }
 

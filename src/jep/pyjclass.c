@@ -310,7 +310,7 @@ static void pyjclass_dealloc(PyJclass_Object *self) {
     if(self->initArray)
         (*env)->DeleteGlobalRef(env, self->initArray);
     free(self->numArgsPerInit);
-    PyObject_Del(self);
+    pyjobject_dealloc((PyJobject_Object*) self); 
 #endif
 }
 
