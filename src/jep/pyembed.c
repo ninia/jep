@@ -331,7 +331,12 @@ void pyembed_thread_close(intptr_t _jepThread) {
         PyDict_DelItem(tdict, key);
     Py_DECREF(key);
 
+    /*
+     * clear out the dictionaries before decrefing them to provide an extra
+     * layer of safety on reference counts
+     */   
     if(jepThread->globals) {
+        PyDict_Clear(jepThread->globals); 
         Py_DECREF(jepThread->globals);
     }
     if(jepThread->fqnToPyJmethods) {
@@ -340,10 +345,6 @@ void pyembed_thread_close(intptr_t _jepThread) {
     }
     if(jepThread->modjep) {
         PyObject *moddict = PyModule_GetDict(jepThread->modjep);
-        /*
-         * we need to clear out the jep module's dictionary, otherwise it
-         * can leak references to some of its attributes
-         */
         if(moddict) {
             PyDict_Clear(moddict);
         }
