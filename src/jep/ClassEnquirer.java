@@ -26,7 +26,7 @@ package jep;
 
 /**
  * Interface to enquire if a name is available to be imported from Java. Used by
- * JEP's importer hook (see <a
+ * Jep's importer hook (see <a
  * href="https://www.python.org/dev/peps/pep-0302/">PEP 302</a>) to determine if
  * an attempt to import a module/package or class should be directed to the
  * Python importer or the Java importer.
@@ -69,7 +69,7 @@ public interface ClassEnquirer {
     /**
      * Whether or not this ClassEnquirer supports importing Java classes at the
      * package level in addition to the class level. For example, with the right
-     * ClassLoader JEP should always be able to successfully import Java classes
+     * ClassLoader Jep should always be able to successfully import Java classes
      * with syntax such as:
      * 
      * <pre>

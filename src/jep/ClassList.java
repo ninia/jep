@@ -39,8 +39,10 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 /**
- * Searches for loaded classes from the JRE and the Java classpath. This is the
- * default ClassEnquirer and is used by the command line jep script.
+ * A singleton that searches for loaded classes from the JRE and the Java
+ * classpath. This is the default ClassEnquirer that is used if no ClassEnquirer
+ * is specified when constructing Jep instances. ClassList is also used by the
+ * command line jep script.
  * 
  * @author [mrjohnson0 at sourceforge.net] Mike Johnson
  * @version $Id$

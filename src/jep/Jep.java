@@ -34,17 +34,17 @@ import jep.python.PyObject;
 
 /**
  * Embeds CPython in Java. Each Jep instance can be considered a Python
- * subintepreter, mostly sandboxed from other Jep instances. However, it is not
- * guaranteed to be completely sandboxed, as one subinterpreter may be able to
- * affect another when using CPython extensions.
+ * sub-intepreter, mostly sandboxed from other Jep instances. However, it is not
+ * guaranteed to be completely sandboxed, as one sub-interpreter may be able to
+ * affect another when using CPython extensions or referencing the same Java
+ * objects in different sub-interpreters.
  * 
  * In general, methods called on a Jep instance must be called from the same
- * thread that created the instance. Jep instances should always be closed when
- * no longer needed to prevent memory leaks.
- * 
- * To maintain stability, avoid having two Jep instances running on the same
- * thread at the same time. Instead provide different threads or close() one
- * before instantiating another on the same thread.
+ * thread that created the instance. To maintain stability, avoid having two Jep
+ * instances running on the same thread at the same time. Instead provide
+ * different threads or close() one before instantiating another on the same
+ * thread. Jep instances should always be closed when no longer needed to
+ * prevent memory leaks.
  * 
  * @author [mrjohnson0 at sourceforge.net] Mike Johnson
  * @version $Id$
@@ -95,7 +95,7 @@ public final class Jep implements Closeable {
 
     /**
      * Loads the jep library (e.g. libjep.so or jep.dll) and initializes the
-     * main python interpreter that all subinterpreters will be created from.
+     * main python interpreter that all sub-interpreters will be created from.
      */
     private static class TopInterpreter {
         Throwable error;
@@ -166,7 +166,8 @@ public final class Jep implements Closeable {
     // -------------------------------------------------- constructors
 
     /**
-     * Creates a new <code>Jep</code> instance.
+     * Creates a new <code>Jep</code> instance and its associated
+     * sub-interpreter.
      * 
      * @exception JepException
      *                if an error occurs
@@ -176,10 +177,12 @@ public final class Jep implements Closeable {
     }
 
     /**
-     * Creates a new <code>Jep</code> instance.
+     * Creates a new <code>Jep</code> instance and its associated
+     * sub-interpreter.
      * 
      * @param interactive
-     *            a <code>boolean</code> value
+     *            whether {@link #eval(String)} should support the slower
+     *            behavior of potentially waiting for multiple statements
      * @exception JepException
      *                if an error occurs
      */
@@ -188,12 +191,14 @@ public final class Jep implements Closeable {
     }
 
     /**
-     * Creates a new <code>Jep</code> instance.
+     * Creates a new <code>Jep</code> instance and its associated
+     * sub-interpreter.
      * 
      * @param interactive
-     *            a <code>boolean</code> value
+     *            whether {@link #eval(String)} should support the slower
+     *            behavior of potentially waiting for multiple statements
      * @param includePath
-     *            a ':' delimited <code>String</code> of directories
+     *            a path of directories separated by File.pathSeparator
      * @exception JepException
      *                if an error occurs
      */
@@ -202,14 +207,16 @@ public final class Jep implements Closeable {
     }
 
     /**
-     * Creates a new <code>Jep</code> instance.
+     * Creates a new <code>Jep</code> instance and its associated
+     * sub-interpreter.
      * 
      * @param interactive
-     *            a <code>boolean</code> value
+     *            whether {@link #eval(String)} should support the slower
+     *            behavior of potentially waiting for multiple statements
      * @param includePath
-     *            a path separated by File.pathSeparator
+     *            a path of directories separated by File.pathSeparator
      * @param cl
-     *            a <code>ClassLoader</code> value
+     *            the ClassLoader to use when importing java classes from python
      * @exception JepException
      *                if an error occurs
      */
@@ -219,17 +226,19 @@ public final class Jep implements Closeable {
     }
 
     /**
-     * Creates a new <code>Jep</code> instance.
+     * Creates a new <code>Jep</code> instance and its associated
+     * sub-interpreter.
      * 
      * @param interactive
-     *            a <code>boolean</code> value
+     *            whether {@link #eval(String)} should support the slower
+     *            behavior of potentially waiting for multiple statements
      * @param includePath
-     *            a path separated by File.pathSeparator
+     *            a path of directories separated by File.pathSeparator
      * @param cl
-     *            a <code>ClassLoader</code> value
+     *            the ClassLoader to use when importing java classes from python
      * @param ce
-     *            a <code>ClassEnquirer</code> value, or null for the default
-     *            ClassList
+     *            a <code>ClassEnquirer</code> to determine which imports are
+     *            python vs java, or null for the default ClassList
      * @exception JepException
      *                if an error occurs
      */
@@ -382,15 +391,15 @@ public final class Jep implements Closeable {
      * Non-interactive mode is faster, but code blocks must be complete.
      * 
      * For Example:
-     * <code>eval("if(Test):\n\tprint 'w00t'")</code>
+     * <code>eval("if(Test):\n\tprint('w00t')")</code>
      * This is a limitation on the Python interpreter and unlikely to change.
      * 
-     * Also, Python does not readly return object values from eval(). Use
+     * Also, Python does not readily return object values from eval(). Use
      * {@link #getValue(java.lang.String)} instead.
      * </pre>
      * 
      * @param str
-     *            a <code>String</code> value
+     *            a <code>String</code> statement to eval
      * @return true if statement complete and was executed.
      * @exception JepException
      *                if an error occurs
@@ -446,11 +455,13 @@ public final class Jep implements Closeable {
     private native void eval(long tstate, String str) throws JepException;
 
     /**
-     * <pre>
-     *  Retrieves a value from python. If the result is not a java object,
-     *  the implementation currently returns a String.
      * 
-     *  Python is pretty picky about what it excepts here. The general syntax:
+     * Retrieves a value from python. If the value is not a java object or one
+     * of the supported python types, the implementation currently returns a
+     * String.
+     * 
+     * <pre>
+     *  Python is pretty picky about what it accepts here. The general syntax:
      *  <code>
      *  eval("a = 5")
      *  String a = (String) getValue("a")
@@ -459,7 +470,8 @@ public final class Jep implements Closeable {
      * </pre>
      * 
      * @param str
-     *            a <code>String</code> value
+     *            the name of the python variable to get from the
+     *            sub-interpreter's global scope
      * @return an <code>Object</code> value
      * @exception JepException
      *                if an error occurs
@@ -476,11 +488,13 @@ public final class Jep implements Closeable {
 
     /**
      * Retrieves a python string object as a java array.
-     * @deprecated use getValue_bytearray and ByteBuffer.asFloatBuffer() or
-     *                 use numpy.ndarray with float32 to get a jep.NDArray
+     * 
+     * @deprecated use getValue_bytearray and ByteBuffer.asFloatBuffer() or use
+     *             numpy.ndarray with float32 to get a jep.NDArray
      * 
      * @param str
-     *            a <code>String</code>
+     *            the name of the python variable to get from the
+     *            sub-interpreter's global scope
      * @return an <code>Object</code> array
      * @exception JepException
      *                if an error occurs
@@ -498,10 +512,11 @@ public final class Jep implements Closeable {
             throws JepException;
 
     /**
-     * Retrieves a python string object as a java array.
+     * Retrieves a python string object as a java byte[].
      * 
      * @param str
-     *            a <code>String</code>
+     *            the name of the python variable to get from the
+     *            sub-interpreter's global scope
      * @return an <code>Object</code> array
      * @exception JepException
      *                if an error occurs
@@ -593,32 +608,32 @@ public final class Jep implements Closeable {
     private native void setClassLoader(long tstate, ClassLoader cl);
 
     /**
-     * Changes behavior of eval(String). Interactive mode can wait for further
-     * python statements to be evaled, while non-interactive mode can only
-     * execute complete python statements.
+     * Changes behavior of {@link #eval(String)}. Interactive mode can wait for
+     * further python statements to be evaled, while non-interactive mode can
+     * only execute complete python statements.
      * 
      * @param v
-     *            a <code>boolean</code> value
+     *            if the sub-interpreter should run in interactive mode
      */
     public void setInteractive(boolean v) {
         this.interactive = v;
     }
 
     /**
-     * Gets whether or not this interpreter is interactive.
+     * Gets whether or not this sub-interpreter is interactive.
      * 
-     * @return a <code>boolean</code> value
+     * @return whether or not the sub-interpreter is interactive
      */
     public boolean isInteractive() {
         return this.interactive;
     }
 
     /**
-     * Sets the Java Object into the interpreter's global scope with the
+     * Sets the Java Object into the sub-interpreter's global scope with the
      * specified variable name.
      * 
      * @param name
-     *            a <code>String</code> value
+     *            the python name for the variable
      * @param v
      *            an <code>Object</code> value
      * @exception JepException
@@ -659,11 +674,11 @@ public final class Jep implements Closeable {
             throws JepException;
 
     /**
-     * Sets the Java String into the interpreter's global scope with the
+     * Sets the Java String into the sub-interpreter's global scope with the
      * specified variable name.
      * 
      * @param name
-     *            a <code>String</code> value
+     *            the python name for the variable
      * @param v
      *            a <code>String</code> value
      * @exception JepException
@@ -681,11 +696,11 @@ public final class Jep implements Closeable {
             throws JepException;
 
     /**
-     * Sets the Java boolean into the interpreter's global scope with the
+     * Sets the Java boolean into the sub-interpreter's global scope with the
      * specified variable name.
      * 
      * @param name
-     *            a <code>String</code> value
+     *            the python name for the variable
      * @param v
      *            a <code>boolean</code> value
      * @exception JepException
@@ -700,11 +715,11 @@ public final class Jep implements Closeable {
     }
 
     /**
-     * Sets the Java int into the interpreter's global scope with the specified
-     * variable name.
+     * Sets the Java int into the sub-interpreter's global scope with the
+     * specified variable name.
      * 
      * @param name
-     *            a <code>String</code> value
+     *            the python name for the variable
      * @param v
      *            an <code>int</code> value
      * @exception JepException
@@ -719,11 +734,11 @@ public final class Jep implements Closeable {
     }
 
     /**
-     * Sets the Java short into the interpreter's global scope with the
+     * Sets the Java short into the sub-interpreter's global scope with the
      * specified variable name.
      * 
      * @param name
-     *            a <code>String</code> value
+     *            the python name for the variable
      * @param v
      *            an <code>int</code> value
      * @exception JepException
@@ -741,11 +756,11 @@ public final class Jep implements Closeable {
             throws JepException;
 
     /**
-     * Sets the Java char[] into the interpreter's global scope with the
+     * Sets the Java char[] into the sub-interpreter's global scope with the
      * specified variable name.
      * 
      * @param name
-     *            a <code>String</code> value
+     *            the python name for the variable
      * @param v
      *            a <code>char[]</code> value
      * @exception JepException
@@ -760,11 +775,11 @@ public final class Jep implements Closeable {
     }
 
     /**
-     * Sets the Java char into the interpreter's global scope with the specified
-     * variable name.
+     * Sets the Java char into the sub-interpreter's global scope with the
+     * specified variable name.
      * 
      * @param name
-     *            a <code>String</code> value
+     *            the python name for the variable
      * @param v
      *            a <code>char</code> value
      * @exception JepException
@@ -779,11 +794,11 @@ public final class Jep implements Closeable {
     }
 
     /**
-     * Sets the Java byte into the interpreter's global scope with the specified
-     * variable name.
+     * Sets the Java byte into the sub-interpreter's global scope with the
+     * specified variable name.
      * 
      * @param name
-     *            a <code>String</code> value
+     *            the python name for the variable
      * @param b
      *            a <code>byte</code> value
      * @exception JepException
@@ -798,11 +813,11 @@ public final class Jep implements Closeable {
     }
 
     /**
-     * Sets the Java long into the interpreter's global scope with the specified
-     * variable name.
+     * Sets the Java long into the sub-interpreter's global scope with the
+     * specified variable name.
      * 
      * @param name
-     *            a <code>String</code> value
+     *            the python name for the variable
      * @param v
      *            a <code>long</code> value
      * @exception JepException
@@ -820,11 +835,11 @@ public final class Jep implements Closeable {
             throws JepException;
 
     /**
-     * Sets the Java double into the interpreter's global scope with the
+     * Sets the Java double into the sub-interpreter's global scope with the
      * specified variable name.
      * 
      * @param name
-     *            a <code>String</code> value
+     *            the python name for the variable
      * @param v
      *            a <code>double</code> value
      * @exception JepException
@@ -842,11 +857,11 @@ public final class Jep implements Closeable {
             throws JepException;
 
     /**
-     * Sets the Java float into the interpreter's global scope with the
+     * Sets the Java float into the sub-interpreter's global scope with the
      * specified variable name.
      * 
      * @param name
-     *            a <code>String</code> value
+     *            the python name for the variable
      * @param v
      *            a <code>float</code> value
      * @exception JepException
@@ -866,11 +881,11 @@ public final class Jep implements Closeable {
     // -------------------------------------------------- set arrays
 
     /**
-     * Sets the Java boolean[] into the interpreter's global scope with the
+     * Sets the Java boolean[] into the sub-interpreter's global scope with the
      * specified variable name.
      * 
      * @param name
-     *            a <code>String</code> value
+     *            the python name for the variable
      * @param v
      *            a <code>boolean[]</code> value
      * @exception JepException
@@ -888,11 +903,11 @@ public final class Jep implements Closeable {
             throws JepException;
 
     /**
-     * Sets the Java int[] into the interpreter's global scope with the
+     * Sets the Java int[] into the sub-interpreter's global scope with the
      * specified variable name.
      * 
      * @param name
-     *            a <code>String</code> value
+     *            the python name for the variable
      * @param v
      *            an <code>int[]</code> value
      * @exception JepException
@@ -910,11 +925,11 @@ public final class Jep implements Closeable {
             throws JepException;
 
     /**
-     * Sets the Java short[] into the interpreter's global scope with the
+     * Sets the Java short[] into the sub-interpreter's global scope with the
      * specified variable name.
      * 
      * @param name
-     *            a <code>String</code> value
+     *            the python name for the variable
      * @param v
      *            a <code>short[]</code> value
      * @exception JepException
@@ -932,11 +947,11 @@ public final class Jep implements Closeable {
             throws JepException;
 
     /**
-     * Sets the Java byte[] into the interpreter's global scope with the
+     * Sets the Java byte[] into the sub-interpreter's global scope with the
      * specified variable name.
      * 
      * @param name
-     *            a <code>String</code> value
+     *            the python name for the variable
      * @param v
      *            a <code>byte[]</code> value
      * @exception JepException
@@ -954,11 +969,11 @@ public final class Jep implements Closeable {
             throws JepException;
 
     /**
-     * Sets the Java long[] into the interpreter's global scope with the
+     * Sets the Java long[] into the sub-interpreter's global scope with the
      * specified variable name.
      * 
      * @param name
-     *            a <code>String</code> value
+     *            the python name for the variable
      * @param v
      *            a <code>long[]</code> value
      * @exception JepException
@@ -976,11 +991,11 @@ public final class Jep implements Closeable {
             throws JepException;
 
     /**
-     * Sets the Java double[] into the interpreter's global scope with the
+     * Sets the Java double[] into the sub-interpreter's global scope with the
      * specified variable name.
      * 
      * @param name
-     *            a <code>String</code> value
+     *            the python name for the variable
      * @param v
      *            a <code>double[]</code> value
      * @exception JepException
@@ -998,11 +1013,11 @@ public final class Jep implements Closeable {
             throws JepException;
 
     /**
-     * Sets the Java float[] into the interpreter's global scope with the
+     * Sets the Java float[] into the sub-interpreter's global scope with the
      * specified variable name.
      * 
      * @param name
-     *            a <code>String</code> value
+     *            the python name for the variable
      * @param v
      *            a <code>float[]</code> value
      * @exception JepException
@@ -1022,7 +1037,7 @@ public final class Jep implements Closeable {
     // -------------------------------------------------- close me
 
     /**
-     * Shuts down the python subinterpreter. Make sure you call this to prevent
+     * Shuts down the python sub-interpreter. Make sure you call this to prevent
      * memory leaks.
      * 
      */
