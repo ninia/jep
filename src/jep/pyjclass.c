@@ -286,6 +286,10 @@ static PyObject* pyjclass_add_inner_classes(JNIEnv *env,
 
                 if(PyObject_SetAttrString((PyObject*) topClz, charName, attrClz) == -1) {
                     printf("Error adding inner class %s\n", charName);
+                } else {
+                    PyObject *pyname = PyString_FromString(charName);
+                    pyjobject_addfield((PyJobject_Object*) topClz, pyname);
+                    Py_DECREF(pyname);
                 }
                 release_utf_char(env, shortName, charName);
             }

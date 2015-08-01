@@ -60,6 +60,9 @@ PyObject* pyjobject_new_class(JNIEnv*, jclass);
 PyObject* pyjobject_find_method(PyJobject_Object*, PyObject*, PyObject*);
 int pyjobject_check(PyObject *obj);
 
+// this method needs to be available to pyjclass
+void pyjobject_addfield(PyJobject_Object*, PyObject*);
+
 // these methods need to be available to pyjlist
 int pyjobject_setattr(PyJobject_Object*, char*, PyObject*);
 PyObject* pyjobject_getattr(PyJobject_Object*, char*);

@@ -70,7 +70,6 @@
 
 static int pyjobject_init(JNIEnv *env, PyJobject_Object*);
 static void pyjobject_addmethod(PyJobject_Object*, PyObject*);
-static void pyjobject_addfield(PyJobject_Object*, PyObject*);
 static void pyjobject_init_subtypes(void);
 static int  subtypes_initialized = 0;
 
@@ -282,7 +281,7 @@ static int pyjobject_init(JNIEnv *env, PyJobject_Object *pyjob) {
     pyClassName = PyString_FromString(cClassName);
     release_utf_char(env, className, cClassName);
     pyAttrName = PyString_FromString("java_name");
-    if(PyObject_SetAttr((PyObject *) pyjob, pyAttrName, pyClassName) != 0) {
+    if(PyObject_SetAttr((PyObject *) pyjob, pyAttrName, pyClassName) == -1) {
         PyErr_Format(PyExc_RuntimeError,
                 "Couldn't add java_name as attribute.");
     } else {
@@ -503,7 +502,7 @@ static void pyjobject_addmethod(PyJobject_Object *obj, PyObject *name) {
 }
 
 
-static void pyjobject_addfield(PyJobject_Object *obj, PyObject *name) {
+void pyjobject_addfield(PyJobject_Object *obj, PyObject *name) {
     if(!PyString_Check(name))
         return;
     if(!PyList_Check(obj->fields))
