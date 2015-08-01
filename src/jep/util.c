@@ -834,6 +834,39 @@ void release_utf_char(JNIEnv *env, jstring str, const char *v) {
 }
 
 
+/*
+ * clears a dictionary by iterating over the keys, removing each item
+ * and then decrefing the item after it is removed
+ */
+void safe_dict_clear(PyObject *obj) {
+    PyObject   *keys;
+    Py_ssize_t  keyCount;
+    Py_ssize_t  keyIndex;
+
+    if(!PyDict_Check(obj)) {
+        // shouldn't ever happen
+        PyErr_SetString(PyExc_TypeError, "Invalid type for safe_dict_clear()");
+        return;
+    }
+
+    keys = PyDict_Keys(obj);
+    keyCount = Py_SIZE(keys);
+
+    for(keyIndex = 0; keyIndex < keyCount; keyIndex++) {
+        PyObject *key, *item;
+
+        key  = PyList_GetItem(keys, keyIndex);
+        item = PyDict_GetItem(obj, key);
+        PyDict_DelItem(obj, key);
+        Py_DECREF(item);
+    }
+    Py_DECREF(keys);
+
+    // should be unnecessary, but let's be safe
+    PyDict_Clear(obj);
+}
+
+
 // in order to call methods that return primitives,
 // we have to know they're return type. that's easy,
 // i'm simply using the reflection api to call getReturnType().
