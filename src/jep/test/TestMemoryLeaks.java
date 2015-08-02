@@ -27,12 +27,21 @@ public class TestMemoryLeaks {
      * @throws JepException
      */
     public static void main(String[] args) throws JepException {
-        testStartStopSubInterpreter();
+        // testStartStopSubInterpreter();
+        testSimpleImport();
     }
 
     public static void testStartStopSubInterpreter() throws JepException {
         for (int i = 0; i < REPEAT; i++) {
             Jep jep = new Jep(false);
+            jep.close();
+        }
+    }
+
+    public static void testSimpleImport() throws JepException {
+        for (int i = 0; i < REPEAT; i++) {
+            Jep jep = new Jep(false);
+            jep.eval("import java.util");
             jep.close();
         }
     }

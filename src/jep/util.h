@@ -152,16 +152,6 @@ int process_java_exception(JNIEnv*);
 // true (1) if an exception was processed.
 int process_import_exception(JNIEnv *env);
 
-/*
- * PyDict_Clear(dict) and Py_DECREF(dict) don't seem to guarantee
- * that a dict's values will be deallocated, even if there's no
- * more references.  It possibly has something to do with scenarios
- * where dict values are other container objects (e.g. lists).
- * Regardless, this method conservatively clears out the
- * dictionary items one by one.
- */
-void safe_dict_clear(PyObject*);
-
 // sets up J<BLAH>TYPE
 int cache_primitive_classes(JNIEnv*);
 void unref_cache_primitive_classes(JNIEnv*);

@@ -326,24 +326,15 @@ void pyembed_thread_close(intptr_t _jepThread) {
 
     PyEval_AcquireThread(jepThread->tstate);
 
-    /*
-     * Freeing the memory is tricky. We can't aggressively start freeing
-     * everything because Py_EndInterpreter() will make use of references
-     * to globals and modjep. We also need to very carefully free
-     * fqnToPyJmethods to dodge garbage collection cycles.
-     */
-
     key = PyString_FromString(DICT_KEY);
     if((tdict = PyThreadState_GetDict()) != NULL && key != NULL)
         PyDict_DelItem(tdict, key);
     Py_DECREF(key);
 
     if(jepThread->globals) {
-        PyDict_Clear(jepThread->globals);
         Py_DECREF(jepThread->globals);
     }
     if(jepThread->fqnToPyJmethods) {
-       safe_dict_clear(jepThread->fqnToPyJmethods);
        Py_DECREF(jepThread->fqnToPyJmethods);
     }
     if(jepThread->modjep) {
@@ -574,8 +565,9 @@ static PyObject* pyembed_forname(PyObject *self, PyObject *args) {
                                                  cl,
                                                  loadClassMethod,
                                                  jstr);
-    if(process_java_exception(env) || !objclazz)
+    if(process_java_exception(env) || !objclazz) {
         return NULL;
+    }
     
     return (PyObject *) pyjobject_new_class(env, objclazz);
 }

@@ -380,6 +380,7 @@ static int pyjobject_init(JNIEnv *env, PyJobject_Object *pyjob) {
         } // end of looping over available methods
         PyDict_SetItem(jepThread->fqnToPyJmethods, pyClassName, pyjMethodList);
         cachedMethodList = pyjMethodList;
+        Py_DECREF(pyjMethodList); // fqnToPyJmethods will hold the reference
         (*env)->DeleteLocalRef(env, methodArray);
     } // end of setting up cache for this Java Class
 

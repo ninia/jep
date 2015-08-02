@@ -207,11 +207,6 @@ static PyObject* pyjclass_add_inner_classes(JNIEnv *env,
     jobjectArray      innerArray    = NULL;
     jsize             innerSize     = 0;
 
-    /*
-     * the first time through langClass should always be here, after that
-     * there are no guarantees, so we will do some safety checks
-     */
-
     if(classGetDeclaredClasses == 0) {
         classGetDeclaredClasses = (*env)->GetMethodID(env,
                                                       JCLASS_TYPE,
@@ -291,10 +286,14 @@ static PyObject* pyjclass_add_inner_classes(JNIEnv *env,
                     pyjobject_addfield((PyJobject_Object*) topClz, pyname);
                     Py_DECREF(pyname);
                 }
+                Py_DECREF(attrClz); // parent class will hold the reference
                 release_utf_char(env, shortName, charName);
             }
+            (*env)->DeleteLocalRef(env, innerClz);
         }
     }
+
+    (*env)->DeleteLocalRef(env, innerArray);
 
     return (PyObject*) topClz;
 }
