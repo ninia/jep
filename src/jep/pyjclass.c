@@ -310,8 +310,10 @@ int pyjclass_check(PyObject *obj) {
 static void pyjclass_dealloc(PyJclass_Object *self) {
 #if USE_DEALLOC
     JNIEnv *env = pyembed_get_env();
-    if(self->initArray)
-        (*env)->DeleteGlobalRef(env, self->initArray);
+    if(env) {
+        if(self->initArray)
+            (*env)->DeleteGlobalRef(env, self->initArray);
+    }
     free(self->numArgsPerInit);
     pyjobject_dealloc((PyJobject_Object*) self);
 #endif

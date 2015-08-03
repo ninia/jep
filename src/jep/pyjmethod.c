@@ -327,9 +327,9 @@ static void pyjmethod_dealloc(PyJmethod_Object *self) {
             (*env)->DeleteGlobalRef(env, self->parameters);
         if(self->rmethod)
             (*env)->DeleteGlobalRef(env, self->rmethod);
-        
-        Py_XDECREF(self->pyMethodName);
     }
+
+    Py_XDECREF(self->pyMethodName);
     
     PyObject_Del(self);
 #endif
