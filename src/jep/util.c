@@ -362,7 +362,6 @@ int process_py_exception(JNIEnv *env, int printTrace) {
                 }
                 jepException = (*env)->NewObject(env, jepExcClazz,
                         jepExcInitStrThrow, jmsg, jexc->object);
-                Py_DECREF(jexc);
             } else {
                 // constructor JepException(String)
                 if(jepExcInitStr == NULL) {
@@ -685,6 +684,7 @@ int process_java_exception(JNIEnv *env) {
 
     pyException = match_exception_type(env, exception);
     PyErr_SetObject(pyException, jpyExc);
+    Py_DECREF(jpyExc);
     (*env)->DeleteLocalRef(env, clazz);
     (*env)->DeleteLocalRef(env, exception);
     return 1;
