@@ -870,8 +870,7 @@ PyObject* pyjobject_getattr(PyJobject_Object *obj,
     ret = pyname = methods = members = NULL;
     
     if(!name) {
-        Py_INCREF(Py_None);
-        return Py_None;
+        Py_RETURN_NONE;
     }
     pyname  = PyString_FromString(name);
     methods = PyString_FromString("__methods__");

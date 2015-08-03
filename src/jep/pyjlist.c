@@ -143,10 +143,8 @@ static PyObject* pyjlist_add(PyObject *o1, PyObject *o2) {
         return NULL;
     }
     result = pyjlist_inplace_add(copy, o2);
-    if(result) {
-        // both pyjlist_new_copy() and pyjlist_inplace_add() increfed it
-        Py_DECREF(result);
-    }
+    // both pyjlist_new_copy() and pyjlist_inplace_add() increfed it
+    Py_XDECREF(result);
     return result;
 }
 
@@ -164,10 +162,8 @@ static PyObject* pyjlist_fill(PyObject *o, Py_ssize_t count) {
         return NULL;
     }
     result = pyjlist_inplace_fill(copy, count);
-    if(result) {
-        // both pyjlist_new_copy() and pyjlist_inplace_fill() increfed it
-        Py_DECREF(result);
-    }
+    // both pyjlist_new_copy() and pyjlist_inplace_fill() increfed it
+    Py_XDECREF(result);
     return result;
 }
 
@@ -199,8 +195,7 @@ static PyObject* pyjlist_getitem(PyObject *o, Py_ssize_t i) {
     }
 
     if(val == NULL) {
-        Py_INCREF(Py_None);
-        return Py_None;
+        Py_RETURN_NONE;
     } else {
         return pyjobject_new(env, val);
     }

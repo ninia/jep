@@ -331,12 +331,8 @@ void pyembed_thread_close(intptr_t _jepThread) {
         PyDict_DelItem(tdict, key);
     Py_DECREF(key);
 
-    if(jepThread->globals) {
-        Py_DECREF(jepThread->globals);
-    }
-    if(jepThread->fqnToPyJmethods) {
-       Py_DECREF(jepThread->fqnToPyJmethods);
-    }
+    Py_XDECREF(jepThread->globals);
+    Py_XDECREF(jepThread->fqnToPyJmethods);
     if(jepThread->modjep) {
         PyObject *moddict = PyModule_GetDict(jepThread->modjep);
         if(moddict) {
@@ -699,12 +695,8 @@ jobject pyembed_invoke(JNIEnv *env,
     ret = pyembed_box_py(env, pyret);
 
 EXIT:
-    if(pyargs) {
-        Py_DECREF(pyargs);
-    }
-    if(pyret) {
-        Py_DECREF(pyret);
-    }
+    Py_XDECREF(pyargs);
+    Py_XDECREF(pyret);
 
     if(types) {
         (*env)->ReleaseIntArrayElements(env,
@@ -750,9 +742,7 @@ void pyembed_eval(JNIEnv *env,
     
     process_py_exception(env, 1);
     
-    if(result != NULL) {
-        Py_DECREF(result);
-    }
+    Py_XDECREF(result);
 
 EXIT:
     PyEval_ReleaseThread(jepThread->tstate);
@@ -898,9 +888,7 @@ intptr_t pyembed_create_module_on(JNIEnv *env,
         ret = (intptr_t) module;
 
 EXIT:
-    if(globals) {
-        Py_DECREF(globals);
-    }
+    Py_XDECREF(globals);
 
     PyEval_ReleaseThread(jepThread->tstate);
 
@@ -1250,9 +1238,7 @@ jobject pyembed_getvalue_on(JNIEnv *env,
 EXIT:
     PyEval_ReleaseThread(jepThread->tstate);
 
-    if(result != NULL) {
-        Py_DECREF(result);
-    }
+    Py_XDECREF(result);
     return ret;
 }
 
@@ -1294,9 +1280,7 @@ jobject pyembed_getvalue(JNIEnv *env, intptr_t _jepThread, char *str) {
 EXIT:
     PyEval_ReleaseThread(jepThread->tstate);
 
-    if(result != NULL) {
-        Py_DECREF(result);
-    }
+    Py_XDECREF(result);
     return ret;
 }
 
@@ -1382,9 +1366,7 @@ jobject pyembed_getvalue_array(JNIEnv *env, intptr_t _jepThread, char *str, int 
 EXIT:
     PyEval_ReleaseThread(jepThread->tstate);
 
-    if(result != NULL) {
-        Py_DECREF(result);
-    }
+    Py_XDECREF(result);
     return ret;
 }
 

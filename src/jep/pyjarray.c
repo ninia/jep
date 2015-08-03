@@ -1265,8 +1265,7 @@ static PyObject* pyjarray_commit(PyJarray_Object *self, PyObject *args) {
 
     pyjarray_release_pinned(self, JNI_COMMIT);
 
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 

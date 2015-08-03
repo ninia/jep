@@ -328,9 +328,7 @@ static void pyjmethod_dealloc(PyJmethod_Object *self) {
         if(self->rmethod)
             (*env)->DeleteGlobalRef(env, self->rmethod);
         
-        if(self->pyMethodName) {
-            Py_DECREF(self->pyMethodName);
-        }
+        Py_XDECREF(self->pyMethodName);
     }
     
     PyObject_Del(self);
@@ -836,8 +834,7 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
     }
     
     if(result == NULL) {
-        Py_INCREF(Py_None);
-        return Py_None;
+        Py_RETURN_NONE;
     }
     
     return result;

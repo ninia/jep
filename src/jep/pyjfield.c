@@ -250,9 +250,7 @@ static void pyjfield_dealloc(PyJfield_Object *self) {
             (*env)->DeleteGlobalRef(env, self->rfield);
     }
     
-    if(self->pyFieldName) {
-        Py_DECREF(self->pyFieldName);
-    }
+    Py_XDECREF(self->pyFieldName);
 
     PyObject_Del(self);
 #endif
@@ -304,8 +302,7 @@ PyObject* pyjfield_get(PyJfield_Object *self) {
             return NULL;
         
         if(jstr == NULL) {
-            Py_INCREF(Py_None);
-            return Py_None;
+            Py_RETURN_NONE;
         }
         
         str    = (*env)->GetStringUTFChars(env, jstr, 0);
@@ -332,8 +329,7 @@ PyObject* pyjfield_get(PyJfield_Object *self) {
             return NULL;
         
         if(obj == NULL) {
-            Py_INCREF(Py_None);
-            return Py_None;
+            Py_RETURN_NONE;
         }
         
         result = pyjobject_new_class(env, obj);
@@ -356,8 +352,7 @@ PyObject* pyjfield_get(PyJfield_Object *self) {
             return NULL;
         
         if(obj == NULL) {
-            Py_INCREF(Py_None);
-            return Py_None;
+            Py_RETURN_NONE;
         }
         
         result = pyjobject_new(env, obj);
@@ -524,14 +519,12 @@ PyObject* pyjfield_get(PyJfield_Object *self) {
         PyErr_Format(PyExc_RuntimeError,
                      "Unknown field type %i.",
                      self->fieldTypeId);
-        Py_INCREF(Py_None);
-        return Py_None;
+        Py_RETURN_NONE;
     }
     
     // shouldn't happen
     if(result == NULL) {
-        Py_INCREF(Py_None);
-        return Py_None;
+        Py_RETURN_NONE;
     }
 
     return result;

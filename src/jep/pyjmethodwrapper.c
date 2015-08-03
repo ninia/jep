@@ -84,9 +84,7 @@ PyJmethodWrapper_Object* pyjmethodwrapper_new(PyJobject_Object *pyjobject, // th
 
 static void pyjmethodwrapper_dealloc(PyJmethodWrapper_Object *self) {
 #if USE_DEALLOC
-    if(self->object) {
-        Py_DECREF(self->object);
-    }
+    Py_XDECREF(self->object);
     PyObject_Del(self);
 #endif
 }

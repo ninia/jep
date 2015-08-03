@@ -399,12 +399,8 @@ int process_py_exception(JNIEnv *env, int printTrace) {
                    */
                   PyErr_Print();
                 }
-                if(modTB != NULL) {
-                    Py_DECREF(modTB);
-                }
-                if(extract != NULL) {
-                    Py_DECREF(extract);
-                }
+                Py_XDECREF(modTB);
+                Py_XDECREF(extract);
             }
 
             /*
@@ -560,12 +556,9 @@ int process_py_exception(JNIEnv *env, int printTrace) {
         }
     }
 
-    if(ptype)
-        Py_DECREF(ptype);
-    if(pvalue)
-        Py_DECREF(pvalue);
-    if(ptrace)
-        Py_DECREF(ptrace);
+    Py_XDECREF(ptype);
+    Py_XDECREF(pvalue);
+    Py_XDECREF(ptrace);
 
     if(jepException != NULL) {
         Py_DECREF(message);
@@ -1618,8 +1611,7 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid) {
     switch(typeid) {
     case -1:
         // null
-        Py_INCREF(Py_None);
-        return Py_None;
+        Py_RETURN_NONE;
 
     case JARRAY_ID:
         return (PyObject *) pyjarray_new(env, val);
@@ -2219,8 +2211,7 @@ jarray convert_pyndarray_jprimitivearray(JNIEnv* env,
             && (paType == NPY_FLOAT64)) {
         arr = (*env)->NewDoubleArray(env, sz);
     } else {
-        if(copy)
-            Py_DECREF(copy);
+        Py_XDECREF(copy);
         PyErr_Format(PyExc_RuntimeError,
                 "Error matching ndarray.dtype to Java primitive type");
         return NULL;
@@ -2231,8 +2222,7 @@ jarray convert_pyndarray_jprimitivearray(JNIEnv* env,
      * couldn't allocate the array
      */
     if(process_java_exception(env) || !arr) {
-        if(copy)
-            Py_DECREF(copy);
+        Py_XDECREF(copy);
         return NULL;
     }
 
@@ -2253,8 +2243,7 @@ jarray convert_pyndarray_jprimitivearray(JNIEnv* env,
         (*env)->SetDoubleArrayRegion(env, arr, 0, sz, (const jdouble *) PyArray_DATA(copy));
     }
 
-    if(copy)
-        Py_DECREF(copy);
+    Py_XDECREF(copy);
 
     if(process_java_exception(env)) {
         PyErr_Format(PyExc_RuntimeError, "Error setting Java primitive array region");
