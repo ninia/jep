@@ -1,7 +1,8 @@
+import traceback
+import os
+import sys
 
 history_file = None
-
-import traceback, os, sys
 
 # python 3 renamed raw_input to input
 if sys.version_info[0] >= 3:
@@ -13,7 +14,7 @@ try:
     import readline
 
     try:
-        has_readline = True        
+        has_readline = True
         history_file = os.path.join(os.environ['HOME'], '.jep')
         if not os.path.exists(history_file):
             readline.write_history_file(history_file)
@@ -68,4 +69,3 @@ def prompt(jep):
                 readline.write_history_file(history_file)
             except IOError:
                 pass
-

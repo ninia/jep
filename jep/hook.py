@@ -1,5 +1,6 @@
 from _jep import forName
-import sys, string
+import sys
+import string
 from types import ModuleType
 
 
@@ -50,12 +51,12 @@ class JepImporter(object):
                 '__file__': '<java>',
             })
             sys.modules[fullname] = mod
-    
+
             if self.classlist.supportsPackageImport():
                 # get the list of classes in package and add them as attributes
                 # to the module
                 classlist = self.classlist.getClassNames(fullname)
-                if classlist: 
+                if classlist:
                     for name in classlist:
                         try:
                             setattr(mod, name.split('.')[-1], forName(name))
@@ -75,8 +76,7 @@ def setupImporter(classlist):
     alreadySetup = False
     for importer in sys.meta_path:
         if isinstance(importer, JepImporter):
-           alreadySetup = True
-           break
+            alreadySetup = True
+            break
     if not alreadySetup:
         sys.meta_path.append(JepImporter(classlist))
-
