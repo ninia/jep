@@ -29,6 +29,8 @@ public class TestMemoryLeaks {
     public static void main(String[] args) throws JepException {
         // testStartStopSubInterpreter();
         testSimpleImport();
+        // testObjectCreation();
+        // testCompare();
     }
 
     public static void testStartStopSubInterpreter() throws JepException {
@@ -42,6 +44,30 @@ public class TestMemoryLeaks {
         for (int i = 0; i < REPEAT; i++) {
             Jep jep = new Jep(false);
             jep.eval("import java.util");
+            jep.close();
+        }
+    }
+
+    public static void testObjectCreation() throws JepException {
+        for (int i = 0; i < REPEAT; i++) {
+            Jep jep = new Jep(false);
+            jep.eval("from java.util import ArrayList");
+            jep.eval("from java.lang import Integer");
+            jep.eval("x = ArrayList()");
+            jep.eval("x.add(Integer(5))");
+            jep.eval("x.add(Integer(-9))");
+            jep.close();
+        }
+    }
+
+    public static void testCompare() throws JepException {
+        for (int i = 0; i < REPEAT; i++) {
+            Jep jep = new Jep(false);
+            jep.eval("from java.lang import Integer");
+            jep.eval("x = Integer(5)");
+            jep.eval("y = Integer(6)");
+            jep.eval("b = (x < y)");
+            Boolean b = (Boolean) jep.getValue("b");
             jep.close();
         }
     }
