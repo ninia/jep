@@ -67,6 +67,12 @@ matches Java in that
   * Supports indexing and slicing with __getitem__() and __setitem__()
 
 
+Better OSGi support
+~~~~~~~~~~~~~~~~~~~
+Thanks to reports from developers using Jep in an OSGi container, we've
+improved the code's handling of resources and restarts of Bundles.
+
+
 Other changes
 ~~~~~~~~~~~~~
 * Jep.getValue(String) will return a HashMap if it detects a Python dictionary
