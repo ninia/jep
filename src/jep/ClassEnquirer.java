@@ -29,7 +29,7 @@ package jep;
  * Jep's importer hook (see <a
  * href="https://www.python.org/dev/peps/pep-0302/">PEP 302</a>) to determine if
  * an attempt to import a module/package or class should be directed to the
- * Python importer or the Java importer.
+ * Python importer or the Java <code>ClassLoader</codE>.
  * 
  * @author [ndjensen at gmail.com] Nate Jensen
  * @version $Id$
@@ -85,13 +85,14 @@ public interface ClassEnquirer {
      * <pre>
      * <code>
      * import java.util as ju
+     * dir(ju)
      * o = ju.ArrayList()
      * </code>
      * </pre>
      * 
-     * This also roughly corresponds to whether or not dir(javaPackage) will
-     * return a list of available classes or only the classes that have been
-     * explicitly imported.
+     * This also roughly corresponds to whether or not
+     * <code>dir(javaPackage)</code> will return a list of available classes or
+     * only the classes that have been explicitly imported.
      * 
      * @return true if this ClassEnquirer supports import of packages in
      *         addition to import of classes, false if it only supports
@@ -102,7 +103,7 @@ public interface ClassEnquirer {
     /**
      * Given a Java package name, gets the fully-qualified classnames available
      * for import in the package. In general this method should return null if
-     * {@code supportsPackageImport()} returns false.
+     * {@link #supportsPackageImport()} returns false.
      * 
      * @param pkgName
      *            the name of a package the ClassEnquirer supports, such as

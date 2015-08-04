@@ -39,7 +39,7 @@ import javax.script.SimpleBindings;
 import jep.python.PyModule;
 
 /**
- * JepScriptEngine.java - implements javax.script.ScriptEngine
+ * Implements {@link javax.script.ScriptEngine}
  * 
  * @author [mrjohnson0 at sourceforge.net] Mike Johnson
  * @version $Id$

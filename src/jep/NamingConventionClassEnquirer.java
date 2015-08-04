@@ -31,22 +31,32 @@ import java.util.Locale;
 import java.util.Set;
 
 /**
- * NamingConventionClassEnquirer.java - A simple enquirer to see if the
- * package/class to be imported in a Python interpreter should be considered as
- * a Java package/class.
+ * <p>
+ * A simple {@link ClassEnquirer} to see if the package/class to be imported in
+ * a Python sub-interpreter should be considered as a Java package/class. This
+ * enquirer can check for import statements beginning with java, com, gov, etc
+ * and country codes such as us, uk, fr, ch, etc.
+ * <p>
  * 
+ * <p>
  * This class is useful for the following scenarios:
  * <ul>
- * <li>You don't want the overhead of initializing ClassList.getInstance()</li>
+ * <li>You don't want the overhead of initializing
+ * {@code ClassList.getInstance()}</li>
  * <li>You don't want all the classes in a package automatically imported</li>
- * <li>You don't have python modules that resemble java package names</li>
+ * <li>You don't have Python modules that resemble Java package names</li>
  * </ul>
+ * </p>
  * 
  * @author [ndjensen at gmail.com] Nate Jensen
  * @version $Id$
  */
 public class NamingConventionClassEnquirer implements ClassEnquirer {
 
+    /**
+     * the default top level package names: java, javax, com, gov, org, edu,
+     * mil, net
+     */
     protected static final List<String> TOP_LEVEL = Arrays.asList("java",
             "javax", "com", "gov", "org", "edu", "mil", "net");
 

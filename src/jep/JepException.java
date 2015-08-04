@@ -25,7 +25,7 @@
 package jep;
 
 /**
- * JepException.java - it happens.
+ * JepException - it happens.
  * 
  * @author [mrjohnson0 at sourceforge.net] Mike Johnson
  * @version $Id$

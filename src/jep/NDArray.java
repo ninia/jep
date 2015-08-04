@@ -28,12 +28,23 @@ import java.lang.reflect.Array;
 import java.util.Arrays;
 
 /**
- * NDArray.java - Represents a <a href=
+ * <p>
+ * Represents a <a href=
  * "http://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html"
  * >numpy.ndarray</a> in Java. If Jep was compiled with numpy support, this
- * object will not be wrapped as a pyjobject in the python interpreter(s), it
- * will instead be transformed into a numpy.ndarray automatically (and vice
- * versa).
+ * object will <b>not</b> be wrapped as a PyJobject in the Python
+ * sub-interpreter(s), it will instead be transformed into a numpy.ndarray
+ * automatically (and vice versa). The transformation in either direction occurs
+ * with a <code>memcpy</code>, therefore changes in the array in one language
+ * will not affect the array in the other language.
+ * </p>
+ * 
+ * <p>
+ * NDArrays only support Java primitive arrays as the underlying type of data.
+ * The data can conceptually be multi-dimensional, but it must be represented as
+ * a one-dimensional array in Java to ensure the memory is contiguous.
+ * </p>
+ * 
  * 
  * @author [ndjensen at gmail.com] Nate Jensen
  * @version $Id$

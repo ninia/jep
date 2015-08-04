@@ -27,7 +27,7 @@ package jep;
 import java.io.File;
 
 /**
- * Run.java - Execute a Python script in the Jep interpreter.
+ * Executes a Python script in a Jep sub-interpreter.
  * 
  * @author [mrjohnson0 at sourceforge.net] Mike Johnson
  * @version $Id$

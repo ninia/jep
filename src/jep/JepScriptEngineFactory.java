@@ -33,7 +33,7 @@ import javax.script.ScriptEngineFactory;
 import javax.script.ScriptException;
 
 /**
- * JepScriptEngineFactory.java
+ * Implements {@link javax.script.ScriptEngineFactory}
  * 
  * @author [mrjohnson0 at sourceforge.net] Mike Johnson
  * @version $Id$

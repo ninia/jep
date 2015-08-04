@@ -27,7 +27,7 @@ package jep;
 import java.lang.reflect.InvocationHandler;
 
 /**
- * Proxy.java - Extend java.lang.reflect.Proxy for callbacks.
+ * Extends java.lang.reflect.Proxy for callbacks.
  * 
  * @author [mrjohnson0 at sourceforge.net] Mike Johnson
  * @version $Id: $
