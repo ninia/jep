@@ -18,7 +18,7 @@ def get_python_libs():
     return libs
 
 def get_python_linker_args():
-    if is_osx() or is_windows():
+    if is_windows():
         return []
     return ['-L{0}'.format(sysconfig.get_config_var('LIBDIR'))]
 
