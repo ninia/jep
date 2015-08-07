@@ -101,14 +101,16 @@ static jmethodID loadClassMethod = 0;
 // jep.Proxy.newProxyInstance
 static jmethodID newProxyMethod = 0;
 
+#if PY_MAJOR_VERSION < 3
 // Integer(int)
 static jmethodID integerIConstructor = 0;
+#endif
 
 // Long(long)
 static jmethodID longJConstructor = 0;
 
-// Float(float)
-static jmethodID floatFConstructor = 0;
+// Double(double)
+static jmethodID doubleDConstructor = 0;
 
 // Boolean(boolean)
 static jmethodID booleanBConstructor = 0;
@@ -962,6 +964,7 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result) {
             return NULL;
     }
 
+#if PY_MAJOR_VERSION < 3
     if(PyInt_Check(result)) {
         jclass clazz;
         jint i = (jint) PyInt_AS_LONG(result);
@@ -980,6 +983,7 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result) {
         else
             return NULL;
     }
+#endif
 
     if(PyLong_Check(result)) {
         jclass clazz;
@@ -1004,19 +1008,19 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result) {
         jclass clazz;
 
         // causes precision loss. python's float type sucks. *shrugs*
-        jfloat f = (jfloat) PyFloat_AS_DOUBLE(result);
+        jdouble d = (jdouble) PyFloat_AS_DOUBLE(result);
 
-        clazz = (*env)->FindClass(env, "java/lang/Float");
+        clazz = (*env)->FindClass(env, "java/lang/Double");
 
-        if(floatFConstructor == 0) {
-            floatFConstructor = (*env)->GetMethodID(env,
+        if(doubleDConstructor == 0) {
+            doubleDConstructor = (*env)->GetMethodID(env,
                                                     clazz,
                                                     "<init>",
-                                                    "(F)V");
+                                                    "(D)V");
         }
 
-        if(!process_java_exception(env) && floatFConstructor)
-            return (*env)->NewObject(env, clazz, floatFConstructor, f);
+        if(!process_java_exception(env) && doubleDConstructor)
+            return (*env)->NewObject(env, clazz, doubleDConstructor, d);
         else
             return NULL;
     }
