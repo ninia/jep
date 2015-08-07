@@ -24,7 +24,7 @@ def get_java_home():
         # newer macs have an executable to help us
         try:
             result = shell('/usr/libexec/java_home')
-            _java_home = result.stdout
+            _java_home = result.stdout.decode("utf-8")
             return _java_home
         except CommandFailed:
             traceback.print_exc()
