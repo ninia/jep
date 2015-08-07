@@ -31,7 +31,7 @@ class TestNumpy(unittest.TestCase):
             y = self.test.testArgAndReturn(x)
             self.assertEqual(x.shape, y.shape)
             self.assertEqual(x.dtype, y.dtype)
-            for i in xrange(10):
+            for i in range(10):
                 self.assertEqual(x[i] + 5, y[i])
             
             

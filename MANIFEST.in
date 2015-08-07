@@ -1,6 +1,6 @@
 recursive-include src *.c *.h *.java
 recursive-include tests *.py
-recursive-include javadoc
+recursive-include javadoc *.html *.css *.gif
 recursive-include commands *.py
 include ChangeLog
 include LICENSE

@@ -71,7 +71,12 @@
 #endif
 #include "numpy/arrayobject.h"
 
+// this is annoying but the method signature of import_array() changes in python 3
+#if PY_MAJOR_VERSION >= 3
+static PyObject* init_numpy(void);
+#else
 static void init_numpy(void);
+#endif
 static int  numpyInitialized = 0;
 static PyObject* convert_jprimitivearray_pyndarray(JNIEnv*, jobject, int, npy_intp*);
 static jarray convert_pyndarray_jprimitivearray(JNIEnv*, PyObject*, jclass);
@@ -2463,13 +2468,24 @@ PyObject* convert_jndarray_pyndarray(JNIEnv *env, jobject obj) {
 
 /*
  * Initializes the numpy extension library.  This is required to be called
- * once and only once, before any PyArray_ methods are called.
+ * once and only once, before any PyArray_ methods are called. Unfortunately
+ * it has to have a different return type in python 2 vs python 3.
  */
+#if PY_MAJOR_VERSION >= 3
+static PyObject* init_numpy(void) {
+    if(!numpyInitialized) {
+        numpyInitialized = 1;
+        import_array();
+    }
+    return NULL;
+}
+#else
 static void init_numpy(void) {
     if(!numpyInitialized) {
         import_array();
         numpyInitialized = 1;
     }
 }
+#endif
 
 #endif
