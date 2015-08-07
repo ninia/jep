@@ -1006,8 +1006,6 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result) {
 
     if(PyFloat_Check(result)) {
         jclass clazz;
-
-        // causes precision loss. python's float type sucks. *shrugs*
         jdouble d = (jdouble) PyFloat_AS_DOUBLE(result);
 
         clazz = (*env)->FindClass(env, "java/lang/Double");
