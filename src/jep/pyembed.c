@@ -333,15 +333,10 @@ void pyembed_thread_close(intptr_t _jepThread) {
         PyDict_DelItem(tdict, key);
     Py_DECREF(key);
 
-    Py_XDECREF(jepThread->globals);
+    Py_CLEAR(jepThread->globals);
     Py_CLEAR(jepThread->fqnToPyJmethods);
-    if(jepThread->modjep) {
-        PyObject *moddict = PyModule_GetDict(jepThread->modjep);
-        if(moddict) {
-            PyDict_Clear(moddict);
-        }
-        Py_DECREF(jepThread->modjep);
-    }
+    Py_CLEAR(jepThread->modjep);
+
     if(jepThread->classloader) {
         (*env)->DeleteGlobalRef(env, jepThread->classloader);
     }
