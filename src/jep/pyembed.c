@@ -334,7 +334,7 @@ void pyembed_thread_close(intptr_t _jepThread) {
     Py_DECREF(key);
 
     Py_XDECREF(jepThread->globals);
-    Py_XDECREF(jepThread->fqnToPyJmethods);
+    Py_CLEAR(jepThread->fqnToPyJmethods);
     if(jepThread->modjep) {
         PyObject *moddict = PyModule_GetDict(jepThread->modjep);
         if(moddict) {
