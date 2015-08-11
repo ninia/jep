@@ -475,10 +475,10 @@ void pyjobject_dealloc(PyJobject_Object *self) {
             (*env)->DeleteGlobalRef(env, self->clazz);
     }
 
-    Py_DECREF(self->attr);
-    Py_DECREF(self->methods);
-    Py_DECREF(self->fields);
-    Py_DECREF(self->javaClassName);
+    Py_CLEAR(self->attr);
+    Py_CLEAR(self->methods);
+    Py_CLEAR(self->fields);
+    Py_CLEAR(self->javaClassName);
     
     PyObject_Del(self);
 #endif

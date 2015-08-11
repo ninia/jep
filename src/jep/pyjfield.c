@@ -250,7 +250,7 @@ static void pyjfield_dealloc(PyJfield_Object *self) {
             (*env)->DeleteGlobalRef(env, self->rfield);
     }
     
-    Py_XDECREF(self->pyFieldName);
+    Py_CLEAR(self->pyFieldName);
 
     PyObject_Del(self);
 #endif
