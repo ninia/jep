@@ -155,6 +155,13 @@ public class ClassList implements ClassEnquirer {
      */
     private void loadClassList() throws JepException {
         String version = System.getProperty("java.version");
+
+        /*
+         * The thread's context ClassLoader is useful if resources have a
+         * different ClassLoader than classes (e.g. tomcat), while the Jep.class
+         * ClassLoader is useful if running inside an OSGi container as a Bundle
+         * (e.g. eclipse).
+         */
         ClassLoader[] classloadersToTry = new ClassLoader[] {
                 Thread.currentThread().getContextClassLoader(),
                 Jep.class.getClassLoader() };

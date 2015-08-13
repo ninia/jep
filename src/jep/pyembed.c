@@ -309,10 +309,9 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller) {
 }
 
 
-void pyembed_thread_close(intptr_t _jepThread) {
+void pyembed_thread_close(JNIEnv *env, intptr_t _jepThread) {
     JepThread     *jepThread;
     PyObject      *tdict, *key;
-    JNIEnv        *env;
 
     jepThread = (JepThread *) _jepThread;
     if(!jepThread) {
@@ -320,12 +319,6 @@ void pyembed_thread_close(intptr_t _jepThread) {
         return;
     }
     
-    env = jepThread->env;
-    if(!env) {
-        printf("WARNING: thread_close, invalid env pointer.\n");
-        return;
-    }
-
     PyEval_AcquireThread(jepThread->tstate);
 
     key = PyString_FromString(DICT_KEY);

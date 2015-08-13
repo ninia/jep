@@ -55,10 +55,7 @@ import jep.python.PyObject;
  */
 public final class Jep implements Closeable {
 
-    private static final String THREAD_WARN = "JEP WARNING: "
-            + "Unsafe reuse of thread ";
-
-    private static final String REUSE_WARN = " for another Python interpreter.\nPlease close() the previous Jep instance to ensure stability.";
+    private static final String THREAD_WARN = "JEP THREAD WARNING: ";
 
     private boolean closed = false;
 
@@ -261,8 +258,12 @@ public final class Jep implements Closeable {
              * avoid this scenario.
              */
             Thread current = Thread.currentThread();
-            String warn = THREAD_WARN + current.getName() + REUSE_WARN;
-            System.err.println(warn);
+            StringBuilder warning = new StringBuilder(THREAD_WARN)
+                    .append("Unsafe reuse of thread ")
+                    .append(current.getName())
+                    .append(" for another Python sub-interpreter.\n")
+                    .append("Please close() the previous Jep instance to ensure stability.");
+            System.err.println(warning.toString());
         }
 
         if (cl == null)
@@ -1085,10 +1086,27 @@ public final class Jep implements Closeable {
         if (this.closed)
             return;
 
-        /*
-         * close() seems to get away with not checking isValidThread() since it
-         * does very little JNI interaction, mostly just cpython code
-         */
+        if (!Thread.currentThread().equals(thread)) {
+            /*
+             * TODO: Possibly throw a JepException if this is detected. This is
+             * inherently unsafe, the thread state information inside Python can
+             * get screwed up if a sub-interpreter is closed from a different
+             * thread. Py_EndInterpreter is assuming that the interpreter is
+             * being ended from the same thread. If close() is called from a
+             * different thread, at best you will lose a little bit of memory,
+             * at worst you will screw up Python's internal tracking of thread
+             * state, which could lead to freezes or crashes.
+             * 
+             * This remains a warning for the time being to provide time for
+             * applications to be updated to avoid this scenario.
+             */
+            Thread current = Thread.currentThread();
+            StringBuilder warning = new StringBuilder(THREAD_WARN)
+                    .append("Unsafe close() of Python sub-interpreter by thread ")
+                    .append(current.getName())
+                    .append(".\nPlease close() from the creating thread to ensure stability.");
+            System.err.println(warning);
+        }
 
         // close all the PyObjects we created
         for (int i = 0; i < this.pythonObjects.size(); i++)
@@ -1103,11 +1121,4 @@ public final class Jep implements Closeable {
 
     private native void close(long tstate);
 
-    /**
-     * Attempts to close the interpreter if it hasn't been correctly closed.
-     */
-    @Override
-    protected void finalize() {
-        this.close();
-    }
 }

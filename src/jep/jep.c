@@ -226,7 +226,7 @@ JNIEXPORT void JNICALL Java_jep_Jep_setClassLoader
  */
 JNIEXPORT void JNICALL Java_jep_Jep_close
 (JNIEnv *env, jobject obj, jlong tstate) {
-    pyembed_thread_close((intptr_t) tstate);
+    pyembed_thread_close(env, (intptr_t) tstate);
 }
 
 
