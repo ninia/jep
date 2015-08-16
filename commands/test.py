@@ -1,6 +1,7 @@
 from distutils.cmd import Command
 from distutils.spawn import spawn
 from commands.util import is_windows
+from commands.util import configure_error
 import os
 
 class test(Command):
@@ -25,7 +26,10 @@ class test(Command):
             if os.environ.has_key('VIRTUAL_ENV'):
                 py_loc = os.environ['VIRTUAL_ENV']
             else:
-                py_loc = os.environ['PYTHONHOME']
+                if os.environ.has_key('PYTHONHOME'):
+                    py_loc = os.environ['PYTHONHOME']
+                else:
+                    configure_error('Please set the environment variable PYTHONHOME for running the tests on Windows without a virtualenv.')
             spawn(['{0}\Scripts\jep.bat'.format(py_loc), 'runtests.py'], search_path=0)
         else:
             spawn(['jep', 'runtests.py'])
