@@ -45,8 +45,8 @@
 
 #define PyString_FromString(str)          PyUnicode_FromString(str)
 #define PyString_Check(str)               PyUnicode_Check(str)
-#define PyString_FromFormat(fmt, ...) PyUnicode_FromFormat(fmt, ##__VA_ARGS__)
-// more string methods are defined for compatibility farther down...
+#define PyString_FromFormat(fmt, ...)     PyUnicode_FromFormat(fmt, ##__VA_ARGS__)
+// more string macros are defined for python 3 compatibility farther down...
 
 #define PyInt_AsLong(i)                   PyLong_AsLong(i)
 #define PyInt_AS_LONG(i)                  PyLong_AsLong(i)
