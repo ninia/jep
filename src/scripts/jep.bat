@@ -1,3 +1,4 @@
+SETLOCAL
 SET VIRTUAL_ENV={virtual_env}
 
 :: TODO For vitualenv, we should really include the old PATH in the redefined
@@ -24,3 +25,4 @@ SET args="{install_lib}jep\console.py"
 )
 
 java -classpath %cp% -Djava.library.path=%jni_path% jep.Run %args%
+ENDLOCAL
