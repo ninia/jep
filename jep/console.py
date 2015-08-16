@@ -33,16 +33,19 @@ except ImportError:
                If your platform doesn't have readline, try this:
                https://pypi.python.org/pypi/readline
                """
-        print msg
+        print(msg)
+except WindowsError as we:
+    print("Windows error importing readline: " + str(we))
 
-try:
-    history_file = os.path.join(os.environ['HOME'], '.jep')
-    if not os.path.exists(history_file):
-        readline.write_history_file(history_file)
-    else:
-        readline.read_history_file(history_file)
-except (IOError, KeyError) as e:
-    pass
+if has_readline:
+    try:
+        history_file = os.path.join(os.environ['HOME'], '.jep')
+        if not os.path.exists(history_file):
+           readline.write_history_file(history_file)
+        else:
+            readline.read_history_file(history_file)
+    except (IOError, KeyError) as e:
+        pass
 
 
 PS1 = ">>> "
