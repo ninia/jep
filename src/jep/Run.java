@@ -52,6 +52,14 @@ public class Run {
         try {
             jep = new Jep(false, ".");
 
+            // Windows file system compatibility
+            if(scriptArgv.contains("\\")) {
+                scriptArgv = scriptArgv.replace("\\", "\\\\");
+            }
+            if(scriptArgv.contains(":")) {
+                scriptArgv = scriptArgv.replace(":", "\\:");
+            }
+
             // "set" by eval'ing it
             jep.eval("import sys; sys.argv = argv = " + scriptArgv);
             if (!file.endsWith("jep" + File.separator + "console.py")) {

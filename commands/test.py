@@ -23,10 +23,10 @@ class test(Command):
         os.environ['CLASSPATH'] = 'build/java/jep.test-{0}.jar{1}tests/lib/sqlitejdbc-v056.jar'.format(self.distribution.metadata.get_version(), os.pathsep)
         if is_windows():
             # Use full path as spawn will only search the system PATH for *.exe on Windows
-            if os.environ.has_key('VIRTUAL_ENV'):
+            if 'VIRTUAL_ENV' in os.environ:
                 py_loc = os.environ['VIRTUAL_ENV']
             else:
-                if os.environ.has_key('PYTHONHOME'):
+                if 'PYTHONHOME' in os.environ:
                     py_loc = os.environ['PYTHONHOME']
                 else:
                     configure_error('Please set the environment variable PYTHONHOME for running the tests on Windows without a virtualenv.')

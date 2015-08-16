@@ -56,3 +56,9 @@ class MSVCCompiler(old_MSVCCompiler) :
     def library_dir_option (self, dir):
         dir = dir.replace('\\', '\\\\')
         return old_MSVCCompiler.library_dir_option(self, dir)
+
+    # MSVC 2010 Express wants an explicit /MANIFEST argument for the linker,
+    # see http://bugs.python.org/issue4431
+    def manifest_setup_ldargs(self, output_filename, build_temp, ld_args):
+        old_MSVCCompiler.manifest_setup_ldargs(self, output_filename, build_temp, ld_args)
+        ld_args.append('/MANIFEST')
