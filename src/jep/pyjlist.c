@@ -429,7 +429,7 @@ static PyObject* pyjlist_subscript(PyObject *self, PyObject *item) {
     if(PyInt_Check(item)) {
         long i = PyInt_AS_LONG(item);
         if (i < 0)
-            i += PyObject_Size(self);
+            i += (long) PyObject_Size(self);
         return pyjlist_getitem(self, (Py_ssize_t) i);
     }
     else if(PyLong_Check(item)) {
@@ -437,7 +437,7 @@ static PyObject* pyjlist_subscript(PyObject *self, PyObject *item) {
         if (i == -1 && PyErr_Occurred())
             return NULL;
         if (i < 0)
-            i += PyObject_Size(self);
+            i += (long) PyObject_Size(self);
         return pyjlist_getitem(self, (Py_ssize_t) i);
     } else if(PySlice_Check(item)) {
         Py_ssize_t start, stop, step, slicelength;
@@ -468,7 +468,7 @@ static int pyjlist_set_subscript(PyObject* self, PyObject* item, PyObject* value
     if(PyInt_Check(item)) {
         long i = PyInt_AS_LONG(item);
         if (i < 0)
-            i += PyObject_Size(self);
+            i += (long) PyObject_Size(self);
         return pyjlist_setitem(self, (Py_ssize_t) i, value);
     }
     else if(PyLong_Check(item)) {
@@ -476,7 +476,7 @@ static int pyjlist_set_subscript(PyObject* self, PyObject* item, PyObject* value
         if (i == -1 && PyErr_Occurred())
             return -1;
         if (i < 0)
-            i += PyObject_Size(self);
+            i += (long) PyObject_Size(self);
         return pyjlist_setitem(self, (Py_ssize_t) i, value);
     } else if(PySlice_Check(item)) {
         Py_ssize_t start, stop, step, slicelength;
