@@ -59,7 +59,7 @@ Notable features
 Help
 ----
 * Documentation: https://github.com/mrj0/jep/wiki
-* Mailing List: https://sourceforge.net/mail/?group_id=109839
+* Mailing List: https://groups.google.com/d/forum/jep-project
 * Known Issues: https://github.com/mrj0/jep/issues
 * Project Page: https://github.com/mrj0/jep
 
