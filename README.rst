@@ -32,8 +32,8 @@ Some benefits of embedding CPython in a JVM:
 
 * Compilers and assorted Python tools are as mature as the language.
 
-* Python is an interpreted language, enabling runtime customizations
-  and plugins that do not require a compilation step.
+* Python is an interpreted language, enabling scripting of established
+  Java code without requiring recompilation.
 
 * Both Java and Python are cross platform, enabling deployment to 
   different operating systems.
@@ -42,31 +42,19 @@ Some benefits of embedding CPython in a JVM:
 Installation
 ------------
 Simply run ``pip install jep`` or download the source and run ``python setup.py build install``.
-Building and installing requires that the JDK, Python, and optionally numpy are already installed.
+Building and installing require the JDK, Python, and optionally numpy to be installed beforehand.
 
 Dependencies
 ------------
-* Python >= 2.6
+* Python 2.6, 2.7, 3.2, 3.3, or 3.4
 * Java >= 1.6
 * Numpy (optional) >= 1.5 (numpy >= 1.7 recommended)
 
-Running the jep script
-----------------------
-The ``setup.py`` script will provide a ``jep`` or ``jep.bat`` script to make
-launching Jep easier.  The jep script is very similar to running python from
-a terminal/command line.  If run with an argument of a file path, it will run
-the script at that path.  If run with no arguments, it will provide an
-interactive console that combines the Python language with access to Java
-classes on the classpath.
-
-::
-
-    $ jep
-    >>> from java.lang import System
-    >>> System.out.println('hello, world')
-    hello, world
-    >>>
-
+Notable features
+----------------
+* Interactive Jep console much like Python's interactive console
+* Supports multiple, simultaneous, mostly sandboxed sub-interpreters
+* Numpy support for Java primitive arrays
 
 Help
 ----
