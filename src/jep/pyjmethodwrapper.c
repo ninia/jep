@@ -117,24 +117,6 @@ static PyObject* pyjmethodwrapper_call(PyJmethodWrapper_Object *self,
     // pyjobject_find_method will actually call the method
     ret = pyjobject_find_method(obj, self->method->pyMethodName, args);
 
-    /*
-     * This seems odd to Py_DECREF(self), but we had to Py_INCREF it
-     * over in pyjobject_getattr so that the garbage collector doesn't
-     * collect it before we even got to __call__ it.
-     *
-     * And now we want to make sure it gets cleaned up and can't tell if
-     * it will be reused.  If it is going to be reused, such as stored in
-     * a variable and repeatedly called, we're still safe.  For example:
-     *
-     * m = obj.doIt
-     * while condition:
-     *    m()
-     *
-     * As long as m is in scope, there will still be a reference so it won't
-     * get garbage collected until m goes out of scope.
-     */
-    Py_DECREF(self);
-
     return ret;
 }
 

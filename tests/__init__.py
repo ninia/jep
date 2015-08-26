@@ -10,4 +10,5 @@ from .test_maps import *
 from .test_compare import *
 from .test_dir import *
 from .test_numpy import *
+from .test_method_memory import *
 

@@ -911,7 +911,6 @@ PyObject* pyjobject_getattr(PyJobject_Object *obj,
     {
         PyJmethodWrapper_Object *wrapper = pyjmethodwrapper_new(obj, (PyJmethod_Object*) ret);
         Py_DECREF(ret);
-        Py_INCREF(wrapper);
         ret = (PyObject *) wrapper;
     }
 
