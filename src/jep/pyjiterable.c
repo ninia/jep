@@ -93,7 +93,7 @@ PyObject* pyjiterable_getiter(PyObject* obj) {
     }
 
     iter = (*env)->CallObjectMethod(env, pyjob->object, getiter);
-    if(process_java_exception(env)) {
+    if(process_java_exception(env) || !iter) {
         return NULL;
     }
     return pyjobject_new(env, iter);

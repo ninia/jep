@@ -103,6 +103,56 @@ static Py_ssize_t pyjmap_len(PyObject* self) {
     return len;
 }
 
+
+/*
+ * Method for checking if a key is in the dictionary.  For example,
+ * if key in o: 
+ */
+static int pyjmap_contains_key(PyObject *self, PyObject *key) {
+    jmethodID         containsKey = NULL;
+    jboolean          result      = JNI_FALSE;
+    PyJobject_Object *obj         = (PyJobject_Object*) self;
+    JNIEnv           *env         = pyembed_get_env();
+    jobject           jkey       = NULL;
+
+    if(key == Py_None) {
+        jkey = NULL;
+    } else {
+        jkey = pyembed_box_py(env, key);
+        if(process_java_exception(env)) {
+            return -1;
+        } else if(!jkey) {
+            /*
+             * with the way pyembed_box_py is currently implemented, shouldn't
+             * be able to get here
+             */
+            PyObject *pystring = PyObject_Str((PyObject*), Py_TYPE(v));
+            PyErr_Format(PyExc_TypeError,
+                        "__contains__ received an incompatible type: %s",
+                        PyString_AsString(pystring));
+            Py_XDECREF(pystring);
+            return -1;
+        }
+    }
+
+    containsKey = (*env)->GetMethodID(env, obj->clazz, "containsKey", "(Ljava/lang/Object;)Z");
+    if(process_java_exception(env) || !containsKey) {
+        return -1;
+    }
+
+    result = (*env)->CallBooleanMethod(env, obj->object, containsKey, jkey);
+    if(process_java_exception(env)) {
+        return -1;
+    }
+
+    if(result) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+
 /*
  * Method for the getting items with the [key] operator on pyjmap.  For
  * example, result = o[key]
@@ -122,6 +172,10 @@ static PyObject* pyjmap_getitem(PyObject *o, PyObject *key) {
     if(pyjobject_check(key)) {
         jkey = ((PyJobject_Object*) key)->object;
     } else {
+        /* 
+         * convert_pyarg_jvalue will leave jkey as NULL and set PyExc_TypeError
+         * if we can't handle the key type, which matches python's guidelines
+         */
         jvalue jvkey = convert_pyarg_jvalue(env, key, JOBJECT_TYPE, JOBJECT_ID, 1);
         jkey = jvkey.l;
         if(process_java_exception(env) || !jkey) {
@@ -132,6 +186,21 @@ static PyObject* pyjmap_getitem(PyObject *o, PyObject *key) {
     val = (*env)->CallObjectMethod(env, obj->object, get, jkey);
     if(process_java_exception(env)) {
         return NULL;
+    }
+
+    if(!val) {
+        /*
+         * Python docs indicate KeyError should be set if the key is not in the
+         * container, but some Maps allow null values. So we have to check.
+         */ 
+        if(!pyjmap_contains_key(o, key)) {
+            PyObject *pystr = PyObject_Str(key);
+            PyErr_Format(PyExc_KeyError,
+                         "KeyError: %s",
+                         PyString_AsString(pystr));
+            Py_XDECREF(pystr);
+            return NULL;
+        }
     }
 
     return convert_jobject_pyobject(env, val);
@@ -159,9 +228,11 @@ static int pyjmap_setitem(PyObject *o, PyObject *key, PyObject *v) {
              * with the way pyembed_box_py is currently implemented, shouldn't
              * be able to get here
              */
+            PyObject *pystring = PyObject_Str((PyObject*), Py_TYPE(v));
             PyErr_Format(PyExc_TypeError,
                         "__setitem__ received an incompatible type: %s",
-                        PyString_AsString(PyObject_Str((PyObject*) Py_TYPE(v))));
+                        PyString_AsString(pystring));
+            Py_XDECREF(pystring);
             return -1;
         }
     }
@@ -190,47 +261,40 @@ static int pyjmap_setitem(PyObject *o, PyObject *key, PyObject *v) {
     return 0;
 }
 
-static int pyjmap_contains_key(PyObject *self, PyObject *key) {
-    jmethodID         containsKey = NULL;
-    jboolean          result      = JNI_FALSE;
-    PyJobject_Object *obj         = (PyJobject_Object*) self;
-    JNIEnv           *env         = pyembed_get_env();
-    jobject           jkey       = NULL;
 
-    if(key == Py_None) {
-        jkey = NULL;
-    } else {
-        jkey = pyembed_box_py(env, key);
-        if(process_java_exception(env)) {
-            return -1;
-        } else if(!jkey) {
-            /*
-             * with the way pyembed_box_py is currently implemented, shouldn't
-             * be able to get here
-             */
-            PyErr_Format(PyExc_TypeError,
-                        "__contains__ received an incompatible type: %s",
-                        PyString_AsString(PyObject_Str((PyObject*) Py_TYPE(key))));
-            return -1;
-        }
+/*
+ * Method for iterating over the keys of the dictionary.  For example,
+ * for key in o:
+ */
+PyObject* pyjmap_getiter(PyObject* obj) {
+    jmethodID         keySet   = NULL;
+    jmethodID         getIter  = NULL;
+    jobject           set      = NULL;
+    jobject           iter     = NULL;
+    PyJobject_Object *pyjob    = (PyJobject_Object*) obj;
+    JNIEnv           *env      = pyembed_get_env();
+
+    keySet = (*env)->GetMethodID(env, pyjob->clazz, "keySet", "()Ljava/util/Set;");
+    if(process_java_exception(env) || !keySet) {
+        return NULL;
     }
 
-    containsKey = (*env)->GetMethodID(env, obj->clazz, "containsKey", "(Ljava/lang/Object;)Z");
-    if(process_java_exception(env) || !containsKey) {
-        return -1;
+    set = (*env)->CallObjectMethod(env, pyjob->object, keySet);
+    if(process_java_exception(env) || !set) {
+        return NULL;
     }
 
-    result = (*env)->CallBooleanMethod(env, obj->object, containsKey, jkey);
-    if(process_java_exception(env)) {
-        return -1;
+    getIter = (*env)->GetMethodID(env, JCOLLECTION_TYPE, "iterator", "()Ljava/util/Iterator;");
+    if(process_java_exception(env) || !getIter) {
+        return NULL;
     }
 
-    if(result) {
-        return 1;
-    } else {
-        return 0;
+    iter = (*env)->CallObjectMethod(env, set, getIter);
+    if(process_java_exception(env) || !iter) {
+        return NULL;
     }
 
+    return pyjobject_new(env, iter);
 }
 
 
@@ -287,7 +351,7 @@ PyTypeObject PyJmap_Type = {
     0,                                        /* tp_clear */
     0,                                        /* tp_richcompare */
     0,                                        /* tp_weaklistoffset */
-    0,                                        /* tp_iter */
+    (getiterfunc) pyjmap_getiter,             /* tp_iter */
     0,                                        /* tp_iternext */
     pyjmap_methods,                           /* tp_methods */
     0,                                        /* tp_members */

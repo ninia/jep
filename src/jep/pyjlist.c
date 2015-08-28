@@ -245,9 +245,11 @@ static int pyjlist_setitem(PyObject *o, Py_ssize_t i, PyObject *v) {
              * with the way pyembed_box_py is currently implemented, shouldn't
              * be able to get here
              */
+            PyObject *pystring = PyObject_Str((PyObject*), Py_TYPE(v));
             PyErr_Format(PyExc_TypeError,
                         "__setitem__ received an incompatible type: %s",
-                        PyString_AsString(PyObject_Str((PyObject*) Py_TYPE(v))));
+                        PyString_AsString(pystring));
+            Py_XDECREF(pystring);
             return -1;
         }
     }
