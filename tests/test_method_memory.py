@@ -1,7 +1,7 @@
 # This test case attempts to verify that pyjmethods are correctly managing their refcounts.
 
 import unittest
-from leak_tool import test_leak
+from .leak_tool import test_leak
 
 class TestMethodMemory(unittest.TestCase):
 

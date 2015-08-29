@@ -68,7 +68,7 @@ class MSVCCompiler(old_MSVCCompiler) :
         old_MSVCCompiler.manifest_setup_ldargs(self, output_filename, build_temp, ld_args)
         ld_args.append('/MANIFEST')
     
-# More advanced detection of vcvarsall.bat.  Borrowed from setuptools
+# More advanced detection of vcvarsall.bat.  Borrowed/modified from setuptools.
 # see https://bugs.python.org/issue23246
 def find_vcvarsall(version):
     Reg = distutils.msvc9compiler.Reg
