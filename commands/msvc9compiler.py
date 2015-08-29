@@ -1,9 +1,14 @@
 """
-Fork of distutils' msvc9compiler to bypass the removal of MSVC manifest
-from the output file and skip export of the python default init<module>
-methond.
+Fork of distutils' msvc9compiler to compile Jep on Windows.  This fork fixes the
+following problems:
+  1. Bypass the removal of MSVC manifest from the pyd/dll file, which Jep needs
+  2. Skip exporting the default init<module> method since Jep already has one
+  3. Add /MANIFEST arg to the linker for building with MSVC 2010 for Python 3
+  4. Better vcvarsall detection to support Microsoft Visual C++ Compiler for Python 2.7
 """
 
+import distutils
+from distutils import msvc9compiler as old_msvc_module
 from distutils.msvc9compiler import MSVCCompiler as old_MSVCCompiler
 
 class MSVCCompiler(old_MSVCCompiler) :
@@ -62,3 +67,30 @@ class MSVCCompiler(old_MSVCCompiler) :
     def manifest_setup_ldargs(self, output_filename, build_temp, ld_args):
         old_MSVCCompiler.manifest_setup_ldargs(self, output_filename, build_temp, ld_args)
         ld_args.append('/MANIFEST')
+    
+# More advanced detection of vcvarsall.bat.  Borrowed from setuptools
+# see https://bugs.python.org/issue23246
+def find_vcvarsall(version):
+    Reg = distutils.msvc9compiler.Reg
+    VC_BASE = r'Software\%sMicrosoft\DevDiv\VCForPython\%0.1f'
+    key = VC_BASE % ('', version)
+    try:
+        # Per-user installs register the compiler path here
+        productdir = Reg.get_value(key, "installdir")
+    except KeyError:
+        try:
+            # All-user installs on a 64-bit system register here
+            key = VC_BASE % ('Wow6432Node\\', version)
+            productdir = Reg.get_value(key, "installdir")
+        except KeyError:
+            productdir = None
+
+    if productdir:
+        import os
+        vcvarsall = os.path.join(productdir, "vcvarsall.bat")
+        if os.path.isfile(vcvarsall):
+            return vcvarsall
+
+            
+
+old_msvc_module.find_vcvarsall = find_vcvarsall

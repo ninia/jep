@@ -2,13 +2,14 @@
 
 import unittest
 import os
+import sys
 from jep import findClass
 from jep.jdbc import connect
 from jep import jdbc as dbapi
 from java.lang import Integer, Long, Double
 from java.sql import Date, Timestamp, Time
 
-
+@unittest.skipIf(sys.platform.startswith("win"), "file access issues on Windows")
 class TestJdbc(unittest.TestCase):
     jdbc_url = 'jdbc:sqlite:build/test.db'
 
