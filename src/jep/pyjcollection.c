@@ -124,7 +124,7 @@ static int pyjcollection_contains(PyObject *o, PyObject *v) {
              * with the way pyembed_box_py is currently implemented, shouldn't
              * be able to get here
              */
-            PyObject *pystring = PyObject_Str((PyObject*), Py_TYPE(v));
+            PyObject *pystring = PyObject_Str((PyObject*) Py_TYPE(v));
             PyErr_Format(PyExc_TypeError,
                         "__contains__ received an incompatible type: %s",
                         PyString_AsString(pystring));
