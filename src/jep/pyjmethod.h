@@ -66,4 +66,17 @@ int pyjmethod_init(JNIEnv*, PyJmethod_Object*);
 PyObject* pyjmethod_call_internal(PyJmethod_Object*, PyJobject_Object*, PyObject*);
 int pyjmethod_check(PyObject *obj);
 
+/*
+ * Test if a method has a specified name and number of parameters.
+ */
+int pyjmethod_check_simple_compat(PyJmethod_Object*, JNIEnv*, PyObject*, int);
+
+/*
+ * Check if a method is compatible with the types of a tuple of arguments. It is
+ * not safe to call this method if pyjmethod_check_simple_compat does not return
+ * true. This method does not need to be called before using call_internal, it
+ * is only necessary for resolving method overloading.
+ */
+int pyjmethod_check_complex_compat(PyJmethod_Object*, JNIEnv*, PyObject*);
+
 #endif // ndef pyjmethod

@@ -342,6 +342,54 @@ int pyjmethod_check(PyObject *obj) {
     return 0;
 }
 
+int pyjmethod_check_simple_compat(PyJmethod_Object* method, JNIEnv* env, PyObject* methodName, int argCount){
+    if(method->parameters) {
+        // If init already happened check argCount first because int comparison is faster.
+        return method->lenParameters == argCount && PyObject_RichCompareBool(method->pyMethodName, methodName, Py_EQ);
+    }else{
+        // If not init then check the name first to avoid init when its not necessay
+        if(PyObject_RichCompareBool(method->pyMethodName, methodName, Py_EQ)){
+            if(!pyjmethod_init(env, method)) {
+                // init failed, that's not good.
+                PyErr_Warn(PyExc_Warning, "pyjmethod init failed.");
+            }else{
+                return method->lenParameters == argCount;
+            }
+        }
+    }
+    return 0;
+}
+
+int pyjmethod_check_complex_compat(PyJmethod_Object* method, JNIEnv* env, PyObject* args){
+    int match = 1;
+    int parampos;
+
+    for(parampos = 0; parampos < method->lenParameters; parampos += 1) {
+        PyObject* param       = PyTuple_GetItem(args, parampos);
+        int       paramTypeId;
+        jclass    paramType   = (jclass) (*env)->GetObjectArrayElement(env, method->parameters, parampos);
+
+        if(process_java_exception(env) || !paramType){
+            match = 0;
+            break;
+        }
+
+        paramTypeId = get_jtype(env, paramType);
+
+        match = pyarg_matches_jtype(env, param, paramType, paramTypeId);        
+        (*env)->DeleteLocalRef(env, paramType);
+        if(PyErr_Occurred()){
+            match = 0;
+            break;
+        }
+
+        if(!match) {
+            break;
+        }
+    }
+
+    return match;
+}
 
 // pyjmethod_call_internal. where the magic happens.
 // 

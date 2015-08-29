@@ -512,184 +512,56 @@ void pyjobject_addfield(PyJobject_Object *obj, PyObject *name) {
     PyList_Append(obj->fields, name);
 }
 
-
 // find and call a method on this object that matches the python args.
-// typically called by way of pyjmethod when python invokes __call__.
-//
-// steals reference to self, methodname and args.
-PyObject* find_method(JNIEnv *env,
-                      PyJobject_Object *self,
-                      PyObject *methodName,
-                      Py_ssize_t methodCount,
-                      PyObject *attr,
-                      PyObject *args) {
-    // all possible method candidates
-    PyJmethod_Object **cand = NULL;
-    Py_ssize_t         pos, i, listSize, argsSize;
-    
-    pos = i = listSize = argsSize = 0;
-
-    // not really likely if we were called from pyjmethod, but hey...
-    if(methodCount < 1) {
-        PyErr_Format(PyExc_RuntimeError, "I have no methods.");
-        return NULL;
-    }
-
-    if(!attr || !PyList_CheckExact(attr)) {
-        PyErr_Format(PyExc_RuntimeError, "Invalid attr list.");
-        return NULL;
-    }
-    
-    cand = (PyJmethod_Object **)
-        PyMem_Malloc(sizeof(PyJmethod_Object*) * methodCount);
-    
-    // just for safety
-    for(i = 0; i < methodCount; i++)
-        cand[i] = NULL;
-    
-    listSize = PyList_GET_SIZE(attr);
-    for(i = 0; i < listSize; i++) {
-        PyObject *tuple = PyList_GetItem(attr, i);               /* borrowed */
-
-        if(PyErr_Occurred())
-            break;
-        
-        if(!tuple || tuple == Py_None || !PyTuple_CheckExact(tuple))
-            continue;
-
-        if(PyTuple_Size(tuple) == 2) {
-            PyObject *key = PyTuple_GetItem(tuple, 0);           /* borrowed */
-            
-            if(PyErr_Occurred())
-                break;
-            
-            if(!key || !PyString_Check(key))
-                continue;
-            
-            if(PyObject_RichCompareBool(key, methodName, Py_EQ)) {
-                PyObject *method = PyTuple_GetItem(tuple, 1);    /* borrowed */
-                if(pyjmethod_check(method))
-                    cand[pos++] = (PyJmethod_Object *) method;
-            }
-        }
-    }
-    
-    if(PyErr_Occurred())
-        goto EXIT_ERROR;
-    
-    // makes more sense to work with...
-    pos--;
-    
-    if(pos < 0) {
-        // didn't find a method by that name....
-        // that shouldn't happen unless the search above is broken.
-        PyErr_Format(PyExc_NameError, "No such method.");
-        goto EXIT_ERROR;
-    }
-    if(pos == 0) {
-        // we're done, call that one
-        PyObject *ret = pyjmethod_call_internal(cand[0], self, args);
-        PyMem_Free(cand);
-        return ret;
-    }
-
-    // first, find out if there's only one method that
-    // has the correct number of args
-    argsSize = PyTuple_Size(args);
-    {
-        PyJmethod_Object *matching = NULL;
-        int               count    = 0;
-        
-        for(i = 0; i <= pos && cand[i]; i++) {
-            // make sure method is fully initialized
-            if(!cand[i]->parameters) {
-                if(!pyjmethod_init(env, cand[i])) {
-                    // init failed, that's not good.
-                    cand[i] = NULL;
-                    PyErr_Warn(PyExc_Warning, "pyjmethod init failed.");
-                    continue;
-                }
-            }
-
-            if(cand[i]->lenParameters == argsSize) {
-                matching = cand[i];
-                count++;
-            }
-            else
-                cand[i] = NULL; // eliminate non-matching
-        }
-        
-        if(matching && count == 1) {
-            PyMem_Free(cand);
-            return pyjmethod_call_internal(matching, self, args);
-        }
-    } // local scope
-    
-    for(i = 0; i <= pos; i++) {
-        int parmpos = 0;
-        
-        // already eliminated?
-        if(!cand[i])
-            continue;
-        
-        // check if argument types match
-        (*env)->PushLocalFrame(env, 20);
-        for(parmpos = 0; parmpos < cand[i]->lenParameters; parmpos++) {
-            PyObject *param       = PyTuple_GetItem(args, parmpos);
-            int       paramTypeId = -1;
-            jclass    paramType =
-                (jclass) (*env)->GetObjectArrayElement(env,
-                                                       cand[i]->parameters,
-                                                       parmpos);
-
-            if(process_java_exception(env) || !paramType)
-                break;
-            
-            paramTypeId = get_jtype(env, paramType);
-            
-            if(pyarg_matches_jtype(env, param, paramType, paramTypeId)) {
-                if(PyErr_Occurred())
-                    break;
-                continue;
-            }
-            
-            // args don't match
-            break;
-        }
-        (*env)->PopLocalFrame(env, NULL);
-        
-        // this method matches?
-        if(parmpos == cand[i]->lenParameters) {
-            PyObject *ret = pyjmethod_call_internal(cand[i], self, args);
-            PyMem_Free(cand);
-            return ret;
-        }
-    }
-
-
-EXIT_ERROR:
-    PyMem_Free(cand);
-    if(!PyErr_Occurred())
-        PyErr_Format(PyExc_NameError,
-                     "Matching overloaded method not found.");
-    return NULL;
-}
-
-
-// find and call a method on this object that matches the python args.
-// typically called from pyjmethod when python invokes __call__.
-//
-// steals reference to self, methodname and args.
+// typically called from pyjmethodwrapper when python invokes __call__.
 PyObject* pyjobject_find_method(PyJobject_Object *self,
                                 PyObject *methodName,
                                 PyObject *args) {
-    // util method does this for us
-    return find_method(pyembed_get_env(),
-                       self,
-                       methodName,
-                       PyList_Size(self->methods),
-                       self->attr,
-                       args);
+    /* 
+     * cand is a method that passes the simple compatiblity check but the
+     * complex check has not run yet.
+     */
+    PyJmethod_Object* cand         = NULL;
+    Py_ssize_t        attrCount    = PyList_Size(self->attr);
+    Py_ssize_t        attrPosition = 0;
+    Py_ssize_t        argsSize     = PyTuple_Size(args);
+    JNIEnv*           env          = pyembed_get_env();
+
+    for(attrPosition = 0; attrPosition < attrCount; attrPosition += 1){
+        PyObject* attr_tuple = PyList_GetItem(self->attr, attrPosition);
+        if(!attr_tuple || !PyTuple_CheckExact(attr_tuple))
+            continue;
+        PyObject* attr_val = PyTuple_GetItem(attr_tuple, 1);
+        if(!pyjmethod_check(attr_val)){
+            continue;
+        }
+        PyJmethod_Object* method = (PyJmethod_Object*) attr_val;
+        if(pyjmethod_check_simple_compat(method, env, methodName, argsSize)){
+            if(cand){
+                if(pyjmethod_check_complex_compat(cand, env, args)){
+                    // cand is completly compatible, call it
+                    break;
+                }else if(PyErr_Occurred()){
+                    return NULL;
+                }else{
+                    // cand was not compatible, replace it with method.
+                    cand = method;
+                }
+            }else if(PyErr_Occurred()){
+                return NULL;
+            }else{
+                cand = method;
+            }
+        }
+    }
+    if(cand){
+        return pyjmethod_call_internal(cand, self, args);
+    }else{
+        if(!PyErr_Occurred()){
+            PyErr_SetString(PyExc_NameError, "No such Method.");
+        }
+        return NULL;
+    }
 }
 
 
