@@ -90,7 +90,10 @@ def find_vcvarsall(version):
         vcvarsall = os.path.join(productdir, "vcvarsall.bat")
         if os.path.isfile(vcvarsall):
             return vcvarsall
+    else:
+        # this implies that MSVC++ for Python2.7 is not installed, and we
+        # should fall back to attempting through MSVC from Visual Studio
+        return old_find_vcvarsall(version)
 
-            
-
+old_find_vcvarsall = old_msvc_module.find_vcvarsall
 old_msvc_module.find_vcvarsall = find_vcvarsall
