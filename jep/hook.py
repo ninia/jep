@@ -1,6 +1,5 @@
 from _jep import forName
 import sys
-import string
 from types import ModuleType
 
 
@@ -66,7 +65,7 @@ class JepImporter(object):
             # It's a Java class, in general we will only reach here if
             # self.classlist.supportsPackageImport() is False (ie the class
             # has not already been imported and set on the module).
-            parentModName = string.join(split[0:-1], '.')
+            parentModName = '.'.join(split[0:-1])
             parentMod = sys.modules[parentModName]
             return parentMod.__getattr__(split[-1])
         return mod
