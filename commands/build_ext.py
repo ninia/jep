@@ -19,5 +19,11 @@ class build_ext (old_build_ext):
             distutils.ccompiler.compiler_class['msvc']= ('jepmsvccompiler', 'MSVCCompiler', "Microsoft Visual C++")
             sys.modules['distutils.jepmsvccompiler'] = msvc9compiler
         old_build_ext.run(self)
+        
+        # copy the jep.pyd to jep.dll early to avoid confusion
+        if is_windows():
+            jep_lib = self.get_outputs()[0]
+            dll = jep_lib.replace('pyd', 'dll')
+            self.copy_file(jep_lib, dll)
 
 # class build_ext
