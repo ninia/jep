@@ -28,10 +28,9 @@ except ImportError:
 
                    i.e.: export LD_PRELOAD=/usr/lib/libpython2.7.so.1.0
                    """
-        # TODO actually pyreadline doesn't work right with Jep on Windows   :\
         msg += """
                If your platform doesn't have readline, try this:
-               https://pypi.python.org/pypi/readline
+               https://github.com/pyreadline/pyreadline
                """
         print(msg)
 except WindowsError as we:
@@ -39,12 +38,12 @@ except WindowsError as we:
 
 if has_readline:
     try:
-        history_file = os.path.join(os.environ['HOME'], '.jep')
+        history_file = os.path.join(os.path.expanduser('~'), '.jep')
         if not os.path.exists(history_file):
            readline.write_history_file(history_file)
         else:
             readline.read_history_file(history_file)
-    except (IOError, KeyError) as e:
+    except IOError as e:
         pass
 
 
@@ -74,5 +73,5 @@ def prompt(jep):
         if has_readline:
             try:
                 readline.write_history_file(history_file)
-            except IOError:
+            except IOError as e:
                 pass
