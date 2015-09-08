@@ -34,13 +34,14 @@ except ImportError:
                    repo on github:
                    https://github.com/pyreadline/pyreadline
 
-                   Do NOT use the version on pypi.python.org, it is out of date
+                   Do NOT use the version on pypi.python.org, and therefore
+                   Do NOT use the version installed by pip.  It is out of date
                    and doesn't work with Jep!
                    """
         print(msg)
 except WindowsError as we:
     print("Windows error importing readline: " + str(we))
-    print("Please try using the latest pyreadline from the official git repo on github.")
+    print("Please try using the latest pyreadline from https://github.com/pyreadline/pyreadline")
 
 if has_readline:
     try:
