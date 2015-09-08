@@ -84,23 +84,25 @@ public class ClassList implements ClassEnquirer {
                 JarFile jfile = new JarFile(el, false);
                 Enumeration<JarEntry> entries = jfile.entries();
                 while (entries.hasMoreElements()) {
-                    JarEntry ent = entries.nextElement();
+                    String entry = entries.nextElement().getName();
 
-                    if (!ent.getName().toLowerCase().endsWith(".class"))
+                    if (!entry.toLowerCase().endsWith(".class")) {
+                        // not a class file, so we don't care
                         continue;
-
-                    // ent.getName() looks like:
-                    // blah.class
-                    // jep/ClassList.class
-                    int end = ent.getName().lastIndexOf('/');
-                    String pname = "default";
-                    if (end > 0) {
-                        pname = ent.getName().substring(0, end)
-                                .replace('/', '.');
                     }
 
-                    String cname = stripClassExt(ent.getName().substring(
-                            end + 1));
+                    // entry looks like:
+                    // pkg/subpkg/.../ClassName.class
+                    // blah.class
+                    // jep/ClassList.class
+                    int end = entry.lastIndexOf('/');
+                    if (end < 0) {
+                        // a class name without a package but inside a jar
+                        continue;
+                    }
+                    String pname = entry.substring(0, end).replace('/', '.');
+
+                    String cname = stripClassExt(entry.substring(end + 1));
 
                     addClass(pname, cname);
                 }
@@ -228,22 +230,18 @@ public class ClassList implements ClassEnquirer {
     // add a class with given package name
     private void addClass(String pname, String cname) {
         ArrayList<String> el = packages.get(pname.toString());
-        if (el == null)
+        if (el == null) {
             el = new ArrayList<String>();
+            packages.put(pname, el);
+        }
 
         // convert to style we need in C code
-        if (pname.equals("default")) {
-            // don't use this package name, just the class
-            ;
-        } else
-            cname = pname + "." + cname;
+        String fqname = pname + "." + cname;
 
-        // unlikely, but don't add a class twice.
-        if (el.indexOf(cname) > -1)
-            return;
-
-        el.add(cname);
-        packages.put(pname.toString(), el);
+        // unlikely, but don't add a class twice
+        if (!el.contains(fqname)) {
+            el.add(fqname);
+        }
     }
 
     private String[] _get(String p) {
