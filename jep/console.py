@@ -28,13 +28,19 @@ except ImportError:
 
                    i.e.: export LD_PRELOAD=/usr/lib/libpython2.7.so.1.0
                    """
-        msg += """
-               If your platform doesn't have readline, try this:
-               https://github.com/pyreadline/pyreadline
-               """
+        elif os.name == "nt":
+            msg += """
+                   For Windows use pyreadline and get it from the official git
+                   repo on github:
+                   https://github.com/pyreadline/pyreadline
+
+                   Do NOT use the version on pypi.python.org, it is out of date
+                   and doesn't work with Jep!
+                   """
         print(msg)
 except WindowsError as we:
     print("Windows error importing readline: " + str(we))
+    print("Please try using the latest pyreadline from the official git repo on github.")
 
 if has_readline:
     try:
@@ -43,7 +49,7 @@ if has_readline:
            readline.write_history_file(history_file)
         else:
             readline.read_history_file(history_file)
-    except IOError as e:
+    except IOError as err:
         pass
 
 
@@ -73,5 +79,5 @@ def prompt(jep):
         if has_readline:
             try:
                 readline.write_history_file(history_file)
-            except IOError as e:
+            except IOError as err:
                 pass
