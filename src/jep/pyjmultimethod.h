@@ -26,40 +26,33 @@
    distribution.   
 */
 
-
-
-// shut up the compiler
-#ifdef _POSIX_C_SOURCE
-#  undef _POSIX_C_SOURCE
-#endif
-#include <jni.h>
 #include <Python.h>
+#include <jni.h>
 
 
-#ifndef _Included_pyjmethodwrapper
-#define _Included_pyjmethodwrapper
+#ifndef _Included_pyjmultimethod
+#define _Included_pyjmultimethod
 
 #include "pyjobject.h"
 #include "pyjmethod.h"
 
-PyAPI_DATA(PyTypeObject) PyJmethodWrapper_Type;
+PyAPI_DATA(PyTypeObject) PyJMultiMethod_Type;
 
-/*
- * PyJmethodWrapper_Object enables the ability to reuse a pyjmethod for
- * multiple instances of pyjobjects of the same underlying Java type.
- *
- * Pyjmethods are tied to java.lang.Methods, which are tied
- * to java.lang.Classes, which are shared across all instances of a particular
- * Class.  To ensure the right object is called with the method, the pyjmethod
- * wrapper includes both the pyjobject instance doing the calling and the
- * pyjmethod to be called.
- */
 typedef struct {
     PyObject_HEAD
-    PyObject *method; /* the original pyjmethod tied to a java.lang.reflect.Method */
-    PyJobject_Object *object; /* the pyjobject that called this method */
-} PyJmethodWrapper_Object;
+    PyObject* methodList;
+} PyJMultiMethodObject;
 
-PyJmethodWrapper_Object* pyjmethodwrapper_new(PyJobject_Object*, PyObject*);
+/* Both args must be PyJmethod_Object, steals both references */
+PyAPI_FUNC(PyObject*) PyJMultiMethod_New(PyObject*, PyObject*);
+/* Args must be a PyJMultiMethodObject and a PyJmethod_Object */
+PyAPI_FUNC(int) PyJMultiMethod_Append(PyObject*, PyObject*);
+/* Check if the arg is a PyJMultiMethodObject */
+PyAPI_FUNC(int) PyJMultiMethod_Check(PyObject*);
+/* Get the name of a PyJMultiMethodObject, returns a borrowed reference to the name */
+PyAPI_FUNC(PyObject*) PyJMultiMethod_GetName(PyObject*);
 
-#endif // ndef pyjmethodwrapper
+
+PyObject* pyjmultimethod_call_internal(PyObject*, PyJobject_Object*, PyObject*);
+
+#endif // ndef pyjmultimethod

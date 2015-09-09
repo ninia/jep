@@ -56,12 +56,10 @@
 #include "Python.h"
 
 #include "pyjmethodwrapper.h"
+#include "pyjmethod.h"
+#include "pyjmultimethod.h"
 #include "pyjobject.h"
 #include "pyembed.h"
-
-
-
-static void pyjmethodwrapper_dealloc(PyJmethodWrapper_Object *self);
 
 /*
  * Makes a new pyjmethodwrapper.  This is required to reuse the pyjmethod
@@ -69,7 +67,7 @@ static void pyjmethodwrapper_dealloc(PyJmethodWrapper_Object *self);
  * pyjobject is doing the calling.
  */
 PyJmethodWrapper_Object* pyjmethodwrapper_new(PyJobject_Object *pyjobject, // the instance doing the calling
-        PyJmethod_Object *pyjmethod) { // the method to be called
+        PyObject *pyjmethod) { // the method to be called
     PyJmethodWrapper_Object *pym = NULL;
 
     if(PyType_Ready(&PyJmethodWrapper_Type) < 0)
@@ -100,9 +98,6 @@ static void pyjmethodwrapper_dealloc(PyJmethodWrapper_Object *self) {
 static PyObject* pyjmethodwrapper_call(PyJmethodWrapper_Object *self,
                                 PyObject *args,
                                 PyObject *keywords) {
-    PyObject *ret;
-    PyJobject_Object* obj;
-    
     if(!PyTuple_Check(args)) {
         PyErr_Format(PyExc_RuntimeError, "args is not a valid tuple");
         return NULL;
@@ -112,12 +107,14 @@ static PyObject* pyjmethodwrapper_call(PyJmethodWrapper_Object *self,
         PyErr_Format(PyExc_RuntimeError, "Keywords are not supported.");
         return NULL;
     }
-
-    obj = self->object;
-    // pyjobject_find_method will actually call the method
-    ret = pyjobject_find_method(obj, self->method->pyMethodName, args);
-
-    return ret;
+    if(pyjmethod_check(self->method)){
+        return pyjmethod_call_internal((PyJmethod_Object*) self->method, self->object, args); 
+    }else if(PyJMultiMethod_Check(self->method)){
+        return pyjmultimethod_call_internal(self->method, self->object, args);
+    }else{
+        PyErr_SetString(PyExc_TypeError, "PyMethodWrapper has an unrecognized method type.");
+        return NULL;
+    }
 }
 
 

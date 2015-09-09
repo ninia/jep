@@ -57,7 +57,6 @@ typedef struct {
 
 PyObject* pyjobject_new(JNIEnv*, jobject);
 PyObject* pyjobject_new_class(JNIEnv*, jclass);
-PyObject* pyjobject_find_method(PyJobject_Object*, PyObject*, PyObject*);
 int pyjobject_check(PyObject *obj);
 
 // this method needs to be available to pyjclass
