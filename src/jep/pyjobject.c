@@ -380,16 +380,14 @@ static int pyjobject_init(JNIEnv *env, PyJobject_Object *pyjob) {
                     if(pyjmethod_check(cached)){
                          PyJmethod_Object* cachedMethod = (PyJmethod_Object*) cached;
                          if (PyObject_RichCompareBool(pymethod->pyMethodName, cachedMethod->pyMethodName, Py_EQ)){
-                             Py_INCREF(cached);
-                             Py_INCREF(pymethod);
-                             PyObject* multimethod = PyJMultiMethod_New((PyObject*) pymethod, cached);
+                             PyObject* multimethod = PyJmultiMethod_New((PyObject*) pymethod, cached);
                              PyList_SetItem(pyjMethodList, cacheIndex, multimethod);
                              multi = 1;
                              break;
                          }
-                    }else if(PyJMultiMethod_Check(cached)){
-                         if (PyObject_RichCompareBool(pymethod->pyMethodName, PyJMultiMethod_GetName(cached), Py_EQ)){
-                             PyJMultiMethod_Append(cached, (PyObject*) pymethod);
+                    }else if(PyJmultiMethod_Check(cached)){
+                         if (PyObject_RichCompareBool(pymethod->pyMethodName, PyJmultiMethod_GetName(cached), Py_EQ)){
+                             PyJmultiMethod_Append(cached, (PyObject*) pymethod);
                              multi = 1;
                              break;
                          }
@@ -418,8 +416,8 @@ static int pyjobject_init(JNIEnv *env, PyJobject_Object *pyjob) {
         if(pyjmethod_check(cached)){
             PyJmethod_Object* cachedMethod = (PyJmethod_Object*) cached;
             name = cachedMethod->pyMethodName;
-        }else if(PyJMultiMethod_Check(cached)){
-            name = PyJMultiMethod_GetName(cached);
+        }else if(PyJmultiMethod_Check(cached)){
+            name = PyJmultiMethod_GetName(cached);
         }
         if(name){
             if(PyObject_SetAttr((PyObject *) pyjob, name, cached) != 0) {
@@ -764,7 +762,7 @@ PyObject* pyjobject_getattr(PyJobject_Object *obj,
         PyJmethodWrapper_Object *wrapper = pyjmethodwrapper_new(obj, ret);
         Py_DECREF(ret);
         ret = (PyObject *) wrapper;
-    }else if(PyJMultiMethod_Check(ret)){
+    }else if(PyJmultiMethod_Check(ret)){
         PyJmethodWrapper_Object *wrapper = pyjmethodwrapper_new(obj, ret);
         Py_DECREF(ret);
         ret = (PyObject*) wrapper;

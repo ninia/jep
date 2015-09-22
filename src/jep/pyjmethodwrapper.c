@@ -109,7 +109,7 @@ static PyObject* pyjmethodwrapper_call(PyJmethodWrapper_Object *self,
     }
     if(pyjmethod_check(self->method)){
         return pyjmethod_call_internal((PyJmethod_Object*) self->method, self->object, args); 
-    }else if(PyJMultiMethod_Check(self->method)){
+    }else if(PyJmultiMethod_Check(self->method)){
         return pyjmultimethod_call_internal(self->method, self->object, args);
     }else{
         PyErr_SetString(PyExc_TypeError, "PyMethodWrapper has an unrecognized method type.");
