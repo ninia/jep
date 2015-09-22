@@ -53,10 +53,7 @@ PyAPI_FUNC(PyObject*) PyJmultiMethod_New(PyObject*, PyObject*);
 PyAPI_FUNC(int) PyJmultiMethod_Append(PyObject*, PyObject*);
 /* Check if the arg is a PyJmultiMethodObject */
 PyAPI_FUNC(int) PyJmultiMethod_Check(PyObject*);
-/* Get the name of a PyJmultiMethodObject, returns a borrowed reference to the name */
+/* Get the name of a PyJmultiMethodObject, returns a new reference to the name */
 PyAPI_FUNC(PyObject*) PyJmultiMethod_GetName(PyObject*);
-
-
-PyObject* pyjmultimethod_call_internal(PyObject*, PyJobject_Object*, PyObject*);
 
 #endif // ndef pyjmultimethod

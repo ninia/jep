@@ -62,7 +62,6 @@
 #include "pyjclass.h"
 #include "util.h"
 #include "pyjarray.h"
-#include "pyjmethodwrapper.h"
 #include "pyjiterable.h"
 #include "pyjiterator.h"
 #include "pyjcollection.h"
@@ -316,9 +315,8 @@ static int pyjobject_init(JNIEnv *env, PyJobject_Object *pyjob) {
      * is safe and drastically speeds up pyjobject instantiation by reducing
      * reflection calls. We continue to set and reuse the pyjmethods as
      * attributes on the pyjobject instance, but if pyjobject_getattr sees a
-     * pyjmethod, it will put it inside a pyjmethodwrapper and return that,
-     * enabling the reuse of the pyjmethod for this particular object instance.
-     * For more info, see pyjmethodwrapper.
+     * pyjmethod, it will put it inside a pymethod and return that, enabling
+     * the reuse of the pyjmethod for this particular object instance.
      *
      * We have the GIL at this point, so we can safely assume we're
      * synchronized and multiple threads will not alter the dictionary at the
@@ -386,10 +384,14 @@ static int pyjobject_init(JNIEnv *env, PyJobject_Object *pyjob) {
                              break;
                          }
                     }else if(PyJmultiMethod_Check(cached)){
-                         if (PyObject_RichCompareBool(pymethod->pyMethodName, PyJmultiMethod_GetName(cached), Py_EQ)){
+                         PyObject* methodName = PyJmultiMethod_GetName(cached);
+                         if (PyObject_RichCompareBool(pymethod->pyMethodName, methodName, Py_EQ)){
+                             Py_DECREF(methodName);
                              PyJmultiMethod_Append(cached, (PyObject*) pymethod);
                              multi = 1;
                              break;
+                         }else{
+                             Py_DECREF(methodName);
                          }
                     }
                 }
@@ -416,6 +418,7 @@ static int pyjobject_init(JNIEnv *env, PyJobject_Object *pyjob) {
         if(pyjmethod_check(cached)){
             PyJmethod_Object* cachedMethod = (PyJmethod_Object*) cached;
             name = cachedMethod->pyMethodName;
+            Py_INCREF(name);
         }else if(PyJmultiMethod_Check(cached)){
             name = PyJmultiMethod_GetName(cached);
         }
@@ -426,6 +429,7 @@ static int pyjobject_init(JNIEnv *env, PyJobject_Object *pyjob) {
             } else {
                 pyjobject_addmethod(pyjob, name);
             }
+            Py_DECREF(name);
         }
     } // end of cached method optimizations
     
@@ -759,13 +763,13 @@ PyObject* pyjobject_getattr(PyJobject_Object *obj,
     
     // method optimizations
     if(pyjmethod_check(ret)){
-        PyJmethodWrapper_Object *wrapper = pyjmethodwrapper_new(obj, ret);
+        PyObject* wrapper = PyMethod_New(ret, (PyObject*) obj, (PyObject*) Py_TYPE(obj));
         Py_DECREF(ret);
-        ret = (PyObject *) wrapper;
+        ret = wrapper;
     }else if(PyJmultiMethod_Check(ret)){
-        PyJmethodWrapper_Object *wrapper = pyjmethodwrapper_new(obj, ret);
+        PyObject* wrapper = PyMethod_New(ret, (PyObject*) obj, (PyObject*) Py_TYPE(obj));
         Py_DECREF(ret);
-        ret = (PyObject*) wrapper;
+        ret = wrapper;
     }
 
     if(PyErr_Occurred() || ret == Py_None) {

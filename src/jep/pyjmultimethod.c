@@ -97,18 +97,23 @@ int PyJmultiMethod_Check(PyObject* object){
 }
 
 PyObject* PyJmultiMethod_GetName(PyObject* multimethod) {
-    PyJmultiMethodObject* mm     = NULL; 
-    PyJmethod_Object*     method = NULL; 
+    PyJmultiMethodObject* mm         = NULL; 
+    PyJmethod_Object*     method     = NULL; 
+    PyObject*             methodName = NULL;
     if(!PyJmultiMethod_Check(multimethod)){
         PyErr_SetString(PyExc_TypeError, "PyJmultiMethod_GetName received incorrect type");
         return NULL;
     }
     mm = (PyJmultiMethodObject*) multimethod;
     method = (PyJmethod_Object*) PyList_GetItem(mm->methodList, 0);
-    return method->pyMethodName;
+    methodName = method->pyMethodName;
+    Py_INCREF(methodName);
+    return methodName;
 }
 
-PyObject* pyjmultimethod_call_internal(PyObject* multimethod, PyJobject_Object* pyjobject, PyObject* args){
+static PyObject* pyjmultimethod_call(PyObject *multimethod,
+                                PyObject *args,
+                                PyObject *keywords) {
     PyJmultiMethodObject* mm         = NULL;
     PyObject* methodName             = NULL;
     /* 
@@ -121,6 +126,11 @@ PyObject* pyjmultimethod_call_internal(PyObject* multimethod, PyJobject_Object* 
     Py_ssize_t        argsSize       = 0;
     JNIEnv*           env            = NULL;
 
+    if(keywords != NULL) {
+        PyErr_Format(PyExc_RuntimeError, "Keywords are not supported.");
+        return NULL;
+    }
+
     if(!PyJmultiMethod_Check(multimethod)){
         PyErr_SetString(PyExc_TypeError, "pyjmultimethod_call_internal received incorrect type");
         return NULL;
@@ -129,7 +139,7 @@ PyObject* pyjmultimethod_call_internal(PyObject* multimethod, PyJobject_Object* 
     mm = (PyJmultiMethodObject*) multimethod;
     methodName = PyJmultiMethod_GetName(multimethod);
     methodCount = PyList_Size(mm->methodList);
-    argsSize = PyTuple_Size(args);
+    argsSize = PyTuple_Size(args) - 1;
     env = pyembed_get_env();
 
     for(methodPosition = 0; methodPosition < methodCount; methodPosition += 1){
@@ -140,21 +150,24 @@ PyObject* pyjmultimethod_call_internal(PyObject* multimethod, PyJobject_Object* 
                     // cand is completly compatible, call it
                     break;
                 }else if(PyErr_Occurred()){
-                    return NULL;
+                    cand = NULL;
+                    break;
                 }else{
                     // cand was not compatible, replace it with method.
                     cand = method;
                 }
             }else if(PyErr_Occurred()){
-                return NULL;
+                break;
             }else{
                 cand = method;
             }
         }
     }
 
+    Py_DECREF(methodName);
+
     if(cand){
-        return pyjmethod_call_internal(cand, pyjobject, args);
+        return PyObject_Call((PyObject*) cand, args, keywords);
     }else{
         if(!PyErr_Occurred()){
             PyErr_SetString(PyExc_NameError, "No such Method.");
@@ -163,10 +176,27 @@ PyObject* pyjmultimethod_call_internal(PyObject* multimethod, PyJobject_Object* 
     }
 }
 
+/* returns internal list as tuple since its not safe to modify the list*/
+PyObject* pyjmultimethod_getmethods(PyObject* multimethod) {
+    PyJmultiMethodObject* mm         = NULL; 
+    if(!PyJmultiMethod_Check(multimethod)){
+        PyErr_SetString(PyExc_TypeError, "PyJmultiMethod_GetName received incorrect type");
+        return NULL;
+    }
+    mm = (PyJmultiMethodObject*) multimethod;
+    return PyList_AsTuple(mm->methodList);
+}
+
 static void pyjmultimethod_dealloc(PyJmultiMethodObject *self) {
     Py_CLEAR(self->methodList);
     PyObject_Del(self);
 }
+
+static PyGetSetDef pyjmultimethod_getsetlist[] = {
+    {"__name__", (getter) PyJmultiMethod_GetName, NULL},
+    {"__methods__", (getter) pyjmultimethod_getmethods, NULL},
+    {NULL} /* Sentinel */
+};
 
 PyDoc_STRVAR(pyjmultimethod_doc,
 "PyJmultiMethod wraps multiple java methods from the same class with the same\n\
@@ -187,7 +217,7 @@ PyTypeObject PyJmultiMethod_Type = {
     0,                                        /* tp_as_sequence */
     0,                                        /* tp_as_mapping */
     0,                                        /* tp_hash  */
-    0,                                        /* tp_call */
+    (ternaryfunc) pyjmultimethod_call,        /* tp_call */
     0,                                        /* tp_str */
     0,                                        /* tp_getattro */
     0,                                        /* tp_setattro */
@@ -202,7 +232,7 @@ PyTypeObject PyJmultiMethod_Type = {
     0,                                        /* tp_iternext */
     0,                                        /* tp_methods */
     0,                                        /* tp_members */
-    0,                                        /* tp_getset */
+    pyjmultimethod_getsetlist,                /* tp_getset */
     0,                                        /* tp_base */
     0,                                        /* tp_dict */
     0,                                        /* tp_descr_get */

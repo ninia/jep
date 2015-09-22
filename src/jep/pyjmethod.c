@@ -53,6 +53,8 @@
 #  undef _POSIX_C_SOURCE
 #endif
 #include "Python.h"
+// https://bugs.python.org/issue2897
+#include "structmember.h"
 
 #include "pyembed.h"
 #include "pyjmethod.h"
@@ -365,7 +367,7 @@ int pyjmethod_check_complex_compat(PyJmethod_Object* method, JNIEnv* env, PyObje
     int parampos;
 
     for(parampos = 0; parampos < method->lenParameters; parampos += 1) {
-        PyObject* param       = PyTuple_GetItem(args, parampos);
+        PyObject* param       = PyTuple_GetItem(args, parampos + 1);
         int       paramTypeId;
         jclass    paramType   = (jclass) (*env)->GetObjectArrayElement(env, method->parameters, parampos);
 
@@ -391,46 +393,61 @@ int pyjmethod_check_complex_compat(PyJmethod_Object* method, JNIEnv* env, PyObje
     return match;
 }
 
-// pyjmethod_call_internal. where the magic happens.
+// pyjmethod_call. where the magic happens.
 // 
 // okay, some of the magic -- we already the methodId, so we don't have
 // to reflect. we just have to parse the arguments from python,
 // check them against the java args, and call the java function.
 // 
 // easy. :-)
-PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
-                                  PyJobject_Object *instance,
-                                  PyObject *args) {
-    PyObject      *result     = NULL;
-    const char    *str        = NULL;
-    JNIEnv        *env        = NULL;
-    int            pos        = 0;
-    jvalue        *jargs      = NULL;
-    int            foundArray = 0;   /* if params includes pyjarray instance */
-    PyThreadState *_save;
-    
+static PyObject* pyjmethod_call(PyJmethod_Object *self,
+                                PyObject *args,
+                                PyObject *keywords) {
+    PyObject *firstArg         = NULL;
+    PyJobject_Object *instance = NULL;
+    PyObject      *result      = NULL;
+    const char    *str         = NULL;
+    JNIEnv        *env         = NULL;
+    int            pos         = 0;
+    jvalue        *jargs       = NULL;
+    int            foundArray  = 0;   /* if params includes pyjarray instance */
+    PyThreadState *_save       = NULL;
+
+    if(keywords != NULL) {
+        PyErr_Format(PyExc_RuntimeError, "Keywords are not supported.");
+        return NULL;
+    }
     env = pyembed_get_env();
     
     if(!self->parameters) {
-        if(!pyjmethod_init(env, self) || PyErr_Occurred())
+        if(!pyjmethod_init(env, self) || PyErr_Occurred()){
             return NULL;
-        return pyjmethod_call_internal(self, instance, args);
+        }
     }
     
+    // shouldn't happen
+    if(self->lenParameters != PyTuple_GET_SIZE(args) - 1) {
+        PyErr_Format(PyExc_RuntimeError,
+                     "Invalid number of arguments: %i, expected %i.",
+                     (int) PyTuple_GET_SIZE(args),
+                     self->lenParameters + 1);
+        return NULL;
+    }
+
+    firstArg = PyTuple_GetItem(args, 0);
+    if(!pyjobject_check(firstArg)){
+        PyErr_SetString(PyExc_RuntimeError,
+                     "First argument to a java method must be a java object..");
+        return NULL;
+
+    }
+    instance = (PyJobject_Object*) firstArg;
+
     // validate we can call this method
     if(!instance->object && self->isStatic != JNI_TRUE) {
         PyErr_Format(PyExc_RuntimeError,
                      "Instantiate this class before "
                      "calling an object method.");
-        return NULL;
-    }
-    
-    // shouldn't happen
-    if(self->lenParameters != PyTuple_GET_SIZE(args)) {
-        PyErr_Format(PyExc_RuntimeError,
-                     "Invalid number of arguments: %i, expected %i.",
-                     (int) PyTuple_GET_SIZE(args),
-                     self->lenParameters);
         return NULL;
     }
 
@@ -446,7 +463,7 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
         jclass paramType = (jclass) (*env)->GetObjectArrayElement(env,
                 self->parameters, pos);
 
-        param = PyTuple_GetItem(args, pos);                   /* borrowed */
+        param = PyTuple_GetItem(args, pos + 1);               /* borrowed */
         if(PyErr_Occurred()) {                                /* borrowed */
             goto EXIT_ERROR;
         }
@@ -875,12 +892,12 @@ PyObject* pyjmethod_call_internal(PyJmethod_Object *self,
     // re pin array objects if needed
     if(foundArray) {
         for(pos = 0; pos < self->lenParameters; pos++) {
-            PyObject *param = PyTuple_GetItem(args, pos);     /* borrowed */
+            PyObject *param = PyTuple_GetItem(args, pos + 1);     /* borrowed */
             if(param && pyjarray_check(param))
                 pyjarray_pin((PyJarray_Object *) param);
         }
     }
-    
+
     if(result == NULL) {
         Py_RETURN_NONE;
     }
@@ -893,6 +910,11 @@ EXIT_ERROR:
    return NULL;
 }
 
+static PyMemberDef pyjmethod_members[] = {
+    {"__name__", T_OBJECT_EX, offsetof(PyJmethod_Object, pyMethodName), READONLY,
+     "method name"},
+    {NULL}  /* Sentinel */
+};
 
 static PyMethodDef pyjmethod_methods[] = {
     {NULL, NULL, 0, NULL}
@@ -914,7 +936,7 @@ PyTypeObject PyJmethod_Type = {
     0,                                        /* tp_as_sequence */
     0,                                        /* tp_as_mapping */
     0,                                        /* tp_hash  */
-    0,                                        /* tp_call */
+    (ternaryfunc) pyjmethod_call,             /* tp_call */
     0,                                        /* tp_str */
     0,                                        /* tp_getattro */
     0,                                        /* tp_setattro */
@@ -928,7 +950,7 @@ PyTypeObject PyJmethod_Type = {
     0,                                        /* tp_iter */
     0,                                        /* tp_iternext */
     pyjmethod_methods,                        /* tp_methods */
-    0,                                        /* tp_members */
+    pyjmethod_members,                        /* tp_members */
     0,                                        /* tp_getset */
     0,                                        /* tp_base */
     0,                                        /* tp_dict */
