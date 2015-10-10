@@ -82,7 +82,7 @@ static PyObject* convert_jprimitivearray_pyndarray(JNIEnv*, jobject, int, npy_in
 static jarray convert_pyndarray_jprimitivearray(JNIEnv*, PyObject*, jclass);
 #endif
 
-static PyObject* match_exception_type(JNIEnv*, jthrowable);
+static PyObject* PyErrType_FromThrowable(JNIEnv*, jthrowable);
 
 
 // -------------------------------------------------- primitive class types
@@ -120,6 +120,16 @@ jclass JCOLLECTION_TYPE = NULL;
 #if USE_NUMPY
 jclass JEP_NDARRAY_TYPE = NULL;
 #endif
+
+// exception cached types
+jclass classNotFoundExc_Type;
+jclass indexOutOfBoundsExc_Type;
+jclass ioExc_Type;
+jclass classCastExc_Type;
+jclass illegalArgumentExc_Type;
+jclass arithmeticExc_Type;
+jclass outOfMemoryErr_Type;
+jclass assertionErr_Type;
 
 // cached methodids
 jmethodID objectToString     = 0;
@@ -635,7 +645,7 @@ int process_import_exception(JNIEnv *env) {
 int process_java_exception(JNIEnv *env) {
     jthrowable exception = NULL;
     jclass clazz;
-    PyObject *pyException = PyExc_RuntimeError;
+    PyObject *pyException;
     PyObject *jpyExc;
     JepThread *jepThread;
     jmethodID fillInStacktrace;
@@ -680,7 +690,7 @@ int process_java_exception(JNIEnv *env) {
         return 1;
     }
 
-    pyException = match_exception_type(env, exception);
+    pyException = PyErrType_FromThrowable(env, exception);
     PyErr_SetObject(pyException, jpyExc);
     Py_DECREF(jpyExc);
     (*env)->DeleteLocalRef(env, clazz);
@@ -691,94 +701,51 @@ int process_java_exception(JNIEnv *env) {
 /*
  * Matches a jthrowable to an equivalent built-in python exception type.  This
  * is to enable more precise except/catch blocks in python for Java exceptions.
- * This method intentionally does not call process_java_exception as it is only
- * called when processing java exceptions, and we don't want to infinitely recurse.
- *
  */
-static PyObject* match_exception_type(JNIEnv *env, jthrowable exception) {
-    jclass classNotFound, indexBounds, io, classCast;
-    jclass illegalArg, arithmetic, memory, assertion;
+static PyObject* PyErrType_FromThrowable(JNIEnv *env, jthrowable exception) {
 
     // map ClassNotFoundException to ImportError
-    classNotFound = (*env)->FindClass(env, "java/lang/ClassNotFoundException");
-    if((*env)->ExceptionOccurred(env) || !classNotFound) {
-        goto EXIT_ERROR;
-    }
-    if((*env)->IsInstanceOf(env, exception, classNotFound)) {
+    if((*env)->IsInstanceOf(env, exception, classNotFoundExc_Type)) {
         return PyExc_ImportError;
     }
 
     // map IndexOutOfBoundsException exception to IndexError
-    indexBounds = (*env)->FindClass(env, "java/lang/IndexOutOfBoundsException");
-    if((*env)->ExceptionOccurred(env) || !indexBounds) {
-        goto EXIT_ERROR;
-    }
-    if((*env)->IsInstanceOf(env, exception, indexBounds)) {
+    if((*env)->IsInstanceOf(env, exception, indexOutOfBoundsExc_Type)) {
         return PyExc_IndexError;
     }
 
     // map IOException to IOError
-    io = (*env)->FindClass(env, "java/io/IOException");
-    if((*env)->ExceptionOccurred(env) || !io) {
-        goto EXIT_ERROR;
-    }
-    if((*env)->IsInstanceOf(env, exception, io)) {
+    if((*env)->IsInstanceOf(env, exception, ioExc_Type)) {
         return PyExc_IOError;
     }
 
     // map ClassCastException to TypeError
-    classCast = (*env)->FindClass(env, "java/lang/ClassCastException");
-    if((*env)->ExceptionOccurred(env) || !classCast) {
-        goto EXIT_ERROR;
-    }
-    if((*env)->IsInstanceOf(env, exception, classCast)) {
+    if((*env)->IsInstanceOf(env, exception, classCastExc_Type)) {
         return PyExc_TypeError;
     }
 
     // map IllegalArgumentException to ValueError
-    illegalArg = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
-    if((*env)->ExceptionOccurred(env) || !illegalArg) {
-        goto EXIT_ERROR;
-    }
-    if((*env)->IsInstanceOf(env, exception, illegalArg)) {
+    if((*env)->IsInstanceOf(env, exception, illegalArgumentExc_Type)) {
         return PyExc_ValueError;
     }
 
     // map ArithmeticException to ArithmeticError
-    arithmetic = (*env)->FindClass(env, "java/lang/ArithmeticException");
-    if((*env)->ExceptionOccurred(env) || !arithmetic) {
-        goto EXIT_ERROR;
-    }
-    if((*env)->IsInstanceOf(env, exception, arithmetic)) {
+    if((*env)->IsInstanceOf(env, exception, arithmeticExc_Type)) {
         return PyExc_ArithmeticError;
     }
 
     // map OutOfMemoryError to MemoryError
-    memory = (*env)->FindClass(env, "java/lang/OutOfMemoryError");
-    if((*env)->ExceptionOccurred(env) || !memory) {
-        goto EXIT_ERROR;
-    }
-    if((*env)->IsInstanceOf(env, exception, memory)) {
+    if((*env)->IsInstanceOf(env, exception, outOfMemoryErr_Type)) {
         // honestly if you hit this you're probably screwed
         return PyExc_MemoryError;
     }
 
     // map AssertionError to AssertionError
-    assertion = (*env)->FindClass(env, "java/lang/AssertionError");
-    if((*env)->ExceptionOccurred(env) || !assertion) {
-        goto EXIT_ERROR;
-    }
-    if((*env)->IsInstanceOf(env, exception, assertion)) {
+    if((*env)->IsInstanceOf(env, exception, assertionErr_Type)) {
         return PyExc_AssertionError;
     }
 
     // default
-    return PyExc_RuntimeError;
-
-EXIT_ERROR:
-    printf("Error mapping exception types\n");
-    (*env)->ExceptionDescribe(env);
-    (*env)->ExceptionClear(env);
     return PyExc_RuntimeError;
 }
 
@@ -1304,10 +1271,74 @@ int cache_frequent_classes(JNIEnv *env) {
     }
 #endif
 
+    // find and cache exception types we check for
+    if(classNotFoundExc_Type == NULL) {
+        clazz = (*env)->FindClass(env, "java/lang/ClassNotFoundException");
+        if((*env)->ExceptionOccurred(env))
+            return 0;
+        classNotFoundExc_Type = (*env)->NewGlobalRef(env, clazz);
+        (*env)->DeleteLocalRef(env, clazz);
+    }
+
+    if(indexOutOfBoundsExc_Type == NULL) {
+        clazz = (*env)->FindClass(env, "java/lang/IndexOutOfBoundsException");
+        if((*env)->ExceptionOccurred(env))
+            return 0;
+        indexOutOfBoundsExc_Type = (*env)->NewGlobalRef(env, clazz);
+        (*env)->DeleteLocalRef(env, clazz);
+    }
+
+    if(ioExc_Type == NULL) {
+        clazz = (*env)->FindClass(env, "java/io/IOException");
+        if((*env)->ExceptionOccurred(env))
+            return 0;
+        ioExc_Type = (*env)->NewGlobalRef(env, clazz);
+        (*env)->DeleteLocalRef(env, clazz);
+    }
+
+    if(classCastExc_Type == NULL) {
+        clazz = (*env)->FindClass(env, "java/lang/ClassCastException");
+        if((*env)->ExceptionOccurred(env))
+            return 0;
+        classCastExc_Type = (*env)->NewGlobalRef(env, clazz);
+        (*env)->DeleteLocalRef(env, clazz);
+    }
+
+    if(illegalArgumentExc_Type == NULL) {
+        clazz = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
+        if((*env)->ExceptionOccurred(env))
+            return 0;
+        illegalArgumentExc_Type = (*env)->NewGlobalRef(env, clazz);
+        (*env)->DeleteLocalRef(env, clazz);
+    }
+
+    if(arithmeticExc_Type == NULL) {
+        clazz = (*env)->FindClass(env, "java/lang/ArithmeticException");
+        if((*env)->ExceptionOccurred(env))
+            return 0;
+        arithmeticExc_Type = (*env)->NewGlobalRef(env, clazz);
+        (*env)->DeleteLocalRef(env, clazz);
+    }
+
+    if(outOfMemoryErr_Type == NULL) {
+        clazz = (*env)->FindClass(env, "java/lang/OutOfMemoryError");
+        if((*env)->ExceptionOccurred(env))
+            return 0;
+        outOfMemoryErr_Type = (*env)->NewGlobalRef(env, clazz);
+        (*env)->DeleteLocalRef(env, clazz);
+    }
+
+    if(assertionErr_Type == NULL) {
+        clazz = (*env)->FindClass(env, "java/lang/AssertionError");
+        if((*env)->ExceptionOccurred(env))
+            return 0;
+        assertionErr_Type = (*env)->NewGlobalRef(env, clazz);
+        (*env)->DeleteLocalRef(env, clazz);
+    }
+
+
     /*
-     * TODO cache the jclass objects used in pyembed_box_py and jep exception
-     * handling, though those methods are less frequently used and will not
-     * result in as noticeable a speedup
+     * TODO cache the jclass objects used in pyembed_box_py
      */
 
     return 1;
@@ -1347,6 +1378,47 @@ void unref_cache_frequent_classes(JNIEnv *env) {
         JEP_NDARRAY_TYPE = NULL;
     }
 #endif
+
+    // release the exception types we check for
+    if(classNotFoundExc_Type != NULL) {
+        (*env)->DeleteGlobalRef(env, classNotFoundExc_Type);
+        classNotFoundExc_Type = NULL;
+    }
+
+    if(indexOutOfBoundsExc_Type != NULL) {
+        (*env)->DeleteGlobalRef(env, indexOutOfBoundsExc_Type);
+        indexOutOfBoundsExc_Type = NULL;
+    }
+
+    if(ioExc_Type != NULL) {
+        (*env)->DeleteGlobalRef(env, ioExc_Type);
+        ioExc_Type = NULL;
+    }
+
+    if(classCastExc_Type != NULL) {
+        (*env)->DeleteGlobalRef(env, classCastExc_Type);
+        classCastExc_Type = NULL;
+    }
+
+    if(illegalArgumentExc_Type != NULL) {
+        (*env)->DeleteGlobalRef(env, illegalArgumentExc_Type);
+        illegalArgumentExc_Type = NULL;
+    }
+
+    if(arithmeticExc_Type != NULL) {
+        (*env)->DeleteGlobalRef(env, arithmeticExc_Type);
+        arithmeticExc_Type = NULL;
+    }
+
+    if(outOfMemoryErr_Type != NULL) {
+        (*env)->DeleteGlobalRef(env, outOfMemoryErr_Type);
+        outOfMemoryErr_Type = NULL;
+    }
+
+    if(assertionErr_Type != NULL) {
+        (*env)->DeleteGlobalRef(env, assertionErr_Type);
+        assertionErr_Type = NULL;
+    }
 
 }
 
