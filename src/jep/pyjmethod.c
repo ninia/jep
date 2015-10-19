@@ -437,7 +437,7 @@ static PyObject* pyjmethod_call(PyJmethod_Object *self,
     firstArg = PyTuple_GetItem(args, 0);
     if(!pyjobject_check(firstArg)){
         PyErr_SetString(PyExc_RuntimeError,
-                     "First argument to a java method must be a java object..");
+                     "First argument to a java method must be a java object.");
         return NULL;
 
     }
