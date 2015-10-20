@@ -57,6 +57,7 @@
 #include "pyembed.h"
 #include "pyjobject.h"
 #include "pyjmethod.h"
+#include "pyjmultimethod.h"
 #include "pyjfield.h"
 #include "pyjclass.h"
 #include "util.h"
@@ -371,8 +372,34 @@ static int pyjobject_init(JNIEnv *env, PyJobject_Object *pyjob) {
                 continue;
 
             if(pymethod->pyMethodName && PyString_Check(pymethod->pyMethodName)) {
-                if(PyList_Append(pyjMethodList, (PyObject*) pymethod) != 0)
-                    printf("WARNING: couldn't add method");
+                int multi = 0;
+                int cacheLen = PyList_Size(pyjMethodList);
+                int cacheIndex = 0;
+                for (cacheIndex = 0; cacheIndex < cacheLen; cacheIndex += 1) {
+                    PyObject* cached = PyList_GetItem(pyjMethodList, cacheIndex);
+                    if(pyjmethod_check(cached)){
+                         PyJmethod_Object* cachedMethod = (PyJmethod_Object*) cached;
+                         if (PyObject_RichCompareBool(pymethod->pyMethodName, cachedMethod->pyMethodName, Py_EQ)){
+                             Py_INCREF(cached);
+                             Py_INCREF(pymethod);
+                             PyObject* multimethod = PyJMultiMethod_New((PyObject*) pymethod, cached);
+                             PyList_SetItem(pyjMethodList, cacheIndex, multimethod);
+                             multi = 1;
+                             break;
+                         }
+                    }else if(PyJMultiMethod_Check(cached)){
+                         if (PyObject_RichCompareBool(pymethod->pyMethodName, PyJMultiMethod_GetName(cached), Py_EQ)){
+                             PyJMultiMethod_Append(cached, (PyObject*) pymethod);
+                             multi = 1;
+                             break;
+                         }
+                    }
+                }
+                if(!multi){
+                    if(PyList_Append(pyjMethodList, (PyObject*) pymethod) != 0){
+                        printf("WARNING: couldn't add method");
+                    }
+                }
             }
 
             Py_DECREF(pymethod);
@@ -386,14 +413,21 @@ static int pyjobject_init(JNIEnv *env, PyJobject_Object *pyjob) {
 
     len = (int) PyList_Size(cachedMethodList);
     for (i = 0; i < len; i++) {
-        PyJmethod_Object* pymethod = (PyJmethod_Object*) PyList_GetItem(
-                cachedMethodList, i);
-        if(PyObject_SetAttr((PyObject *) pyjob, pymethod->pyMethodName,
-                (PyObject*) pymethod) != 0) {
-            PyErr_Format(PyExc_RuntimeError,
-                    "Couldn't add method as attribute.");
-        } else {
-            pyjobject_addmethod(pyjob, pymethod->pyMethodName);
+        PyObject* name   = NULL;
+        PyObject* cached = PyList_GetItem(cachedMethodList, i);
+        if(pyjmethod_check(cached)){
+            PyJmethod_Object* cachedMethod = (PyJmethod_Object*) cached;
+            name = cachedMethod->pyMethodName;
+        }else if(PyJMultiMethod_Check(cached)){
+            name = PyJMultiMethod_GetName(cached);
+        }
+        if(name){
+            if(PyObject_SetAttr((PyObject *) pyjob, name, cached) != 0) {
+                PyErr_SetString(PyExc_RuntimeError,
+                        "Couldn't add method as attribute.");
+            } else {
+                pyjobject_addmethod(pyjob, name);
+            }
         }
     } // end of cached method optimizations
     
@@ -510,186 +544,6 @@ void pyjobject_addfield(PyJobject_Object *obj, PyObject *name) {
         return;
     
     PyList_Append(obj->fields, name);
-}
-
-
-// find and call a method on this object that matches the python args.
-// typically called by way of pyjmethod when python invokes __call__.
-//
-// steals reference to self, methodname and args.
-PyObject* find_method(JNIEnv *env,
-                      PyJobject_Object *self,
-                      PyObject *methodName,
-                      Py_ssize_t methodCount,
-                      PyObject *attr,
-                      PyObject *args) {
-    // all possible method candidates
-    PyJmethod_Object **cand = NULL;
-    Py_ssize_t         pos, i, listSize, argsSize;
-    
-    pos = i = listSize = argsSize = 0;
-
-    // not really likely if we were called from pyjmethod, but hey...
-    if(methodCount < 1) {
-        PyErr_Format(PyExc_RuntimeError, "I have no methods.");
-        return NULL;
-    }
-
-    if(!attr || !PyList_CheckExact(attr)) {
-        PyErr_Format(PyExc_RuntimeError, "Invalid attr list.");
-        return NULL;
-    }
-    
-    cand = (PyJmethod_Object **)
-        PyMem_Malloc(sizeof(PyJmethod_Object*) * methodCount);
-    
-    // just for safety
-    for(i = 0; i < methodCount; i++)
-        cand[i] = NULL;
-    
-    listSize = PyList_GET_SIZE(attr);
-    for(i = 0; i < listSize; i++) {
-        PyObject *tuple = PyList_GetItem(attr, i);               /* borrowed */
-
-        if(PyErr_Occurred())
-            break;
-        
-        if(!tuple || tuple == Py_None || !PyTuple_CheckExact(tuple))
-            continue;
-
-        if(PyTuple_Size(tuple) == 2) {
-            PyObject *key = PyTuple_GetItem(tuple, 0);           /* borrowed */
-            
-            if(PyErr_Occurred())
-                break;
-            
-            if(!key || !PyString_Check(key))
-                continue;
-            
-            if(PyObject_RichCompareBool(key, methodName, Py_EQ)) {
-                PyObject *method = PyTuple_GetItem(tuple, 1);    /* borrowed */
-                if(pyjmethod_check(method))
-                    cand[pos++] = (PyJmethod_Object *) method;
-            }
-        }
-    }
-    
-    if(PyErr_Occurred())
-        goto EXIT_ERROR;
-    
-    // makes more sense to work with...
-    pos--;
-    
-    if(pos < 0) {
-        // didn't find a method by that name....
-        // that shouldn't happen unless the search above is broken.
-        PyErr_Format(PyExc_NameError, "No such method.");
-        goto EXIT_ERROR;
-    }
-    if(pos == 0) {
-        // we're done, call that one
-        PyObject *ret = pyjmethod_call_internal(cand[0], self, args);
-        PyMem_Free(cand);
-        return ret;
-    }
-
-    // first, find out if there's only one method that
-    // has the correct number of args
-    argsSize = PyTuple_Size(args);
-    {
-        PyJmethod_Object *matching = NULL;
-        int               count    = 0;
-        
-        for(i = 0; i <= pos && cand[i]; i++) {
-            // make sure method is fully initialized
-            if(!cand[i]->parameters) {
-                if(!pyjmethod_init(env, cand[i])) {
-                    // init failed, that's not good.
-                    cand[i] = NULL;
-                    PyErr_Warn(PyExc_Warning, "pyjmethod init failed.");
-                    continue;
-                }
-            }
-
-            if(cand[i]->lenParameters == argsSize) {
-                matching = cand[i];
-                count++;
-            }
-            else
-                cand[i] = NULL; // eliminate non-matching
-        }
-        
-        if(matching && count == 1) {
-            PyMem_Free(cand);
-            return pyjmethod_call_internal(matching, self, args);
-        }
-    } // local scope
-    
-    for(i = 0; i <= pos; i++) {
-        int parmpos = 0;
-        
-        // already eliminated?
-        if(!cand[i])
-            continue;
-        
-        // check if argument types match
-        (*env)->PushLocalFrame(env, 20);
-        for(parmpos = 0; parmpos < cand[i]->lenParameters; parmpos++) {
-            PyObject *param       = PyTuple_GetItem(args, parmpos);
-            int       paramTypeId = -1;
-            jclass    paramType =
-                (jclass) (*env)->GetObjectArrayElement(env,
-                                                       cand[i]->parameters,
-                                                       parmpos);
-
-            if(process_java_exception(env) || !paramType)
-                break;
-            
-            paramTypeId = get_jtype(env, paramType);
-            
-            if(pyarg_matches_jtype(env, param, paramType, paramTypeId)) {
-                if(PyErr_Occurred())
-                    break;
-                continue;
-            }
-            
-            // args don't match
-            break;
-        }
-        (*env)->PopLocalFrame(env, NULL);
-        
-        // this method matches?
-        if(parmpos == cand[i]->lenParameters) {
-            PyObject *ret = pyjmethod_call_internal(cand[i], self, args);
-            PyMem_Free(cand);
-            return ret;
-        }
-    }
-
-
-EXIT_ERROR:
-    PyMem_Free(cand);
-    if(!PyErr_Occurred())
-        PyErr_Format(PyExc_NameError,
-                     "Matching overloaded method not found.");
-    return NULL;
-}
-
-
-// find and call a method on this object that matches the python args.
-// typically called from pyjmethod when python invokes __call__.
-//
-// steals reference to self, methodname and args.
-PyObject* pyjobject_find_method(PyJobject_Object *self,
-                                PyObject *methodName,
-                                PyObject *args) {
-    // util method does this for us
-    return find_method(pyembed_get_env(),
-                       self,
-                       methodName,
-                       PyList_Size(self->methods),
-                       self->attr,
-                       args);
 }
 
 
@@ -903,15 +757,17 @@ PyObject* pyjobject_getattr(PyJobject_Object *obj,
     
     // util function fetches from attr list for us.
     ret = tuplelist_getitem(obj->attr, pyname);      /* new reference */
-    
     Py_DECREF(pyname);
     
     // method optimizations
-    if(pyjmethod_check(ret))
-    {
-        PyJmethodWrapper_Object *wrapper = pyjmethodwrapper_new(obj, (PyJmethod_Object*) ret);
+    if(pyjmethod_check(ret)){
+        PyJmethodWrapper_Object *wrapper = pyjmethodwrapper_new(obj, ret);
         Py_DECREF(ret);
         ret = (PyObject *) wrapper;
+    }else if(PyJMultiMethod_Check(ret)){
+        PyJmethodWrapper_Object *wrapper = pyjmethodwrapper_new(obj, ret);
+        Py_DECREF(ret);
+        ret = (PyObject*) wrapper;
     }
 
     if(PyErr_Occurred() || ret == Py_None) {
