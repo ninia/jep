@@ -36,23 +36,24 @@
 #include "pyjobject.h"
 #include "pyjmethod.h"
 
-PyAPI_DATA(PyTypeObject) PyJMultiMethod_Type;
+PyAPI_DATA(PyTypeObject) PyJmultiMethod_Type;
 
 typedef struct {
     PyObject_HEAD
     PyObject* methodList;
-} PyJMultiMethodObject;
+} PyJmultiMethodObject;
 
-/* Both args must be PyJmethod_Object, steals both references */
-PyAPI_FUNC(PyObject*) PyJMultiMethod_New(PyObject*, PyObject*);
-/* Args must be a PyJMultiMethodObject and a PyJmethod_Object */
-PyAPI_FUNC(int) PyJMultiMethod_Append(PyObject*, PyObject*);
-/* Check if the arg is a PyJMultiMethodObject */
-PyAPI_FUNC(int) PyJMultiMethod_Check(PyObject*);
-/* Get the name of a PyJMultiMethodObject, returns a borrowed reference to the name */
-PyAPI_FUNC(PyObject*) PyJMultiMethod_GetName(PyObject*);
-
-
-PyObject* pyjmultimethod_call_internal(PyObject*, PyJobject_Object*, PyObject*);
+/* 
+ * Both args must be PyJmethod_Objects. A minimum of 2 methods is required to
+ * make a PyJmultiMethod, after creation it is possible to add more than two 
+ * methods using PyJmultiMethod_Append.
+ */
+PyAPI_FUNC(PyObject*) PyJmultiMethod_New(PyObject*, PyObject*);
+/* Args must be a PyJmultiMethodObject and a PyJmethod_Object */
+PyAPI_FUNC(int) PyJmultiMethod_Append(PyObject*, PyObject*);
+/* Check if the arg is a PyJmultiMethodObject */
+PyAPI_FUNC(int) PyJmultiMethod_Check(PyObject*);
+/* Get the name of a PyJmultiMethodObject, returns a new reference to the name */
+PyAPI_FUNC(PyObject*) PyJmultiMethod_GetName(PyObject*);
 
 #endif // ndef pyjmultimethod

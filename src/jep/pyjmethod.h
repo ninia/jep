@@ -63,7 +63,6 @@ PyJmethod_Object* pyjmethod_new(JNIEnv*,
 PyJmethod_Object* pyjmethod_new_static(JNIEnv*, jobject, PyJobject_Object*);
 int pyjmethod_init(JNIEnv*, PyJmethod_Object*);
 
-PyObject* pyjmethod_call_internal(PyJmethod_Object*, PyJobject_Object*, PyObject*);
 int pyjmethod_check(PyObject *obj);
 
 /*
