@@ -335,8 +335,7 @@ static int pyjlist_setslice(PyObject *o, Py_ssize_t i1, Py_ssize_t i2, PyObject 
  * o1 is a pyjlist.
  */
 static PyObject* pyjlist_inplace_add(PyObject *o1, PyObject *o2) {
-    jobject               value   = NULL;
-    jclass           collection   = NULL;
+    jobject              value    = NULL;
     JNIEnv               *env     = pyembed_get_env();
     PyJobject_Object     *self    = (PyJobject_Object*) o1;
 
@@ -346,12 +345,7 @@ static PyObject* pyjlist_inplace_add(PyObject *o1, PyObject *o2) {
         value                     = pyembed_box_py(env, o2);
     }
 
-    collection = (*env)->FindClass(env, "java/util/Collection");
-    if(process_java_exception(env) || !collection) {
-        return NULL;
-    }
-
-    if((*env)->IsInstanceOf(env, value, collection)) {
+    if((*env)->IsInstanceOf(env, value, JCOLLECTION_TYPE)) {
         /*
          * it's a Collection so we need to simulate a python + and combine the
          * two collections

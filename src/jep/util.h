@@ -210,12 +210,23 @@ extern jclass JFLOAT_ARRAY_TYPE;
 extern jclass JDOUBLE_ARRAY_TYPE;
 #endif
 
-// cache some frequently looked up classes
+// cache some frequently looked up interfaces
 extern jclass JLIST_TYPE;
 extern jclass JMAP_TYPE;
 extern jclass JITERABLE_TYPE;
 extern jclass JITERATOR_TYPE;
 extern jclass JCOLLECTION_TYPE;
+extern jclass JCOMPARABLE_TYPE;
+
+// cache some frequently looked up classes
+extern jclass JBOOL_OBJ_TYPE;
+extern jclass JINT_OBJ_TYPE;
+extern jclass JLONG_OBJ_TYPE;
+extern jclass JDOUBLE_OBJ_TYPE;
+
+extern jclass JARRAYLIST_TYPE;
+extern jclass JHASHMAP_TYPE;
+extern jclass JCOLLECTIONS_TYPE;
 #if USE_NUMPY
 extern jclass JEP_NDARRAY_TYPE;
 #endif

@@ -932,81 +932,69 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result) {
     }
 
     if(PyBool_Check(result)) {
-        jclass clazz;
         jboolean b = JNI_FALSE;
         if(result == Py_True)
             b = JNI_TRUE;
 
-        clazz = (*env)->FindClass(env, "java/lang/Boolean");
-
         if(booleanBConstructor == 0) {
             booleanBConstructor = (*env)->GetMethodID(env,
-                                                      clazz,
+                                                      JBOOL_OBJ_TYPE,
                                                       "<init>",
                                                       "(Z)V");
         }
 
         if(!process_java_exception(env) && booleanBConstructor)
-            return (*env)->NewObject(env, clazz, booleanBConstructor, b);
+            return (*env)->NewObject(env, JBOOL_OBJ_TYPE, booleanBConstructor, b);
         else
             return NULL;
     }
 
 #if PY_MAJOR_VERSION < 3
     if(PyInt_Check(result)) {
-        jclass clazz;
         jint i = (jint) PyInt_AS_LONG(result);
-
-        clazz = (*env)->FindClass(env, "java/lang/Integer");
 
         if(integerIConstructor == 0) {
             integerIConstructor = (*env)->GetMethodID(env,
-                                                      clazz,
+                                                      JINT_OBJ_TYPE,
                                                       "<init>",
                                                       "(I)V");
         }
 
         if(!process_java_exception(env) && integerIConstructor)
-            return (*env)->NewObject(env, clazz, integerIConstructor, i);
+            return (*env)->NewObject(env, JINT_OBJ_TYPE, integerIConstructor, i);
         else
             return NULL;
     }
 #endif
 
     if(PyLong_Check(result)) {
-        jclass clazz;
         jeplong i = PyLong_AsLongLong(result);
-
-        clazz = (*env)->FindClass(env, "java/lang/Long");
 
         if(longJConstructor == 0) {
             longJConstructor = (*env)->GetMethodID(env,
-                                                   clazz,
+                                                   JLONG_OBJ_TYPE,
                                                    "<init>",
                                                    "(J)V");
         }
 
         if(!process_java_exception(env) && longJConstructor)
-            return (*env)->NewObject(env, clazz, longJConstructor, i);
+            return (*env)->NewObject(env, JLONG_OBJ_TYPE, longJConstructor, i);
         else
             return NULL;
     }
 
     if(PyFloat_Check(result)) {
-        jclass clazz;
         jdouble d = (jdouble) PyFloat_AS_DOUBLE(result);
-
-        clazz = (*env)->FindClass(env, "java/lang/Double");
 
         if(doubleDConstructor == 0) {
             doubleDConstructor = (*env)->GetMethodID(env,
-                                                    clazz,
-                                                    "<init>",
-                                                    "(D)V");
+                                                     JDOUBLE_OBJ_TYPE,
+                                                     "<init>",
+                                                     "(D)V");
         }
 
         if(!process_java_exception(env) && doubleDConstructor)
-            return (*env)->NewObject(env, clazz, doubleDConstructor, d);
+            return (*env)->NewObject(env, JDOUBLE_OBJ_TYPE, doubleDConstructor, d);
         else
             return NULL;
     }
@@ -1019,22 +1007,20 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result) {
     }
 
     if(PyList_Check(result) || PyTuple_Check(result)) {
-        jclass clazz;
         jobject list;
         Py_ssize_t i;
         Py_ssize_t size;
         int modifiable = PyList_Check(result);
 
-        clazz = (*env)->FindClass(env, "java/util/ArrayList");
         if(arraylistIConstructor == 0) {
             arraylistIConstructor = (*env)->GetMethodID(env,
-                                                    clazz,
-                                                    "<init>",
-                                                    "(I)V");
+                                                        JARRAYLIST_TYPE,
+                                                        "<init>",
+                                                        "(I)V");
         }
         if(arraylistAdd == 0) {
             arraylistAdd = (*env)->GetMethodID(env,
-                                               clazz,
+                                               JARRAYLIST_TYPE,
                                                "add",
                                                "(Ljava/lang/Object;)Z");
         }
@@ -1043,12 +1029,13 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result) {
             return NULL;
         }
 
+
         if(modifiable) {
             size = PyList_Size(result);
         } else {
             size = PyTuple_Size(result);
         }
-        list = (*env)->NewObject(env, clazz, arraylistIConstructor, (int) size);
+        list = (*env)->NewObject(env, JARRAYLIST_TYPE, arraylistIConstructor, (int) size);
         if(process_java_exception(env) || !list) {
             return NULL;
         }
@@ -1078,27 +1065,21 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result) {
             }
         }
 
-        if(modifiable) {
+        if (modifiable) {
             return list;
         } else {
             // make the tuple unmodifiable in Java
-            jclass collections;
             jmethodID unmodifiableList;
 
-            collections = (*env)->FindClass(env, "java/util/Collections");
-            if(process_java_exception(env) || !collections) {
-                return NULL;
-            }
-
             unmodifiableList = (*env)->GetStaticMethodID(env,
-                                                         collections,
+                                                         JCOLLECTIONS_TYPE,
                                                          "unmodifiableList",
                                                          "(Ljava/util/List;)Ljava/util/List;");
             if(process_java_exception(env) || !unmodifiableList) {
                 return NULL;
             }
             list = (*env)->CallStaticObjectMethod(env,
-                                                  collections,
+                                                  JCOLLECTIONS_TYPE,
                                                   unmodifiableList,
                                                   list);
             if(process_java_exception(env) || !list) {
@@ -1109,23 +1090,21 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result) {
     } // end of list and tuple conversion
 
     if(PyDict_Check(result)) {
-        jclass clazz;
         jobject map, jkey, jvalue;
         Py_ssize_t size, pos;
         PyObject *key, *value;
 
-        clazz = (*env)->FindClass(env, "java/util/HashMap");
         if(hashmapIConstructor == 0) {
             hashmapIConstructor = (*env)->GetMethodID(env,
-                                                    clazz,
-                                                    "<init>",
-                                                    "(I)V");
+                                                      JHASHMAP_TYPE,
+                                                      "<init>",
+                                                      "(I)V");
         }
         if(hashmapPut == 0) {
             hashmapPut = (*env)->GetMethodID(env,
-                                               clazz,
-                                               "put",
-                                               "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+                                             JHASHMAP_TYPE,
+                                             "put",
+                                             "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
         }
 
         if(process_java_exception(env) || !hashmapIConstructor || !hashmapPut) {
@@ -1133,7 +1112,7 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result) {
         }
 
         size = PyDict_Size(result);
-        map = (*env)->NewObject(env, clazz, hashmapIConstructor, (jint) size);
+        map = (*env)->NewObject(env, JHASHMAP_TYPE, hashmapIConstructor, (jint) size);
         if(process_java_exception(env) || !map) {
             return NULL;
         }

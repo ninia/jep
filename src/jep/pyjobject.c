@@ -371,7 +371,7 @@ static int pyjobject_init(JNIEnv *env, PyJobject_Object *pyjob) {
 
             if(pymethod->pyMethodName && PyString_Check(pymethod->pyMethodName)) {
                 int multi = 0;
-                int cacheLen = PyList_Size(pyjMethodList);
+                Py_ssize_t cacheLen = PyList_Size(pyjMethodList);
                 int cacheIndex = 0;
                 for (cacheIndex = 0; cacheIndex < cacheLen; cacheIndex += 1) {
                     PyObject* cached = PyList_GetItem(pyjMethodList, cacheIndex);
@@ -648,21 +648,19 @@ static PyObject* pyjobject_richcompare(PyJobject_Object *self,
              * NotImplemented (due to ClassCastException), Python 3 will
              * raise a TypeError.
              */
-            jclass comparable;
             jmethodID compareTo;
             jint result;
 #if PY_MAJOR_VERSION >= 3
             jthrowable exc;
 #endif
 
-            comparable = (*env)->FindClass(env, "java/lang/Comparable");
-            if(!(*env)->IsInstanceOf(env, self->object, comparable)) {
+            if(!(*env)->IsInstanceOf(env, self->object, JCOMPARABLE_TYPE)) {
                 char* jname = PyString_AsString(self->javaClassName);
                 PyErr_Format(PyExc_TypeError, "Invalid comparison operation for Java type %s", jname);
                 return NULL;
             }
 
-            compareTo = (*env)->GetMethodID(env, comparable, "compareTo", "(Ljava/lang/Object;)I");
+            compareTo = (*env)->GetMethodID(env, JCOMPARABLE_TYPE, "compareTo", "(Ljava/lang/Object;)I");
             if(process_java_exception(env) || !compareTo) {
                 return NULL;
             }

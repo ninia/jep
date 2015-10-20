@@ -82,7 +82,7 @@ static PyObject* convert_jprimitivearray_pyndarray(JNIEnv*, jobject, int, npy_in
 static jarray convert_pyndarray_jprimitivearray(JNIEnv*, PyObject*, jclass);
 #endif
 
-static PyObject* PyErrType_FromThrowable(JNIEnv*, jthrowable);
+static PyObject* pyerrtype_from_throwable(JNIEnv*, jthrowable);
 
 
 // -------------------------------------------------- primitive class types
@@ -111,12 +111,23 @@ jclass JFLOAT_ARRAY_TYPE   = NULL;
 jclass JDOUBLE_ARRAY_TYPE  = NULL;
 #endif
 
-// more cached types
+// more cached types for interfaces
 jclass JLIST_TYPE       = NULL;
 jclass JMAP_TYPE        = NULL;
 jclass JITERABLE_TYPE   = NULL;
 jclass JITERATOR_TYPE   = NULL;
 jclass JCOLLECTION_TYPE = NULL;
+jclass JCOMPARABLE_TYPE = NULL;
+
+// more cached types for classes
+jclass JBOOL_OBJ_TYPE   = NULL;
+jclass JINT_OBJ_TYPE    = NULL;
+jclass JLONG_OBJ_TYPE   = NULL;
+jclass JDOUBLE_OBJ_TYPE = NULL;
+
+jclass JARRAYLIST_TYPE   = NULL;
+jclass JHASHMAP_TYPE     = NULL;
+jclass JCOLLECTIONS_TYPE = NULL;
 #if USE_NUMPY
 jclass JEP_NDARRAY_TYPE = NULL;
 #endif
@@ -690,7 +701,7 @@ int process_java_exception(JNIEnv *env) {
         return 1;
     }
 
-    pyException = PyErrType_FromThrowable(env, exception);
+    pyException = pyerrtype_from_throwable(env, exception);
     PyErr_SetObject(pyException, jpyExc);
     Py_DECREF(jpyExc);
     (*env)->DeleteLocalRef(env, clazz);
@@ -702,7 +713,7 @@ int process_java_exception(JNIEnv *env) {
  * Matches a jthrowable to an equivalent built-in python exception type.  This
  * is to enable more precise except/catch blocks in python for Java exceptions.
  */
-static PyObject* PyErrType_FromThrowable(JNIEnv *env, jthrowable exception) {
+static PyObject* pyerrtype_from_throwable(JNIEnv *env, jthrowable exception) {
 
     // map ClassNotFoundException to ImportError
     if((*env)->IsInstanceOf(env, exception, classNotFoundExc_Type)) {
@@ -1259,6 +1270,77 @@ int cache_frequent_classes(JNIEnv *env) {
         (*env)->DeleteLocalRef(env, clazz);
     }
 
+    if(JCOMPARABLE_TYPE == NULL) {
+        clazz = (*env)->FindClass(env, "java/lang/Comparable");
+        if((*env)->ExceptionOccurred(env))
+            return 0;
+
+        JCOMPARABLE_TYPE = (*env)->NewGlobalRef(env, clazz);
+        (*env)->DeleteLocalRef(env, clazz);
+    }
+
+    if(JBOOL_OBJ_TYPE == NULL) {
+        clazz = (*env)->FindClass(env, "java/lang/Boolean");
+        if((*env)->ExceptionOccurred(env))
+            return 0;
+
+        JBOOL_OBJ_TYPE = (*env)->NewGlobalRef(env, clazz);
+        (*env)->DeleteLocalRef(env, clazz);
+    }
+
+    if(JINT_OBJ_TYPE == NULL) {
+        clazz = (*env)->FindClass(env, "java/lang/Integer");
+        if((*env)->ExceptionOccurred(env))
+            return 0;
+
+        JINT_OBJ_TYPE = (*env)->NewGlobalRef(env, clazz);
+        (*env)->DeleteLocalRef(env, clazz);
+    }
+
+    if(JLONG_OBJ_TYPE == NULL) {
+        clazz = (*env)->FindClass(env, "java/lang/Long");
+        if((*env)->ExceptionOccurred(env))
+            return 0;
+
+        JLONG_OBJ_TYPE = (*env)->NewGlobalRef(env, clazz);
+        (*env)->DeleteLocalRef(env, clazz);
+    }
+
+    if(JDOUBLE_OBJ_TYPE == NULL) {
+        clazz = (*env)->FindClass(env, "java/lang/Double");
+        if((*env)->ExceptionOccurred(env))
+            return 0;
+
+        JDOUBLE_OBJ_TYPE = (*env)->NewGlobalRef(env, clazz);
+        (*env)->DeleteLocalRef(env, clazz);
+    }
+
+    if(JARRAYLIST_TYPE == NULL) {
+        clazz = (*env)->FindClass(env, "java/util/ArrayList");
+        if((*env)->ExceptionOccurred(env))
+            return 0;
+
+        JARRAYLIST_TYPE = (*env)->NewGlobalRef(env, clazz);
+        (*env)->DeleteLocalRef(env, clazz);
+    }
+
+    if(JHASHMAP_TYPE == NULL) {
+        clazz = (*env)->FindClass(env, "java/util/HashMap");
+        if((*env)->ExceptionOccurred(env))
+            return 0;
+
+        JHASHMAP_TYPE = (*env)->NewGlobalRef(env, clazz);
+        (*env)->DeleteLocalRef(env, clazz);
+    }
+
+    if(JCOLLECTIONS_TYPE == NULL) {
+        clazz = (*env)->FindClass(env, "java/util/Collections");
+        if((*env)->ExceptionOccurred(env))
+            return 0;
+
+        JCOLLECTIONS_TYPE = (*env)->NewGlobalRef(env, clazz);
+        (*env)->DeleteLocalRef(env, clazz);
+    }
 
 #if USE_NUMPY
     if(JEP_NDARRAY_TYPE == NULL) {
@@ -1336,13 +1418,7 @@ int cache_frequent_classes(JNIEnv *env) {
         (*env)->DeleteLocalRef(env, clazz);
     }
 
-
-    /*
-     * TODO cache the jclass objects used in pyembed_box_py
-     */
-
     return 1;
-
 }
 
 // TODO is this method used?  Should it be called from pyembed_shutdown()?
@@ -1370,6 +1446,46 @@ void unref_cache_frequent_classes(JNIEnv *env) {
     if(JCOLLECTION_TYPE != NULL) {
         (*env)->DeleteGlobalRef(env, JCOLLECTION_TYPE);
         JCOLLECTION_TYPE = NULL;
+    }
+
+    if(JCOMPARABLE_TYPE != NULL) {
+        (*env)->DeleteGlobalRef(env, JCOMPARABLE_TYPE);
+        JCOMPARABLE_TYPE = NULL;
+    }
+
+    if(JBOOL_OBJ_TYPE != NULL) {
+        (*env)->DeleteGlobalRef(env, JBOOL_OBJ_TYPE);
+        JBOOL_OBJ_TYPE = NULL;
+    }
+
+    if(JINT_OBJ_TYPE != NULL) {
+        (*env)->DeleteGlobalRef(env, JINT_OBJ_TYPE);
+        JINT_OBJ_TYPE = NULL;
+    }
+
+    if(JLONG_OBJ_TYPE != NULL) {
+        (*env)->DeleteGlobalRef(env, JLONG_OBJ_TYPE);
+        JLONG_OBJ_TYPE = NULL;
+    }
+
+    if(JDOUBLE_OBJ_TYPE != NULL) {
+        (*env)->DeleteGlobalRef(env, JDOUBLE_OBJ_TYPE);
+        JDOUBLE_OBJ_TYPE = NULL;
+    }
+
+    if(JARRAYLIST_TYPE != NULL) {
+        (*env)->DeleteGlobalRef(env, JARRAYLIST_TYPE);
+        JARRAYLIST_TYPE = NULL;
+    }
+
+    if(JHASHMAP_TYPE != NULL) {
+        (*env)->DeleteGlobalRef(env, JHASHMAP_TYPE);
+        JHASHMAP_TYPE = NULL;
+    }
+
+    if(JCOLLECTIONS_TYPE != NULL) {
+        (*env)->DeleteGlobalRef(env, JCOLLECTIONS_TYPE);
+        JCOLLECTIONS_TYPE = NULL;
     }
 
 #if USE_NUMPY
@@ -1718,17 +1834,10 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid) {
         jboolean b;
 
         if(getBooleanValue == 0) {
-            jclass clazz;
-
-            Py_UNBLOCK_THREADS;
-            clazz = (*env)->FindClass(env, "java/lang/Boolean");
-
             getBooleanValue = (*env)->GetMethodID(env,
-                                                  clazz,
+                                                  JBOOL_OBJ_TYPE,
                                                   "booleanValue",
                                                   "()Z");
-
-            Py_BLOCK_THREADS;
             if((*env)->ExceptionOccurred(env))
                 return NULL;
         }
@@ -1776,6 +1885,7 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid) {
         return PyFloat_FromDouble(b);
     }
 
+
     case JCHAR_ID: {
         jchar c;
 
@@ -1820,12 +1930,10 @@ PyObject* convert_jobject_pyobject(JNIEnv *env, jobject val) {
     int typeId         = -1;
 
     if(val != NULL) {
-        jclass    objClass = NULL;
         jclass    retClass = NULL;
         jmethodID getClass = NULL;
 
-        objClass = (*env)->FindClass(env, "java/lang/Object");
-        getClass = (*env)->GetMethodID(env, objClass, "getClass", "()Ljava/lang/Class;");
+        getClass = (*env)->GetMethodID(env, JOBJECT_TYPE, "getClass", "()Ljava/lang/Class;");
         if(process_java_exception(env) || !getClass) {
             return NULL;
         }
@@ -1881,10 +1989,8 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
             ret.l = NULL;
         } else if(pyjobject_check(param)) {
             // if they pass in a pyjobject with java.lang.String inside it
-            jclass strClazz;
             PyJobject_Object *obj = (PyJobject_Object*) param;
-            strClazz = (*env)->FindClass(env, "java/lang/String");
-            if(!(*env)->IsInstanceOf(env, obj->object, strClazz)) {
+            if(!(*env)->IsInstanceOf(env, obj->object, JSTRING_TYPE)) {
                 PyErr_Format(PyExc_TypeError,
                         "Expected string parameter at %i.",
                         pos + 1);
@@ -2340,7 +2446,6 @@ jarray convert_pyndarray_jprimitivearray(JNIEnv* env,
  * @return a new jep.NDArray or NULL if errors are encountered
  */
 jobject convert_pyndarray_jndarray(JNIEnv *env, PyObject *pyobj) {
-    jclass         ndclz     = NULL;
     npy_intp      *dims      = NULL;
     jint          *jdims     = NULL;
     jobject        jdimObj   = NULL;
@@ -2351,10 +2456,9 @@ jobject convert_pyndarray_jndarray(JNIEnv *env, PyObject *pyobj) {
     int            i;
 
     init_numpy();
-    ndclz = (*env)->FindClass(env, "jep/NDArray");
     if(ndarrayInit == 0) {
         ndarrayInit = (*env)->GetMethodID(env,
-                                          ndclz,
+                                          JEP_NDARRAY_TYPE,
                                           "<init>",
                                           "(Ljava/lang/Object;[I)V");
         if(process_java_exception(env) || !ndarrayInit) {
@@ -2388,7 +2492,7 @@ jobject convert_pyndarray_jndarray(JNIEnv *env, PyObject *pyobj) {
         return NULL;
     }
 
-    result = (*env)->NewObject(env, ndclz, ndarrayInit, primitive, jdimObj);
+    result = (*env)->NewObject(env, JEP_NDARRAY_TYPE, ndarrayInit, primitive, jdimObj);
     if(process_java_exception(env) || !result) {
         return NULL;
     }

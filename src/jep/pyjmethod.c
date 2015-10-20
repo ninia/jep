@@ -344,7 +344,7 @@ int pyjmethod_check(PyObject *obj) {
     return 0;
 }
 
-int pyjmethod_check_simple_compat(PyJmethod_Object* method, JNIEnv* env, PyObject* methodName, int argCount){
+int pyjmethod_check_simple_compat(PyJmethod_Object* method, JNIEnv* env, PyObject* methodName, Py_ssize_t argCount){
     if(method->parameters) {
         // If init already happened check argCount first because int comparison is faster.
         return method->lenParameters == argCount && PyObject_RichCompareBool(method->pyMethodName, methodName, Py_EQ);
