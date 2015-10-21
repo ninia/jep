@@ -102,6 +102,7 @@ jclass JBYTE_TYPE    = NULL;
 jclass JCLASS_TYPE   = NULL;
 
 #if USE_NUMPY
+// cached types for primitive arrays
 jclass JBOOLEAN_ARRAY_TYPE = NULL;
 jclass JBYTE_ARRAY_TYPE    = NULL;
 jclass JSHORT_ARRAY_TYPE   = NULL;
@@ -111,7 +112,7 @@ jclass JFLOAT_ARRAY_TYPE   = NULL;
 jclass JDOUBLE_ARRAY_TYPE  = NULL;
 #endif
 
-// more cached types for interfaces
+// cached types for interfaces
 jclass JLIST_TYPE       = NULL;
 jclass JMAP_TYPE        = NULL;
 jclass JITERABLE_TYPE   = NULL;
@@ -119,12 +120,14 @@ jclass JITERATOR_TYPE   = NULL;
 jclass JCOLLECTION_TYPE = NULL;
 jclass JCOMPARABLE_TYPE = NULL;
 
-// more cached types for classes
+// cached types for Object equivalents of primitives
 jclass JBOOL_OBJ_TYPE   = NULL;
 jclass JINT_OBJ_TYPE    = NULL;
 jclass JLONG_OBJ_TYPE   = NULL;
 jclass JDOUBLE_OBJ_TYPE = NULL;
 
+// cached types for frequently used classes
+jclass JMODIFIER_TYPE    = NULL;
 jclass JARRAYLIST_TYPE   = NULL;
 jclass JHASHMAP_TYPE     = NULL;
 jclass JCOLLECTIONS_TYPE = NULL;
@@ -1315,6 +1318,15 @@ int cache_frequent_classes(JNIEnv *env) {
         (*env)->DeleteLocalRef(env, clazz);
     }
 
+    if(JMODIFIER_TYPE == NULL) {
+        clazz = (*env)->FindClass(env, "java/lang/reflect/Modifier");
+        if((*env)->ExceptionOccurred(env))
+            return 0;
+
+        JMODIFIER_TYPE = (*env)->NewGlobalRef(env, clazz);
+        (*env)->DeleteLocalRef(env, clazz);
+    }
+
     if(JARRAYLIST_TYPE == NULL) {
         clazz = (*env)->FindClass(env, "java/util/ArrayList");
         if((*env)->ExceptionOccurred(env))
@@ -1471,6 +1483,11 @@ void unref_cache_frequent_classes(JNIEnv *env) {
     if(JDOUBLE_OBJ_TYPE != NULL) {
         (*env)->DeleteGlobalRef(env, JDOUBLE_OBJ_TYPE);
         JDOUBLE_OBJ_TYPE = NULL;
+    }
+
+    if(JMODIFIER_TYPE != NULL) {
+        (*env)->DeleteGlobalRef(env, JMODIFIER_TYPE);
+        JMODIFIER_TYPE = NULL;
     }
 
     if(JARRAYLIST_TYPE != NULL) {

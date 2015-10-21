@@ -231,15 +231,11 @@ static PyObject* pyjclass_add_inner_classes(JNIEnv *env,
 
     innerSize = (*env)->GetArrayLength(env, innerArray);
     if(innerSize > 0) {
-        jclass    modClz     = NULL;
         int i;
 
         // setup to verify this inner class should be available
-        modClz = (*env)->FindClass(env, "java/lang/reflect/Modifier");
-        if(process_java_exception(env) || !modClz)
-            return NULL;
         if(modifierIsPublic == 0) {
-            modifierIsPublic = (*env)->GetStaticMethodID(env, modClz, "isPublic", "(I)Z");
+            modifierIsPublic = (*env)->GetStaticMethodID(env, JMODIFIER_TYPE, "isPublic", "(I)Z");
             if(process_java_exception(env) || !modifierIsPublic)
                 return NULL;
         }
@@ -256,7 +252,7 @@ static PyObject* pyjclass_add_inner_classes(JNIEnv *env,
             mods = (*env)->CallIntMethod(env, innerClz, classGetModifiers);
             if(process_java_exception(env))
                 return NULL;
-            public = (*env)->CallBooleanMethod(env, modClz, modifierIsPublic, mods);
+            public = (*env)->CallBooleanMethod(env, JMODIFIER_TYPE, modifierIsPublic, mods);
             if(process_java_exception(env))
                 return NULL;
 

@@ -196,7 +196,6 @@ int pyjmethod_init(JNIEnv *env, PyJmethod_Object *self) {
     jmethodID         methodId;
     jobject           returnType             = NULL;
     jobjectArray      paramArray             = NULL;
-    jclass            modClass               = NULL;
     jint              modifier               = -1;
     jboolean          isStatic               = JNI_FALSE;
     jclass            rmethodClass           = NULL;
@@ -282,20 +281,16 @@ int pyjmethod_init(JNIEnv *env, PyJmethod_Object *self) {
         if(process_java_exception(env) || !modifier)
             goto EXIT_ERROR;
         
-        modClass = (*env)->FindClass(env, "java/lang/reflect/Modifier");
-        if(process_java_exception(env) || !modClass)
-            goto EXIT_ERROR;
-        
         // caching this methodid caused a crash on the mac
         methodId = (*env)->GetStaticMethodID(env,
-                                             modClass,
+                                             JMODIFIER_TYPE,
                                              "isStatic",
                                              "(I)Z");
         if(process_java_exception(env) || !methodId)
             goto EXIT_ERROR;
         
         isStatic = (*env)->CallStaticBooleanMethod(env,
-                                                   modClass,
+                                                   JMODIFIER_TYPE,
                                                    methodId,
                                                    modifier);
         if(process_java_exception(env))

@@ -132,7 +132,6 @@ static int pyjfield_init(JNIEnv *env, PyJfield_Object *self) {
     jfieldID         fieldId;
     jclass           rfieldClass = NULL;
     jobject          fieldType   = NULL;
-    jclass           modClass    = NULL;
     jint             modifier    = -1;
     jboolean         isStatic    = JNI_TRUE;
 
@@ -199,13 +198,9 @@ static int pyjfield_init(JNIEnv *env, PyJfield_Object *self) {
     if(process_java_exception(env))
         goto EXIT_ERROR;
     
-    modClass = (*env)->FindClass(env, "java/lang/reflect/Modifier");
-    if(process_java_exception(env) || !modClass)
-        goto EXIT_ERROR;
-    
     if(modIsStatic == 0) {
         modIsStatic = (*env)->GetStaticMethodID(env,
-                                                modClass,
+                                                JMODIFIER_TYPE,
                                                 "isStatic",
                                                 "(I)Z");
         if(process_java_exception(env) || !modIsStatic)
@@ -213,7 +208,7 @@ static int pyjfield_init(JNIEnv *env, PyJfield_Object *self) {
     }
     
     isStatic = (*env)->CallStaticBooleanMethod(env,
-                                               modClass,
+                                               JMODIFIER_TYPE,
                                                modIsStatic,
                                                modifier);
     if(process_java_exception(env))
