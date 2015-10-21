@@ -1,0 +1,13 @@
+Jep 3.5 Release Notes
+*********************
+This release emphasized TODO.
+It is compatible with Python 2.6, 2.7, 3.2, 3.3, and 3.4.
+
+
+Improved performance
+~~~~~~~~~~~~~~~~~~~~
+Jep now has improved caching of java.lang.Class and java.lang.reflect.Method
+objects for faster performance overall.  The most notable speedups will be
+seen when there are a large number of Java method invocations from Python.
+
+
