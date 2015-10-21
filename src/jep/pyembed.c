@@ -896,12 +896,16 @@ void pyembed_setloader(JNIEnv *env, intptr_t _jepThread, jobject cl) {
     
     if(!cl)
         return;
+
+    PyEval_AcquireThread(jepThread->tstate);
+    Py_CLEAR(jepThread->fqnToPyJmethods);
     
     oldLoader = jepThread->classloader;
     if(oldLoader)
         (*env)->DeleteGlobalRef(env, oldLoader);
     
     jepThread->classloader = (*env)->NewGlobalRef(env, cl);
+    PyEval_ReleaseThread(jepThread->tstate);
 }
 
 
