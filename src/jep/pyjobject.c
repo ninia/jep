@@ -762,10 +762,14 @@ PyObject* pyjobject_getattr(PyJobject_Object *obj,
     // method optimizations
     if(pyjmethod_check(ret) || PyJmultiMethod_Check(ret)){
         /* 
-         * Should not bind non-static methods to pyjclass objects, but not sure
-         * how to handle multimethods and static methods.
+         * TODO Should not bind non-static methods to pyjclass objects, but not
+         * sure yet how to handle multimethods and static methods.
          */
+#if PY_MAJOR_VERSION >= 3
+        PyObject* wrapper = PyMethod_New(ret, (PyObject*) obj);
+#else
         PyObject* wrapper = PyMethod_New(ret, (PyObject*) obj, (PyObject*) Py_TYPE(obj));
+#endif
         Py_DECREF(ret);
         ret = wrapper;
     }
