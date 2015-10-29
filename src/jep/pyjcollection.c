@@ -26,34 +26,7 @@
    distribution.
 */
 
-
-#ifdef WIN32
-# include "winconfig.h"
-#endif
-
-#if HAVE_CONFIG_H
-# include <config.h>
-#endif
-
-#if HAVE_UNISTD_H
-# include <sys/types.h>
-# include <unistd.h>
-#endif
-
-// shut up the compiler
-#ifdef _POSIX_C_SOURCE
-#  undef _POSIX_C_SOURCE
-#endif
-#ifdef _FILE_OFFSET_BITS
-# undef _FILE_OFFSET_BITS
-#endif
-#include <jni.h>
-
-// shut up the compiler
-#ifdef _POSIX_C_SOURCE
-#  undef _POSIX_C_SOURCE
-#endif
-#include "Python.h"
+#include "jport.h"
 #include "pyjcollection.h"
 #include "pyembed.h"
 

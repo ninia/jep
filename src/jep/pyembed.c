@@ -38,36 +38,11 @@
    *****************************************************************************
 */
 
-#ifdef WIN32
-# include "winconfig.h"
-#endif
-
-#if HAVE_CONFIG_H
-# include <config.h>
-#endif
-
-#if HAVE_UNISTD_H
-# include <sys/types.h>
-# include <unistd.h>
-#endif
-
 #if STDC_HEADERS
 # include <stdio.h>
 #endif
 
-
-// The following includes were added to support compilation on RHEL 4, which
-// ships with python2.3.  With python2.4 (and possibly beyond), the includes
-// are not necessary but do not affect operation.
-#if 0
-#include <pyport.h>
-#include <object.h>
-#include <pystate.h>
-#include <pythonrun.h>
-#include <compile.h>
-#endif
-// End additional includes for python2.3
-
+#include "jport.h"
 #include "pyembed.h"
 #include "pyjobject.h"
 #include "pyjclass.h"
