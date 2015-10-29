@@ -26,9 +26,7 @@
    distribution.
 */
 
-#include "jport.h"
 #include "pyjlist.h"
-#include "pyjobject.h"
 #include "pyembed.h"
 
 static PyObject* pyjlist_add(PyObject*, PyObject*);

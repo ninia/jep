@@ -26,26 +26,12 @@
    distribution.   
 */
 
+#include "jport.h"
+#include "util.h"
+
 #ifndef _Included_pyembed
 #define _Included_pyembed
 
-// shut up the compiler
-#ifdef _POSIX_C_SOURCE
-# undef _POSIX_C_SOURCE
-#endif
-#include <jni.h>
-
-// shut up the compiler
-#ifdef _POSIX_C_SOURCE
-# undef _POSIX_C_SOURCE
-#endif
-#ifdef _FILE_OFFSET_BITS
-# undef _FILE_OFFSET_BITS
-#endif
-#include "Python.h"
-#include "marshal.h"
-
-#include "util.h"
 
 #define DICT_KEY "jep"
 

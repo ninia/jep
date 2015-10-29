@@ -26,9 +26,7 @@
    distribution.
 */
 
-#include "jport.h"
 #include "pyjmap.h"
-#include "pyjobject.h"
 #include "pyembed.h"
 
 static Py_ssize_t pyjmap_len(PyObject*);

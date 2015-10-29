@@ -26,16 +26,14 @@
    distribution.   
 */
 
-#include "jport.h"
-
-// https://bugs.python.org/issue2897
-#include "structmember.h"
-
 #include "pyembed.h"
 #include "pyjmethod.h"
 #include "pyjarray.h"
 #include "util.h"
-#include "pyembed.h"
+
+// https://bugs.python.org/issue2897
+#include "structmember.h"
+
 
 static void pyjmethod_dealloc(PyJmethod_Object *self);
 

@@ -42,12 +42,16 @@
 # include <stdio.h>
 #endif
 
-#include "jport.h"
 #include "pyembed.h"
 #include "pyjobject.h"
 #include "pyjclass.h"
 #include "pyjarray.h"
-#include "util.h"
+
+/*
+ * fixes compiler warnings about PyMarshal_ReadLongFromFile and
+ * PyMarshal_ReadLastObjectFromFile
+ */
+#include "marshal.h"
 
 
 #ifdef __APPLE__

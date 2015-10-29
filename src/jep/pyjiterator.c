@@ -26,9 +26,7 @@
    distribution.
 */
 
-#include "jport.h"
 #include "pyjiterator.h"
-#include "pyjobject.h"
 #include "pyembed.h"
 
 

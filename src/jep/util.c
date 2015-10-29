@@ -26,7 +26,6 @@
    distribution.   
 */
 
-#include "jport.h"
 #include "util.h"
 #include "pyjobject.h"
 #include "pyjarray.h"

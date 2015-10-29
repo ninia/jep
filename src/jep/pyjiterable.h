@@ -26,16 +26,8 @@
    distribution.
 */
 
-
-
-// shut up the compiler
-#ifdef _POSIX_C_SOURCE
-#  undef _POSIX_C_SOURCE
-#endif
-#include <jni.h>
-#include <Python.h>
+#include "jport.h"
 #include "pyjobject.h"
-
 
 #ifndef _Included_pyjiterable
 #define _Included_pyjiterable

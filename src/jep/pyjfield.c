@@ -31,7 +31,6 @@
    to cast to PyObject.
 */
 
-#include "jport.h"
 #include "pyembed.h"
 #include "pyjfield.h"
 #include "pyjobject.h"

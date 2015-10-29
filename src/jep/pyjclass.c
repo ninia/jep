@@ -26,11 +26,9 @@
    distribution.   
 */
 
-#include "jport.h"
 #include "pyembed.h"
 #include "pyjfield.h"
 #include "pyjclass.h"
-#include "pyjobject.h"
 #include "pyjmethod.h"
 #include "pyjarray.h"
 #include "util.h"

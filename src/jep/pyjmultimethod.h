@@ -26,15 +26,13 @@
    distribution.   
 */
 
-#include <Python.h>
-#include <jni.h>
-
+#include "jport.h"
+#include "pyjobject.h"
+#include "pyjmethod.h"
 
 #ifndef _Included_pyjmultimethod
 #define _Included_pyjmultimethod
 
-#include "pyjobject.h"
-#include "pyjmethod.h"
 
 PyAPI_DATA(PyTypeObject) PyJmultiMethod_Type;
 

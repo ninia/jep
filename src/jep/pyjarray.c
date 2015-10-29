@@ -31,7 +31,6 @@
    of the python distribution.
 */     
 
-#include "jport.h"
 #include "pyjarray.h"
 #include "pyjobject.h"
 #include "pyembed.h"

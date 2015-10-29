@@ -26,19 +26,11 @@
    distribution.   
 */
 
-
-// shut up the compiler
-#ifdef _POSIX_C_SOURCE
-#  undef _POSIX_C_SOURCE
-#endif
-#include <jni.h>
-#include <Python.h>
+#include "pyjobject.h"
 
 #ifndef _Included_pyjmethod
 #define _Included_pyjmethod
 
-#include "pyjobject.h"
-#include "pyjclass.h"
 
 PyAPI_DATA(PyTypeObject) PyJmethod_Type;
 

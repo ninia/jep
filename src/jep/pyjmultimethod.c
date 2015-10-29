@@ -26,9 +26,7 @@
    distribution.   
 */
 
-#include "jport.h"
 #include "pyjmultimethod.h"
-#include "pyjobject.h"
 #include "pyembed.h"
 
 PyObject* PyJmultiMethod_New(PyObject* method1, PyObject* method2) {
