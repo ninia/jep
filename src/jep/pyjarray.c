@@ -1479,14 +1479,23 @@ static PyObject* pyjarray_subscript(PyJarray_Object *self, PyObject *item) {
         return pyjarray_item(self, (Py_ssize_t) i);
     } else if(PySlice_Check(item)) {
         Py_ssize_t start, stop, step, slicelength;
-        /*
-         * ignore compile warning on the next line, they fixed the
-         * method signature in python 3.2
-         */
+
+#if PY_MAJOR_VERSION >= 3
         if(PySlice_GetIndicesEx(item, pyjarray_length((PyObject*) self), &start, &stop, &step, &slicelength) < 0) {
             // error will already be set
             return NULL;
         }
+#else
+        /*
+         * This silences a compile warning on PySlice_GetIndicesEx by casting
+         * item.  Python fixed the method signature in 3.2 to take item as a
+         * PyObject*
+         */
+        if(PySlice_GetIndicesEx((PySliceObject *) item, pyjarray_length((PyObject*) self), &start, &stop, &step, &slicelength) < 0) {
+            // error will already be set
+            return NULL;
+        }
+#endif
 
         if(slicelength <= 0) {
             return pyjarray_slice((PyObject*) self, 0, 0);
