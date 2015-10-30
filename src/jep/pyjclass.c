@@ -33,8 +33,8 @@
 #include "pyjarray.h"
 #include "util.h"
 
-static PyObject* pyjclass_add_inner_classes(JNIEnv*, PyJobject_Object*);
-static void pyjclass_dealloc(PyJclass_Object*);
+static PyObject* pyjclass_add_inner_classes(JNIEnv*, PyJObject*);
+static void pyjclass_dealloc(PyJClassObject*);
 
 static jmethodID classGetConstructors    = 0;
 static jmethodID classGetParmTypes       = 0;
@@ -46,19 +46,19 @@ static jmethodID modifierIsPublic        = 0;
 
 
 int pyjclass_init(JNIEnv *env, PyObject *pyjob) {
-    PyJclass_Object  *pyc         = NULL;
+    PyJClassObject   *pyc         = NULL;
     jobject           langClass   = NULL;
     jobjectArray      initArray   = NULL;
-    PyJobject_Object *pyjobject   = NULL;
+    PyJObject        *pyjobject   = NULL;
     jobject           constructor = NULL;
     jclass            initClass   = NULL;
     jobjectArray      parmArray   = NULL;
     int               i;
 
-    pyc = (PyJclass_Object*) pyjob;
+    pyc = (PyJClassObject*) pyjob;
     pyc->initArray  = NULL;
     
-    pyjobject = (PyJobject_Object *) pyjob;
+    pyjobject = (PyJObject *) pyjob;
 
     (*env)->PushLocalFrame(env, 5);
     if(process_java_exception(env))
@@ -174,7 +174,7 @@ EXIT_ERROR:
  * @return topClz if successful, otherwise NULL
  */
 static PyObject* pyjclass_add_inner_classes(JNIEnv *env,
-                                            PyJobject_Object *topClz) {
+                                            PyJObject *topClz) {
     jobjectArray      innerArray    = NULL;
     jsize             innerSize     = 0;
 
@@ -250,7 +250,7 @@ static PyObject* pyjclass_add_inner_classes(JNIEnv *env,
                     printf("Error adding inner class %s\n", charName);
                 } else {
                     PyObject *pyname = PyString_FromString(charName);
-                    pyjobject_addfield((PyJobject_Object*) topClz, pyname);
+                    pyjobject_addfield((PyJObject*) topClz, pyname);
                     Py_DECREF(pyname);
                 }
                 Py_DECREF(attrClz); // parent class will hold the reference
@@ -267,14 +267,14 @@ static PyObject* pyjclass_add_inner_classes(JNIEnv *env,
 
 
 int pyjclass_check(PyObject *obj) {
-    if(PyObject_TypeCheck(obj, &PyJclass_Type)) {
+    if(PyObject_TypeCheck(obj, &PyJClass_Type)) {
         return 1;
     }
     return 0;
 }
 
 
-static void pyjclass_dealloc(PyJclass_Object *self) {
+static void pyjclass_dealloc(PyJClassObject *self) {
 #if USE_DEALLOC
     JNIEnv *env = pyembed_get_env();
     if(env) {
@@ -282,13 +282,13 @@ static void pyjclass_dealloc(PyJclass_Object *self) {
             (*env)->DeleteGlobalRef(env, self->initArray);
     }
     free(self->numArgsPerInit);
-    pyjobject_dealloc((PyJobject_Object*) self);
+    pyjobject_dealloc((PyJObject*) self);
 #endif
 }
 
 
 // call constructor as a method and return pyjobject.
-PyObject* pyjclass_call(PyJclass_Object *self,
+PyObject* pyjclass_call(PyJClassObject *self,
                         PyObject *args,
                         PyObject *keywords) {
     int            initPos     = 0;
@@ -416,7 +416,7 @@ PyObject* pyjclass_call(PyJclass_Object *self,
                 
             Py_UNBLOCK_THREADS;
             obj = (*env)->NewObjectA(env,
-                                     ((PyJobject_Object*) self)->clazz,
+                                     ((PyJObject*) self)->clazz,
                                      methodId,
                                      jargs);
             Py_BLOCK_THREADS;
@@ -435,7 +435,7 @@ PyObject* pyjclass_call(PyJclass_Object *self,
                 for(parmPos = 0; parmPos < parmLen; parmPos++) {
                     PyObject *param = PyTuple_GetItem(args, parmPos);
                     if(param && pyjarray_check(param))
-                        pyjarray_pin((PyJarray_Object *) param);
+                        pyjarray_pin((PyJArrayObject *) param);
                 }
             }
             
@@ -471,10 +471,10 @@ static PyMethodDef pyjclass_methods[] = {
 };
 
 
-PyTypeObject PyJclass_Type = {
+PyTypeObject PyJClass_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "PyJclass",
-    sizeof(PyJclass_Object),
+    sizeof(PyJClassObject),
     0,
     (destructor) pyjclass_dealloc,            /* tp_dealloc */
     0,                                        /* tp_print */
@@ -502,7 +502,7 @@ PyTypeObject PyJclass_Type = {
     pyjclass_methods,                         /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
-    0, // PyJobject_Type                      /* tp_base */
+    0, // &PyJObject_Type                     /* tp_base */
     0,                                        /* tp_dict */
     0,                                        /* tp_descr_get */
     0,                                        /* tp_descr_set */

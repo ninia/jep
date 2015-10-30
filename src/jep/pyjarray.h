@@ -31,7 +31,7 @@
 #define _Included_pyjarray
 
 
-PyAPI_DATA(PyTypeObject) PyJarray_Type;
+PyAPI_DATA(PyTypeObject) PyJArray_Type;
 
 // c storage for our stuff, managed by python interpreter.
 typedef struct {
@@ -43,12 +43,12 @@ typedef struct {
     int              length;         /* better than querying all the time */
     void            *pinnedArray;    /* i.e.: cast to (int *) for an int array */
     jboolean         isCopy;         /* true if pinned array was copied */
-} PyJarray_Object;
+} PyJArrayObject;
 
 PyObject* pyjarray_new(JNIEnv*, jobjectArray);
 PyObject* pyjarray_new_v(PyObject*, PyObject*);
 int pyjarray_check(PyObject*);
-void pyjarray_release_pinned(PyJarray_Object*, jint);
-void pyjarray_pin(PyJarray_Object*);
+void pyjarray_release_pinned(PyJArrayObject*, jint);
+void pyjarray_pin(PyJArrayObject*);
 
 #endif // ndef pyjarray

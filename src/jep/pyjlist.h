@@ -32,7 +32,7 @@
 #ifndef _Included_pyjlist
 #define _Included_pyjlist
 
-PyAPI_DATA(PyTypeObject) PyJlist_Type;
+PyAPI_DATA(PyTypeObject) PyJList_Type;
 
 /*
  * A pyjlist is just a pyjcollection with some extra methods attached to it to meet
@@ -40,11 +40,11 @@ PyAPI_DATA(PyTypeObject) PyJlist_Type;
  * the underlying jobject of the pyjobject is an implementation of java.util.List.
  */
 typedef struct {
-    PyJcollection_Object obj; /* magic inheritance */
-} PyJlist_Object;
+    PyJCollectionObject obj; /* magic inheritance */
+} PyJListObject;
 
 
-PyJlist_Object* pyjlist_new(void);
+PyJListObject* pyjlist_new(void);
 PyObject* pyjlist_new_copy(PyObject*);
 int pyjlist_check(PyObject*);
 

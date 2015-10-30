@@ -269,7 +269,7 @@ int process_py_exception(JNIEnv *env, int printTrace) {
     PyObject *ptype, *pvalue, *ptrace, *pystack = NULL;
     PyObject *message = NULL;
     char *m = NULL;
-    PyJobject_Object *jexc = NULL;
+    PyJObject *jexc = NULL;
     jobject jepException = NULL;
     jclass jepExcClazz;
     jstring jmsg;
@@ -312,7 +312,7 @@ int process_py_exception(JNIEnv *env, int printTrace) {
             if(pyjobject_check(pvalue)) {
                 // it's a java exception that came from process_java_exception
                 jmethodID getMessage;
-                jexc = (PyJobject_Object*) pvalue;
+                jexc = (PyJObject*) pvalue;
                 getMessage = (*env)->GetMethodID(env, jexc->clazz,
                         "getLocalizedMessage", "()Ljava/lang/String;");
                 if(getMessage != NULL) {
@@ -1671,7 +1671,7 @@ int pyarg_matches_jtype(JNIEnv *env,
         if(pyjobject_check(param)) {
             // check if the object itself can cast to parameter type.
             if((*env)->IsAssignableFrom(env,
-                                        ((PyJobject_Object *) param)->clazz,
+                                        ((PyJObject *) param)->clazz,
                                         paramType))
                 return 1;
         }
@@ -1685,7 +1685,7 @@ int pyarg_matches_jtype(JNIEnv *env,
         if(pyjarray_check(param)) {
             // check if the object itself can cast to parameter type.
             if((*env)->IsAssignableFrom(env,
-                                        ((PyJarray_Object *) param)->clazz,
+                                        ((PyJArrayObject *) param)->clazz,
                                         paramType))
                 return 1;
         }
@@ -1708,7 +1708,7 @@ int pyarg_matches_jtype(JNIEnv *env,
         if(pyjobject_check(param)) {
             // check if the object itself can cast to parameter type.
             if((*env)->IsAssignableFrom(env,
-                                        ((PyJobject_Object *) param)->clazz,
+                                        ((PyJObject *) param)->clazz,
                                         paramType))
                 return 1;
         }
@@ -1978,7 +1978,7 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
             ret.l = NULL;
         } else if(pyjobject_check(param)) {
             // if they pass in a pyjobject with java.lang.String inside it
-            PyJobject_Object *obj = (PyJobject_Object*) param;
+            PyJObject *obj = (PyJObject*) param;
             if(!(*env)->IsInstanceOf(env, obj->object, JSTRING_TYPE)) {
                 PyErr_Format(PyExc_TypeError,
                         "Expected string parameter at %i.",
@@ -2038,7 +2038,7 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
         }
 #endif
         else {
-            PyJarray_Object *ar;
+            PyJArrayObject *ar;
             
             if(!pyjarray_check(param)) {
                 PyErr_Format(PyExc_TypeError,
@@ -2047,7 +2047,7 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
                 return ret;
             }
             
-            ar = (PyJarray_Object *) param;
+            ar = (PyJArrayObject *) param;
             
             if(!(*env)->IsAssignableFrom(env,
                                          ar->clazz,
@@ -2060,8 +2060,8 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
 
             // since this method is called before the value is used,
             // release the pinned array from here.
-            pyjarray_release_pinned((PyJarray_Object *) param, 0);
-            obj = ((PyJarray_Object *) param)->object;
+            pyjarray_release_pinned((PyJArrayObject *) param, 0);
+            obj = ((PyJArrayObject *) param)->object;
         }
         
         ret.l = obj;
@@ -2081,7 +2081,7 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
                 return ret;
             }
 
-            obj = ((PyJobject_Object *) param)->clazz;
+            obj = ((PyJObject *) param)->clazz;
         }
 
         ret.l = obj;
@@ -2126,7 +2126,7 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
 
             // check object itself is assignable to that type.
             if(!(*env)->IsAssignableFrom(env,
-                                         ((PyJobject_Object *) param)->clazz,
+                                         ((PyJObject *) param)->clazz,
                                          paramType)) {
                 PyErr_Format(PyExc_TypeError,
                              "Incorrect object type at %i.",
@@ -2134,7 +2134,7 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
                 return ret;
             }
 
-            obj = ((PyJobject_Object *) param)->object;
+            obj = ((PyJObject *) param)->object;
         }
         
         ret.l = obj;

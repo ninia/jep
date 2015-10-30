@@ -33,26 +33,26 @@
 /*
  * News up a pyjiterator, which is just a pyjobject for iterators.
  */
-PyJiterator_Object* pyjiterator_new() {
+PyJIteratorObject* pyjiterator_new() {
     /*
      * MSVC requires tp_base to be set here
      * See https://docs.python.org/2/extending/newtypes.html
      */
-    if(!PyJiterator_Type.tp_base) {
-        PyJiterator_Type.tp_base = &PyJobject_Type;
+    if(!PyJIterator_Type.tp_base) {
+        PyJIterator_Type.tp_base = &PyJObject_Type;
     }
 
-    if(PyType_Ready(&PyJiterator_Type) < 0)
+    if(PyType_Ready(&PyJIterator_Type) < 0)
         return NULL;
 
-    return PyObject_NEW(PyJiterator_Object, &PyJiterator_Type);
+    return PyObject_NEW(PyJIteratorObject, &PyJIterator_Type);
 }
 
 /*
  * Checks if the object is a pyjiterator.
  */
 int pyjiterator_check(PyObject *obj) {
-    if(PyObject_TypeCheck(obj, &PyJiterator_Type))
+    if(PyObject_TypeCheck(obj, &PyJIterator_Type))
         return 1;
     return 0;
 }
@@ -65,10 +65,10 @@ PyObject* pyjiterator_getiter(PyObject* self) {
 }
 
 PyObject* pyjiterator_next(PyObject* self) {
-    jmethodID         hasNext   = NULL;
-    jboolean          nextAvail = JNI_FALSE;
-    PyJobject_Object *pyjob     = (PyJobject_Object*) self;
-    JNIEnv           *env       = pyembed_get_env();
+    jmethodID     hasNext   = NULL;
+    jboolean      nextAvail = JNI_FALSE;
+    PyJObject    *pyjob     = (PyJObject*) self;
+    JNIEnv       *env       = pyembed_get_env();
 
     hasNext = (*env)->GetMethodID(env, pyjob->clazz, "hasNext", "()Z");
     if(process_java_exception(env)) {
@@ -107,12 +107,12 @@ static PyMethodDef pyjiterator_methods[] = {
 
 
 /*
- * Inherits from PyJobject_Type
+ * Inherits from PyJObject_Type
  */
-PyTypeObject PyJiterator_Type = {
+PyTypeObject PyJIterator_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "jep.PyJiterator",
-    sizeof(PyJiterator_Object),
+    sizeof(PyJIteratorObject),
     0,
     0,                                        /* tp_dealloc */
     0,                                        /* tp_print */
@@ -140,7 +140,7 @@ PyTypeObject PyJiterator_Type = {
     pyjiterator_methods,                      /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
-    0, // &PyJobject_Type                     /* tp_base */
+    0, // &PyJObject_Type                     /* tp_base */
     0,                                        /* tp_dict */
     0,                                        /* tp_descr_get */
     0,                                        /* tp_descr_set */

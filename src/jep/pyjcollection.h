@@ -32,7 +32,7 @@
 #ifndef _Included_pyjcollection
 #define _Included_pyjcollection
 
-PyAPI_DATA(PyTypeObject) PyJcollection_Type;
+PyAPI_DATA(PyTypeObject) PyJCollection_Type;
 
 /*
  * A pyjcollection is just a pyjiterable with the contains(o) and len() methods.
@@ -40,11 +40,11 @@ PyAPI_DATA(PyTypeObject) PyJcollection_Type;
  * implementation of java.util.Collection.
  */
 typedef struct {
-    PyJiterable_Object obj; /* magic inheritance */
-} PyJcollection_Object;
+    PyJIterableObject obj; /* magic inheritance */
+} PyJCollectionObject;
 
 
-PyJcollection_Object* pyjcollection_new(void);
+PyJCollectionObject* pyjcollection_new(void);
 int pyjcollection_check(PyObject*);
 
 

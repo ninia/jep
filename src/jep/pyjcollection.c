@@ -37,9 +37,9 @@ static int pyjcollection_contains(PyObject*, PyObject*);
  * News up a pyjcollection, which is just a pyjiterable with a few methods
  * attached to it.  This should only be called from pyjobject_new().
  */
-PyJcollection_Object* pyjcollection_new() {
-    // pyjobject will have already initialized PyJcollection_Type
-    return PyObject_NEW(PyJcollection_Object, &PyJcollection_Type);
+PyJCollectionObject* pyjcollection_new() {
+    // pyjobject will have already initialized PyJCollection_Type
+    return PyObject_NEW(PyJCollectionObject, &PyJCollection_Type);
 }
 
 
@@ -47,7 +47,7 @@ PyJcollection_Object* pyjcollection_new() {
  * Checks if the object is a pyjcollection.
  */
 int pyjcollection_check(PyObject *obj) {
-    if(PyObject_TypeCheck(obj, &PyJcollection_Type))
+    if(PyObject_TypeCheck(obj, &PyJCollection_Type))
         return 1;
     return 0;
 }
@@ -56,10 +56,10 @@ int pyjcollection_check(PyObject *obj) {
  * Gets the size of the collection.
  */
 static Py_ssize_t pyjcollection_len(PyObject* self) {
-    jmethodID         size  = NULL;
-    Py_ssize_t        len   = 0;
-    PyJobject_Object *pyjob = (PyJobject_Object*) self;
-    JNIEnv           *env   = pyembed_get_env();
+    jmethodID     size  = NULL;
+    Py_ssize_t    len   = 0;
+    PyJObject    *pyjob = (PyJObject*) self;
+    JNIEnv       *env   = pyembed_get_env();
 
     size = (*env)->GetMethodID(env, pyjob->clazz, "size", "()I");
     if(process_java_exception(env) || !size) {
@@ -79,11 +79,11 @@ static Py_ssize_t pyjcollection_len(PyObject* self) {
  * in operator.  For example, if v in o:
  */
 static int pyjcollection_contains(PyObject *o, PyObject *v) {
-    jmethodID         contains = NULL;
-    jboolean          result   = JNI_FALSE;
-    PyJobject_Object *obj      = (PyJobject_Object*) o;
-    JNIEnv           *env      = pyembed_get_env();
-    jobject           value    = NULL;
+    jmethodID     contains = NULL;
+    jboolean      result   = JNI_FALSE;
+    PyJObject    *obj      = (PyJObject*) o;
+    JNIEnv       *env      = pyembed_get_env();
+    jobject       value    = NULL;
 
     if(v == Py_None) {
         value = NULL;
@@ -142,12 +142,12 @@ static PySequenceMethods pyjcollection_seq_methods = {
 
 
 /*
- * Inherits from PyJiterable_Type
+ * Inherits from PyJIterable_Type
  */
-PyTypeObject PyJcollection_Type = {
+PyTypeObject PyJCollection_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "jep.PyJcollection",
-    sizeof(PyJcollection_Object),
+    sizeof(PyJCollectionObject),
     0,
     0,                                        /* tp_dealloc */
     0,                                        /* tp_print */
@@ -176,7 +176,7 @@ PyTypeObject PyJcollection_Type = {
     pyjcollection_methods,                    /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
-    0, // &PyJiterable_Type                   /* tp_base */
+    0, // &PyJIterable_Type                   /* tp_base */
     0,                                        /* tp_dict */
     0,                                        /* tp_descr_get */
     0,                                        /* tp_descr_set */

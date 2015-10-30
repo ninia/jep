@@ -904,10 +904,10 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result) {
     // class and object need to return a new local ref so the object
     // isn't garbage collected.
     if(pyjclass_check(result))
-        return (*env)->NewLocalRef(env, ((PyJobject_Object *) result)->clazz);
+        return (*env)->NewLocalRef(env, ((PyJObject *) result)->clazz);
 
     if(pyjobject_check(result))
-        return (*env)->NewLocalRef(env, ((PyJobject_Object *) result)->object);
+        return (*env)->NewLocalRef(env, ((PyJObject *) result)->object);
 
     if(PyString_Check(result)) {
         char *s = PyString_AS_STRING(result);
@@ -983,7 +983,7 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result) {
     }
 
     if(pyjarray_check(result)) {
-        PyJarray_Object *t = (PyJarray_Object *) result;
+        PyJArrayObject *t = (PyJArrayObject *) result;
         pyjarray_release_pinned(t, JNI_COMMIT);
 
         return t->object;

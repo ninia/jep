@@ -32,7 +32,7 @@
 #ifndef _Included_pyjiterable
 #define _Included_pyjiterable
 
-PyAPI_DATA(PyTypeObject) PyJiterable_Type;
+PyAPI_DATA(PyTypeObject) PyJIterable_Type;
 
 /*
  * A pyjiterable is just a pyjobject that has tp_iter implemented. It should
@@ -40,11 +40,11 @@ PyAPI_DATA(PyTypeObject) PyJiterable_Type;
  * implementation of java.util.Iterable.
  */
 typedef struct {
-    PyJobject_Object obj; /* magic inheritance */
-} PyJiterable_Object;
+    PyJObject obj; /* magic inheritance */
+} PyJIterableObject;
 
 
-PyJiterable_Object* pyjiterable_new(void);
+PyJIterableObject* pyjiterable_new(void);
 int pyjiterable_check(PyObject*);
 PyObject* pyjiterable_getiter(PyObject*);
 

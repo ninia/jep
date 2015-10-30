@@ -47,20 +47,20 @@ typedef struct {
     jobjectArray      parameters;          /* array of jclass parameter types */
     int               lenParameters;       /* length of parameters above */
     int               isStatic;            /* if method is static */
-} PyJmethod_Object;
+} PyJMethodObject;
 
-PyJmethod_Object* pyjmethod_new(JNIEnv*,
+PyJMethodObject* pyjmethod_new(JNIEnv*,
                                 jobject,
-                                PyJobject_Object*);
-PyJmethod_Object* pyjmethod_new_static(JNIEnv*, jobject, PyJobject_Object*);
-int pyjmethod_init(JNIEnv*, PyJmethod_Object*);
+                                PyJObject*);
+PyJMethodObject* pyjmethod_new_static(JNIEnv*, jobject, PyJObject*);
+int pyjmethod_init(JNIEnv*, PyJMethodObject*);
 
 int pyjmethod_check(PyObject *obj);
 
 /*
  * Test if a method has a specified name and number of parameters.
  */
-int pyjmethod_check_simple_compat(PyJmethod_Object*, JNIEnv*, PyObject*, Py_ssize_t);
+int pyjmethod_check_simple_compat(PyJMethodObject*, JNIEnv*, PyObject*, Py_ssize_t);
 
 /*
  * Check if a method is compatible with the types of a tuple of arguments. It is
@@ -68,6 +68,6 @@ int pyjmethod_check_simple_compat(PyJmethod_Object*, JNIEnv*, PyObject*, Py_ssiz
  * true. This method does not need to be called before using call_internal, it
  * is only necessary for resolving method overloading.
  */
-int pyjmethod_check_complex_compat(PyJmethod_Object*, JNIEnv*, PyObject*);
+int pyjmethod_check_complex_compat(PyJMethodObject*, JNIEnv*, PyObject*);
 
 #endif // ndef pyjmethod

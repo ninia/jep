@@ -37,25 +37,25 @@
 #include "pyjclass.h"
 #include "util.h"
 
-static void pyjfield_dealloc(PyJfield_Object *self);
+static void pyjfield_dealloc(PyJFieldObject *self);
 
 static jmethodID classGetName = 0;
 static jmethodID classGetType = 0;
 static jmethodID classGetMod  = 0;
 static jmethodID modIsStatic  = 0;
 
-PyJfield_Object* pyjfield_new(JNIEnv *env,
+PyJFieldObject* pyjfield_new(JNIEnv *env,
                               jobject rfield,
-                              PyJobject_Object *pyjobject) {
-    PyJfield_Object *pyf;
+                              PyJObject *pyjobject) {
+    PyJFieldObject *pyf;
     jclass           rfieldClass = NULL;
     jstring          jstr        = NULL;
     const char      *fieldName   = NULL;
 
-    if(PyType_Ready(&PyJfield_Type) < 0)
+    if(PyType_Ready(&PyJField_Type) < 0)
         return NULL;
     
-    pyf              = PyObject_NEW(PyJfield_Object, &PyJfield_Type);
+    pyf              = PyObject_NEW(PyJFieldObject, &PyJField_Type);
     pyf->rfield      = (*env)->NewGlobalRef(env, rfield);
     pyf->pyjobject   = pyjobject;
     pyf->pyFieldName = NULL;
@@ -100,7 +100,7 @@ EXIT_ERROR:
 }
 
 
-static int pyjfield_init(JNIEnv *env, PyJfield_Object *self) {
+static int pyjfield_init(JNIEnv *env, PyJFieldObject *self) {
     jfieldID         fieldId;
     jclass           rfieldClass = NULL;
     jobject          fieldType   = NULL;
@@ -209,7 +209,7 @@ EXIT_ERROR:
 }
 
 
-static void pyjfield_dealloc(PyJfield_Object *self) {
+static void pyjfield_dealloc(PyJFieldObject *self) {
 #if USE_DEALLOC
     JNIEnv *env  = pyembed_get_env();
     if(env) {
@@ -225,7 +225,7 @@ static void pyjfield_dealloc(PyJfield_Object *self) {
 
 
 int pyjfield_check(PyObject *obj) {
-    if(PyObject_TypeCheck(obj, &PyJfield_Type))
+    if(PyObject_TypeCheck(obj, &PyJField_Type))
         return 1;
     return 0;
 }
@@ -233,7 +233,7 @@ int pyjfield_check(PyObject *obj) {
 
 // get value from java object field.
 // returns new reference.
-PyObject* pyjfield_get(PyJfield_Object *self) {
+PyObject* pyjfield_get(PyJFieldObject *self) {
     PyObject *result = NULL;
     JNIEnv   *env;
     
@@ -498,7 +498,7 @@ PyObject* pyjfield_get(PyJfield_Object *self) {
 }
 
 
-int pyjfield_set(PyJfield_Object *self, PyObject *value) {
+int pyjfield_set(PyJFieldObject *self, PyObject *value) {
     JNIEnv   *env;
     jvalue    jarg;
     
@@ -869,10 +869,10 @@ static PyMethodDef pyjfield_methods[] = {
 };
 
 
-PyTypeObject PyJfield_Type = {
+PyTypeObject PyJField_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "PyJfield",
-    sizeof(PyJfield_Object),
+    sizeof(PyJFieldObject),
     0,
     (destructor) pyjfield_dealloc,            /* tp_dealloc */
     0,                                        /* tp_print */

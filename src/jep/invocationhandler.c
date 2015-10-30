@@ -26,10 +26,10 @@
    distribution.   
 */
 
-#include "invocationhandler.h"
-
 #include "util.h"
 #include "pyembed.h"
+
+#include "invocationhandler.h"
 
 
 // note that this function is called by java, not python. this is

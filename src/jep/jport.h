@@ -37,6 +37,9 @@
  *
  */
 
+// Python.h needs to be included first, see http://bugs.python.org/issue1045893
+#include <Python.h>
+
 #ifdef WIN32
 # include "winconfig.h"
 #endif
@@ -50,8 +53,8 @@
 # include <unistd.h>
 #endif
 
+
 #include <jni.h>
-#include <Python.h>
 
 
 

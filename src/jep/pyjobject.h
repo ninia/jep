@@ -32,7 +32,7 @@
 #define _Included_pyjobject
 
 
-PyAPI_DATA(PyTypeObject) PyJobject_Type;
+PyAPI_DATA(PyTypeObject) PyJObject_Type;
 
 // c storage for our stuff, managed by python interpreter.
 // doesn't need much, just a dictionary for attributes and
@@ -47,19 +47,19 @@ typedef struct {
     int              finishAttr;  /* true if object attributes are finished */
     PyObject        *javaClassName; /* string of the fully-qualified name of
                                        the object's Java clazz */
-} PyJobject_Object;
+} PyJObject;
 
 PyObject* pyjobject_new(JNIEnv*, jobject);
 PyObject* pyjobject_new_class(JNIEnv*, jclass);
 int pyjobject_check(PyObject *obj);
 
 // this method needs to be available to pyjclass
-void pyjobject_addfield(PyJobject_Object*, PyObject*);
+void pyjobject_addfield(PyJObject*, PyObject*);
 
 // these methods need to be available to pyjlist
-int pyjobject_setattr(PyJobject_Object*, char*, PyObject*);
-PyObject* pyjobject_getattr(PyJobject_Object*, char*);
-void pyjobject_dealloc(PyJobject_Object*);
-PyObject* pyjobject_str(PyJobject_Object*);
+int pyjobject_setattr(PyJObject*, char*, PyObject*);
+PyObject* pyjobject_getattr(PyJObject*, char*);
+void pyjobject_dealloc(PyJObject*);
+PyObject* pyjobject_str(PyJObject*);
 
 #endif // ndef pyjobject

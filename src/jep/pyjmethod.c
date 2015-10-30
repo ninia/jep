@@ -35,7 +35,7 @@
 #include "structmember.h"
 
 
-static void pyjmethod_dealloc(PyJmethod_Object *self);
+static void pyjmethod_dealloc(PyJMethodObject *self);
 
 // cache methodIds
 static jmethodID classGetName        = 0;
@@ -45,12 +45,12 @@ static jmethodID methodGetModifiers  = 0;
 
 
 
-// called internally to make new PyJmethod_Object instances.
+// called internally to make new PyJMethodObject instances.
 // throws java exception and returns NULL on error.
-PyJmethod_Object* pyjmethod_new(JNIEnv *env,
+PyJMethodObject* pyjmethod_new(JNIEnv *env,
                                 jobject rmethod,
-                                PyJobject_Object *pyjobject) {
-    PyJmethod_Object *pym          = NULL;
+                                PyJObject *pyjobject) {
+    PyJMethodObject *pym          = NULL;
     jclass            rmethodClass = NULL;
     const char       *methodName   = NULL;
     jstring           jstr         = NULL;
@@ -58,7 +58,7 @@ PyJmethod_Object* pyjmethod_new(JNIEnv *env,
     if(PyType_Ready(&PyJmethod_Type) < 0)
         return NULL;
 
-    pym                = PyObject_NEW(PyJmethod_Object, &PyJmethod_Type);
+    pym                = PyObject_NEW(PyJMethodObject, &PyJmethod_Type);
     pym->rmethod       = (*env)->NewGlobalRef(env, rmethod);
     pym->parameters    = NULL;
     pym->lenParameters = 0;
@@ -106,17 +106,17 @@ EXIT_ERROR:
 }
 
 
-// called internally to make new PyJmethod_Object instances.
+// called internally to make new PyJMethodObject instances.
 // throws java exception and returns NULL on error.
-PyJmethod_Object* pyjmethod_new_static(JNIEnv *env,
+PyJMethodObject* pyjmethod_new_static(JNIEnv *env,
                                        jobject rmethod,
-                                       PyJobject_Object *pyjobject) {
-    PyJmethod_Object *pym          = NULL;
+                                       PyJObject *pyjobject) {
+    PyJMethodObject *pym          = NULL;
     jclass            rmethodClass = NULL;
     const char       *methodName   = NULL;
     jstring           jstr         = NULL;
 
-    pym                = PyObject_NEW(PyJmethod_Object, &PyJmethod_Type);
+    pym                = PyObject_NEW(PyJMethodObject, &PyJmethod_Type);
     pym->rmethod       = (*env)->NewGlobalRef(env, rmethod);
     pym->parameters    = NULL;
     pym->lenParameters = 0;
@@ -165,7 +165,7 @@ EXIT_ERROR:
 
 
 // 1 if successful, 0 if failed.
-int pyjmethod_init(JNIEnv *env, PyJmethod_Object *self) {
+int pyjmethod_init(JNIEnv *env, PyJMethodObject *self) {
     jmethodID         methodId;
     jobject           returnType             = NULL;
     jobjectArray      paramArray             = NULL;
@@ -289,7 +289,7 @@ EXIT_ERROR:
 }
 
 
-static void pyjmethod_dealloc(PyJmethod_Object *self) {
+static void pyjmethod_dealloc(PyJMethodObject *self) {
 #if USE_DEALLOC
     JNIEnv *env  = pyembed_get_env();
     if(env) {
@@ -312,7 +312,7 @@ int pyjmethod_check(PyObject *obj) {
     return 0;
 }
 
-int pyjmethod_check_simple_compat(PyJmethod_Object* method, JNIEnv* env, PyObject* methodName, Py_ssize_t argCount){
+int pyjmethod_check_simple_compat(PyJMethodObject* method, JNIEnv* env, PyObject* methodName, Py_ssize_t argCount){
     if(method->parameters) {
         // If init already happened check argCount first because int comparison is faster.
         return method->lenParameters == argCount && PyObject_RichCompareBool(method->pyMethodName, methodName, Py_EQ);
@@ -330,7 +330,7 @@ int pyjmethod_check_simple_compat(PyJmethod_Object* method, JNIEnv* env, PyObjec
     return 0;
 }
 
-int pyjmethod_check_complex_compat(PyJmethod_Object* method, JNIEnv* env, PyObject* args){
+int pyjmethod_check_complex_compat(PyJMethodObject* method, JNIEnv* env, PyObject* args){
     int match = 1;
     int parampos;
 
@@ -368,11 +368,11 @@ int pyjmethod_check_complex_compat(PyJmethod_Object* method, JNIEnv* env, PyObje
 // check them against the java args, and call the java function.
 // 
 // easy. :-)
-static PyObject* pyjmethod_call(PyJmethod_Object *self,
+static PyObject* pyjmethod_call(PyJMethodObject *self,
                                 PyObject *args,
                                 PyObject *keywords) {
-    PyObject *firstArg         = NULL;
-    PyJobject_Object *instance = NULL;
+    PyObject      *firstArg    = NULL;
+    PyJObject     *instance    = NULL;
     PyObject      *result      = NULL;
     const char    *str         = NULL;
     JNIEnv        *env         = NULL;
@@ -409,7 +409,7 @@ static PyObject* pyjmethod_call(PyJmethod_Object *self,
         return NULL;
 
     }
-    instance = (PyJobject_Object*) firstArg;
+    instance = (PyJObject*) firstArg;
 
     // validate we can call this method
     if(!instance->object && self->isStatic != JNI_TRUE) {
@@ -862,7 +862,7 @@ static PyObject* pyjmethod_call(PyJmethod_Object *self,
         for(pos = 0; pos < self->lenParameters; pos++) {
             PyObject *param = PyTuple_GetItem(args, pos + 1);     /* borrowed */
             if(param && pyjarray_check(param))
-                pyjarray_pin((PyJarray_Object *) param);
+                pyjarray_pin((PyJArrayObject *) param);
         }
     }
 
@@ -879,7 +879,7 @@ EXIT_ERROR:
 }
 
 static PyMemberDef pyjmethod_members[] = {
-    {"__name__", T_OBJECT_EX, offsetof(PyJmethod_Object, pyMethodName), READONLY,
+    {"__name__", T_OBJECT_EX, offsetof(PyJMethodObject, pyMethodName), READONLY,
      "method name"},
     {NULL}  /* Sentinel */
 };
@@ -892,7 +892,7 @@ static PyMethodDef pyjmethod_methods[] = {
 PyTypeObject PyJmethod_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "jep.PyJmethod",
-    sizeof(PyJmethod_Object),
+    sizeof(PyJMethodObject),
     0,
     (destructor) pyjmethod_dealloc,           /* tp_dealloc */
     0,                                        /* tp_print */

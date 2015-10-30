@@ -38,16 +38,16 @@ static int pyjmap_setitem(PyObject*, PyObject*, PyObject*);
  * News up a pyjmap, which is just a pyjobject with some mapping methods
  * attached to it.  This should only be called from pyjobject_new().
  */
-PyJmap_Object* pyjmap_new() {
-    // pyjobject will have already initialized PyJmap_Type
-    return PyObject_NEW(PyJmap_Object, &PyJmap_Type);
+PyJMapObject* pyjmap_new() {
+    // pyjobject will have already initialized PyJMap_Type
+    return PyObject_NEW(PyJMapObject, &PyJMap_Type);
 }
 
 /*
  * Checks if the object is a pyjmap.
  */
 int pyjmap_check(PyObject *obj) {
-    if(PyObject_TypeCheck(obj, &PyJmap_Type))
+    if(PyObject_TypeCheck(obj, &PyJMap_Type))
         return 1;
     return 0;
 }
@@ -56,10 +56,10 @@ int pyjmap_check(PyObject *obj) {
  * Gets the size of the map.
  */
 static Py_ssize_t pyjmap_len(PyObject* self) {
-    jmethodID         size  = NULL;
-    Py_ssize_t        len   = 0;
-    PyJobject_Object *pyjob = (PyJobject_Object*) self;
-    JNIEnv           *env   = pyembed_get_env();
+    jmethodID     size  = NULL;
+    Py_ssize_t    len   = 0;
+    PyJObject    *pyjob = (PyJObject*) self;
+    JNIEnv       *env   = pyembed_get_env();
 
     size = (*env)->GetMethodID(env, pyjob->clazz, "size", "()I");
     if(process_java_exception(env) || !size) {
@@ -79,11 +79,11 @@ static Py_ssize_t pyjmap_len(PyObject* self) {
  * if key in o: 
  */
 static int pyjmap_contains_key(PyObject *self, PyObject *key) {
-    jmethodID         containsKey = NULL;
-    jboolean          result      = JNI_FALSE;
-    PyJobject_Object *obj         = (PyJobject_Object*) self;
-    JNIEnv           *env         = pyembed_get_env();
-    jobject           jkey       = NULL;
+    jmethodID     containsKey = NULL;
+    jboolean      result      = JNI_FALSE;
+    PyJObject    *obj         = (PyJObject*) self;
+    JNIEnv       *env         = pyembed_get_env();
+    jobject       jkey        = NULL;
 
     if(key == Py_None) {
         jkey = NULL;
@@ -128,11 +128,11 @@ static int pyjmap_contains_key(PyObject *self, PyObject *key) {
  * example, result = o[key]
  */
 static PyObject* pyjmap_getitem(PyObject *o, PyObject *key) {
-    jmethodID         get  = NULL;
-    jobject           jkey = NULL;
-    jobject           val  = NULL;
-    PyJobject_Object *obj  = (PyJobject_Object*) o;
-    JNIEnv           *env  = pyembed_get_env();
+    jmethodID     get  = NULL;
+    jobject       jkey = NULL;
+    jobject       val  = NULL;
+    PyJObject    *obj  = (PyJObject*) o;
+    JNIEnv       *env  = pyembed_get_env();
 
     get = (*env)->GetMethodID(env, obj->clazz, "get", "(Ljava/lang/Object;)Ljava/lang/Object;");
     if(process_java_exception(env) || !get) {
@@ -140,7 +140,7 @@ static PyObject* pyjmap_getitem(PyObject *o, PyObject *key) {
     }
 
     if(pyjobject_check(key)) {
-        jkey = ((PyJobject_Object*) key)->object;
+        jkey = ((PyJObject*) key)->object;
     } else {
         /* 
          * convert_pyarg_jvalue will leave jkey as NULL and set PyExc_TypeError
@@ -181,11 +181,11 @@ static PyObject* pyjmap_getitem(PyObject *o, PyObject *key) {
  * o[key] = v
  */
 static int pyjmap_setitem(PyObject *o, PyObject *key, PyObject *v) {
-    jmethodID         put      = NULL;
-    jobject           jkey     = NULL;
-    jobject           value    = NULL;
-    PyJobject_Object *obj      = (PyJobject_Object*) o;
-    JNIEnv           *env      = pyembed_get_env();
+    jmethodID     put      = NULL;
+    jobject       jkey     = NULL;
+    jobject       value    = NULL;
+    PyJObject    *obj      = (PyJObject*) o;
+    JNIEnv       *env      = pyembed_get_env();
 
     if(v == Py_None) {
         value = NULL;
@@ -208,7 +208,7 @@ static int pyjmap_setitem(PyObject *o, PyObject *key, PyObject *v) {
     }
 
     if(pyjobject_check(key)) {
-        jkey = ((PyJobject_Object*) key)->object;
+        jkey = ((PyJObject*) key)->object;
     } else {
         jvalue jvkey = convert_pyarg_jvalue(env, key, JOBJECT_TYPE, JOBJECT_ID, 1);
         jkey = jvkey.l;
@@ -237,12 +237,12 @@ static int pyjmap_setitem(PyObject *o, PyObject *key, PyObject *v) {
  * for key in o:
  */
 PyObject* pyjmap_getiter(PyObject* obj) {
-    jmethodID         keySet   = NULL;
-    jmethodID         getIter  = NULL;
-    jobject           set      = NULL;
-    jobject           iter     = NULL;
-    PyJobject_Object *pyjob    = (PyJobject_Object*) obj;
-    JNIEnv           *env      = pyembed_get_env();
+    jmethodID     keySet   = NULL;
+    jmethodID     getIter  = NULL;
+    jobject       set      = NULL;
+    jobject       iter     = NULL;
+    PyJObject    *pyjob    = (PyJObject*) obj;
+    JNIEnv       *env      = pyembed_get_env();
 
     keySet = (*env)->GetMethodID(env, pyjob->clazz, "keySet", "()Ljava/util/Set;");
     if(process_java_exception(env) || !keySet) {
@@ -293,12 +293,12 @@ static PyMappingMethods pyjmap_map_methods = {
 
 
 /*
- * Inherits from PyJobject_Type
+ * Inherits from PyJObject_Type
  */
-PyTypeObject PyJmap_Type = {
+PyTypeObject PyJMap_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "jep.PyJmap",
-    sizeof(PyJmap_Object),
+    sizeof(PyJMapObject),
     0,
     0,                                        /* tp_dealloc */
     0,                                        /* tp_print */
@@ -326,7 +326,7 @@ PyTypeObject PyJmap_Type = {
     pyjmap_methods,                           /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
-    0, // &PyJobject_Type                     /* tp_base */
+    0, // &PyJObject_Type                     /* tp_base */
     0,                                        /* tp_dict */
     0,                                        /* tp_descr_get */
     0,                                        /* tp_descr_set */

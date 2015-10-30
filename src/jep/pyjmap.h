@@ -32,7 +32,7 @@
 #ifndef _Included_pyjmap
 #define _Included_pyjmap
 
-PyAPI_DATA(PyTypeObject) PyJmap_Type;
+PyAPI_DATA(PyTypeObject) PyJMap_Type;
 
 /*
  * A pyjmap is just a pyjobject with some extra methods attached to it to meet
@@ -40,11 +40,11 @@ PyAPI_DATA(PyTypeObject) PyJmap_Type;
  * the underlying jobject of the pyjobject is an implementation of java.util.Map.
  */
 typedef struct {
-    PyJobject_Object obj; /* magic inheritance */
-} PyJmap_Object;
+    PyJObject obj; /* magic inheritance */
+} PyJMapObject;
 
 
-PyJmap_Object* pyjmap_new(void);
+PyJMapObject* pyjmap_new(void);
 int pyjmap_check(PyObject*);
 
 

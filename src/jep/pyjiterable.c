@@ -34,16 +34,16 @@
  * News up a pyjiterable, which is just a pyjobject that supports iteration.
  * This should only be called from pyjobject_new().
  */
-PyJiterable_Object* pyjiterable_new() {
-    // pyjobject will have already initialized PyJiterable_Type
-    return PyObject_NEW(PyJiterable_Object, &PyJiterable_Type);
+PyJIterableObject* pyjiterable_new() {
+    // pyjobject will have already initialized PyJIterable_Type
+    return PyObject_NEW(PyJIterableObject, &PyJIterable_Type);
 }
 
 /*
  * Checks if the object is a pyjiterable.
  */
 int pyjiterable_check(PyObject *obj) {
-    if(PyObject_TypeCheck(obj, &PyJiterable_Type))
+    if(PyObject_TypeCheck(obj, &PyJIterable_Type))
         return 1;
     return 0;
 }
@@ -52,10 +52,10 @@ int pyjiterable_check(PyObject *obj) {
  * Gets the iterator for the object.
  */
 PyObject* pyjiterable_getiter(PyObject* obj) {
-    jmethodID         getiter  = NULL;
-    jobject           iter     = NULL;
-    PyJobject_Object *pyjob    = (PyJobject_Object*) obj;
-    JNIEnv           *env      = pyembed_get_env();
+    jmethodID     getiter  = NULL;
+    jobject       iter     = NULL;
+    PyJObject    *pyjob    = (PyJObject*) obj;
+    JNIEnv       *env      = pyembed_get_env();
 
     getiter = (*env)->GetMethodID(env, pyjob->clazz, "iterator", "()Ljava/util/Iterator;");
     if(process_java_exception(env) || !getiter) {
@@ -76,12 +76,12 @@ static PyMethodDef pyjiterable_methods[] = {
 
 
 /*
- * Inherits from PyJobject_Type
+ * Inherits from PyJObject_Type
  */
-PyTypeObject PyJiterable_Type = {
+PyTypeObject PyJIterable_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "jep.PyJiterable",
-    sizeof(PyJiterable_Object),
+    sizeof(PyJIterableObject),
     0,
     0,                                        /* tp_dealloc */
     0,                                        /* tp_print */
@@ -110,7 +110,7 @@ PyTypeObject PyJiterable_Type = {
     pyjiterable_methods,                      /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
-    0, // &PyJobject_Type                     /* tp_base */
+    0, // &PyJObject_Type                     /* tp_base */
     0,                                        /* tp_dict */
     0,                                        /* tp_descr_get */
     0,                                        /* tp_descr_set */

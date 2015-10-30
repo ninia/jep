@@ -32,18 +32,18 @@
 #ifndef _Included_pyjiterator
 #define _Included_pyjiterator
 
-PyAPI_DATA(PyTypeObject) PyJiterator_Type;
+PyAPI_DATA(PyTypeObject) PyJIterator_Type;
 
 /*
  * A pyjiterator is just a pyjobject that has tp_iter and tp_iternext
  * implemented. It exists to support pyjiterable.
  */
 typedef struct {
-    PyJobject_Object obj; /* magic inheritance */
-} PyJiterator_Object;
+    PyJObject obj; /* magic inheritance */
+} PyJIteratorObject;
 
 
-PyJiterator_Object* pyjiterator_new(void);
+PyJIteratorObject* pyjiterator_new(void);
 int pyjiterator_check(PyObject*);
 PyObject* pyjiterator_getiter(PyObject*);
 PyObject* pyjiterator_next(PyObject*);

@@ -44,9 +44,9 @@ static PyObject* pyjlist_inplace_fill(PyObject*, Py_ssize_t);
  * News up a pyjlist, which is just a pyjobject with some sequence methods
  * attached to it.  This should only be called from pyjobject_new().
  */
-PyJlist_Object* pyjlist_new() {
-    // pyjobject will have already initialized PyJlist_Type
-    return PyObject_NEW(PyJlist_Object, &PyJlist_Type);
+PyJListObject* pyjlist_new() {
+    // pyjobject will have already initialized PyJList_Type
+    return PyObject_NEW(PyJListObject, &PyJList_Type);
 }
 
 /*
@@ -54,11 +54,11 @@ PyJlist_Object* pyjlist_new() {
  * same type.
  */
 PyObject* pyjlist_new_copy(PyObject *toCopy) {
-    jmethodID         newInstance = NULL;
-    jobject           newList     = NULL;
-    jmethodID         addAll      = NULL;
-    PyJobject_Object *obj         = (PyJobject_Object*) toCopy;
-    JNIEnv           *env         = pyembed_get_env();
+    jmethodID     newInstance = NULL;
+    jobject       newList     = NULL;
+    jmethodID     addAll      = NULL;
+    PyJObject    *obj         = (PyJObject*) toCopy;
+    JNIEnv       *env         = pyembed_get_env();
 
 
     if(!pyjlist_check(toCopy)) {
@@ -93,7 +93,7 @@ PyObject* pyjlist_new_copy(PyObject *toCopy) {
  * Checks if the object is a pyjlist.
  */
 int pyjlist_check(PyObject *obj) {
-    if(PyObject_TypeCheck(obj, &PyJlist_Type))
+    if(PyObject_TypeCheck(obj, &PyJList_Type))
         return 1;
     return 0;
 }
@@ -142,11 +142,11 @@ static PyObject* pyjlist_fill(PyObject *o, Py_ssize_t count) {
  * example, result = o[i]
  */
 static PyObject* pyjlist_getitem(PyObject *o, Py_ssize_t i) {
-    jmethodID         get  = NULL;
-    jobject           val  = NULL;
-    Py_ssize_t        size = 0;
-    PyJobject_Object *obj  = (PyJobject_Object*) o;
-    JNIEnv           *env  = pyembed_get_env();
+    jmethodID     get  = NULL;
+    jobject       val  = NULL;
+    Py_ssize_t    size = 0;
+    PyJObject    *obj  = (PyJObject*) o;
+    JNIEnv       *env  = pyembed_get_env();
 
     get = (*env)->GetMethodID(env, obj->clazz, "get", "(I)Ljava/lang/Object;");
     if(process_java_exception(env) || !get) {
@@ -176,10 +176,10 @@ static PyObject* pyjlist_getitem(PyObject *o, Py_ssize_t i) {
  * example, result = o[i1:i2]
  */
 static PyObject* pyjlist_getslice(PyObject *o, Py_ssize_t i1, Py_ssize_t i2) {
-    jmethodID         sublist = NULL;
-    jobject           result  = NULL;
-    PyJobject_Object *obj     = (PyJobject_Object*) o;
-    JNIEnv           *env     = pyembed_get_env();
+    jmethodID     sublist = NULL;
+    jobject       result  = NULL;
+    PyJObject    *obj     = (PyJObject*) o;
+    JNIEnv       *env     = pyembed_get_env();
 
     sublist = (*env)->GetMethodID(env, obj->clazz, "subList", "(II)Ljava/util/List;");
     if(process_java_exception(env) || !sublist) {
@@ -199,10 +199,10 @@ static PyObject* pyjlist_getslice(PyObject *o, Py_ssize_t i1, Py_ssize_t i2) {
  * o[i] = v
  */
 static int pyjlist_setitem(PyObject *o, Py_ssize_t i, PyObject *v) {
-    jmethodID         set      = NULL;
-    PyJobject_Object *obj      = (PyJobject_Object*) o;
-    JNIEnv           *env      = pyembed_get_env();
-    jobject           value    = NULL;
+    jmethodID     set      = NULL;
+    PyJObject    *obj      = (PyJObject*) o;
+    JNIEnv       *env      = pyembed_get_env();
+    jobject       value    = NULL;
 
     if(v == Py_None) {
         value = NULL;
@@ -305,12 +305,12 @@ static int pyjlist_setslice(PyObject *o, Py_ssize_t i1, Py_ssize_t i2, PyObject 
  * o1 is a pyjlist.
  */
 static PyObject* pyjlist_inplace_add(PyObject *o1, PyObject *o2) {
-    jobject              value    = NULL;
-    JNIEnv               *env     = pyembed_get_env();
-    PyJobject_Object     *self    = (PyJobject_Object*) o1;
+    jobject        value    = NULL;
+    JNIEnv        *env      = pyembed_get_env();
+    PyJObject     *self     = (PyJObject*) o1;
 
     if(pyjlist_check(o2)) {
-        value                     = ((PyJobject_Object*) o2)->object;
+        value                     = ((PyJObject*) o2)->object;
     } else {
         value                     = pyembed_box_py(env, o2);
     }
@@ -352,8 +352,8 @@ static PyObject* pyjlist_inplace_add(PyObject *o1, PyObject *o2) {
  * a pyjlist.
  */
 static PyObject* pyjlist_inplace_fill(PyObject *o, Py_ssize_t count) {
-    PyJobject_Object     *self    = (PyJobject_Object*) o;
-    JNIEnv               *env     = pyembed_get_env();
+    PyJObject      *self    = (PyJObject*) o;
+    JNIEnv         *env     = pyembed_get_env();
 
     if(count < 1) {
         jmethodID         clear   = (*env)->GetMethodID(env, self->clazz, "clear", "()V");
@@ -513,12 +513,12 @@ static PyMappingMethods pyjlist_map_methods = {
 
 
 /*
- * Inherits from PyJcollection_Type
+ * Inherits from PyJCollection_Type
  */
-PyTypeObject PyJlist_Type = {
+PyTypeObject PyJList_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "jep.PyJlist",
-    sizeof(PyJlist_Object),
+    sizeof(PyJListObject),
     0,
     0,                                        /* tp_dealloc */
     0,                                        /* tp_print */
@@ -546,7 +546,7 @@ PyTypeObject PyJlist_Type = {
     pyjlist_methods,                          /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
-    0, // &PyJcollection_Type                 /* tp_base */
+    0, // &PyJCollection_Type                 /* tp_base */
     0,                                        /* tp_dict */
     0,                                        /* tp_descr_get */
     0,                                        /* tp_descr_set */

@@ -30,9 +30,9 @@
 #include "pyembed.h"
 
 PyObject* PyJmultiMethod_New(PyObject* method1, PyObject* method2) {
-    PyJmultiMethodObject* mm = NULL;
+    PyJMultiMethodObject* mm = NULL;
 
-    if(PyType_Ready(&PyJmultiMethod_Type) < 0){
+    if(PyType_Ready(&PyJMultiMethod_Type) < 0){
         return NULL;
     }
     if(!pyjmethod_check(method1) || !pyjmethod_check(method2)){
@@ -40,7 +40,7 @@ PyObject* PyJmultiMethod_New(PyObject* method1, PyObject* method2) {
         return NULL;
     }
 
-    mm = PyObject_NEW(PyJmultiMethodObject, &PyJmultiMethod_Type);
+    mm = PyObject_NEW(PyJMultiMethodObject, &PyJMultiMethod_Type);
     if(mm == NULL){
         return NULL;
     }
@@ -57,7 +57,7 @@ PyObject* PyJmultiMethod_New(PyObject* method1, PyObject* method2) {
 }
 
 int PyJmultiMethod_Append(PyObject* multimethod, PyObject* method){
-    PyJmultiMethodObject* mm = NULL;
+    PyJMultiMethodObject* mm = NULL;
     if(!PyJmultiMethod_Check(multimethod)){
         PyErr_SetString(PyExc_TypeError, "PyJmultiMethod_Append received incorrect type");
         return -1;
@@ -66,24 +66,24 @@ int PyJmultiMethod_Append(PyObject* multimethod, PyObject* method){
         PyErr_SetString(PyExc_TypeError, "PyJmultiMethod can only hold PyJmethods");
         return -1;
     }
-    mm = (PyJmultiMethodObject*) multimethod;
+    mm = (PyJMultiMethodObject*) multimethod;
     return PyList_Append(mm->methodList, method);
 }
 
 int PyJmultiMethod_Check(PyObject* object){
-    return PyObject_TypeCheck(object, &PyJmultiMethod_Type);
+    return PyObject_TypeCheck(object, &PyJMultiMethod_Type);
 }
 
 PyObject* PyJmultiMethod_GetName(PyObject* multimethod) {
-    PyJmultiMethodObject* mm         = NULL; 
-    PyJmethod_Object*     method     = NULL; 
+    PyJMultiMethodObject* mm         = NULL; 
+    PyJMethodObject*     method     = NULL; 
     PyObject*             methodName = NULL;
     if(!PyJmultiMethod_Check(multimethod)){
         PyErr_SetString(PyExc_TypeError, "PyJmultiMethod_GetName received incorrect type");
         return NULL;
     }
-    mm = (PyJmultiMethodObject*) multimethod;
-    method = (PyJmethod_Object*) PyList_GetItem(mm->methodList, 0);
+    mm = (PyJMultiMethodObject*) multimethod;
+    method = (PyJMethodObject*) PyList_GetItem(mm->methodList, 0);
     methodName = method->pyMethodName;
     Py_INCREF(methodName);
     return methodName;
@@ -92,13 +92,13 @@ PyObject* PyJmultiMethod_GetName(PyObject* multimethod) {
 static PyObject* pyjmultimethod_call(PyObject *multimethod,
                                 PyObject *args,
                                 PyObject *keywords) {
-    PyJmultiMethodObject* mm         = NULL;
+    PyJMultiMethodObject* mm         = NULL;
     PyObject* methodName             = NULL;
     /* 
      * cand is a method that passes the simple compatiblity check but the
      * complex check has not run yet.
      */
-    PyJmethod_Object* cand           = NULL;
+    PyJMethodObject* cand           = NULL;
     Py_ssize_t        methodCount    = 0;
     Py_ssize_t        methodPosition = 0;
     Py_ssize_t        argsSize       = 0;
@@ -114,14 +114,14 @@ static PyObject* pyjmultimethod_call(PyObject *multimethod,
         return NULL;
     }
 
-    mm = (PyJmultiMethodObject*) multimethod;
+    mm = (PyJMultiMethodObject*) multimethod;
     methodName = PyJmultiMethod_GetName(multimethod);
     methodCount = PyList_Size(mm->methodList);
     argsSize = PyTuple_Size(args) - 1;
     env = pyembed_get_env();
 
     for(methodPosition = 0; methodPosition < methodCount; methodPosition += 1){
-        PyJmethod_Object* method = (PyJmethod_Object*) PyList_GetItem(mm->methodList, methodPosition);
+        PyJMethodObject* method = (PyJMethodObject*) PyList_GetItem(mm->methodList, methodPosition);
         if(pyjmethod_check_simple_compat(method, env, methodName, argsSize)){
             if(cand){
                 if(pyjmethod_check_complex_compat(cand, env, args)){
@@ -156,16 +156,16 @@ static PyObject* pyjmultimethod_call(PyObject *multimethod,
 
 /* returns internal list as tuple since its not safe to modify the list*/
 PyObject* pyjmultimethod_getmethods(PyObject* multimethod) {
-    PyJmultiMethodObject* mm         = NULL; 
+    PyJMultiMethodObject* mm         = NULL; 
     if(!PyJmultiMethod_Check(multimethod)){
         PyErr_SetString(PyExc_TypeError, "PyJmultiMethod_GetName received incorrect type");
         return NULL;
     }
-    mm = (PyJmultiMethodObject*) multimethod;
+    mm = (PyJMultiMethodObject*) multimethod;
     return PyList_AsTuple(mm->methodList);
 }
 
-static void pyjmultimethod_dealloc(PyJmultiMethodObject *self) {
+static void pyjmultimethod_dealloc(PyJMultiMethodObject *self) {
     Py_CLEAR(self->methodList);
     PyObject_Del(self);
 }
@@ -180,10 +180,10 @@ PyDoc_STRVAR(pyjmultimethod_doc,
 "PyJmultiMethod wraps multiple java methods from the same class with the same\n\
 name as a single callable python object.");
 
-PyTypeObject PyJmultiMethod_Type = {
+PyTypeObject PyJMultiMethod_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "jep.PyJmultiMethod",
-    sizeof(PyJmultiMethodObject),
+    sizeof(PyJMultiMethodObject),
     0,
     (destructor) pyjmultimethod_dealloc,      /* tp_dealloc */
     0,                                        /* tp_print */

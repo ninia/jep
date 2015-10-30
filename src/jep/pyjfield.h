@@ -32,7 +32,7 @@
 #ifndef _Included_pyjfield
 #define _Included_pyjfield
 
-PyAPI_DATA(PyTypeObject) PyJfield_Type;
+PyAPI_DATA(PyTypeObject) PyJField_Type;
 
 // i needed an object to store methods in. this is a callable
 // object and instances of these are dynamically added to a PyJobject
@@ -42,20 +42,20 @@ typedef struct {
     PyObject_HEAD
     jfieldID          fieldId;             /* Resolved fieldid */
     jobject           rfield;              /* reflect/Field object */
-    PyJobject_Object *pyjobject;           /* parent, should point to
+    PyJObject        *pyjobject;           /* parent, should point to
                                               PyJObject_Object */
     int               fieldTypeId;         /* field's typeid */
     PyObject         *pyFieldName;         /* python name... :-) */
     int               isStatic;            /* -1 if not known,
                                               otherwise 1 or 0 */
     int               init;                /* 1 if init performed */
-} PyJfield_Object;
+} PyJFieldObject;
 
 
-PyJfield_Object* pyjfield_new(JNIEnv*, jobject, PyJobject_Object*);
+PyJFieldObject* pyjfield_new(JNIEnv*, jobject, PyJObject*);
 int pyjfield_check(PyObject*);
 
-PyObject* pyjfield_get(PyJfield_Object*);
-int pyjfield_set(PyJfield_Object *self, PyObject *value);
+PyObject* pyjfield_get(PyJFieldObject*);
+int pyjfield_set(PyJFieldObject *self, PyObject *value);
 
 #endif // ndef pyjfield
