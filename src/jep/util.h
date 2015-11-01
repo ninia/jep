@@ -32,19 +32,6 @@
 #ifndef _Included_util
 #define _Included_util
 
-#if PY_MAJOR_VERSION >= 3
-#define Py_TPFLAGS_HAVE_ITER 0
-
-#define PyString_FromString(str)          PyUnicode_FromString(str)
-#define PyString_Check(str)               PyUnicode_Check(str)
-#define PyString_FromFormat(fmt, ...)     PyUnicode_FromFormat(fmt, ##__VA_ARGS__)
-// more string macros are defined for python 3 compatibility farther down...
-
-#define PyInt_AsLong(i)                   PyLong_AsLong(i)
-#define PyInt_AS_LONG(i)                  PyLong_AsLong(i)
-#define PyInt_Check(i)                    PyLong_Check(i)
-#define PyInt_FromLong(i)                 PyLong_FromLong(i)
-#endif 
 
 #ifndef USE_NUMPY
 #define USE_NUMPY 1
@@ -75,26 +62,6 @@
 }
 
 
-#ifdef WIN32
-typedef __int64 jeplong;
-#define FILE_SEP               '\\'
-#else
-typedef long long jeplong;
-#define FILE_SEP               '/'
-#endif
-
-// was added in python 2.2
-#ifndef PyObject_TypeCheck
-# define PyObject_TypeCheck(ob, tp) (Py_TYPE(ob) == (tp))
-#endif
-
-// added in python 2.3
-#ifndef PyDoc_STR
-# define PyDoc_VAR(name)         static char name[]
-# define PyDoc_STR(str)          (str)
-# define PyDoc_STRVAR(name, str) PyDoc_VAR(name) = PyDoc_STR(str)
-#endif
-
 // this function exists solely to support python 3.2
 char* pyunicode_to_utf8(PyObject *unicode);
 
@@ -105,11 +72,6 @@ char* pyunicode_to_utf8(PyObject *unicode);
   #define PyString_AS_STRING(str)           pyunicode_to_utf8(str)
   #define PyString_Size(str)                PyUnicode_GetSize(str)
   #define PyString_GET_SIZE(str)            PyUnicode_GET_SIZE(str)
- #else
-  #define PyString_AsString(str)            PyUnicode_AsUTF8(str)
-  #define PyString_AS_STRING(str)           PyUnicode_AsUTF8(str)
-  #define PyString_Size(str)                PyUnicode_GetLength(str)
-  #define PyString_GET_SIZE(str)            PyUnicode_GET_LENGTH(str)
  #endif
 #endif
 
