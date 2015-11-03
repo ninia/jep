@@ -28,7 +28,6 @@
 
 
 #include "jport.h"
-#include "numpyembed.h"
 
 #ifndef _Included_util
 #define _Included_util

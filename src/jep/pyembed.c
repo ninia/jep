@@ -46,6 +46,7 @@
 #include "pyjobject.h"
 #include "pyjclass.h"
 #include "pyjarray.h"
+#include "numpyembed.h"
 
 /*
  * fixes compiler warnings about PyMarshal_ReadLongFromFile and

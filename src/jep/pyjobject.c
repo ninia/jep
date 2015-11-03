@@ -39,6 +39,7 @@
 #include "pyjcollection.h"
 #include "pyjlist.h"
 #include "pyjmap.h"
+#include "numpyembed.h"
 
 static int pyjobject_init(JNIEnv *env, PyJObject*);
 static void pyjobject_addmethod(PyJObject*, PyObject*);
