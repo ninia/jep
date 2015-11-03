@@ -244,10 +244,10 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller) {
 
     // store java.lang.Class objects for later use.
     // it's a noop if already done, but to synchronize, have the lock first
-    if(!cache_primitive_classes(env))
-        printf("WARNING: failed to get primitive class types.\n");
     if(!cache_frequent_classes(env))
-        printf("WARNING: failed to get frequent class types.\n");
+        printf("WARNING: Failed to get and cache frequent class types!\n");
+    if(!cache_primitive_classes(env))
+        printf("WARNING: Failed to get and cache primitive class types!\n");
 
 
     mod_main = PyImport_AddModule("__main__");                      /* borrowed */

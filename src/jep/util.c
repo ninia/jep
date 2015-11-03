@@ -98,8 +98,9 @@ jclass outOfMemoryErr_Type;
 jclass assertionErr_Type;
 
 // cached methodids
-jmethodID objectToString     = 0;
-jmethodID objectIsArray      = 0;
+jmethodID objectToString        = 0;
+jmethodID objectIsArray         = 0;
+jmethodID classGetComponentType = 0;
 
 // for convert_jobject
 jmethodID getBooleanValue    = 0;
@@ -776,167 +777,61 @@ void release_utf_char(JNIEnv *env, jstring str, const char *v) {
         var = NULL;\
     }\
 
+#define CACHE_PRIMITIVE_ARRAY(primitive, array, name)\
+    if(primitive == NULL) {\
+        if(array == NULL) {\
+            clazz = (*env)->FindClass(env, name);\
+            if((*env)->ExceptionOccurred(env))\
+                return 0;\
+            array = (*env)->NewGlobalRef(env, clazz);\
+            (*env)->DeleteLocalRef(env, clazz);\
+        }\
+        clazz = (*env)->CallObjectMethod(env, array, classGetComponentType);\
+        primitive = (*env)->NewGlobalRef(env, clazz);\
+        (*env)->DeleteLocalRef(env, clazz);\
+    }\
 
-// in order to call methods that return primitives,
-// we have to know they're return type. that's easy,
-// i'm simply using the reflection api to call getReturnType().
-// 
-// however, jni requires us to use Call<type>Method.
-// so, here we fetch the primitive Class objects
-// (i.e. Integer.TYPE)
-//
-// returns 1 if successful, 0 if failed.
-// doesn't process java exceptions.
+
+/*
+ * In order to call methods that return primitives, we have to know their
+ * return type.  That's easy, we're using the Reflection API to call
+ * java.lang.reflect.Method.getReturnType().
+ *
+ * However, JNI requires us to match the return type to the corresponding
+ * (*env)->Call<type>Method(args...) where <type> is the return type.
+ * Therefore to quickly compare the return type we need the underlying
+ * primitive types and not their Object types.  For example we need int,
+ * not java.lang.Integer.
+ *
+ * We use two techniques to get at the primitive types:
+ *
+ *   1. Get the java.lang.Class for a primitive array, and then call
+ *       Class.getComponentType().
+ *
+ *   2. Get the java.lang.Class for the Object and then access the static
+ *       field Class.TYPE, e.g. java.lang.Integer.TYPE.
+ *
+ * Returns 1 if successful, 0 if failed.  Does not process Java exceptions.
+ */
 int cache_primitive_classes(JNIEnv *env) {
     jclass   clazz, tmpclazz = NULL;
     jfieldID fieldId;
     jobject  tmpobj          = NULL;
 
-    // ------------------------------ get Integer.TYPE
-
-    if(JINT_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "java/lang/Integer");
+    if(classGetComponentType == 0) {
+        classGetComponentType = (*env)->GetMethodID(env, JCLASS_TYPE, "getComponentType", "()Ljava/lang/Class;");
         if((*env)->ExceptionOccurred(env))
             return 0;
-
-        fieldId = (*env)->GetStaticFieldID(env,
-                                           clazz,
-                                           "TYPE",
-                                           "Ljava/lang/Class;");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-
-        tmpclazz = (jclass) (*env)->GetStaticObjectField(env,
-                                                         clazz,
-                                                         fieldId);
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-
-        JINT_TYPE = (*env)->NewGlobalRef(env, tmpclazz);
-        (*env)->DeleteLocalRef(env, tmpclazz);
-        (*env)->DeleteLocalRef(env, tmpobj);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-    
-    if(JSHORT_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "java/lang/Short");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-
-        fieldId = (*env)->GetStaticFieldID(env,
-                                           clazz,
-                                           "TYPE",
-                                           "Ljava/lang/Class;");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-
-        tmpclazz = (jclass) (*env)->GetStaticObjectField(env,
-                                                         clazz,
-                                                         fieldId);
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-
-        JSHORT_TYPE = (*env)->NewGlobalRef(env, tmpclazz);
-        (*env)->DeleteLocalRef(env, tmpclazz);
-        (*env)->DeleteLocalRef(env, tmpobj);
-        (*env)->DeleteLocalRef(env, clazz);
     }
 
-    if(JDOUBLE_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "java/lang/Double");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-        
-        fieldId = (*env)->GetStaticFieldID(env,
-                                           clazz,
-                                           "TYPE",
-                                           "Ljava/lang/Class;");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
+    CACHE_PRIMITIVE_ARRAY(JBOOLEAN_TYPE, JBOOLEAN_ARRAY_TYPE, "[Z");
+    CACHE_PRIMITIVE_ARRAY(JBYTE_TYPE, JBYTE_ARRAY_TYPE, "[B");
+    CACHE_PRIMITIVE_ARRAY(JSHORT_TYPE, JSHORT_ARRAY_TYPE, "[S");
+    CACHE_PRIMITIVE_ARRAY(JINT_TYPE, JINT_ARRAY_TYPE, "[I");
+    CACHE_PRIMITIVE_ARRAY(JLONG_TYPE, JLONG_ARRAY_TYPE, "[J");
+    CACHE_PRIMITIVE_ARRAY(JFLOAT_TYPE, JFLOAT_ARRAY_TYPE, "[F");
+    CACHE_PRIMITIVE_ARRAY(JDOUBLE_TYPE, JDOUBLE_ARRAY_TYPE, "[D");
 
-        tmpclazz = (jclass) (*env)->GetStaticObjectField(env,
-                                                         clazz,
-                                                         fieldId);
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-        
-        JDOUBLE_TYPE = (*env)->NewGlobalRef(env, tmpclazz);
-        (*env)->DeleteLocalRef(env, tmpclazz);
-        (*env)->DeleteLocalRef(env, tmpobj);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if(JFLOAT_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "java/lang/Float");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-        
-        fieldId = (*env)->GetStaticFieldID(env,
-                                           clazz,
-                                           "TYPE",
-                                           "Ljava/lang/Class;");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-
-        tmpclazz = (jclass) (*env)->GetStaticObjectField(env,
-                                                         clazz,
-                                                         fieldId);
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-        
-        JFLOAT_TYPE = (*env)->NewGlobalRef(env, tmpclazz);
-        (*env)->DeleteLocalRef(env, tmpclazz);
-        (*env)->DeleteLocalRef(env, tmpobj);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if(JLONG_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "java/lang/Long");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-        
-        fieldId = (*env)->GetStaticFieldID(env,
-                                           clazz,
-                                           "TYPE",
-                                           "Ljava/lang/Class;");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-
-        tmpclazz = (jclass) (*env)->GetStaticObjectField(env,
-                                                         clazz,
-                                                         fieldId);
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-
-        JLONG_TYPE = (*env)->NewGlobalRef(env, tmpclazz);
-        (*env)->DeleteLocalRef(env, tmpclazz);
-        (*env)->DeleteLocalRef(env, tmpobj);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if(JBOOLEAN_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "java/lang/Boolean");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-        
-        fieldId = (*env)->GetStaticFieldID(env,
-                                           clazz,
-                                           "TYPE",
-                                           "Ljava/lang/Class;");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-        
-        tmpclazz = (jclass) (*env)->GetStaticObjectField(env,
-                                                         clazz,
-                                                         fieldId);
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-        
-        JBOOLEAN_TYPE = (*env)->NewGlobalRef(env, tmpclazz);
-        (*env)->DeleteLocalRef(env, tmpclazz);
-        (*env)->DeleteLocalRef(env, tmpobj);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
 
     if(JVOID_TYPE == NULL) {
         clazz = (*env)->FindClass(env, "java/lang/Void");
@@ -957,30 +852,6 @@ int cache_primitive_classes(JNIEnv *env) {
             return 0;
         
         JVOID_TYPE = (*env)->NewGlobalRef(env, tmpclazz);
-        (*env)->DeleteLocalRef(env, tmpclazz);
-        (*env)->DeleteLocalRef(env, tmpobj);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if(JBYTE_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "java/lang/Byte");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-        
-        fieldId = (*env)->GetStaticFieldID(env,
-                                           clazz,
-                                           "TYPE",
-                                           "Ljava/lang/Class;");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-        
-        tmpclazz = (jclass) (*env)->GetStaticObjectField(env,
-                                                         clazz,
-                                                         fieldId);
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-        
-        JBYTE_TYPE = (*env)->NewGlobalRef(env, tmpclazz);
         (*env)->DeleteLocalRef(env, tmpclazz);
         (*env)->DeleteLocalRef(env, tmpobj);
         (*env)->DeleteLocalRef(env, clazz);
@@ -1010,20 +881,6 @@ int cache_primitive_classes(JNIEnv *env) {
         (*env)->DeleteLocalRef(env, clazz);
     }
 
-    CACHE_CLASS(JOBJECT_TYPE, "java/lang/Object");
-    CACHE_CLASS(JSTRING_TYPE, "java/lang/String"); 
-    CACHE_CLASS(JCLASS_TYPE, "java/lang/Class");
-
-#if USE_NUMPY
-    CACHE_CLASS(JBOOLEAN_ARRAY_TYPE, "[Z");
-    CACHE_CLASS(JBYTE_ARRAY_TYPE, "[B");
-    CACHE_CLASS(JSHORT_ARRAY_TYPE, "[S");
-    CACHE_CLASS(JINT_ARRAY_TYPE, "[I");
-    CACHE_CLASS(JLONG_ARRAY_TYPE, "[J");
-    CACHE_CLASS(JFLOAT_ARRAY_TYPE, "[F");
-    CACHE_CLASS(JDOUBLE_ARRAY_TYPE, "[D");
-#endif
-
     return 1;
 }
 
@@ -1037,11 +894,8 @@ void unref_cache_primitive_classes(JNIEnv *env) {
     UNCACHE_CLASS(JLONG_TYPE);
     UNCACHE_CLASS(JFLOAT_TYPE);
     UNCACHE_CLASS(JDOUBLE_TYPE);
-    UNCACHE_CLASS(JOBJECT_TYPE);
-    UNCACHE_CLASS(JSTRING_TYPE);
-    UNCACHE_CLASS(JCLASS_TYPE);
 
-#if USE_NUMPY
+    // release the primitive array types
     UNCACHE_CLASS(JBOOLEAN_ARRAY_TYPE);
     UNCACHE_CLASS(JBYTE_ARRAY_TYPE);
     UNCACHE_CLASS(JSHORT_ARRAY_TYPE);
@@ -1049,11 +903,14 @@ void unref_cache_primitive_classes(JNIEnv *env) {
     UNCACHE_CLASS(JLONG_ARRAY_TYPE);
     UNCACHE_CLASS(JFLOAT_ARRAY_TYPE);
     UNCACHE_CLASS(JDOUBLE_ARRAY_TYPE);
-#endif
 }
 
 int cache_frequent_classes(JNIEnv *env) {
     jclass clazz;
+
+    CACHE_CLASS(JOBJECT_TYPE, "java/lang/Object");
+    CACHE_CLASS(JSTRING_TYPE, "java/lang/String");
+    CACHE_CLASS(JCLASS_TYPE, "java/lang/Class");
 
     CACHE_CLASS(JLIST_TYPE, "java/util/List");
     CACHE_CLASS(JMAP_TYPE, "java/util/Map");
@@ -1089,6 +946,10 @@ int cache_frequent_classes(JNIEnv *env) {
 
 // TODO is this method used?  Should it be called from pyembed_shutdown()?
 void unref_cache_frequent_classes(JNIEnv *env) {
+    UNCACHE_CLASS(JOBJECT_TYPE);
+    UNCACHE_CLASS(JSTRING_TYPE);
+    UNCACHE_CLASS(JCLASS_TYPE);
+
     UNCACHE_CLASS(JLIST_TYPE);
     UNCACHE_CLASS(JMAP_TYPE);
     UNCACHE_CLASS(JITERABLE_TYPE);
