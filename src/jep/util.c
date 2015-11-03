@@ -760,6 +760,23 @@ void release_utf_char(JNIEnv *env, jstring str, const char *v) {
 }
 
 
+/* These macros are Only intended for use within the caching methods below. */
+#define CACHE_CLASS(var, name)\
+    if(var == NULL) {\
+        clazz = (*env)->FindClass(env, name);\
+        if((*env)->ExceptionOccurred(env))\
+            return 0;\
+        var = (*env)->NewGlobalRef(env, clazz);\
+        (*env)->DeleteLocalRef(env, clazz);\
+    }\
+
+#define UNCACHE_CLASS(var)\
+    if(var != NULL) {\
+        (*env)->DeleteGlobalRef(env, var);\
+        var = NULL;\
+    }\
+
+
 // in order to call methods that return primitives,
 // we have to know they're return type. that's easy,
 // i'm simply using the reflection api to call getReturnType().
@@ -993,96 +1010,18 @@ int cache_primitive_classes(JNIEnv *env) {
         (*env)->DeleteLocalRef(env, clazz);
     }
 
-    if(JOBJECT_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "java/lang/Object");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-        
-        JOBJECT_TYPE = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-    
-    if(JSTRING_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "java/lang/String");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-        
-        JSTRING_TYPE = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if(JCLASS_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "java/lang/Class");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-        
-        JCLASS_TYPE = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
+    CACHE_CLASS(JOBJECT_TYPE, "java/lang/Object");
+    CACHE_CLASS(JSTRING_TYPE, "java/lang/String"); 
+    CACHE_CLASS(JCLASS_TYPE, "java/lang/Class");
 
 #if USE_NUMPY
-    if(JBOOLEAN_ARRAY_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "[Z");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-
-        JBOOLEAN_ARRAY_TYPE = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if(JBYTE_ARRAY_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "[B");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-
-        JBYTE_ARRAY_TYPE = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if(JSHORT_ARRAY_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "[S");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-
-        JSHORT_ARRAY_TYPE = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if(JINT_ARRAY_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "[I");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-
-        JINT_ARRAY_TYPE = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if(JLONG_ARRAY_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "[J");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-
-        JLONG_ARRAY_TYPE = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if(JFLOAT_ARRAY_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "[F");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-
-        JFLOAT_ARRAY_TYPE = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if(JDOUBLE_ARRAY_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "[D");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-
-        JDOUBLE_ARRAY_TYPE = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
+    CACHE_CLASS(JBOOLEAN_ARRAY_TYPE, "[Z");
+    CACHE_CLASS(JBYTE_ARRAY_TYPE, "[B");
+    CACHE_CLASS(JSHORT_ARRAY_TYPE, "[S");
+    CACHE_CLASS(JINT_ARRAY_TYPE, "[I");
+    CACHE_CLASS(JLONG_ARRAY_TYPE, "[J");
+    CACHE_CLASS(JFLOAT_ARRAY_TYPE, "[F");
+    CACHE_CLASS(JDOUBLE_ARRAY_TYPE, "[D");
 #endif
 
     return 1;
@@ -1091,415 +1030,93 @@ int cache_primitive_classes(JNIEnv *env) {
 // remove global references setup in above function.
 // TODO is this method used?  Should it be called from pyembed_shutdown()?
 void unref_cache_primitive_classes(JNIEnv *env) {
-    if(JINT_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JINT_TYPE);
-        JINT_TYPE = NULL;
-    }
-    if(JSHORT_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JSHORT_TYPE);
-        JSHORT_TYPE = NULL;
-    }
-    if(JDOUBLE_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JDOUBLE_TYPE);
-        JDOUBLE_TYPE = NULL;
-    }
-    if(JFLOAT_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JFLOAT_TYPE);
-        JFLOAT_TYPE = NULL;
-    }
-    if(JLONG_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JLONG_TYPE);
-        JLONG_TYPE = NULL;
-    }
-    if(JBOOLEAN_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JBOOLEAN_TYPE);
-        JBOOLEAN_TYPE = NULL;
-    }
-    if(JOBJECT_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JOBJECT_TYPE);
-        JOBJECT_TYPE = NULL;
-    }
-    if(JSTRING_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JSTRING_TYPE);
-        JSTRING_TYPE = NULL;
-    }
-    if(JVOID_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JVOID_TYPE);
-        JVOID_TYPE = NULL;
-    }
-    if(JCHAR_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JCHAR_TYPE);
-        JCHAR_TYPE = NULL;
-    }
-    if(JBYTE_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JBYTE_TYPE);
-        JBYTE_TYPE = NULL;
-    }
-    if(JCLASS_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JCLASS_TYPE);
-        JCLASS_TYPE = NULL;
-    }
+    UNCACHE_CLASS(JBOOLEAN_TYPE);
+    UNCACHE_CLASS(JBYTE_TYPE);
+    UNCACHE_CLASS(JSHORT_TYPE);
+    UNCACHE_CLASS(JINT_TYPE);
+    UNCACHE_CLASS(JLONG_TYPE);
+    UNCACHE_CLASS(JFLOAT_TYPE);
+    UNCACHE_CLASS(JDOUBLE_TYPE);
+    UNCACHE_CLASS(JOBJECT_TYPE);
+    UNCACHE_CLASS(JSTRING_TYPE);
+    UNCACHE_CLASS(JCLASS_TYPE);
 
 #if USE_NUMPY
-    if(JBOOLEAN_ARRAY_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JBOOLEAN_ARRAY_TYPE);
-        JBOOLEAN_ARRAY_TYPE = NULL;
-    }
-    if(JBYTE_ARRAY_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JBYTE_ARRAY_TYPE);
-        JBYTE_ARRAY_TYPE = NULL;
-    }
-    if(JSHORT_ARRAY_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JSHORT_ARRAY_TYPE);
-        JSHORT_ARRAY_TYPE = NULL;
-    }
-    if(JINT_ARRAY_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JINT_ARRAY_TYPE);
-        JINT_ARRAY_TYPE = NULL;
-    }
-    if(JLONG_ARRAY_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JLONG_ARRAY_TYPE);
-        JLONG_ARRAY_TYPE = NULL;
-    }
-    if(JFLOAT_ARRAY_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JFLOAT_ARRAY_TYPE);
-        JFLOAT_ARRAY_TYPE = NULL;
-    }
-    if(JDOUBLE_ARRAY_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JDOUBLE_ARRAY_TYPE);
-        JDOUBLE_ARRAY_TYPE = NULL;
-    }
+    UNCACHE_CLASS(JBOOLEAN_ARRAY_TYPE);
+    UNCACHE_CLASS(JBYTE_ARRAY_TYPE);
+    UNCACHE_CLASS(JSHORT_ARRAY_TYPE);
+    UNCACHE_CLASS(JINT_ARRAY_TYPE);
+    UNCACHE_CLASS(JLONG_ARRAY_TYPE);
+    UNCACHE_CLASS(JFLOAT_ARRAY_TYPE);
+    UNCACHE_CLASS(JDOUBLE_ARRAY_TYPE);
 #endif
 }
 
 int cache_frequent_classes(JNIEnv *env) {
     jclass clazz;
 
-    if(JLIST_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "java/util/List");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-
-        JLIST_TYPE = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if(JMAP_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "java/util/Map");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-
-        JMAP_TYPE = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if(JITERABLE_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "java/lang/Iterable");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-
-        JITERABLE_TYPE = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if(JITERATOR_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "java/util/Iterator");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-
-        JITERATOR_TYPE = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if(JCOLLECTION_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "java/util/Collection");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-
-        JCOLLECTION_TYPE = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if(JCOMPARABLE_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "java/lang/Comparable");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-
-        JCOMPARABLE_TYPE = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if(JBOOL_OBJ_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "java/lang/Boolean");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-
-        JBOOL_OBJ_TYPE = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if(JINT_OBJ_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "java/lang/Integer");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-
-        JINT_OBJ_TYPE = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if(JLONG_OBJ_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "java/lang/Long");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-
-        JLONG_OBJ_TYPE = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if(JDOUBLE_OBJ_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "java/lang/Double");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-
-        JDOUBLE_OBJ_TYPE = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if(JMODIFIER_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "java/lang/reflect/Modifier");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-
-        JMODIFIER_TYPE = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if(JARRAYLIST_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "java/util/ArrayList");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-
-        JARRAYLIST_TYPE = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if(JHASHMAP_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "java/util/HashMap");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-
-        JHASHMAP_TYPE = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if(JCOLLECTIONS_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "java/util/Collections");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-
-        JCOLLECTIONS_TYPE = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
+    CACHE_CLASS(JLIST_TYPE, "java/util/List");
+    CACHE_CLASS(JMAP_TYPE, "java/util/Map");
+    CACHE_CLASS(JITERABLE_TYPE, "java/lang/Iterable");
+    CACHE_CLASS(JITERATOR_TYPE, "java/util/Iterator");
+    CACHE_CLASS(JCOLLECTION_TYPE, "java/util/Collection");
+    CACHE_CLASS(JCOMPARABLE_TYPE, "java/lang/Comparable");
+    CACHE_CLASS(JBOOL_OBJ_TYPE, "java/lang/Boolean");
+    CACHE_CLASS(JINT_OBJ_TYPE, "java/lang/Integer");
+    CACHE_CLASS(JLONG_OBJ_TYPE, "java/lang/Long");
+    CACHE_CLASS(JDOUBLE_OBJ_TYPE, "java/lang/Double");
+    CACHE_CLASS(JMODIFIER_TYPE, "java/lang/reflect/Modifier");
+    CACHE_CLASS(JARRAYLIST_TYPE, "java/util/ArrayList");
+    CACHE_CLASS(JHASHMAP_TYPE, "java/util/HashMap");
+    CACHE_CLASS(JCOLLECTIONS_TYPE, "java/util/Collections");
 
 #if USE_NUMPY
-    if(JEP_NDARRAY_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "jep/NDArray");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-
-        JEP_NDARRAY_TYPE = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
+    CACHE_CLASS(JEP_NDARRAY_TYPE, "jep/NDArray");
 #endif
 
     // find and cache exception types we check for
-    if(classNotFoundExc_Type == NULL) {
-        clazz = (*env)->FindClass(env, "java/lang/ClassNotFoundException");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-        classNotFoundExc_Type = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if(indexOutOfBoundsExc_Type == NULL) {
-        clazz = (*env)->FindClass(env, "java/lang/IndexOutOfBoundsException");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-        indexOutOfBoundsExc_Type = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if(ioExc_Type == NULL) {
-        clazz = (*env)->FindClass(env, "java/io/IOException");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-        ioExc_Type = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if(classCastExc_Type == NULL) {
-        clazz = (*env)->FindClass(env, "java/lang/ClassCastException");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-        classCastExc_Type = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if(illegalArgumentExc_Type == NULL) {
-        clazz = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-        illegalArgumentExc_Type = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if(arithmeticExc_Type == NULL) {
-        clazz = (*env)->FindClass(env, "java/lang/ArithmeticException");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-        arithmeticExc_Type = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if(outOfMemoryErr_Type == NULL) {
-        clazz = (*env)->FindClass(env, "java/lang/OutOfMemoryError");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-        outOfMemoryErr_Type = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if(assertionErr_Type == NULL) {
-        clazz = (*env)->FindClass(env, "java/lang/AssertionError");
-        if((*env)->ExceptionOccurred(env))
-            return 0;
-        assertionErr_Type = (*env)->NewGlobalRef(env, clazz);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
+    CACHE_CLASS(classNotFoundExc_Type, "java/lang/ClassNotFoundException");
+    CACHE_CLASS(indexOutOfBoundsExc_Type, "java/lang/IndexOutOfBoundsException");
+    CACHE_CLASS(ioExc_Type, "java/io/IOException");
+    CACHE_CLASS(classCastExc_Type, "java/lang/ClassCastException");
+    CACHE_CLASS(illegalArgumentExc_Type, "java/lang/IllegalArgumentException");
+    CACHE_CLASS(arithmeticExc_Type, "java/lang/ArithmeticException");
+    CACHE_CLASS(outOfMemoryErr_Type, "java/lang/OutOfMemoryError");
+    CACHE_CLASS(assertionErr_Type, "java/lang/AssertionError");
 
     return 1;
 }
 
 // TODO is this method used?  Should it be called from pyembed_shutdown()?
 void unref_cache_frequent_classes(JNIEnv *env) {
-    if(JLIST_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JLIST_TYPE);
-        JLIST_TYPE = NULL;
-    }
-
-    if(JMAP_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JMAP_TYPE);
-        JMAP_TYPE = NULL;
-    }
-
-    if(JITERABLE_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JITERABLE_TYPE);
-        JITERABLE_TYPE = NULL;
-    }
-
-    if(JITERATOR_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JITERATOR_TYPE);
-        JITERATOR_TYPE = NULL;
-    }
-
-    if(JCOLLECTION_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JCOLLECTION_TYPE);
-        JCOLLECTION_TYPE = NULL;
-    }
-
-    if(JCOMPARABLE_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JCOMPARABLE_TYPE);
-        JCOMPARABLE_TYPE = NULL;
-    }
-
-    if(JBOOL_OBJ_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JBOOL_OBJ_TYPE);
-        JBOOL_OBJ_TYPE = NULL;
-    }
-
-    if(JINT_OBJ_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JINT_OBJ_TYPE);
-        JINT_OBJ_TYPE = NULL;
-    }
-
-    if(JLONG_OBJ_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JLONG_OBJ_TYPE);
-        JLONG_OBJ_TYPE = NULL;
-    }
-
-    if(JDOUBLE_OBJ_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JDOUBLE_OBJ_TYPE);
-        JDOUBLE_OBJ_TYPE = NULL;
-    }
-
-    if(JMODIFIER_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JMODIFIER_TYPE);
-        JMODIFIER_TYPE = NULL;
-    }
-
-    if(JARRAYLIST_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JARRAYLIST_TYPE);
-        JARRAYLIST_TYPE = NULL;
-    }
-
-    if(JHASHMAP_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JHASHMAP_TYPE);
-        JHASHMAP_TYPE = NULL;
-    }
-
-    if(JCOLLECTIONS_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JCOLLECTIONS_TYPE);
-        JCOLLECTIONS_TYPE = NULL;
-    }
+    UNCACHE_CLASS(JLIST_TYPE);
+    UNCACHE_CLASS(JMAP_TYPE);
+    UNCACHE_CLASS(JITERABLE_TYPE);
+    UNCACHE_CLASS(JITERATOR_TYPE);
+    UNCACHE_CLASS(JCOLLECTION_TYPE);
+    UNCACHE_CLASS(JCOMPARABLE_TYPE);
+    UNCACHE_CLASS(JBOOL_OBJ_TYPE);
+    UNCACHE_CLASS(JINT_OBJ_TYPE);
+    UNCACHE_CLASS(JLONG_OBJ_TYPE);
+    UNCACHE_CLASS(JDOUBLE_OBJ_TYPE);
+    UNCACHE_CLASS(JMODIFIER_TYPE);
+    UNCACHE_CLASS(JARRAYLIST_TYPE);
+    UNCACHE_CLASS(JHASHMAP_TYPE);
+    UNCACHE_CLASS(JCOLLECTIONS_TYPE);
 
 #if USE_NUMPY
-    if(JEP_NDARRAY_TYPE != NULL) {
-        (*env)->DeleteGlobalRef(env, JEP_NDARRAY_TYPE);
-        JEP_NDARRAY_TYPE = NULL;
-    }
+    UNCACHE_CLASS(JEP_NDARRAY_TYPE);
 #endif
 
-    // release the exception types we check for
-    if(classNotFoundExc_Type != NULL) {
-        (*env)->DeleteGlobalRef(env, classNotFoundExc_Type);
-        classNotFoundExc_Type = NULL;
-    }
-
-    if(indexOutOfBoundsExc_Type != NULL) {
-        (*env)->DeleteGlobalRef(env, indexOutOfBoundsExc_Type);
-        indexOutOfBoundsExc_Type = NULL;
-    }
-
-    if(ioExc_Type != NULL) {
-        (*env)->DeleteGlobalRef(env, ioExc_Type);
-        ioExc_Type = NULL;
-    }
-
-    if(classCastExc_Type != NULL) {
-        (*env)->DeleteGlobalRef(env, classCastExc_Type);
-        classCastExc_Type = NULL;
-    }
-
-    if(illegalArgumentExc_Type != NULL) {
-        (*env)->DeleteGlobalRef(env, illegalArgumentExc_Type);
-        illegalArgumentExc_Type = NULL;
-    }
-
-    if(arithmeticExc_Type != NULL) {
-        (*env)->DeleteGlobalRef(env, arithmeticExc_Type);
-        arithmeticExc_Type = NULL;
-    }
-
-    if(outOfMemoryErr_Type != NULL) {
-        (*env)->DeleteGlobalRef(env, outOfMemoryErr_Type);
-        outOfMemoryErr_Type = NULL;
-    }
-
-    if(assertionErr_Type != NULL) {
-        (*env)->DeleteGlobalRef(env, assertionErr_Type);
-        assertionErr_Type = NULL;
-    }
-
+    // release exception types we check for
+    UNCACHE_CLASS(classNotFoundExc_Type);
+    UNCACHE_CLASS(indexOutOfBoundsExc_Type);
+    UNCACHE_CLASS(ioExc_Type);
+    UNCACHE_CLASS(classCastExc_Type);
+    UNCACHE_CLASS(illegalArgumentExc_Type);
+    UNCACHE_CLASS(arithmeticExc_Type);
+    UNCACHE_CLASS(outOfMemoryErr_Type);
+    UNCACHE_CLASS(assertionErr_Type);
 }
 
 
