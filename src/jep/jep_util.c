@@ -401,8 +401,6 @@ int cache_primitive_classes(JNIEnv *env) {
 /*
  * Releases the global references to the cached jclasses of Java primitive
  * types that were setup in the above function.
- *
- * TODO Is this method used?  Should it be called from pyembed_shutdown()?
  */
 void unref_cache_primitive_classes(JNIEnv *env) {
     UNCACHE_CLASS(JBOOLEAN_TYPE);
@@ -476,8 +474,6 @@ int cache_frequent_classes(JNIEnv *env) {
 /*
  * Releases the global references to the cached jclasses that Jep may use
  * frequently and were setup in the above function.
- *
- * TODO Is this method used?  Should it be called from pyembed_shutdown()?
  */
 void unref_cache_frequent_classes(JNIEnv *env) {
     UNCACHE_CLASS(JOBJECT_TYPE);

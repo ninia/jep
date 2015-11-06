@@ -1082,12 +1082,14 @@ public final class Jep implements Closeable {
                     .append(".\nPlease close() from the creating thread to ensure stability.");
             System.err.println(warning);
         }
+        
+        // don't attempt close twice if something goes wrong
+        this.closed = true;
 
         // close all the PyObjects we created
         for (int i = 0; i < this.pythonObjects.size(); i++)
             pythonObjects.get(i).close();
 
-        this.closed = true;
         this.close(tstate);
         this.tstate = 0;
 

@@ -49,7 +49,7 @@ typedef struct __JepThread JepThread;
 
 
 void pyembed_startup(void);
-void pyembed_shutdown(void);
+void pyembed_shutdown(JavaVM*);
 
 intptr_t pyembed_thread_init(JNIEnv*, jobject, jobject);
 void pyembed_thread_close(JNIEnv*, intptr_t);

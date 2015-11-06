@@ -205,10 +205,21 @@ void pyembed_startup(void) {
 }
 
 
-void pyembed_shutdown(void) {
-    printf("Shutting down Python...\n");
+void pyembed_shutdown(JavaVM *vm) {
+    JNIEnv *env;
+
+    // shut down python first
     PyEval_AcquireThread(mainThreadState);
     Py_Finalize();
+
+    if ((*vm)->GetEnv(vm, (void **) &env, JNI_VERSION_1_6) != JNI_OK) {
+        // failed to get a JNIEnv*, we can hope it's just shutting down fast
+        return;
+    } else {
+        // delete global references
+        unref_cache_primitive_classes(env);
+        unref_cache_frequent_classes(env);
+    }
 }
 
 

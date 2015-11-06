@@ -53,7 +53,7 @@ JNI_OnLoad(JavaVM *vm, void *reserved) {
 
 JNIEXPORT void JNICALL
 JNI_OnUnload(JavaVM *vm, void *reserved) {
-    pyembed_shutdown();
+    pyembed_shutdown(vm);
 }
 
 
