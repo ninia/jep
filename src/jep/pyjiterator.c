@@ -72,7 +72,7 @@ PyObject* pyjiterator_next(PyObject* self) {
 
     if(itrHasNext == 0) {
         itrHasNext = (*env)->GetMethodID(env, JITERATOR_TYPE, "hasNext", "()Z");
-        if(process_java_exception(env)) {
+        if(process_java_exception(env) || !itrHasNext) {
             return NULL;
         }
     }

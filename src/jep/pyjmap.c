@@ -33,7 +33,7 @@ jmethodID mapGet         = 0;
 jmethodID mapPut         = 0;
 jmethodID mapContainsKey = 0;
 jmethodID mapKeySet      = 0;
-jmethodID mapIterator       = 0;
+jmethodID mapKeyItr      = 0;
 
 static Py_ssize_t pyjmap_len(PyObject*);
 static PyObject* pyjmap_getitem(PyObject*, PyObject*);
@@ -264,14 +264,14 @@ PyObject* pyjmap_getiter(PyObject* obj) {
         return NULL;
     }
 
-    if(mapIterator == 0) {
-        mapIterator = (*env)->GetMethodID(env, JCOLLECTION_TYPE, "iterator", "()Ljava/util/Iterator;");
-        if(process_java_exception(env) || !mapIterator) {
+    if(mapKeyItr == 0) {
+        mapKeyItr = (*env)->GetMethodID(env, JCOLLECTION_TYPE, "iterator", "()Ljava/util/Iterator;");
+        if(process_java_exception(env) || !mapKeyItr) {
             return NULL;
         }
     }
 
-    iter = (*env)->CallObjectMethod(env, set, mapIterator);
+    iter = (*env)->CallObjectMethod(env, set, mapKeyItr);
     if(process_java_exception(env) || !iter) {
         return NULL;
     }
