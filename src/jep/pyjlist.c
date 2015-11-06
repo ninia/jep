@@ -28,6 +28,14 @@
 
 #include "Jep.h"
 
+jmethodID classNewInstance = 0;
+jmethodID listAddAll       = 0;
+jmethodID listGet          = 0;
+jmethodID listSubList      = 0;
+jmethodID listSet          = 0;
+jmethodID listAdd          = 0;
+jmethodID listClear        = 0;
+
 static PyObject* pyjlist_add(PyObject*, PyObject*);
 static PyObject* pyjlist_fill(PyObject*, Py_ssize_t);
 static PyObject* pyjlist_getitem(PyObject*, Py_ssize_t);
@@ -36,7 +44,6 @@ static int pyjlist_setitem(PyObject*, Py_ssize_t, PyObject*);
 static int pyjlist_setslice(PyObject*, Py_ssize_t, Py_ssize_t, PyObject*);
 static PyObject* pyjlist_inplace_add(PyObject*, PyObject*);
 static PyObject* pyjlist_inplace_fill(PyObject*, Py_ssize_t);
-
 
 
 /*
@@ -53,9 +60,7 @@ PyJListObject* pyjlist_new() {
  * same type.
  */
 PyObject* pyjlist_new_copy(PyObject *toCopy) {
-    jmethodID     newInstance = NULL;
     jobject       newList     = NULL;
-    jmethodID     addAll      = NULL;
     PyJObject    *obj         = (PyJObject*) toCopy;
     JNIEnv       *env         = pyembed_get_env();
 
@@ -65,22 +70,26 @@ PyObject* pyjlist_new_copy(PyObject *toCopy) {
         return NULL;
     }
 
-    newInstance = (*env)->GetMethodID(env, JCLASS_TYPE, "newInstance", "()Ljava/lang/Object;");
-    if(process_java_exception(env) || !newInstance) {
-        return NULL;
+    if(classNewInstance == 0) {
+        classNewInstance = (*env)->GetMethodID(env, JCLASS_TYPE, "newInstance", "()Ljava/lang/Object;");
+        if(process_java_exception(env) || !classNewInstance) {
+            return NULL;
+        }
     }
 
-    newList = (*env)->CallObjectMethod(env, obj->clazz, newInstance);
+    newList = (*env)->CallObjectMethod(env, obj->clazz, classNewInstance);
     if(process_java_exception(env) || !newList) {
         return NULL;
     }
 
-    addAll = (*env)->GetMethodID(env, obj->clazz, "addAll", "(Ljava/util/Collection;)Z");
-    if(process_java_exception(env) || !addAll) {
-        return NULL;
+    if(listAddAll == 0) {
+        listAddAll = (*env)->GetMethodID(env, JLIST_TYPE, "addAll", "(Ljava/util/Collection;)Z");
+        if(process_java_exception(env) || !listAddAll) {
+            return NULL;
+        }
     }
 
-    (*env)->CallBooleanMethod(env, newList, addAll, obj->object);
+    (*env)->CallBooleanMethod(env, newList, listAddAll, obj->object);
     if(process_java_exception(env)) {
         return NULL;
     }
@@ -141,15 +150,16 @@ static PyObject* pyjlist_fill(PyObject *o, Py_ssize_t count) {
  * example, result = o[i]
  */
 static PyObject* pyjlist_getitem(PyObject *o, Py_ssize_t i) {
-    jmethodID     get  = NULL;
     jobject       val  = NULL;
     Py_ssize_t    size = 0;
     PyJObject    *obj  = (PyJObject*) o;
     JNIEnv       *env  = pyembed_get_env();
 
-    get = (*env)->GetMethodID(env, obj->clazz, "get", "(I)Ljava/lang/Object;");
-    if(process_java_exception(env) || !get) {
-        return NULL;
+    if(listGet == 0) {
+        listGet = (*env)->GetMethodID(env, JLIST_TYPE, "get", "(I)Ljava/lang/Object;");
+        if(process_java_exception(env) || !listGet) {
+            return NULL;
+        }
     }
 
     size = PyObject_Size(o);
@@ -158,7 +168,7 @@ static PyObject* pyjlist_getitem(PyObject *o, Py_ssize_t i) {
         return NULL;
     }
 
-    val = (*env)->CallObjectMethod(env, obj->object, get, (jint) i);
+    val = (*env)->CallObjectMethod(env, obj->object, listGet, (jint) i);
     if(process_java_exception(env)) {
         return NULL;
     }
@@ -175,17 +185,18 @@ static PyObject* pyjlist_getitem(PyObject *o, Py_ssize_t i) {
  * example, result = o[i1:i2]
  */
 static PyObject* pyjlist_getslice(PyObject *o, Py_ssize_t i1, Py_ssize_t i2) {
-    jmethodID     sublist = NULL;
     jobject       result  = NULL;
     PyJObject    *obj     = (PyJObject*) o;
     JNIEnv       *env     = pyembed_get_env();
 
-    sublist = (*env)->GetMethodID(env, obj->clazz, "subList", "(II)Ljava/util/List;");
-    if(process_java_exception(env) || !sublist) {
-        return NULL;
+    if(listSubList == 0) {
+        listSubList = (*env)->GetMethodID(env, JLIST_TYPE, "subList", "(II)Ljava/util/List;");
+        if(process_java_exception(env) || !listSubList) {
+            return NULL;
+        }
     }
 
-    result = (*env)->CallObjectMethod(env, obj->object, sublist, (jint) i1, (jint) i2);
+    result = (*env)->CallObjectMethod(env, obj->object, listSubList, (jint) i1, (jint) i2);
     if(process_java_exception(env)) {
         return NULL;
     }
@@ -198,7 +209,6 @@ static PyObject* pyjlist_getslice(PyObject *o, Py_ssize_t i1, Py_ssize_t i2) {
  * o[i] = v
  */
 static int pyjlist_setitem(PyObject *o, Py_ssize_t i, PyObject *v) {
-    jmethodID     set      = NULL;
     PyJObject    *obj      = (PyJObject*) o;
     JNIEnv       *env      = pyembed_get_env();
     jobject       value    = NULL;
@@ -223,12 +233,14 @@ static int pyjlist_setitem(PyObject *o, Py_ssize_t i, PyObject *v) {
         }
     }
 
-    set = (*env)->GetMethodID(env, obj->clazz, "set", "(ILjava/lang/Object;)Ljava/lang/Object;");
-    if(process_java_exception(env) || !set) {
-        return -1;
+    if(listSet == 0) {
+        listSet = (*env)->GetMethodID(env, JLIST_TYPE, "set", "(ILjava/lang/Object;)Ljava/lang/Object;");
+        if(process_java_exception(env) || !listSet) {
+            return -1;
+        }
     }
 
-    (*env)->CallObjectMethod(env, obj->object, set, (jint) i, value);
+    (*env)->CallObjectMethod(env, obj->object, listSet, (jint) i, value);
     if(process_java_exception(env)) {
         return -1;
     }
@@ -319,23 +331,27 @@ static PyObject* pyjlist_inplace_add(PyObject *o1, PyObject *o2) {
          * it's a Collection so we need to simulate a python + and combine the
          * two collections
          */
-        jmethodID addAll = (*env)->GetMethodID(env, self->clazz, "addAll", "(Ljava/util/Collection;)Z");
-        if(process_java_exception(env) || !addAll) {
-            return NULL;
+        if(listAddAll == 0) {
+            listAddAll = (*env)->GetMethodID(env, JLIST_TYPE, "addAll", "(Ljava/util/Collection;)Z");
+            if(process_java_exception(env) || !listAddAll) {
+                return NULL;
+            }
         }
 
-        (*env)->CallBooleanMethod(env, self->object, addAll, value);
+        (*env)->CallBooleanMethod(env, self->object, listAddAll, value);
         if(process_java_exception(env)) {
             return NULL;
         }
     } else {
         // not a collection, add it as a single object
-        jmethodID add = (*env)->GetMethodID(env, self->clazz, "add", "(Ljava/lang/Object;)Z");
-        if(process_java_exception(env) || !add) {
-            return NULL;
+        if(listAdd == 0) {
+            listAdd = (*env)->GetMethodID(env, JLIST_TYPE, "add", "(Ljava/lang/Object;)Z");
+            if(process_java_exception(env) || !listAdd) {
+                return NULL;
+            }
         }
 
-        (*env)->CallBooleanMethod(env, self->object, add, value);
+        (*env)->CallBooleanMethod(env, self->object, listAdd, value);
         if(process_java_exception(env)) {
             return NULL;
         }
@@ -355,12 +371,14 @@ static PyObject* pyjlist_inplace_fill(PyObject *o, Py_ssize_t count) {
     JNIEnv         *env     = pyembed_get_env();
 
     if(count < 1) {
-        jmethodID         clear   = (*env)->GetMethodID(env, self->clazz, "clear", "()V");
-        if(process_java_exception(env) || !clear) {
-            return NULL;
+        if(listClear == 0) {
+            listClear = (*env)->GetMethodID(env, JLIST_TYPE, "clear", "()V");
+            if(process_java_exception(env) || !listClear) {
+                return NULL;
+            }
         }
 
-        (*env)->CallVoidMethod(env, self->object, clear);
+        (*env)->CallVoidMethod(env, self->object, listClear);
         if(process_java_exception(env)) {
             return NULL;
         }

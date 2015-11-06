@@ -28,6 +28,8 @@
 
 #include "Jep.h"
 
+jmethodID itrHasNext = 0;
+jmethodID itrNext    = 0;
 
 /*
  * News up a pyjiterator, which is just a pyjobject for iterators.
@@ -64,31 +66,33 @@ PyObject* pyjiterator_getiter(PyObject* self) {
 }
 
 PyObject* pyjiterator_next(PyObject* self) {
-    jmethodID     hasNext   = NULL;
     jboolean      nextAvail = JNI_FALSE;
     PyJObject    *pyjob     = (PyJObject*) self;
     JNIEnv       *env       = pyembed_get_env();
 
-    hasNext = (*env)->GetMethodID(env, pyjob->clazz, "hasNext", "()Z");
-    if(process_java_exception(env)) {
-        return NULL;
+    if(itrHasNext == 0) {
+        itrHasNext = (*env)->GetMethodID(env, JITERATOR_TYPE, "hasNext", "()Z");
+        if(process_java_exception(env)) {
+            return NULL;
+        }
     }
 
-    nextAvail = (*env)->CallBooleanMethod(env, pyjob->object, hasNext);
+    nextAvail = (*env)->CallBooleanMethod(env, pyjob->object, itrHasNext);
     if(process_java_exception(env)) {
         return NULL;
     }
     
     if(nextAvail) {
         jobject   nextItem;
-        jmethodID next;
 
-        next = (*env)->GetMethodID(env, pyjob->clazz, "next", "()Ljava/lang/Object;");
-        if(process_java_exception(env) || !next) {
-            return NULL;
+        if(itrNext == 0) {
+            itrNext = (*env)->GetMethodID(env, JITERATOR_TYPE, "next", "()Ljava/lang/Object;");
+            if(process_java_exception(env) || !itrNext) {
+                return NULL;
+            }
         }
         
-        nextItem = (*env)->CallObjectMethod(env, pyjob->object, next);
+        nextItem = (*env)->CallObjectMethod(env, pyjob->object, itrNext);
         if(process_java_exception(env)) {
             return NULL;
         }

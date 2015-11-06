@@ -29,6 +29,8 @@
 #include "Jep.h"
 
 
+jmethodID iterator = 0;
+
 /*
  * News up a pyjiterable, which is just a pyjobject that supports iteration.
  * This should only be called from pyjobject_new().
@@ -51,17 +53,18 @@ int pyjiterable_check(PyObject *obj) {
  * Gets the iterator for the object.
  */
 PyObject* pyjiterable_getiter(PyObject* obj) {
-    jmethodID     getiter  = NULL;
     jobject       iter     = NULL;
     PyJObject    *pyjob    = (PyJObject*) obj;
     JNIEnv       *env      = pyembed_get_env();
 
-    getiter = (*env)->GetMethodID(env, pyjob->clazz, "iterator", "()Ljava/util/Iterator;");
-    if(process_java_exception(env) || !getiter) {
-        return NULL;
+    if(iterator == 0) {
+        iterator = (*env)->GetMethodID(env, JITERABLE_TYPE, "iterator", "()Ljava/util/Iterator;");
+        if(process_java_exception(env) || !iterator) {
+            return NULL;
+        }
     }
 
-    iter = (*env)->CallObjectMethod(env, pyjob->object, getiter);
+    iter = (*env)->CallObjectMethod(env, pyjob->object, iterator);
     if(process_java_exception(env) || !iter) {
         return NULL;
     }

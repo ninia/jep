@@ -28,6 +28,10 @@
 
 #include "Jep.h"
 
+jmethodID collectionSize     = 0;
+jmethodID collectionContains = 0;
+
+
 static Py_ssize_t pyjcollection_len(PyObject*);
 static int pyjcollection_contains(PyObject*, PyObject*);
 
@@ -55,17 +59,18 @@ int pyjcollection_check(PyObject *obj) {
  * Gets the size of the collection.
  */
 static Py_ssize_t pyjcollection_len(PyObject* self) {
-    jmethodID     size  = NULL;
     Py_ssize_t    len   = 0;
     PyJObject    *pyjob = (PyJObject*) self;
     JNIEnv       *env   = pyembed_get_env();
 
-    size = (*env)->GetMethodID(env, pyjob->clazz, "size", "()I");
-    if(process_java_exception(env) || !size) {
-        return -1;
+    if(collectionSize == 0) {
+        collectionSize = (*env)->GetMethodID(env, JCOLLECTION_TYPE, "size", "()I");
+        if(process_java_exception(env) || !collectionSize) {
+            return -1;
+        }
     }
 
-    len = (*env)->CallIntMethod(env, pyjob->object, size);
+    len = (*env)->CallIntMethod(env, pyjob->object, collectionSize);
     if(process_java_exception(env)) {
         return -1;
     }
@@ -78,7 +83,6 @@ static Py_ssize_t pyjcollection_len(PyObject* self) {
  * in operator.  For example, if v in o:
  */
 static int pyjcollection_contains(PyObject *o, PyObject *v) {
-    jmethodID     contains = NULL;
     jboolean      result   = JNI_FALSE;
     PyJObject    *obj      = (PyJObject*) o;
     JNIEnv       *env      = pyembed_get_env();
@@ -104,12 +108,14 @@ static int pyjcollection_contains(PyObject *o, PyObject *v) {
         }
     }
 
-    contains = (*env)->GetMethodID(env, obj->clazz, "contains", "(Ljava/lang/Object;)Z");
-    if(process_java_exception(env) || !contains) {
-        return -1;
+    if(collectionContains == 0) {
+        collectionContains = (*env)->GetMethodID(env, JCOLLECTION_TYPE, "contains", "(Ljava/lang/Object;)Z");
+        if(process_java_exception(env) || !collectionContains) {
+            return -1;
+        }
     }
 
-    result = (*env)->CallBooleanMethod(env, obj->object, contains, value);
+    result = (*env)->CallBooleanMethod(env, obj->object, collectionContains, value);
     if(process_java_exception(env)) {
         return -1;
     }

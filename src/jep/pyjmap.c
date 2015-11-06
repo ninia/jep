@@ -28,6 +28,13 @@
 
 #include "Jep.h"
 
+jmethodID mapSize        = 0;
+jmethodID mapGet         = 0;
+jmethodID mapPut         = 0;
+jmethodID mapContainsKey = 0;
+jmethodID mapKeySet      = 0;
+jmethodID mapIterator       = 0;
+
 static Py_ssize_t pyjmap_len(PyObject*);
 static PyObject* pyjmap_getitem(PyObject*, PyObject*);
 static int pyjmap_setitem(PyObject*, PyObject*, PyObject*);
@@ -55,17 +62,18 @@ int pyjmap_check(PyObject *obj) {
  * Gets the size of the map.
  */
 static Py_ssize_t pyjmap_len(PyObject* self) {
-    jmethodID     size  = NULL;
     Py_ssize_t    len   = 0;
     PyJObject    *pyjob = (PyJObject*) self;
     JNIEnv       *env   = pyembed_get_env();
 
-    size = (*env)->GetMethodID(env, pyjob->clazz, "size", "()I");
-    if(process_java_exception(env) || !size) {
-        return -1;
+    if(mapSize == 0) {
+        mapSize = (*env)->GetMethodID(env, JMAP_TYPE, "size", "()I");
+        if(process_java_exception(env) || !mapSize) {
+            return -1;
+        }
     }
 
-    len = (*env)->CallIntMethod(env, pyjob->object, size);
+    len = (*env)->CallIntMethod(env, pyjob->object, mapSize);
     if(process_java_exception(env)) {
         return -1;
     }
@@ -78,7 +86,6 @@ static Py_ssize_t pyjmap_len(PyObject* self) {
  * if key in o: 
  */
 static int pyjmap_contains_key(PyObject *self, PyObject *key) {
-    jmethodID     containsKey = NULL;
     jboolean      result      = JNI_FALSE;
     PyJObject    *obj         = (PyJObject*) self;
     JNIEnv       *env         = pyembed_get_env();
@@ -104,12 +111,14 @@ static int pyjmap_contains_key(PyObject *self, PyObject *key) {
         }
     }
 
-    containsKey = (*env)->GetMethodID(env, obj->clazz, "containsKey", "(Ljava/lang/Object;)Z");
-    if(process_java_exception(env) || !containsKey) {
-        return -1;
+    if(mapContainsKey == 0) {
+        mapContainsKey = (*env)->GetMethodID(env, JMAP_TYPE, "containsKey", "(Ljava/lang/Object;)Z");
+        if(process_java_exception(env) || !mapContainsKey) {
+            return -1;
+        }
     }
 
-    result = (*env)->CallBooleanMethod(env, obj->object, containsKey, jkey);
+    result = (*env)->CallBooleanMethod(env, obj->object, mapContainsKey, jkey);
     if(process_java_exception(env)) {
         return -1;
     }
@@ -127,15 +136,16 @@ static int pyjmap_contains_key(PyObject *self, PyObject *key) {
  * example, result = o[key]
  */
 static PyObject* pyjmap_getitem(PyObject *o, PyObject *key) {
-    jmethodID     get  = NULL;
     jobject       jkey = NULL;
     jobject       val  = NULL;
     PyJObject    *obj  = (PyJObject*) o;
     JNIEnv       *env  = pyembed_get_env();
 
-    get = (*env)->GetMethodID(env, obj->clazz, "get", "(Ljava/lang/Object;)Ljava/lang/Object;");
-    if(process_java_exception(env) || !get) {
-        return NULL;
+    if(mapGet == 0) {
+        mapGet = (*env)->GetMethodID(env, JMAP_TYPE, "get", "(Ljava/lang/Object;)Ljava/lang/Object;");
+        if(process_java_exception(env) || !mapGet) {
+            return NULL;
+        }
     }
 
     if(pyjobject_check(key)) {
@@ -152,7 +162,7 @@ static PyObject* pyjmap_getitem(PyObject *o, PyObject *key) {
         }
     }
 
-    val = (*env)->CallObjectMethod(env, obj->object, get, jkey);
+    val = (*env)->CallObjectMethod(env, obj->object, mapGet, jkey);
     if(process_java_exception(env)) {
         return NULL;
     }
@@ -180,7 +190,6 @@ static PyObject* pyjmap_getitem(PyObject *o, PyObject *key) {
  * o[key] = v
  */
 static int pyjmap_setitem(PyObject *o, PyObject *key, PyObject *v) {
-    jmethodID     put      = NULL;
     jobject       jkey     = NULL;
     jobject       value    = NULL;
     PyJObject    *obj      = (PyJObject*) o;
@@ -216,12 +225,14 @@ static int pyjmap_setitem(PyObject *o, PyObject *key, PyObject *v) {
         }
     }
 
-    put = (*env)->GetMethodID(env, obj->clazz, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-    if(process_java_exception(env) || !put) {
-        return -1;
+    if(mapPut == 0) {
+        mapPut = (*env)->GetMethodID(env, JMAP_TYPE, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+        if(process_java_exception(env) || !mapPut) {
+            return -1;
+        }
     }
 
-    (*env)->CallObjectMethod(env, obj->object, put, jkey, value);
+    (*env)->CallObjectMethod(env, obj->object, mapPut, jkey, value);
     if(process_java_exception(env)) {
         return -1;
     }
@@ -236,29 +247,31 @@ static int pyjmap_setitem(PyObject *o, PyObject *key, PyObject *v) {
  * for key in o:
  */
 PyObject* pyjmap_getiter(PyObject* obj) {
-    jmethodID     keySet   = NULL;
-    jmethodID     getIter  = NULL;
     jobject       set      = NULL;
     jobject       iter     = NULL;
     PyJObject    *pyjob    = (PyJObject*) obj;
     JNIEnv       *env      = pyembed_get_env();
 
-    keySet = (*env)->GetMethodID(env, pyjob->clazz, "keySet", "()Ljava/util/Set;");
-    if(process_java_exception(env) || !keySet) {
-        return NULL;
+    if(mapKeySet == 0) {
+        mapKeySet = (*env)->GetMethodID(env, JMAP_TYPE, "keySet", "()Ljava/util/Set;");
+        if(process_java_exception(env) || !mapKeySet) {
+            return NULL;
+        }
     }
 
-    set = (*env)->CallObjectMethod(env, pyjob->object, keySet);
+    set = (*env)->CallObjectMethod(env, pyjob->object, mapKeySet);
     if(process_java_exception(env) || !set) {
         return NULL;
     }
 
-    getIter = (*env)->GetMethodID(env, JCOLLECTION_TYPE, "iterator", "()Ljava/util/Iterator;");
-    if(process_java_exception(env) || !getIter) {
-        return NULL;
+    if(mapIterator == 0) {
+        mapIterator = (*env)->GetMethodID(env, JCOLLECTION_TYPE, "iterator", "()Ljava/util/Iterator;");
+        if(process_java_exception(env) || !mapIterator) {
+            return NULL;
+        }
     }
 
-    iter = (*env)->CallObjectMethod(env, set, getIter);
+    iter = (*env)->CallObjectMethod(env, set, mapIterator);
     if(process_java_exception(env) || !iter) {
         return NULL;
     }
