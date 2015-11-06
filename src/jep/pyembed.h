@@ -26,8 +26,7 @@
    distribution.   
 */
 
-#include "jport.h"
-#include "util.h"
+#include "jep_platform.h"
 
 #ifndef _Included_pyembed
 #define _Included_pyembed

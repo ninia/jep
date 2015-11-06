@@ -26,8 +26,8 @@
    distribution.   
 */
 
-#include "util.h"
-#include "numpyembed.h"
+#include "jep_util.h"
+#include "jep_numpy.h"
 #include "pyjobject.h"
 #include "pyjarray.h"
 #include "pyjmethod.h"

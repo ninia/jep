@@ -25,7 +25,7 @@
    distribution.   
 */
 
-#include "jport.h"
+#include "jep_platform.h"
 
 #ifndef _Included_pyjarray
 #define _Included_pyjarray

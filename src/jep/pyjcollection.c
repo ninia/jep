@@ -28,6 +28,7 @@
 
 #include "pyjcollection.h"
 #include "pyembed.h"
+#include "jep_util.h"
 
 static Py_ssize_t pyjcollection_len(PyObject*);
 static int pyjcollection_contains(PyObject*, PyObject*);

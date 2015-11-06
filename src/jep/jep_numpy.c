@@ -26,8 +26,8 @@
    distribution.   
 */
 
-#include "numpyembed.h"
-#include "util.h"
+#include "jep_numpy.h"
+#include "jep_util.h"
 
 /* this whole file is a no-op if numpy support is disabled */
 #if USE_NUMPY

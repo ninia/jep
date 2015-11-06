@@ -28,6 +28,7 @@
 
 #include "pyjiterable.h"
 #include "pyembed.h"
+#include "jep_util.h"
 
 
 /*

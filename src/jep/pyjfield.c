@@ -35,7 +35,7 @@
 #include "pyjfield.h"
 #include "pyjobject.h"
 #include "pyjclass.h"
-#include "util.h"
+#include "jep_util.h"
 
 static void pyjfield_dealloc(PyJFieldObject *self);
 

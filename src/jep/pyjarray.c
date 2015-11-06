@@ -34,7 +34,7 @@
 #include "pyjarray.h"
 #include "pyjobject.h"
 #include "pyembed.h"
-#include "util.h"
+#include "jep_util.h"
 
 jmethodID objectComponentType = 0;
 

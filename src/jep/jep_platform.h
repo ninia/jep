@@ -84,7 +84,7 @@ typedef long long jeplong;
 
 /*
  * Python 3.3 drastically improved the unicode API.
- * For Python 3.2 support, see util.h.
+ * For Python 3.2 support, see jep_util.h.
  */
 #if PY_MINOR_VERSION >= 3
   #define PyString_AsString(str)            PyUnicode_AsUTF8(str)

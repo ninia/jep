@@ -26,7 +26,7 @@
    distribution.   
 */
 
-#include "util.h"
+#include "jep_util.h"
 #include "pyembed.h"
 
 #include "invocationhandler.h"

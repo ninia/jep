@@ -26,7 +26,7 @@
    distribution.
 */
 
-#include "jport.h"
+#include "jep_platform.h"
 #include "pyjcollection.h"
 
 #ifndef _Included_pyjlist

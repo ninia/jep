@@ -29,7 +29,7 @@
 #include "pyembed.h"
 #include "pyjmethod.h"
 #include "pyjarray.h"
-#include "util.h"
+#include "jep_util.h"
 
 // https://bugs.python.org/issue2897
 #include "structmember.h"

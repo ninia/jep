@@ -26,7 +26,7 @@
    distribution.   
 */
 
-#include "jport.h"
+#include "jep_platform.h"
 
 #ifndef _Included_numpyembed
 #define _Included_numpyembed
