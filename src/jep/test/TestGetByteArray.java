@@ -11,7 +11,7 @@ import jep.Jep;
 
 /**
  * A test class for verifying that Jep.getValue_bytearray() is working
- * correctly. Also tests Jep.getValue_floatarray() just to be complete.
+ * correctly.
  * 
  * 
  * Created: Tue Jul 14 2015
@@ -78,7 +78,6 @@ public class TestGetByteArray {
         System.out.println("byte[] properly retrieved from Jep");
     }
 
-    @SuppressWarnings("deprecation")
     public static void testGetFloatArray() throws Exception {
         File output = File.createTempFile("testFloatArrayGet", ".bin");
         byte[] b = new byte[SIZE * 4];
@@ -97,40 +96,6 @@ public class TestGetByteArray {
                 fos.close();
             }
         }
-
-        Jep jep = null;
-        float[] f2 = null;
-        try {
-            jep = new Jep(false);
-            jep.eval("f = open('" + output.getAbsolutePath() + "', 'rb')");
-            jep.eval("x = f.read()");
-            jep.eval("f.close()");
-            f2 = jep.getValue_floatarray("x");
-        } finally {
-            if (jep != null) {
-                jep.close();
-            }
-        }
-
-        if (f2 == null) {
-            throw new AssertionError(
-                    "float array retrieved from python is null");
-        }
-
-        if (fb.capacity() != f2.length) {
-            throw new AssertionError(
-                    "java and python float arrays have different lengths");
-        }
-
-        fb.position(0);
-        for (int i = 0; i < f2.length; i++) {
-            float f0 = fb.get();
-            if (f0 != f2[i]) {
-                throw new AssertionError("values at index " + i + " differ");
-            }
-        }
-
-        System.out.println("float[] properly retrieved from jep");
     }
 
 }

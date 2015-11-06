@@ -26,8 +26,7 @@
    distribution.   
 */
 
-#include "jep_util.h"
-#include "pyembed.h"
+#include "Jep.h"
 
 
 /*

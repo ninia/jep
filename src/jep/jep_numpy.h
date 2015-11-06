@@ -28,7 +28,7 @@
 
 /*
  * Contains functions to support transformation between numpy ndarrays and
- * Java primitive arrays (and jep.NDArrays).
+ * Java primitive arrays and jep.NDArrays.
  */
 
 #include "jep_platform.h"

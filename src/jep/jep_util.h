@@ -26,6 +26,9 @@
    distribution.   
 */
 
+/*
+ * Contains convenient utility functions for Jep.
+ */
 
 #include "jep_platform.h"
 

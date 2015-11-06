@@ -26,6 +26,11 @@
    distribution.
 */
 
+/*
+ * A PyJIteratorObject is a PyJObject that has tp_iter and tp_iternext
+ * implemented. It exists to support PyJIterableObject.
+ */
+
 #include "jep_platform.h"
 #include "pyjobject.h"
 
@@ -34,10 +39,6 @@
 
 PyAPI_DATA(PyTypeObject) PyJIterator_Type;
 
-/*
- * A pyjiterator is just a pyjobject that has tp_iter and tp_iternext
- * implemented. It exists to support pyjiterable.
- */
 typedef struct {
     PyJObject obj; /* magic inheritance */
 } PyJIteratorObject;

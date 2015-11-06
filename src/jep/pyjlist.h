@@ -26,6 +26,12 @@
    distribution.
 */
 
+/*
+ * A PyJListObject is a PyJCollection with some extra methods attached to meet
+ * the python Sequence protocol/interface.  It should only be used where the
+ * underlying jobject of the PyJObject is an implementation of java.util.List.
+ */
+
 #include "jep_platform.h"
 #include "pyjcollection.h"
 
@@ -34,11 +40,6 @@
 
 PyAPI_DATA(PyTypeObject) PyJList_Type;
 
-/*
- * A pyjlist is just a pyjcollection with some extra methods attached to it to meet
- * the python Sequence protocol (interface).  It should only be used where
- * the underlying jobject of the pyjobject is an implementation of java.util.List.
- */
 typedef struct {
     PyJCollectionObject obj; /* magic inheritance */
 } PyJListObject;

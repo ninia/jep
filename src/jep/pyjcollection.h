@@ -26,6 +26,13 @@
    distribution.
 */
 
+/*
+ * A PyJCollectionObject is a PyJIterableObject with the additional
+ * functionality of the __contains__ and __len__ methods. It should only be
+ * used where the underlying jobject of the PyJObject is an implementation of
+ * java.util.Collection.
+ */
+
 #include "jep_platform.h"
 #include "pyjiterable.h"
 
@@ -34,11 +41,6 @@
 
 PyAPI_DATA(PyTypeObject) PyJCollection_Type;
 
-/*
- * A pyjcollection is just a pyjiterable with the contains(o) and len() methods.
- * It should only be used where the underlying jobject of the pyjobject is an
- * implementation of java.util.Collection.
- */
 typedef struct {
     PyJIterableObject obj; /* magic inheritance */
 } PyJCollectionObject;

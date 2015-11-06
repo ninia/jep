@@ -1235,7 +1235,7 @@ EXIT:
 
 
 
-jobject pyembed_getvalue_array(JNIEnv *env, intptr_t _jepThread, char *str, int typeId) {
+jobject pyembed_getvalue_array(JNIEnv *env, intptr_t _jepThread, char *str) {
     PyObject       *result;
     jobject         ret = NULL;
     JepThread      *jepThread;
@@ -1281,30 +1281,8 @@ jobject pyembed_getvalue_array(JNIEnv *env, intptr_t _jepThread, char *str, int 
     if(PyBytes_Check(result)) {
         void *s = (void*) PyBytes_AS_STRING(result);
         Py_ssize_t n = PyBytes_Size(result);
-
-        switch (typeId) {
-        case JFLOAT_ID:
-            if(n % SIZEOF_FLOAT != 0) {
-                THROW_JEP(env, "The Python string is the wrong length.\n");
-                goto EXIT;
-            }
-
-            ret = (*env)->NewFloatArray(env, (jsize) n / SIZEOF_FLOAT);
-            (*env)->SetFloatArrayRegion(env, ret, 0, (jsize) (n / SIZEOF_FLOAT), (jfloat *) s);
-            break;
-
-        case JBYTE_ID:
-            ret = (*env)->NewByteArray(env, (jsize) n);
-            (*env)->SetByteArrayRegion(env, ret, 0, (jsize) n, (jbyte *) s);
-            break;
-
-        default:
-            THROW_JEP(env, "Internal error: array type not handled.");
-            ret = NULL;
-            goto EXIT;
-
-        } // switch
-
+        ret = (*env)->NewByteArray(env, (jsize) n);
+        (*env)->SetByteArrayRegion(env, ret, 0, (jsize) n, (jbyte *) s);
     }
     else{
         THROW_JEP(env, "Value is not a string.");
@@ -1318,9 +1296,6 @@ EXIT:
     Py_XDECREF(result);
     return ret;
 }
-
-
-
 
 
 

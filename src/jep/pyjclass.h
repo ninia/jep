@@ -26,6 +26,11 @@
    distribution.   
 */
 
+/*
+ * A PyJClassObject is a PyJObject with a __call__ method attached, where
+ * the call method can invoke the Java object's constructors.
+ */
+
 #include "jep_platform.h"
 #include "pyjobject.h"
 
@@ -33,10 +38,7 @@
 #define _Included_pyjclass
 
 PyAPI_DATA(PyTypeObject) PyJClass_Type;
-/*
- * a pyjclass is a pyjobject with a __call__ method attached, where
- * the call method will invoke constructors.
- */
+
 typedef struct {
     PyJObject  obj;            /* magic inheritance */
     jobjectArray      initArray;      /* constructor array */

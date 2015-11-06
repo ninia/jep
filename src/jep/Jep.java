@@ -527,31 +527,6 @@ public final class Jep implements Closeable {
     private native Object getValue(long tstate, String str) throws JepException;
 
     /**
-     * Retrieves a Python string object as a Java array.
-     * 
-     * @deprecated use getValue_bytearray and ByteBuffer.asFloatBuffer() or use
-     *             numpy.ndarray with float32 to get a jep.NDArray
-     * 
-     * @param str
-     *            the name of the Python variable to get from the
-     *            sub-interpreter's global scope
-     * @return an <code>Object</code> array
-     * @exception JepException
-     *                if an error occurs
-     */
-    @Deprecated
-    public float[] getValue_floatarray(String str) throws JepException {
-        if (this.closed)
-            throw new JepException("Jep has been closed.");
-        isValidThread();
-
-        return getValue_floatarray(this.tstate, str);
-    }
-
-    private native float[] getValue_floatarray(long tstate, String str)
-            throws JepException;
-
-    /**
      * Retrieves a Python string object as a Java byte[].
      * 
      * @param str

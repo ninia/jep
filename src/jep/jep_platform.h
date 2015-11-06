@@ -28,8 +28,8 @@
 
 /*
  * Contains includes and macros to enable compilation across multiple
- * platforms with different compilers, and both python 2 and 3.  This file
- * aims to be for Jep what pyport.h is for CPython.
+ * platforms with different compilers while supporting both Python 2 and 3.
+ * This file aims to be for Jep what pyport.h is for CPython.
  */
 
 // Python.h needs to be included first, see http://bugs.python.org/issue1045893

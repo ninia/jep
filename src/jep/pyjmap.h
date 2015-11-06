@@ -26,6 +26,12 @@
    distribution.
 */
 
+/*
+ * A PyJMapObject is a PyJObject with some extra methods attached to meet
+ * the python Mapping protocol/interface.  It should only be used where the
+ * underlying jobject of the PyJObject is an implementation of java.util.Map.
+ */
+
 #include "jep_platform.h"
 #include "pyjobject.h"
 
@@ -34,11 +40,6 @@
 
 PyAPI_DATA(PyTypeObject) PyJMap_Type;
 
-/*
- * A pyjmap is just a pyjobject with some extra methods attached to it to meet
- * the python Mapping protocol (interface).  It should only be used where
- * the underlying jobject of the pyjobject is an implementation of java.util.Map.
- */
 typedef struct {
     PyJObject obj; /* magic inheritance */
 } PyJMapObject;

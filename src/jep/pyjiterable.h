@@ -26,6 +26,12 @@
    distribution.
 */
 
+/*
+ * A PyJIterableObject is a PyJObject that has tp_iter implemented. It should
+ * only be used where the underlying jobject of the PyJObject is an
+ * implementation of java.util.Iterable.
+ */
+
 #include "jep_platform.h"
 #include "pyjobject.h"
 
@@ -34,11 +40,6 @@
 
 PyAPI_DATA(PyTypeObject) PyJIterable_Type;
 
-/*
- * A pyjiterable is just a pyjobject that has tp_iter implemented. It should
- * only be used where the underlying jobject of the pyjobject is an
- * implementation of java.util.Iterable.
- */
 typedef struct {
     PyJObject obj; /* magic inheritance */
 } PyJIterableObject;

@@ -26,6 +26,12 @@
    distribution.
 */
 
+/*
+ * Convenience header for including all of the headers of Jep.  Not to be
+ * confused with jep.h which is generated at build time by javah.  This file
+ * is inspired by the ease of use of including Python.h.
+ */
+
 /* jep_platform needs to be included first, see comments in jep_platform.h */
 #include "jep_platform.h"
 #include "jep_util.h"

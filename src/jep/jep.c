@@ -155,22 +155,6 @@ JNIEXPORT jobject JNICALL Java_jep_Jep_getValue
 }
 
 
-/*
- * Class:     jep_Jep
- * Method:    getValue_floatarray
- * Signature: (ILjava/lang/String;)L[F
- */
-JNIEXPORT jobject JNICALL Java_jep_Jep_getValue_1floatarray
-(JNIEnv *env, jobject obj, jlong tstate, jstring jstr) {
-    const char *str;
-    jobject ret;
-
-    str = jstring2char(env, jstr);
-    ret = pyembed_getvalue_array(env, (intptr_t) tstate, (char *) str, JFLOAT_ID);
-    release_utf_char(env, jstr, str);
-    return ret;
-}
-
 
 /*
  * Class:     jep_Jep
@@ -183,7 +167,7 @@ JNIEXPORT jobject JNICALL Java_jep_Jep_getValue_1bytearray
     jobject ret;
 
     str = jstring2char(env, jstr);
-    ret = pyembed_getvalue_array(env, (intptr_t) tstate, (char *) str, JBYTE_ID);
+    ret = pyembed_getvalue_array(env, (intptr_t) tstate, (char *) str);
     release_utf_char(env, jstr, str);
     return ret;
 }
