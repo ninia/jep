@@ -305,6 +305,8 @@ void release_utf_char(JNIEnv *env, jstring str, const char *v) {
 
 
 /*
+ * Caches the jclasses relevant to Java primitive types.
+ *
  * In order to call methods that return primitives, we have to know their
  * return type.  That's easy, we're using the Reflection API to call
  * java.lang.reflect.Method.getReturnType().
@@ -396,8 +398,12 @@ int cache_primitive_classes(JNIEnv *env) {
     return 1;
 }
 
-// remove global references setup in above function.
-// TODO is this method used?  Should it be called from pyembed_shutdown()?
+/*
+ * Releases the global references to the cached jclasses of Java primitive
+ * types that were setup in the above function.
+ *
+ * TODO Is this method used?  Should it be called from pyembed_shutdown()?
+ */
 void unref_cache_primitive_classes(JNIEnv *env) {
     UNCACHE_CLASS(JBOOLEAN_TYPE);
     UNCACHE_CLASS(JBYTE_TYPE);
@@ -417,6 +423,17 @@ void unref_cache_primitive_classes(JNIEnv *env) {
     UNCACHE_CLASS(JDOUBLE_ARRAY_TYPE);
 }
 
+
+/*
+ * Caches jclasses that Jep may use frequently.
+ *
+ * A single call of (*env)->FindClass("...") is generally considered fast, but
+ * repeated calls add up.  Given how frequently Jep may make use of some
+ * of the classes built-in to the JVM, we'll cache those classes for optimal
+ * performance.
+ *
+ * Returns 1 if successful, 0 if failed.  Does not process Java exceptions.
+ */
 int cache_frequent_classes(JNIEnv *env) {
     jclass clazz;
 
@@ -456,7 +473,12 @@ int cache_frequent_classes(JNIEnv *env) {
     return 1;
 }
 
-// TODO is this method used?  Should it be called from pyembed_shutdown()?
+/*
+ * Releases the global references to the cached jclasses that Jep may use
+ * frequently and were setup in the above function.
+ *
+ * TODO Is this method used?  Should it be called from pyembed_shutdown()?
+ */
 void unref_cache_frequent_classes(JNIEnv *env) {
     UNCACHE_CLASS(JOBJECT_TYPE);
     UNCACHE_CLASS(JSTRING_TYPE);

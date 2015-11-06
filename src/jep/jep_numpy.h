@@ -26,6 +26,11 @@
    distribution.   
 */
 
+/*
+ * Contains functions to support transformation between numpy ndarrays and
+ * Java primitive arrays (and jep.NDArrays).
+ */
+
 #include "jep_platform.h"
 
 #ifndef _Included_jep_numpy

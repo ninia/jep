@@ -26,6 +26,11 @@
    distribution.
 */
 
+/*
+ * Contains functions to support exception handling in Jep.  Supports
+ * both exceptions thrown by the Python interpreter and by the JVM.
+ */
+
 #include "jep_platform.h"
 
 #ifndef _Included_jep_exceptions
