@@ -31,11 +31,7 @@
    to cast to PyObject.
 */
 
-#include "pyembed.h"
-#include "pyjfield.h"
-#include "pyjobject.h"
-#include "pyjclass.h"
-#include "jep_util.h"
+#include "Jep.h"
 
 static void pyjfield_dealloc(PyJFieldObject *self);
 

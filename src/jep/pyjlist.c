@@ -26,9 +26,7 @@
    distribution.
 */
 
-#include "pyjlist.h"
-#include "pyembed.h"
-#include "jep_util.h"
+#include "Jep.h"
 
 static PyObject* pyjlist_add(PyObject*, PyObject*);
 static PyObject* pyjlist_fill(PyObject*, Py_ssize_t);

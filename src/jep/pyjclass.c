@@ -26,12 +26,7 @@
    distribution.   
 */
 
-#include "pyembed.h"
-#include "pyjfield.h"
-#include "pyjclass.h"
-#include "pyjmethod.h"
-#include "pyjarray.h"
-#include "jep_util.h"
+#include "Jep.h"
 
 static PyObject* pyjclass_add_inner_classes(JNIEnv*, PyJObject*);
 static void pyjclass_dealloc(PyJClassObject*);

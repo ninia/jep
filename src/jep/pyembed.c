@@ -42,12 +42,7 @@
 # include <stdio.h>
 #endif
 
-#include "pyembed.h"
-#include "pyjobject.h"
-#include "pyjclass.h"
-#include "pyjarray.h"
-#include "jep_util.h"
-#include "jep_numpy.h"
+#include "Jep.h"
 
 /*
  * fixes compiler warnings about PyMarshal_ReadLongFromFile and

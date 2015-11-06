@@ -26,9 +26,7 @@
    distribution.
 */
 
-#include "pyjmap.h"
-#include "pyembed.h"
-#include "jep_util.h"
+#include "Jep.h"
 
 static Py_ssize_t pyjmap_len(PyObject*);
 static PyObject* pyjmap_getitem(PyObject*, PyObject*);

@@ -26,10 +26,7 @@
    distribution.   
 */
 
-#include "pyembed.h"
-#include "pyjmethod.h"
-#include "pyjarray.h"
-#include "jep_util.h"
+#include "Jep.h"
 
 // https://bugs.python.org/issue2897
 #include "structmember.h"

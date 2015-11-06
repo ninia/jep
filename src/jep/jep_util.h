@@ -29,33 +29,8 @@
 
 #include "jep_platform.h"
 
-#ifndef _Included_util
-#define _Included_util
-
-
-#define JEPEXCEPTION "jep/JepException"
-
-#define THROW_JEP(env, msg)                         \
-{                                                   \
-    jclass clazz = (*env)->FindClass(env,           \
-                                     JEPEXCEPTION); \
-    if(clazz)                                       \
-        (*env)->ThrowNew(env, clazz, msg);          \
-}
-
-#define THROW_JEP_EXC(env, jepExc) { (*env)->Throw(env, jepExc); }
-
-// does the same thing as the function version, but
-// restores thread blocking first
-#define PROCESS_JAVA_EXCEPTION(env)             \
-{                                               \
-    if((*env)->ExceptionCheck(env)) {           \
-        Py_BLOCK_THREADS;                       \
-        process_java_exception(env);            \
-        Py_UNBLOCK_THREADS;                     \
-        goto EXIT_ERROR;                        \
-    }                                           \
-}
+#ifndef _Included_jep_util
+#define _Included_jep_util
 
 
 // this function exists solely to support python 3.2
@@ -89,18 +64,6 @@ const char* jstring2char(JNIEnv*, jstring);
 
 // release memory allocated by jstring2char
 void release_utf_char(JNIEnv*, jstring, const char*);
-
-// convert pyerr to java exception.
-// int param is printTrace, send traceback to stderr
-int process_py_exception(JNIEnv*, int);
-
-// convert java exception to pyerr.
-// true (1) if an exception was processed.
-int process_java_exception(JNIEnv*);
-
-// convert java exception to ImportError.
-// true (1) if an exception was processed.
-int process_import_exception(JNIEnv *env);
 
 // sets up J<BLAH>TYPE
 int cache_primitive_classes(JNIEnv*);
@@ -163,4 +126,4 @@ extern jclass JARRAYLIST_TYPE;
 extern jclass JHASHMAP_TYPE;
 extern jclass JCOLLECTIONS_TYPE;
 
-#endif // ifndef _Included_util
+#endif // ifndef _Included_jep_util

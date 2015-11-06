@@ -1,15 +1,15 @@
 /* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
-/* 
+/*
    jep - Java Embedded Python
 
-   Copyright (c) JEP AUTHORS.
+   Copyright (c) 2015 JEP AUTHORS.
 
    This file is licenced under the the zlib/libpng License.
 
    This software is provided 'as-is', without any express or implied
    warranty. In no event will the authors be held liable for any
    damages arising from the use of this software.
-   
+
    Permission is granted to anyone to use this software for any
    purpose, including commercial applications, and to alter it and
    redistribute it freely, subject to the following restrictions:
@@ -23,41 +23,24 @@
    must not be misrepresented as being the original software.
 
    3. This notice may not be removed or altered from any source
-   distribution.   
+   distribution.
 */
 
+/* jep_platform needs to be included first, see comments in jep_platform.h */
 #include "jep_platform.h"
+#include "jep_util.h"
+#include "jep_exceptions.h"
+#include "jep_numpy.h"
 
-#ifndef _Included_jep_numpy
-#define _Included_jep_numpy
-
-
-#ifndef USE_NUMPY
- #define USE_NUMPY 1
-#endif
-
-/* this whole file is a no-op if numpy support is disabled */
-#if USE_NUMPY
-
-/* jclasses cached for faster performance */
-extern jclass JBOOLEAN_ARRAY_TYPE;
-extern jclass JBYTE_ARRAY_TYPE;
-extern jclass JSHORT_ARRAY_TYPE;
-extern jclass JINT_ARRAY_TYPE;
-extern jclass JLONG_ARRAY_TYPE;
-extern jclass JFLOAT_ARRAY_TYPE;
-extern jclass JDOUBLE_ARRAY_TYPE;
-extern jclass JEP_NDARRAY_TYPE;
-
-
-/* methods to support numpy <-> java conversion */
-int npy_array_check(PyObject*);
-int jndarray_check(JNIEnv*, jobject);
-jobject convert_pyndarray_jndarray(JNIEnv*, PyObject*);
-PyObject* convert_jndarray_pyndarray(JNIEnv*, jobject);
-jarray convert_pyndarray_jprimitivearray(JNIEnv*, PyObject*, jclass);
-
-#endif // if numpy is enabled
-
-
-#endif // ifndef _Included_jep_numpy
+#include "pyembed.h"
+#include "pyjarray.h"
+#include "pyjclass.h"
+#include "pyjcollection.h"
+#include "pyjfield.h"
+#include "pyjiterable.h"
+#include "pyjiterator.h"
+#include "pyjlist.h"
+#include "pyjmap.h"
+#include "pyjmethod.h"
+#include "pyjmultimethod.h"
+#include "pyjobject.h"

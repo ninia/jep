@@ -26,9 +26,7 @@
    distribution.
 */
 
-#include "pyjcollection.h"
-#include "pyembed.h"
-#include "jep_util.h"
+#include "Jep.h"
 
 static Py_ssize_t pyjcollection_len(PyObject*);
 static int pyjcollection_contains(PyObject*, PyObject*);

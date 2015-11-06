@@ -52,8 +52,8 @@
 
 #include <jni.h>
 
-#ifndef _Included_jport
-#define _Included_jport
+#ifndef _Included_jep_platform
+#define _Included_jep_platform
 
 /* Windows compatibility */
 #ifdef WIN32
@@ -96,5 +96,5 @@ typedef long long jeplong;
 #endif // Python 3 compatibility
 
 
-#endif // ifndef _Included_jport
+#endif // ifndef _Included_jep_platform
 

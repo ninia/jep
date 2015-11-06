@@ -26,6 +26,7 @@
    distribution.   
 */
 
+#include "jep_platform.h"
 #include "pyjobject.h"
 
 #ifndef _Included_pyjmethod

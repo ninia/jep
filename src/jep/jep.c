@@ -26,9 +26,8 @@
    distribution.   
 */
 
-#include "jep_util.h"
+#include "Jep.h"
 #include "jep.h"
-#include "pyembed.h"
 
 
 #ifdef WIN32

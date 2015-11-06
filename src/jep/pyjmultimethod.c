@@ -26,8 +26,7 @@
    distribution.   
 */
 
-#include "pyjmultimethod.h"
-#include "pyembed.h"
+#include "Jep.h"
 
 PyObject* PyJmultiMethod_New(PyObject* method1, PyObject* method2) {
     PyJMultiMethodObject* mm = NULL;

@@ -26,15 +26,7 @@
    distribution.   
 */
 
-#include "jep_util.h"
-#include "jep_numpy.h"
-#include "pyjobject.h"
-#include "pyjarray.h"
-#include "pyjmethod.h"
-#include "pyjclass.h"
-#include "pyembed.h"
-
-static PyObject* pyerrtype_from_throwable(JNIEnv*, jthrowable);
+#include "Jep.h"
 
 
 // -------------------------------------------------- primitive class types
@@ -88,14 +80,14 @@ jclass JEP_NDARRAY_TYPE = NULL;
 #endif
 
 // exception cached types
-jclass classNotFoundExc_Type;
-jclass indexOutOfBoundsExc_Type;
-jclass ioExc_Type;
-jclass classCastExc_Type;
-jclass illegalArgumentExc_Type;
-jclass arithmeticExc_Type;
-jclass outOfMemoryErr_Type;
-jclass assertionErr_Type;
+jclass CLASSNOTFOUND_EXC_TYPE;
+jclass INDEX_EXC_TYPE;
+jclass IO_EXC_TYPE;
+jclass CLASSCAST_EXC_TYPE;
+jclass ILLEGALARG_EXC_TYPE;
+jclass ARITHMETIC_EXC_TYPE;
+jclass OUTOFMEMORY_EXC_TYPE;
+jclass ASSERTION_EXC_TYPE;
 
 // cached methodids
 jmethodID objectToString        = 0;
@@ -109,12 +101,6 @@ jmethodID getLongValue       = 0;
 jmethodID getDoubleValue     = 0;
 jmethodID getFloatValue      = 0;
 jmethodID getCharValue       = 0;
-
-// exception handling
-jmethodID jepExcInitStr = NULL;
-jmethodID jepExcInitStrThrow = NULL;
-jmethodID stackTraceElemInit = NULL;
-jmethodID setStackTrace = NULL;
 
 
 // call toString() on jobject, make a python string and return
@@ -235,480 +221,6 @@ char* pyunicode_to_utf8(PyObject *unicode) {
        return NULL;
     }
     return c;
-}
-
-
-
-// convert python exception to java.
-int process_py_exception(JNIEnv *env, int printTrace) {
-    JepThread *jepThread;
-    PyObject *ptype, *pvalue, *ptrace, *pystack = NULL;
-    PyObject *message = NULL;
-    char *m = NULL;
-    PyJObject *jexc = NULL;
-    jobject jepException = NULL;
-    jclass jepExcClazz;
-    jstring jmsg;
-
-    if(!PyErr_Occurred())
-        return 0;
-
-    // let's not turn this into a Java exception if the user exited
-    if(PyErr_ExceptionMatches(PyExc_SystemExit))
-         return 0;
-
-    /*
-     * We only care about ptype and pvalue for the message.
-     * Many people consider it a security vulnerability
-     * to have the source code printed to the user's
-     * screen.  We'll try and attach the trace as the
-     * cause on the JepException so the application
-     * can determine if/how traces should be logged or
-     * shown.
-     */
-
-    PyErr_Fetch(&ptype, &pvalue, &ptrace);
-
-    jepThread = pyembed_get_jepthread();
-    if(!jepThread) {
-        printf("Error while processing a Python exception, "
-                "invalid JepThread.\n");
-        if(jepThread->printStack) {
-            PyErr_Print();
-            if(!PyErr_Occurred())
-                return 0;
-        }
-    }
-
-    if(ptype) {
-        message = PyObject_Str(ptype);
-
-        if(pvalue) {
-            PyObject *v = NULL;
-            if(pyjobject_check(pvalue)) {
-                // it's a java exception that came from process_java_exception
-                jmethodID getMessage;
-                jexc = (PyJObject*) pvalue;
-                getMessage = (*env)->GetMethodID(env, jexc->clazz,
-                        "getLocalizedMessage", "()Ljava/lang/String;");
-                if(getMessage != NULL) {
-                    jstring jmessage;
-                    jmessage = (*env)->CallObjectMethod(env, jexc->object,
-                            getMessage);
-                    if(jmessage != NULL) {
-                        const char* charMessage;
-                        charMessage = jstring2char(env, jmessage);
-                        if(charMessage != NULL) {
-                            v = PyString_FromString(charMessage);
-                            release_utf_char(env, jmessage, charMessage);
-                        }
-                    }
-                } else {
-                    printf(
-                            "Error getting method getLocalizedMessage() on java exception\n");
-                }
-            }
-
-            if(v == NULL) {
-                // unsure of what we got, treat it as a string
-                v = PyObject_Str(pvalue);
-            }
-
-            if(v != NULL && PyString_Check(v)) {
-                PyObject *t;
-#if PY_MAJOR_VERSION >= 3
-                t = PyUnicode_FromFormat("%U: %U", message, v);
-#else
-                t = PyString_FromFormat("%s: %s", PyString_AsString(message), PyString_AsString(v));
-#endif
-                Py_DECREF(v);
-                Py_DECREF(message);
-                message = t;
-            }
-            m = PyString_AsString(message);
-
-            // make a JepException
-            jmsg = (*env)->NewStringUTF(env, (const char *) m);
-            jepExcClazz = (*env)->FindClass(env, JEPEXCEPTION);
-            if(jexc != NULL) {
-                // constructor JepException(String, Throwable)
-                if(jepExcInitStrThrow == NULL) {
-                    jepExcInitStrThrow = (*env)->GetMethodID(env, jepExcClazz,
-                            "<init>",
-                            "(Ljava/lang/String;Ljava/lang/Throwable;)V");
-                }
-                jepException = (*env)->NewObject(env, jepExcClazz,
-                        jepExcInitStrThrow, jmsg, jexc->object);
-            } else {
-                // constructor JepException(String)
-                if(jepExcInitStr == NULL) {
-                    jepExcInitStr = (*env)->GetMethodID(env, jepExcClazz,
-                            "<init>", "(Ljava/lang/String;)V");
-                }
-                jepException = (*env)->NewObject(env, jepExcClazz,
-                        jepExcInitStr, jmsg);
-            }
-            (*env)->DeleteLocalRef(env, jmsg);
-            if((*env)->ExceptionCheck(env) || !jepException) {
-                PyErr_Format(PyExc_RuntimeError,
-                        "creating jep.JepException failed.");
-                return 1;
-            }
-
-            if(ptrace) {
-                PyObject *modTB, *extract = NULL;
-                modTB = PyImport_ImportModule("traceback");
-                if(modTB == NULL) {
-                    printf("Error importing python traceback module\n");
-                }
-                extract = PyString_FromString("extract_tb");
-                if(extract == NULL) {
-                    printf("Error making PyString 'extract_tb'\n");
-                }
-                if(modTB != NULL && extract != NULL) {
-                    pystack = PyObject_CallMethodObjArgs(modTB, extract, ptrace,
-                            NULL);
-                }
-                if(PyErr_Occurred()) {
-                  /*
-                   * well this isn't good, we got an error while we're trying
-                   * to process errors, let's just print it out
-                   */
-                  PyErr_Print();
-                }
-                Py_XDECREF(modTB);
-                Py_XDECREF(extract);
-            }
-
-            /*
-             * this could go in the above if statement but I got tired of
-             * incrementing so far to the right
-             */
-            if(pystack != NULL) {
-                Py_ssize_t stackSize, i, count, index;
-                jobjectArray stackArray, reverse;
-                jclass stackTraceElemClazz;
-
-                stackTraceElemClazz = (*env)->FindClass(env,
-                        "Ljava/lang/StackTraceElement;");
-                if(stackTraceElemInit == NULL) {
-                    stackTraceElemInit =
-                            (*env)->GetMethodID(env, stackTraceElemClazz,
-                                    "<init>",
-                                    "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V");
-                }
-
-                stackSize = PyList_Size(pystack);
-                stackArray = (*env)->NewObjectArray(env, (jsize) stackSize,
-                        stackTraceElemClazz, NULL);
-                if((*env)->ExceptionCheck(env) || !stackArray) {
-                    PyErr_Format(PyExc_RuntimeError,
-                            "creating java.lang.StackTraceElement[] failed.");
-                    Py_DECREF(pystack);
-                    return 1;
-                }
-
-                count = 0;
-                for (i = 0; i < stackSize; i++) {
-                    PyObject *stackEntry, *pyLine;
-                    char *charPyFile, *charPyFunc = NULL;
-                    int pyLineNum;
-
-                    stackEntry = PyList_GetItem(pystack, i);
-                    // java order is classname, methodname, filename, lineNumber
-                    // python order is filename, line number, function name, line
-                    charPyFile = PyString_AsString(
-                            PyTuple_GetItem(stackEntry, 0));
-                    pyLineNum = (int) PyInt_AsLong(
-                            PyTuple_GetItem(stackEntry, 1));
-                    charPyFunc = PyString_AsString(
-                            PyTuple_GetItem(stackEntry, 2));
-                    pyLine = PyTuple_GetItem(stackEntry, 3);
-
-                    /*
-                     * if pyLine is None, this seems to imply it was an eval,
-                     * making the stack element fairly useless, so we will
-                     * skip it
-                     */
-                    if(pyLine != Py_None) {
-                        char *charPyFileNoExt, *lastDot;
-                        char *charPyFileNoDir, *lastBackslash;
-                        int namelen;
-                        jobject element;
-                        jstring pyFileNoDir, pyFileNoExt, pyFunc;
-
-                        // remove the .py to look more like a Java StackTraceElement
-                        namelen = (int) strlen(charPyFile);
-                        charPyFileNoExt = malloc(sizeof(char) * (namelen + 1));
-                        strcpy(charPyFileNoExt, charPyFile);
-                        lastDot = strrchr(charPyFileNoExt, '.');
-                        if(lastDot != NULL) {
-                            *lastDot = '\0';
-                        }
-
-                        // remove the dir path to look more like a Java StackTraceElement
-                        charPyFileNoDir = malloc(sizeof(char) * (namelen + 1));
-                        lastBackslash = strrchr(charPyFile, FILE_SEP);
-                        if(lastBackslash != NULL) {
-                            strcpy(charPyFileNoDir, lastBackslash + 1);
-                        } else {
-                            strcpy(charPyFileNoDir, charPyFile);
-                        }
-
-                        pyFileNoDir = (*env)->NewStringUTF(env,
-                                (const char *) charPyFileNoDir);
-                        pyFileNoExt = (*env)->NewStringUTF(env,
-                                (const char *) charPyFileNoExt);
-                        pyFunc = (*env)->NewStringUTF(env,
-                                (const char *) charPyFunc);
-
-                        /*
-                         * Make the stack trace element from python look like a normal
-                         * java stack trace element.  The order may seem wrong but
-                         * this makes it look best.
-                         */
-                        element = (*env)->NewObject(env, stackTraceElemClazz,
-                                stackTraceElemInit, pyFileNoExt, pyFunc, pyFileNoDir,
-                                pyLineNum);
-                        if((*env)->ExceptionCheck(env) || !element) {
-                            PyErr_Format(PyExc_RuntimeError,
-                                    "failed to create java.lang.StackTraceElement for python %s:%i.",
-                                    charPyFile, pyLineNum);
-                            release_utf_char(env, pyFileNoDir, charPyFileNoDir);
-                            release_utf_char(env, pyFileNoExt, charPyFileNoExt);
-                            free(charPyFileNoDir);
-                            free(charPyFileNoExt);
-                            release_utf_char(env, pyFunc, charPyFunc);
-                            Py_DECREF(pystack);
-                            return 1;
-                        }
-                        (*env)->SetObjectArrayElement(env, stackArray, (jsize) i,
-                                element);
-                        count++;
-                        free(charPyFileNoDir);
-                        free(charPyFileNoExt);
-                        (*env)->DeleteLocalRef(env, pyFileNoDir);
-                        (*env)->DeleteLocalRef(env, pyFileNoExt);
-                        (*env)->DeleteLocalRef(env, pyFunc);
-                        (*env)->DeleteLocalRef(env, element);
-                    }
-                } // end of stack for loop
-                Py_DECREF(pystack);
-
-                /*
-                 * reverse order of stack and ensure no null elements so it will
-                 * appear like a java stacktrace
-                 */
-                reverse = (*env)->NewObjectArray(env, (jsize) count,
-                        stackTraceElemClazz, NULL);
-                if((*env)->ExceptionCheck(env) || !reverse) {
-                    PyErr_Format(PyExc_RuntimeError,
-                            "creating reverse java.lang.StackTraceElement[] failed.");
-                    return 1;
-                }
-
-                index = 0;
-                for (i = stackSize - 1; i > -1; i--) {
-                    jobject element;
-                    element = (*env)->GetObjectArrayElement(env, stackArray, (jsize) i);
-                    if(element != NULL) {
-                        (*env)->SetObjectArrayElement(env, reverse, (jsize) index,
-                                element);
-                        index++;
-                    }
-                }
-                (*env)->DeleteLocalRef(env, stackArray);
-
-                if(jepException != NULL) {
-                    if(setStackTrace == NULL) {
-                        setStackTrace = (*env)->GetMethodID(env, jepExcClazz,
-                                "setStackTrace",
-                                "([Ljava/lang/StackTraceElement;)V");
-                    }
-                    (*env)->CallObjectMethod(env, jepException, setStackTrace,
-                            reverse);
-                }
-                (*env)->DeleteLocalRef(env, reverse);
-            }
-        }
-    }
-
-    Py_XDECREF(ptype);
-    Py_XDECREF(pvalue);
-    Py_XDECREF(ptrace);
-
-    if(jepException != NULL) {
-        Py_DECREF(message);
-        THROW_JEP_EXC(env, jepException);
-    } else if(message && PyString_Check(message)) {
-        // should only get here if there was a ptype but no pvalue
-        m = PyString_AsString(message);
-        THROW_JEP(env, m);
-        Py_DECREF(message);
-    }
-
-    return 1;
-}
-
-
-// convert java exception to ImportError.
-// true (1) if an exception was processed.
-int process_import_exception(JNIEnv *env) {
-    jstring     estr;
-    jthrowable  exception    = NULL;
-    jclass      clazz;
-    PyObject   *pyException  = PyExc_ImportError;
-    char       *message;
-    JepThread  *jepThread;
-
-    if(!(*env)->ExceptionCheck(env))
-        return 0;
-
-    if((exception = (*env)->ExceptionOccurred(env)) == NULL)
-        return 0;
-
-    jepThread = pyembed_get_jepthread();
-    if(!jepThread) {
-        printf("Error while processing a Java exception, "
-               "invalid JepThread.\n");
-        return 1;
-    }
-
-    if(jepThread->printStack)    
-        (*env)->ExceptionDescribe(env);
-
-    // we're already processing this one, clear the old
-    (*env)->ExceptionClear(env);
-
-    clazz = (*env)->GetObjectClass(env, exception);
-    if((*env)->ExceptionCheck(env) || !clazz) {
-        (*env)->ExceptionDescribe(env);
-        return 1;
-    }
-    
-    estr = jobject_tostring(env, exception, clazz);
-    if((*env)->ExceptionCheck(env) || !estr) {
-        PyErr_Format(PyExc_RuntimeError, "toString() on exception failed.");
-        return 1;
-    }
-
-    message = (char *) jstring2char(env, estr);
-    PyErr_Format(pyException, "%s", message);
-    release_utf_char(env, estr, message);
-    
-    (*env)->DeleteLocalRef(env, clazz);
-    (*env)->DeleteLocalRef(env, exception);
-    return 1;
-}
-
-
-// convert java exception to pyerr.
-// true (1) if an exception was processed.
-int process_java_exception(JNIEnv *env) {
-    jthrowable exception = NULL;
-    jclass clazz;
-    PyObject *pyException;
-    PyObject *jpyExc;
-    JepThread *jepThread;
-    jmethodID fillInStacktrace;
-    jobjectArray stack;
-
-    if(!(*env)->ExceptionCheck(env))
-        return 0;
-
-    if((exception = (*env)->ExceptionOccurred(env)) == NULL)
-        return 0;
-
-    jepThread = pyembed_get_jepthread();
-    if(!jepThread) {
-        printf("Error while processing a Java exception, "
-                "invalid JepThread.\n");
-        return 1;
-    }
-
-    if(jepThread->printStack)
-        (*env)->ExceptionDescribe(env);
-
-    // we're already processing this one, clear the old
-    (*env)->ExceptionClear(env);
-
-    clazz = (*env)->GetObjectClass(env, exception);
-    if((*env)->ExceptionCheck(env) || !clazz) {
-        (*env)->ExceptionDescribe(env);
-        return 1;
-    }
-
-    // fill in the stack trace here to make sure we don't lose it
-    fillInStacktrace = (*env)->GetMethodID(env, clazz, "getStackTrace",
-            "()[Ljava/lang/StackTraceElement;");
-    stack = (*env)->CallObjectMethod(env, exception, fillInStacktrace);
-    (*env)->DeleteLocalRef(env, stack);
-
-    // turn the java exception into a pyjobject so the interpreter can handle it
-    jpyExc = pyjobject_new(env, exception);
-    if((*env)->ExceptionCheck(env) || !jpyExc) {
-        PyErr_Format(PyExc_RuntimeError,
-                "wrapping java exception in pyjobject failed.");
-        return 1;
-    }
-
-    pyException = pyerrtype_from_throwable(env, exception);
-    PyErr_SetObject(pyException, jpyExc);
-    Py_DECREF(jpyExc);
-    (*env)->DeleteLocalRef(env, clazz);
-    (*env)->DeleteLocalRef(env, exception);
-    return 1;
-}
-
-/*
- * Matches a jthrowable to an equivalent built-in python exception type.  This
- * is to enable more precise except/catch blocks in python for Java exceptions.
- */
-static PyObject* pyerrtype_from_throwable(JNIEnv *env, jthrowable exception) {
-
-    // map ClassNotFoundException to ImportError
-    if((*env)->IsInstanceOf(env, exception, classNotFoundExc_Type)) {
-        return PyExc_ImportError;
-    }
-
-    // map IndexOutOfBoundsException exception to IndexError
-    if((*env)->IsInstanceOf(env, exception, indexOutOfBoundsExc_Type)) {
-        return PyExc_IndexError;
-    }
-
-    // map IOException to IOError
-    if((*env)->IsInstanceOf(env, exception, ioExc_Type)) {
-        return PyExc_IOError;
-    }
-
-    // map ClassCastException to TypeError
-    if((*env)->IsInstanceOf(env, exception, classCastExc_Type)) {
-        return PyExc_TypeError;
-    }
-
-    // map IllegalArgumentException to ValueError
-    if((*env)->IsInstanceOf(env, exception, illegalArgumentExc_Type)) {
-        return PyExc_ValueError;
-    }
-
-    // map ArithmeticException to ArithmeticError
-    if((*env)->IsInstanceOf(env, exception, arithmeticExc_Type)) {
-        return PyExc_ArithmeticError;
-    }
-
-    // map OutOfMemoryError to MemoryError
-    if((*env)->IsInstanceOf(env, exception, outOfMemoryErr_Type)) {
-        // honestly if you hit this you're probably screwed
-        return PyExc_MemoryError;
-    }
-
-    // map AssertionError to AssertionError
-    if((*env)->IsInstanceOf(env, exception, assertionErr_Type)) {
-        return PyExc_AssertionError;
-    }
-
-    // default
-    return PyExc_RuntimeError;
 }
 
 
@@ -932,14 +444,14 @@ int cache_frequent_classes(JNIEnv *env) {
 #endif
 
     // find and cache exception types we check for
-    CACHE_CLASS(classNotFoundExc_Type, "java/lang/ClassNotFoundException");
-    CACHE_CLASS(indexOutOfBoundsExc_Type, "java/lang/IndexOutOfBoundsException");
-    CACHE_CLASS(ioExc_Type, "java/io/IOException");
-    CACHE_CLASS(classCastExc_Type, "java/lang/ClassCastException");
-    CACHE_CLASS(illegalArgumentExc_Type, "java/lang/IllegalArgumentException");
-    CACHE_CLASS(arithmeticExc_Type, "java/lang/ArithmeticException");
-    CACHE_CLASS(outOfMemoryErr_Type, "java/lang/OutOfMemoryError");
-    CACHE_CLASS(assertionErr_Type, "java/lang/AssertionError");
+    CACHE_CLASS(CLASSNOTFOUND_EXC_TYPE, "java/lang/ClassNotFoundException");
+    CACHE_CLASS(INDEX_EXC_TYPE, "java/lang/IndexOutOfBoundsException");
+    CACHE_CLASS(IO_EXC_TYPE, "java/io/IOException");
+    CACHE_CLASS(CLASSCAST_EXC_TYPE, "java/lang/ClassCastException");
+    CACHE_CLASS(ILLEGALARG_EXC_TYPE, "java/lang/IllegalArgumentException");
+    CACHE_CLASS(ARITHMETIC_EXC_TYPE, "java/lang/ArithmeticException");
+    CACHE_CLASS(OUTOFMEMORY_EXC_TYPE, "java/lang/OutOfMemoryError");
+    CACHE_CLASS(ASSERTION_EXC_TYPE, "java/lang/AssertionError");
 
     return 1;
 }
@@ -970,14 +482,14 @@ void unref_cache_frequent_classes(JNIEnv *env) {
 #endif
 
     // release exception types we check for
-    UNCACHE_CLASS(classNotFoundExc_Type);
-    UNCACHE_CLASS(indexOutOfBoundsExc_Type);
-    UNCACHE_CLASS(ioExc_Type);
-    UNCACHE_CLASS(classCastExc_Type);
-    UNCACHE_CLASS(illegalArgumentExc_Type);
-    UNCACHE_CLASS(arithmeticExc_Type);
-    UNCACHE_CLASS(outOfMemoryErr_Type);
-    UNCACHE_CLASS(assertionErr_Type);
+    UNCACHE_CLASS(CLASSNOTFOUND_EXC_TYPE);
+    UNCACHE_CLASS(INDEX_EXC_TYPE);
+    UNCACHE_CLASS(IO_EXC_TYPE);
+    UNCACHE_CLASS(CLASSCAST_EXC_TYPE);
+    UNCACHE_CLASS(ILLEGALARG_EXC_TYPE);
+    UNCACHE_CLASS(ARITHMETIC_EXC_TYPE);
+    UNCACHE_CLASS(OUTOFMEMORY_EXC_TYPE);
+    UNCACHE_CLASS(ASSERTION_EXC_TYPE);
 }
 
 

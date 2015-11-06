@@ -26,20 +26,7 @@
    distribution.   
 */
 
-#include "pyembed.h"
-#include "pyjobject.h"
-#include "pyjmethod.h"
-#include "pyjmultimethod.h"
-#include "pyjfield.h"
-#include "pyjclass.h"
-#include "jep_util.h"
-#include "pyjarray.h"
-#include "pyjiterable.h"
-#include "pyjiterator.h"
-#include "pyjcollection.h"
-#include "pyjlist.h"
-#include "pyjmap.h"
-#include "jep_numpy.h"
+#include "Jep.h"
 
 static int pyjobject_init(JNIEnv *env, PyJObject*);
 static void pyjobject_addmethod(PyJObject*, PyObject*);

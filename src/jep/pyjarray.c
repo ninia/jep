@@ -31,10 +31,7 @@
    of the python distribution.
 */     
 
-#include "pyjarray.h"
-#include "pyjobject.h"
-#include "pyembed.h"
-#include "jep_util.h"
+#include "Jep.h"
 
 jmethodID objectComponentType = 0;
 

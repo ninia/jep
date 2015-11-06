@@ -26,9 +26,7 @@
    distribution.
 */
 
-#include "pyjiterator.h"
-#include "pyembed.h"
-#include "jep_util.h"
+#include "Jep.h"
 
 
 /*
