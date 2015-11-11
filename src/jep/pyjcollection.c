@@ -114,7 +114,8 @@ static int pyjcollection_contains(PyObject *o, PyObject *v)
     }
 
     if (collectionContains == 0) {
-        collectionContains = (*env)->GetMethodID(env, JCOLLECTION_TYPE, "contains", "(Ljava/lang/Object;)Z");
+        collectionContains = (*env)->GetMethodID(env, JCOLLECTION_TYPE, "contains",
+                             "(Ljava/lang/Object;)Z");
         if (process_java_exception(env) || !collectionContains) {
             return -1;
         }

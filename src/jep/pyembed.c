@@ -1099,7 +1099,8 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result)
         } else {
             size = PyTuple_Size(result);
         }
-        list = (*env)->NewObject(env, JARRAYLIST_TYPE, arraylistIConstructor, (int) size);
+        list = (*env)->NewObject(env, JARRAYLIST_TYPE, arraylistIConstructor,
+                                 (int) size);
         if (process_java_exception(env) || !list) {
             return NULL;
         }
@@ -1482,7 +1483,8 @@ static void pyembed_run_pyc(JepThread *jepThread,
 #if PY_MAJOR_VERSION >= 3
     v = PyEval_EvalCode(co, jepThread->globals, jepThread->globals);
 #else
-    v = PyEval_EvalCode((PyCodeObject *) co, jepThread->globals, jepThread->globals);
+    v = PyEval_EvalCode((PyCodeObject *) co, jepThread->globals,
+                        jepThread->globals);
 #endif
     Py_DECREF(co);
     Py_XDECREF(v);

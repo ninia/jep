@@ -73,7 +73,8 @@ PyObject* pyjlist_new_copy(PyObject *toCopy)
     }
 
     if (classNewInstance == 0) {
-        classNewInstance = (*env)->GetMethodID(env, JCLASS_TYPE, "newInstance", "()Ljava/lang/Object;");
+        classNewInstance = (*env)->GetMethodID(env, JCLASS_TYPE, "newInstance",
+                                               "()Ljava/lang/Object;");
         if (process_java_exception(env) || !classNewInstance) {
             return NULL;
         }
@@ -85,7 +86,8 @@ PyObject* pyjlist_new_copy(PyObject *toCopy)
     }
 
     if (listAddAll == 0) {
-        listAddAll = (*env)->GetMethodID(env, JLIST_TYPE, "addAll", "(Ljava/util/Collection;)Z");
+        listAddAll = (*env)->GetMethodID(env, JLIST_TYPE, "addAll",
+                                         "(Ljava/util/Collection;)Z");
         if (process_java_exception(env) || !listAddAll) {
             return NULL;
         }
@@ -171,7 +173,8 @@ static PyObject* pyjlist_getitem(PyObject *o, Py_ssize_t i)
 
     size = PyObject_Size(o);
     if ((i > size - 1) || (i < 0)) {
-        PyErr_Format(PyExc_IndexError, "list index %i out of range, size %i", (int) i, (int) size);
+        PyErr_Format(PyExc_IndexError, "list index %i out of range, size %i", (int) i,
+                     (int) size);
         return NULL;
     }
 
@@ -198,13 +201,15 @@ static PyObject* pyjlist_getslice(PyObject *o, Py_ssize_t i1, Py_ssize_t i2)
     JNIEnv       *env     = pyembed_get_env();
 
     if (listSubList == 0) {
-        listSubList = (*env)->GetMethodID(env, JLIST_TYPE, "subList", "(II)Ljava/util/List;");
+        listSubList = (*env)->GetMethodID(env, JLIST_TYPE, "subList",
+                                          "(II)Ljava/util/List;");
         if (process_java_exception(env) || !listSubList) {
             return NULL;
         }
     }
 
-    result = (*env)->CallObjectMethod(env, obj->object, listSubList, (jint) i1, (jint) i2);
+    result = (*env)->CallObjectMethod(env, obj->object, listSubList, (jint) i1,
+                                      (jint) i2);
     if (process_java_exception(env)) {
         return NULL;
     }
@@ -243,7 +248,8 @@ static int pyjlist_setitem(PyObject *o, Py_ssize_t i, PyObject *v)
     }
 
     if (listSet == 0) {
-        listSet = (*env)->GetMethodID(env, JLIST_TYPE, "set", "(ILjava/lang/Object;)Ljava/lang/Object;");
+        listSet = (*env)->GetMethodID(env, JLIST_TYPE, "set",
+                                      "(ILjava/lang/Object;)Ljava/lang/Object;");
         if (process_java_exception(env) || !listSet) {
             return -1;
         }
@@ -262,7 +268,8 @@ static int pyjlist_setitem(PyObject *o, Py_ssize_t i, PyObject *v)
  * Method for setting slices with the [int:int] operator on pyjlist.  For
  * example, o[i1:i2] = v where v is a sequence.
  */
-static int pyjlist_setslice(PyObject *o, Py_ssize_t i1, Py_ssize_t i2, PyObject *v)
+static int pyjlist_setslice(PyObject *o, Py_ssize_t i1, Py_ssize_t i2,
+                            PyObject *v)
 {
     Py_ssize_t oSize;
     Py_ssize_t vSize;
@@ -343,7 +350,8 @@ static PyObject* pyjlist_inplace_add(PyObject *o1, PyObject *o2)
          * two collections
          */
         if (listAddAll == 0) {
-            listAddAll = (*env)->GetMethodID(env, JLIST_TYPE, "addAll", "(Ljava/util/Collection;)Z");
+            listAddAll = (*env)->GetMethodID(env, JLIST_TYPE, "addAll",
+                                             "(Ljava/util/Collection;)Z");
             if (process_java_exception(env) || !listAddAll) {
                 return NULL;
             }
@@ -441,7 +449,8 @@ static PyObject* pyjlist_subscript(PyObject *self, PyObject *item)
         Py_ssize_t start, stop, step, slicelength;
 
 #if PY_MAJOR_VERSION >= 3
-        if (PySlice_GetIndicesEx(item, PyObject_Size(self), &start, &stop, &step, &slicelength) < 0) {
+        if (PySlice_GetIndicesEx(item, PyObject_Size(self), &start, &stop, &step,
+                                 &slicelength) < 0) {
             // error will already be set
             return NULL;
         }
@@ -451,7 +460,8 @@ static PyObject* pyjlist_subscript(PyObject *self, PyObject *item)
          * item.  Python fixed the method signature in 3.2 to take item as a
          * PyObject*
          */
-        if (PySlice_GetIndicesEx((PySliceObject *) item, PyObject_Size(self), &start, &stop, &step, &slicelength) < 0) {
+        if (PySlice_GetIndicesEx((PySliceObject *) item, PyObject_Size(self), &start,
+                                 &stop, &step, &slicelength) < 0) {
             // error will already be set
             return NULL;
         }
@@ -466,12 +476,14 @@ static PyObject* pyjlist_subscript(PyObject *self, PyObject *item)
             return pyjlist_getslice(self, start, stop);
         }
     } else {
-        PyErr_SetString(PyExc_TypeError, "list indices must be integers, longs, or slices");
+        PyErr_SetString(PyExc_TypeError,
+                        "list indices must be integers, longs, or slices");
         return NULL;
     }
 }
 
-static int pyjlist_set_subscript(PyObject* self, PyObject* item, PyObject* value)
+static int pyjlist_set_subscript(PyObject* self, PyObject* item,
+                                 PyObject* value)
 {
     if (PyInt_Check(item)) {
         long i = PyInt_AS_LONG(item);
@@ -492,7 +504,8 @@ static int pyjlist_set_subscript(PyObject* self, PyObject* item, PyObject* value
         Py_ssize_t start, stop, step, slicelength;
 
 #if PY_MAJOR_VERSION >= 3
-        if (PySlice_GetIndicesEx(item, PyObject_Size(self), &start, &stop, &step, &slicelength) < 0) {
+        if (PySlice_GetIndicesEx(item, PyObject_Size(self), &start, &stop, &step,
+                                 &slicelength) < 0) {
             // error will already be set
             return -1;
         }
@@ -502,7 +515,8 @@ static int pyjlist_set_subscript(PyObject* self, PyObject* item, PyObject* value
          * item.  Python fixed the method signature in 3.2 to take item as a
          * PyObject*
          */
-        if (PySlice_GetIndicesEx((PySliceObject *) item, PyObject_Size(self), &start, &stop, &step, &slicelength) < 0) {
+        if (PySlice_GetIndicesEx((PySliceObject *) item, PyObject_Size(self), &start,
+                                 &stop, &step, &slicelength) < 0) {
             // error will already be set
             return -1;
         }
@@ -517,7 +531,8 @@ static int pyjlist_set_subscript(PyObject* self, PyObject* item, PyObject* value
             return pyjlist_setslice(self, start, stop, value);
         }
     } else {
-        PyErr_SetString(PyExc_TypeError, "list indices must be integers, longs, or slices");
+        PyErr_SetString(PyExc_TypeError,
+                        "list indices must be integers, longs, or slices");
         return -1;
     }
 

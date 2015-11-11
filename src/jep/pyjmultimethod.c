@@ -60,7 +60,8 @@ int PyJmultiMethod_Append(PyObject* multimethod, PyObject* method)
 {
     PyJMultiMethodObject* mm = NULL;
     if (!PyJmultiMethod_Check(multimethod)) {
-        PyErr_SetString(PyExc_TypeError, "PyJmultiMethod_Append received incorrect type");
+        PyErr_SetString(PyExc_TypeError,
+                        "PyJmultiMethod_Append received incorrect type");
         return -1;
     }
     if (!pyjmethod_check(method)) {
@@ -82,7 +83,8 @@ PyObject* PyJmultiMethod_GetName(PyObject* multimethod)
     PyJMethodObject*     method     = NULL;
     PyObject*             methodName = NULL;
     if (!PyJmultiMethod_Check(multimethod)) {
-        PyErr_SetString(PyExc_TypeError, "PyJmultiMethod_GetName received incorrect type");
+        PyErr_SetString(PyExc_TypeError,
+                        "PyJmultiMethod_GetName received incorrect type");
         return NULL;
     }
     mm = (PyJMultiMethodObject*) multimethod;
@@ -114,7 +116,8 @@ static PyObject* pyjmultimethod_call(PyObject *multimethod,
     }
 
     if (!PyJmultiMethod_Check(multimethod)) {
-        PyErr_SetString(PyExc_TypeError, "pyjmultimethod_call_internal received incorrect type");
+        PyErr_SetString(PyExc_TypeError,
+                        "pyjmultimethod_call_internal received incorrect type");
         return NULL;
     }
 
@@ -125,7 +128,8 @@ static PyObject* pyjmultimethod_call(PyObject *multimethod,
     env = pyembed_get_env();
 
     for (methodPosition = 0; methodPosition < methodCount; methodPosition += 1) {
-        PyJMethodObject* method = (PyJMethodObject*) PyList_GetItem(mm->methodList, methodPosition);
+        PyJMethodObject* method = (PyJMethodObject*) PyList_GetItem(mm->methodList,
+                                  methodPosition);
         if (pyjmethod_check_simple_compat(method, env, methodName, argsSize)) {
             if (cand) {
                 if (pyjmethod_check_complex_compat(cand, env, args)) {
@@ -163,7 +167,8 @@ PyObject* pyjmultimethod_getmethods(PyObject* multimethod)
 {
     PyJMultiMethodObject* mm         = NULL;
     if (!PyJmultiMethod_Check(multimethod)) {
-        PyErr_SetString(PyExc_TypeError, "PyJmultiMethod_GetName received incorrect type");
+        PyErr_SetString(PyExc_TypeError,
+                        "PyJmultiMethod_GetName received incorrect type");
         return NULL;
     }
     mm = (PyJMultiMethodObject*) multimethod;

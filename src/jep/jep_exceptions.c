@@ -121,7 +121,8 @@ int process_py_exception(JNIEnv *env, int printTrace)
 #if PY_MAJOR_VERSION >= 3
                 t = PyUnicode_FromFormat("%U: %U", message, v);
 #else
-                t = PyString_FromFormat("%s: %s", PyString_AsString(message), PyString_AsString(v));
+                t = PyString_FromFormat("%s: %s", PyString_AsString(message),
+                                        PyString_AsString(v));
 #endif
                 Py_DECREF(v);
                 Py_DECREF(message);

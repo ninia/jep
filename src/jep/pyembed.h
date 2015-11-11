@@ -56,7 +56,8 @@ void pyembed_thread_close(JNIEnv*, intptr_t);
 
 void pyembed_close(void);
 void pyembed_run(JNIEnv*, intptr_t, char*);
-jobject pyembed_invoke_method(JNIEnv*, intptr_t, const char*, jobjectArray, jintArray);
+jobject pyembed_invoke_method(JNIEnv*, intptr_t, const char*, jobjectArray,
+                              jintArray);
 jobject pyembed_invoke(JNIEnv*, PyObject*, jobjectArray, jintArray);
 void pyembed_eval(JNIEnv*, intptr_t, char*);
 int pyembed_compile_string(JNIEnv*, intptr_t, char*);
@@ -74,13 +75,20 @@ intptr_t pyembed_create_module_on(JNIEnv*, intptr_t, intptr_t, char*);
 
 // -------------------------------------------------- set() methods
 
-void pyembed_setparameter_object(JNIEnv*, intptr_t, intptr_t, const char*, jobject);
-void pyembed_setparameter_array(JNIEnv *, intptr_t, intptr_t, const char *, jobjectArray);
-void pyembed_setparameter_class(JNIEnv *, intptr_t, intptr_t, const char*, jclass);
-void pyembed_setparameter_string(JNIEnv*, intptr_t, intptr_t, const char*, const char*);
+void pyembed_setparameter_object(JNIEnv*, intptr_t, intptr_t, const char*,
+                                 jobject);
+void pyembed_setparameter_array(JNIEnv *, intptr_t, intptr_t, const char *,
+                                jobjectArray);
+void pyembed_setparameter_class(JNIEnv *, intptr_t, intptr_t, const char*,
+                                jclass);
+void pyembed_setparameter_string(JNIEnv*, intptr_t, intptr_t, const char*,
+                                 const char*);
 void pyembed_setparameter_int(JNIEnv*, intptr_t, intptr_t, const char*, int);
-void pyembed_setparameter_long(JNIEnv*, intptr_t, intptr_t, const char*, jeplong);
-void pyembed_setparameter_double(JNIEnv*, intptr_t, intptr_t, const char*, double);
-void pyembed_setparameter_float(JNIEnv*, intptr_t, intptr_t, const char*, float);
+void pyembed_setparameter_long(JNIEnv*, intptr_t, intptr_t, const char*,
+                               jeplong);
+void pyembed_setparameter_double(JNIEnv*, intptr_t, intptr_t, const char*,
+                                 double);
+void pyembed_setparameter_float(JNIEnv*, intptr_t, intptr_t, const char*,
+                                float);
 
 #endif

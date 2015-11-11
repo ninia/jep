@@ -39,7 +39,8 @@ typedef struct {
     jobjectArray     object;         /* array object */
     jclass           clazz;          /* useful for later calls */
     int              componentType;  /* type of array elements */
-    jclass           componentClass; /* component type of object arrays, but not strings */
+    jclass
+    componentClass; /* component type of object arrays, but not strings */
     int              length;         /* better than querying all the time */
     void            *pinnedArray;    /* i.e.: cast to (int *) for an int array */
     jboolean         isCopy;         /* true if pinned array was copied */

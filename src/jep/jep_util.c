@@ -350,7 +350,8 @@ int cache_primitive_classes(JNIEnv *env)
     jobject  tmpobj          = NULL;
 
     if (classGetComponentType == 0) {
-        classGetComponentType = (*env)->GetMethodID(env, JCLASS_TYPE, "getComponentType", "()Ljava/lang/Class;");
+        classGetComponentType = (*env)->GetMethodID(env, JCLASS_TYPE,
+                                "getComponentType", "()Ljava/lang/Class;");
         if ((*env)->ExceptionOccurred(env)) {
             return 0;
         }
@@ -986,7 +987,8 @@ PyObject* convert_jobject_pyobject(JNIEnv *env, jobject val)
         jclass    retClass = NULL;
         jmethodID getClass = NULL;
 
-        getClass = (*env)->GetMethodID(env, JOBJECT_TYPE, "getClass", "()Ljava/lang/Class;");
+        getClass = (*env)->GetMethodID(env, JOBJECT_TYPE, "getClass",
+                                       "()Ljava/lang/Class;");
         if (process_java_exception(env) || !getClass) {
             return NULL;
         }

@@ -51,7 +51,8 @@ static void init_numpy(void);
 
 
 /* internal method */
-static PyObject* convert_jprimitivearray_pyndarray(JNIEnv*, jobject, int, npy_intp*);
+static PyObject* convert_jprimitivearray_pyndarray(JNIEnv*, jobject, int,
+        npy_intp*);
 
 /* cache jmethodIDs for performance */
 jmethodID ndarrayInit    = NULL;
@@ -207,19 +208,23 @@ jarray convert_pyndarray_jprimitivearray(JNIEnv* env,
 
     // if arr was allocated, we already know it matched the python array type
     if (paType == NPY_BOOL) {
-        (*env)->SetBooleanArrayRegion(env, arr, 0, sz, (const jboolean *) PyArray_DATA(copy));
+        (*env)->SetBooleanArrayRegion(env, arr, 0, sz,
+                                      (const jboolean *) PyArray_DATA(copy));
     } else if (paType == NPY_BYTE) {
         (*env)->SetByteArrayRegion(env, arr, 0, sz, (const jbyte *) PyArray_DATA(copy));
     } else if (paType == NPY_INT16) {
-        (*env)->SetShortArrayRegion(env, arr, 0, sz, (const jshort *) PyArray_DATA(copy));
+        (*env)->SetShortArrayRegion(env, arr, 0, sz,
+                                    (const jshort *) PyArray_DATA(copy));
     } else if (paType == NPY_INT32) {
         (*env)->SetIntArrayRegion(env, arr, 0, sz, (const jint *) PyArray_DATA(copy));
     } else if (paType == NPY_INT64) {
         (*env)->SetLongArrayRegion(env, arr, 0, sz, (const jlong *) PyArray_DATA(copy));
     } else if (paType == NPY_FLOAT32) {
-        (*env)->SetFloatArrayRegion(env, arr, 0, sz, (const jfloat *) PyArray_DATA(copy));
+        (*env)->SetFloatArrayRegion(env, arr, 0, sz,
+                                    (const jfloat *) PyArray_DATA(copy));
     } else if (paType == NPY_FLOAT64) {
-        (*env)->SetDoubleArrayRegion(env, arr, 0, sz, (const jdouble *) PyArray_DATA(copy));
+        (*env)->SetDoubleArrayRegion(env, arr, 0, sz,
+                                     (const jdouble *) PyArray_DATA(copy));
     }
 
     Py_XDECREF(copy);
@@ -289,7 +294,8 @@ jobject convert_pyndarray_jndarray(JNIEnv *env, PyObject *pyobj)
         return NULL;
     }
 
-    result = (*env)->NewObject(env, JEP_NDARRAY_TYPE, ndarrayInit, primitive, jdimObj);
+    result = (*env)->NewObject(env, JEP_NDARRAY_TYPE, ndarrayInit, primitive,
+                               jdimObj);
     if (process_java_exception(env) || !result) {
         return NULL;
     }
@@ -387,14 +393,16 @@ PyObject* convert_jndarray_pyndarray(JNIEnv *env, jobject obj)
 
     init_numpy();
     if (ndarrayGetDims == 0) {
-        ndarrayGetDims = (*env)->GetMethodID(env, JEP_NDARRAY_TYPE, "getDimensions", "()[I");
+        ndarrayGetDims = (*env)->GetMethodID(env, JEP_NDARRAY_TYPE, "getDimensions",
+                                             "()[I");
         if (process_java_exception(env) || !ndarrayGetDims) {
             return NULL;
         }
     }
 
     if (ndarrayGetData == 0) {
-        ndarrayGetData = (*env)->GetMethodID(env, JEP_NDARRAY_TYPE, "getData", "()Ljava/lang/Object;");
+        ndarrayGetData = (*env)->GetMethodID(env, JEP_NDARRAY_TYPE, "getData",
+                                             "()Ljava/lang/Object;");
         if (process_java_exception(env) || !ndarrayGetData) {
             return NULL;
         }

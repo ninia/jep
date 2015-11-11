@@ -61,7 +61,8 @@ int pyjmethod_check(PyObject *obj);
 /*
  * Test if a method has a specified name and number of parameters.
  */
-int pyjmethod_check_simple_compat(PyJMethodObject*, JNIEnv*, PyObject*, Py_ssize_t);
+int pyjmethod_check_simple_compat(PyJMethodObject*, JNIEnv*, PyObject*,
+                                  Py_ssize_t);
 
 /*
  * Check if a method is compatible with the types of a tuple of arguments. It is

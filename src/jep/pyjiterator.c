@@ -92,7 +92,8 @@ PyObject* pyjiterator_next(PyObject* self)
         jobject   nextItem;
 
         if (itrNext == 0) {
-            itrNext = (*env)->GetMethodID(env, JITERATOR_TYPE, "next", "()Ljava/lang/Object;");
+            itrNext = (*env)->GetMethodID(env, JITERATOR_TYPE, "next",
+                                          "()Ljava/lang/Object;");
             if (process_java_exception(env) || !itrNext) {
                 return NULL;
             }

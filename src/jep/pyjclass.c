@@ -216,7 +216,8 @@ static PyObject* pyjclass_add_inner_classes(JNIEnv *env,
 
         // setup to verify this inner class should be available
         if (modifierIsPublic == 0) {
-            modifierIsPublic = (*env)->GetStaticMethodID(env, JMODIFIER_TYPE, "isPublic", "(I)Z");
+            modifierIsPublic = (*env)->GetStaticMethodID(env, JMODIFIER_TYPE, "isPublic",
+                               "(I)Z");
             if (process_java_exception(env) || !modifierIsPublic) {
                 return NULL;
             }
@@ -251,7 +252,8 @@ static PyObject* pyjclass_add_inner_classes(JNIEnv *env,
                     return NULL;
                 }
                 if (classGetSimpleName == 0) {
-                    classGetSimpleName = (*env)->GetMethodID(env, JCLASS_TYPE, "getSimpleName", "()Ljava/lang/String;");
+                    classGetSimpleName = (*env)->GetMethodID(env, JCLASS_TYPE, "getSimpleName",
+                                         "()Ljava/lang/String;");
                     if (process_java_exception(env) || !classGetSimpleName) {
                         return NULL;
                     }

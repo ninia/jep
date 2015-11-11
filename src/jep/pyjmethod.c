@@ -342,11 +342,13 @@ int pyjmethod_check(PyObject *obj)
     return 0;
 }
 
-int pyjmethod_check_simple_compat(PyJMethodObject* method, JNIEnv* env, PyObject* methodName, Py_ssize_t argCount)
+int pyjmethod_check_simple_compat(PyJMethodObject* method, JNIEnv* env,
+                                  PyObject* methodName, Py_ssize_t argCount)
 {
     if (method->parameters) {
         // If init already happened check argCount first because int comparison is faster.
-        return method->lenParameters == argCount && PyObject_RichCompareBool(method->pyMethodName, methodName, Py_EQ);
+        return method->lenParameters == argCount
+               && PyObject_RichCompareBool(method->pyMethodName, methodName, Py_EQ);
     } else {
         // If not init then check the name first to avoid init when its not necessay
         if (PyObject_RichCompareBool(method->pyMethodName, methodName, Py_EQ)) {
@@ -361,7 +363,8 @@ int pyjmethod_check_simple_compat(PyJMethodObject* method, JNIEnv* env, PyObject
     return 0;
 }
 
-int pyjmethod_check_complex_compat(PyJMethodObject* method, JNIEnv* env, PyObject* args)
+int pyjmethod_check_complex_compat(PyJMethodObject* method, JNIEnv* env,
+                                   PyObject* args)
 {
     int match = 1;
     int parampos;
@@ -369,7 +372,8 @@ int pyjmethod_check_complex_compat(PyJMethodObject* method, JNIEnv* env, PyObjec
     for (parampos = 0; parampos < method->lenParameters; parampos += 1) {
         PyObject* param       = PyTuple_GetItem(args, parampos + 1);
         int       paramTypeId;
-        jclass    paramType   = (jclass) (*env)->GetObjectArrayElement(env, method->parameters, parampos);
+        jclass    paramType   = (jclass) (*env)->GetObjectArrayElement(env,
+                                method->parameters, parampos);
 
         if (process_java_exception(env) || !paramType) {
             match = 0;

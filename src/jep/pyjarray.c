@@ -1328,7 +1328,8 @@ static int pyjarray_contains(PyJArrayObject *self, PyObject *el)
 
 
 // shamelessly taken from listobject.c
-static PyObject* pyjarray_slice(PyObject *_self, Py_ssize_t ilow, Py_ssize_t ihigh)
+static PyObject* pyjarray_slice(PyObject *_self, Py_ssize_t ilow,
+                                Py_ssize_t ihigh)
 {
     PyJArrayObject *pyarray  = NULL;
     jobjectArray     arrayObj = NULL;
@@ -1576,7 +1577,8 @@ static PyObject* pyjarray_subscript(PyJArrayObject *self, PyObject *item)
         Py_ssize_t start, stop, step, slicelength;
 
 #if PY_MAJOR_VERSION >= 3
-        if (PySlice_GetIndicesEx(item, pyjarray_length((PyObject*) self), &start, &stop, &step, &slicelength) < 0) {
+        if (PySlice_GetIndicesEx(item, pyjarray_length((PyObject*) self), &start, &stop,
+                                 &step, &slicelength) < 0) {
             // error will already be set
             return NULL;
         }
@@ -1586,7 +1588,8 @@ static PyObject* pyjarray_subscript(PyJArrayObject *self, PyObject *item)
          * item.  Python fixed the method signature in 3.2 to take item as a
          * PyObject*
          */
-        if (PySlice_GetIndicesEx((PySliceObject *) item, pyjarray_length((PyObject*) self), &start, &stop, &step, &slicelength) < 0) {
+        if (PySlice_GetIndicesEx((PySliceObject *) item,
+                                 pyjarray_length((PyObject*) self), &start, &stop, &step, &slicelength) < 0) {
             // error will already be set
             return NULL;
         }
@@ -1601,7 +1604,8 @@ static PyObject* pyjarray_subscript(PyJArrayObject *self, PyObject *item)
             return pyjarray_slice((PyObject*) self, start, stop);
         }
     } else {
-        PyErr_SetString(PyExc_TypeError, "pyjarray indices must be integers, longs, or slices");
+        PyErr_SetString(PyExc_TypeError,
+                        "pyjarray indices must be integers, longs, or slices");
         return NULL;
     }
 }

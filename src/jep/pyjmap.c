@@ -117,7 +117,8 @@ static int pyjmap_contains_key(PyObject *self, PyObject *key)
     }
 
     if (mapContainsKey == 0) {
-        mapContainsKey = (*env)->GetMethodID(env, JMAP_TYPE, "containsKey", "(Ljava/lang/Object;)Z");
+        mapContainsKey = (*env)->GetMethodID(env, JMAP_TYPE, "containsKey",
+                                             "(Ljava/lang/Object;)Z");
         if (process_java_exception(env) || !mapContainsKey) {
             return -1;
         }
@@ -148,7 +149,8 @@ static PyObject* pyjmap_getitem(PyObject *o, PyObject *key)
     JNIEnv       *env  = pyembed_get_env();
 
     if (mapGet == 0) {
-        mapGet = (*env)->GetMethodID(env, JMAP_TYPE, "get", "(Ljava/lang/Object;)Ljava/lang/Object;");
+        mapGet = (*env)->GetMethodID(env, JMAP_TYPE, "get",
+                                     "(Ljava/lang/Object;)Ljava/lang/Object;");
         if (process_java_exception(env) || !mapGet) {
             return NULL;
         }
@@ -233,7 +235,8 @@ static int pyjmap_setitem(PyObject *o, PyObject *key, PyObject *v)
     }
 
     if (mapPut == 0) {
-        mapPut = (*env)->GetMethodID(env, JMAP_TYPE, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+        mapPut = (*env)->GetMethodID(env, JMAP_TYPE, "put",
+                                     "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
         if (process_java_exception(env) || !mapPut) {
             return -1;
         }
@@ -273,7 +276,8 @@ PyObject* pyjmap_getiter(PyObject* obj)
     }
 
     if (mapKeyItr == 0) {
-        mapKeyItr = (*env)->GetMethodID(env, JCOLLECTION_TYPE, "iterator", "()Ljava/util/Iterator;");
+        mapKeyItr = (*env)->GetMethodID(env, JCOLLECTION_TYPE, "iterator",
+                                        "()Ljava/util/Iterator;");
         if (process_java_exception(env) || !mapKeyItr) {
             return NULL;
         }
