@@ -1,5 +1,5 @@
 /* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
-/* 
+/*
    jep - Java Embedded Python
 
    Copyright (c) 2015 JEP AUTHORS.
@@ -9,7 +9,7 @@
    This software is provided 'as-is', without any express or implied
    warranty. In no event will the authors be held liable for any
    damages arising from the use of this software.
-   
+
    Permission is granted to anyone to use this software for any
    purpose, including commercial applications, and to alter it and
    redistribute it freely, subject to the following restrictions:
@@ -23,7 +23,7 @@
    must not be misrepresented as being the original software.
 
    3. This notice may not be removed or altered from any source
-   distribution.   
+   distribution.
 */
 
 #include "jep_platform.h"
@@ -42,7 +42,7 @@ struct __JepThread {
     jobject        classloader;
     jobject        caller;      /* Jep instance that called us. */
     int            printStack;
-    PyObject      *fqnToPyJmethods; /* a dictionary of fully qualified Java 
+    PyObject      *fqnToPyJmethods; /* a dictionary of fully qualified Java
                                        classnames to PyJmethods on the class */
 };
 typedef struct __JepThread JepThread;
@@ -56,7 +56,7 @@ void pyembed_thread_close(JNIEnv*, intptr_t);
 
 void pyembed_close(void);
 void pyembed_run(JNIEnv*, intptr_t, char*);
-jobject pyembed_invoke_method(JNIEnv*, intptr_t,const char*, jobjectArray, jintArray);
+jobject pyembed_invoke_method(JNIEnv*, intptr_t, const char*, jobjectArray, jintArray);
 jobject pyembed_invoke(JNIEnv*, PyObject*, jobjectArray, jintArray);
 void pyembed_eval(JNIEnv*, intptr_t, char*);
 int pyembed_compile_string(JNIEnv*, intptr_t, char*);

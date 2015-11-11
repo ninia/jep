@@ -34,17 +34,19 @@ jmethodID itrNext    = 0;
 /*
  * News up a pyjiterator, which is just a pyjobject for iterators.
  */
-PyJIteratorObject* pyjiterator_new() {
+PyJIteratorObject* pyjiterator_new()
+{
     /*
      * MSVC requires tp_base to be set here
      * See https://docs.python.org/2/extending/newtypes.html
      */
-    if(!PyJIterator_Type.tp_base) {
+    if (!PyJIterator_Type.tp_base) {
         PyJIterator_Type.tp_base = &PyJObject_Type;
     }
 
-    if(PyType_Ready(&PyJIterator_Type) < 0)
+    if (PyType_Ready(&PyJIterator_Type) < 0) {
         return NULL;
+    }
 
     return PyObject_NEW(PyJIteratorObject, &PyJIterator_Type);
 }
@@ -52,51 +54,55 @@ PyJIteratorObject* pyjiterator_new() {
 /*
  * Checks if the object is a pyjiterator.
  */
-int pyjiterator_check(PyObject *obj) {
-    if(PyObject_TypeCheck(obj, &PyJIterator_Type))
+int pyjiterator_check(PyObject *obj)
+{
+    if (PyObject_TypeCheck(obj, &PyJIterator_Type)) {
         return 1;
+    }
     return 0;
 }
 
 /*
  * Gets the iterator (itself).
  */
-PyObject* pyjiterator_getiter(PyObject* self) {
+PyObject* pyjiterator_getiter(PyObject* self)
+{
     return self;
 }
 
-PyObject* pyjiterator_next(PyObject* self) {
+PyObject* pyjiterator_next(PyObject* self)
+{
     jboolean      nextAvail = JNI_FALSE;
     PyJObject    *pyjob     = (PyJObject*) self;
     JNIEnv       *env       = pyembed_get_env();
 
-    if(itrHasNext == 0) {
+    if (itrHasNext == 0) {
         itrHasNext = (*env)->GetMethodID(env, JITERATOR_TYPE, "hasNext", "()Z");
-        if(process_java_exception(env) || !itrHasNext) {
+        if (process_java_exception(env) || !itrHasNext) {
             return NULL;
         }
     }
 
     nextAvail = (*env)->CallBooleanMethod(env, pyjob->object, itrHasNext);
-    if(process_java_exception(env)) {
+    if (process_java_exception(env)) {
         return NULL;
     }
-    
-    if(nextAvail) {
+
+    if (nextAvail) {
         jobject   nextItem;
 
-        if(itrNext == 0) {
+        if (itrNext == 0) {
             itrNext = (*env)->GetMethodID(env, JITERATOR_TYPE, "next", "()Ljava/lang/Object;");
-            if(process_java_exception(env) || !itrNext) {
+            if (process_java_exception(env) || !itrNext) {
                 return NULL;
             }
         }
-        
+
         nextItem = (*env)->CallObjectMethod(env, pyjob->object, itrNext);
-        if(process_java_exception(env)) {
+        if (process_java_exception(env)) {
             return NULL;
         }
-        
+
         return convert_jobject_pyobject(env, nextItem);
     }
 

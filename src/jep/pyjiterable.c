@@ -35,7 +35,8 @@ jmethodID iterator = 0;
  * News up a pyjiterable, which is just a pyjobject that supports iteration.
  * This should only be called from pyjobject_new().
  */
-PyJIterableObject* pyjiterable_new() {
+PyJIterableObject* pyjiterable_new()
+{
     // pyjobject will have already initialized PyJIterable_Type
     return PyObject_NEW(PyJIterableObject, &PyJIterable_Type);
 }
@@ -43,29 +44,32 @@ PyJIterableObject* pyjiterable_new() {
 /*
  * Checks if the object is a pyjiterable.
  */
-int pyjiterable_check(PyObject *obj) {
-    if(PyObject_TypeCheck(obj, &PyJIterable_Type))
+int pyjiterable_check(PyObject *obj)
+{
+    if (PyObject_TypeCheck(obj, &PyJIterable_Type)) {
         return 1;
+    }
     return 0;
 }
 
 /*
  * Gets the iterator for the object.
  */
-PyObject* pyjiterable_getiter(PyObject* obj) {
+PyObject* pyjiterable_getiter(PyObject* obj)
+{
     jobject       iter     = NULL;
     PyJObject    *pyjob    = (PyJObject*) obj;
     JNIEnv       *env      = pyembed_get_env();
 
-    if(iterator == 0) {
+    if (iterator == 0) {
         iterator = (*env)->GetMethodID(env, JITERABLE_TYPE, "iterator", "()Ljava/util/Iterator;");
-        if(process_java_exception(env) || !iterator) {
+        if (process_java_exception(env) || !iterator) {
             return NULL;
         }
     }
 
     iter = (*env)->CallObjectMethod(env, pyjob->object, iterator);
-    if(process_java_exception(env) || !iter) {
+    if (process_java_exception(env) || !iter) {
         return NULL;
     }
     return pyjobject_new(env, iter);

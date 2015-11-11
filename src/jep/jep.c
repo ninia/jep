@@ -1,5 +1,5 @@
 /* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
-/* 
+/*
    jep - Java Embedded Python
 
    Copyright (c) 2015 JEP AUTHORS.
@@ -9,7 +9,7 @@
    This software is provided 'as-is', without any express or implied
    warranty. In no event will the authors be held liable for any
    damages arising from the use of this software.
-   
+
    Permission is granted to anyone to use this software for any
    purpose, including commercial applications, and to alter it and
    redistribute it freely, subject to the following restrictions:
@@ -23,7 +23,7 @@
    must not be misrepresented as being the original software.
 
    3. This notice may not be removed or altered from any source
-   distribution.   
+   distribution.
 */
 
 #include "Jep.h"
@@ -35,7 +35,8 @@
 
 BOOL APIENTRY DllMain(HANDLE hModule,
                       DWORD  ul_reason_for_call,
-                      LPVOID lpReserved) {
+                      LPVOID lpReserved)
+{
     return TRUE;
 }
 #endif
@@ -45,14 +46,16 @@ BOOL APIENTRY DllMain(HANDLE hModule,
 
 
 JNIEXPORT jint JNICALL
-JNI_OnLoad(JavaVM *vm, void *reserved) {
+JNI_OnLoad(JavaVM *vm, void *reserved)
+{
     pyembed_startup();
     return JNI_VERSION_1_2;
 }
 
 
 JNIEXPORT void JNICALL
-JNI_OnUnload(JavaVM *vm, void *reserved) {
+JNI_OnUnload(JavaVM *vm, void *reserved)
+{
     pyembed_shutdown(vm);
 }
 
@@ -63,7 +66,8 @@ JNI_OnUnload(JavaVM *vm, void *reserved) {
  * Signature: (Ljava/lang/ClassLoader;)I
  */
 JNIEXPORT jlong JNICALL Java_jep_Jep_init
-(JNIEnv *env, jobject obj, jobject cl) {
+(JNIEnv *env, jobject obj, jobject cl)
+{
     return pyembed_thread_init(env, cl, obj);
 }
 
@@ -74,7 +78,8 @@ JNIEXPORT jlong JNICALL Java_jep_Jep_init
  * Signature: (ILjava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_run
-(JNIEnv *env, jobject obj, jlong tstate, jstring str) {
+(JNIEnv *env, jobject obj, jlong tstate, jstring str)
+{
     const char *filename;
 
     filename = jstring2char(env, str);
@@ -94,7 +99,8 @@ JNIEXPORT jobject JNICALL Java_jep_Jep_invoke
  jlong tstate,
  jstring name,
  jobjectArray args,
- jintArray types) {
+ jintArray types)
+{
     const char *cname;
     jobject ret;
 
@@ -112,7 +118,8 @@ JNIEXPORT jobject JNICALL Java_jep_Jep_invoke
  * Signature: (ILjava/lang/String;)I
  */
 JNIEXPORT jint JNICALL Java_jep_Jep_compileString
-(JNIEnv *env, jobject obj, jlong tstate, jstring jstr) {
+(JNIEnv *env, jobject obj, jlong tstate, jstring jstr)
+{
     const char *str;
     jint ret;
 
@@ -129,7 +136,8 @@ JNIEXPORT jint JNICALL Java_jep_Jep_compileString
  * Signature: (ILjava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_eval
-(JNIEnv *env, jobject obj, jlong tstate, jstring jstr) {
+(JNIEnv *env, jobject obj, jlong tstate, jstring jstr)
+{
     const char *str;
 
     str = jstring2char(env, jstr);
@@ -144,7 +152,8 @@ JNIEXPORT void JNICALL Java_jep_Jep_eval
  * Signature: (ILjava/lang/String;)Ljava/lang/Object;
  */
 JNIEXPORT jobject JNICALL Java_jep_Jep_getValue
-(JNIEnv *env, jobject obj, jlong tstate, jstring jstr) {
+(JNIEnv *env, jobject obj, jlong tstate, jstring jstr)
+{
     const char *str;
     jobject ret;
 
@@ -162,7 +171,8 @@ JNIEXPORT jobject JNICALL Java_jep_Jep_getValue
  * Signature: (ILjava/lang/String;)L[B;
  */
 JNIEXPORT jobject JNICALL Java_jep_Jep_getValue_1bytearray
-(JNIEnv *env, jobject obj, jlong tstate, jstring jstr) {
+(JNIEnv *env, jobject obj, jlong tstate, jstring jstr)
+{
     const char *str;
     jobject ret;
 
@@ -180,7 +190,8 @@ JNIEXPORT jobject JNICALL Java_jep_Jep_getValue_1bytearray
  * Signature: (JLjava/lang/String;)J
  */
 JNIEXPORT jlong JNICALL Java_jep_Jep_createModule
-(JNIEnv *env, jobject obj, jlong tstate, jstring jstr) {
+(JNIEnv *env, jobject obj, jlong tstate, jstring jstr)
+{
     const char *str;
     jlong ret;
 
@@ -197,7 +208,8 @@ JNIEXPORT jlong JNICALL Java_jep_Jep_createModule
  * Signature: (ILjava/lang/ClassLoader;)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_setClassLoader
-(JNIEnv *env, jobject obj, jlong tstate, jobject cl) {
+(JNIEnv *env, jobject obj, jlong tstate, jobject cl)
+{
     pyembed_setloader(env, (intptr_t) tstate, cl);
 }
 
@@ -208,7 +220,8 @@ JNIEXPORT void JNICALL Java_jep_Jep_setClassLoader
  * Signature: (Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_close
-(JNIEnv *env, jobject obj, jlong tstate) {
+(JNIEnv *env, jobject obj, jlong tstate)
+{
     pyembed_thread_close(env, (intptr_t) tstate);
 }
 
@@ -221,9 +234,10 @@ JNIEXPORT void JNICALL Java_jep_Jep_close
  * Signature: (ILjava/lang/String;Ljava/lang/Object;)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2Ljava_lang_Object_2
-(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jobject jval) {
+(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jobject jval)
+{
     const char *name;
-    
+
     name = jstring2char(env, jname);
     pyembed_setparameter_object(env, (intptr_t) tstate, 0, name, jval);
     release_utf_char(env, jname, name);
@@ -236,9 +250,10 @@ JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2Ljava_lang_Object_2
  * Signature: (JLjava/lang/String;Ljava/lang/Class;)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2Ljava_lang_Class_2
-(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jclass jval) {
+(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jclass jval)
+{
     const char *name;
-    
+
     name = jstring2char(env, jname);
     pyembed_setparameter_class(env, (intptr_t) tstate, 0, name, jval);
     release_utf_char(env, jname, name);
@@ -251,7 +266,8 @@ JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2Ljava_lang_Class_2
  * Signature: (ILjava/lang/String;Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2Ljava_lang_String_2
-(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jstring jval) {
+(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jstring jval)
+{
     const char *name, *value;
 
     name  = jstring2char(env, jname);
@@ -268,9 +284,10 @@ JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2Ljava_lang_String_2
  * Signature: (ILjava/lang/String;I)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2I
-(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jint jval) {
+(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jint jval)
+{
     const char *name;
-    
+
     name = jstring2char(env, jname);
     pyembed_setparameter_int(env, (intptr_t) tstate, 0, name, (int) jval);
     release_utf_char(env, jname, name);
@@ -283,9 +300,10 @@ JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2I
  * Signature: (ILjava/lang/String;J)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2J
-(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jlong jval) {
+(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jlong jval)
+{
     const char *name;
-    
+
     name = jstring2char(env, jname);
     pyembed_setparameter_long(env, (intptr_t) tstate, 0, name, (jeplong) jval);
     release_utf_char(env, jname, name);
@@ -298,9 +316,10 @@ JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2J
  * Signature: (ILjava/lang/String;D)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2D
-(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jdouble jval) {
+(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jdouble jval)
+{
     const char *name;
-    
+
     name = jstring2char(env, jname);
     pyembed_setparameter_double(env, (intptr_t) tstate, 0, name, (double) jval);
     release_utf_char(env, jname, name);
@@ -313,9 +332,10 @@ JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2D
  * Signature: (ILjava/lang/String;F)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2F
-(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jfloat jval) {
+(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jfloat jval)
+{
     const char *name;
-    
+
     name = jstring2char(env, jname);
     pyembed_setparameter_float(env, (intptr_t) tstate, 0, name, (float) jval);
     release_utf_char(env, jname, name);
@@ -328,9 +348,10 @@ JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2F
  * Signature: (JLjava/lang/String;[Z)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2_3Z
-(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jbooleanArray jarr) {
+(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jbooleanArray jarr)
+{
     const char *name;
-    
+
     name = jstring2char(env, jname);
     pyembed_setparameter_array(env, (intptr_t) tstate, 0, name, (jobjectArray) jarr);
     release_utf_char(env, jname, name);
@@ -343,9 +364,10 @@ JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2_3Z
  * Signature: (JLjava/lang/String;[I)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2_3I
-(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jintArray jarr) {
+(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jintArray jarr)
+{
     const char *name;
-    
+
     name = jstring2char(env, jname);
     pyembed_setparameter_array(env, (intptr_t) tstate, 0, name, (jobjectArray) jarr);
     release_utf_char(env, jname, name);
@@ -358,9 +380,10 @@ JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2_3I
  * Signature: (JLjava/lang/String;[S)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2_3S
-(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jshortArray jarr) {
+(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jshortArray jarr)
+{
     const char *name;
-    
+
     name = jstring2char(env, jname);
     pyembed_setparameter_array(env, (intptr_t) tstate, 0, name, (jobjectArray) jarr);
     release_utf_char(env, jname, name);
@@ -373,9 +396,10 @@ JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2_3S
  * Signature: (JLjava/lang/String;[B)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2_3B
-(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jbyteArray jarr) {
+(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jbyteArray jarr)
+{
     const char *name;
-    
+
     name = jstring2char(env, jname);
     pyembed_setparameter_array(env, (intptr_t) tstate, 0, name, (jobjectArray) jarr);
     release_utf_char(env, jname, name);
@@ -388,9 +412,10 @@ JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2_3B
  * Signature: (JLjava/lang/String;[J)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2_3J
-(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jlongArray jarr) {
+(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jlongArray jarr)
+{
     const char *name;
-    
+
     name = jstring2char(env, jname);
     pyembed_setparameter_array(env, (intptr_t) tstate, 0, name, (jobjectArray) jarr);
     release_utf_char(env, jname, name);
@@ -403,9 +428,10 @@ JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2_3J
  * Signature: (JLjava/lang/String;[D)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2_3D
-(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jdoubleArray jarr) {
+(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jdoubleArray jarr)
+{
     const char *name;
-    
+
     name = jstring2char(env, jname);
     pyembed_setparameter_array(env, (intptr_t) tstate, 0, name, (jobjectArray) jarr);
     release_utf_char(env, jname, name);
@@ -418,9 +444,10 @@ JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2_3D
  * Signature: (JLjava/lang/String;[F)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2_3F
-(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jfloatArray jarr) {
+(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jfloatArray jarr)
+{
     const char *name;
-    
+
     name = jstring2char(env, jname);
     pyembed_setparameter_array(env, (intptr_t) tstate, 0, name, (jobjectArray) jarr);
     release_utf_char(env, jname, name);

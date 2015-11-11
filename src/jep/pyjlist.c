@@ -50,7 +50,8 @@ static PyObject* pyjlist_inplace_fill(PyObject*, Py_ssize_t);
  * News up a pyjlist, which is just a pyjobject with some sequence methods
  * attached to it.  This should only be called from pyjobject_new().
  */
-PyJListObject* pyjlist_new() {
+PyJListObject* pyjlist_new()
+{
     // pyjobject will have already initialized PyJList_Type
     return PyObject_NEW(PyJListObject, &PyJList_Type);
 }
@@ -59,38 +60,39 @@ PyJListObject* pyjlist_new() {
  * Convenience method to copy a list's items into a new java.util.List of the
  * same type.
  */
-PyObject* pyjlist_new_copy(PyObject *toCopy) {
+PyObject* pyjlist_new_copy(PyObject *toCopy)
+{
     jobject       newList     = NULL;
     PyJObject    *obj         = (PyJObject*) toCopy;
     JNIEnv       *env         = pyembed_get_env();
 
 
-    if(!pyjlist_check(toCopy)) {
+    if (!pyjlist_check(toCopy)) {
         PyErr_Format(PyExc_RuntimeError, "pyjlist_new_copy() must receive a pyjlist");
         return NULL;
     }
 
-    if(classNewInstance == 0) {
+    if (classNewInstance == 0) {
         classNewInstance = (*env)->GetMethodID(env, JCLASS_TYPE, "newInstance", "()Ljava/lang/Object;");
-        if(process_java_exception(env) || !classNewInstance) {
+        if (process_java_exception(env) || !classNewInstance) {
             return NULL;
         }
     }
 
     newList = (*env)->CallObjectMethod(env, obj->clazz, classNewInstance);
-    if(process_java_exception(env) || !newList) {
+    if (process_java_exception(env) || !newList) {
         return NULL;
     }
 
-    if(listAddAll == 0) {
+    if (listAddAll == 0) {
         listAddAll = (*env)->GetMethodID(env, JLIST_TYPE, "addAll", "(Ljava/util/Collection;)Z");
-        if(process_java_exception(env) || !listAddAll) {
+        if (process_java_exception(env) || !listAddAll) {
             return NULL;
         }
     }
 
     (*env)->CallBooleanMethod(env, newList, listAddAll, obj->object);
-    if(process_java_exception(env)) {
+    if (process_java_exception(env)) {
         return NULL;
     }
 
@@ -100,9 +102,11 @@ PyObject* pyjlist_new_copy(PyObject *toCopy) {
 /*
  * Checks if the object is a pyjlist.
  */
-int pyjlist_check(PyObject *obj) {
-    if(PyObject_TypeCheck(obj, &PyJList_Type))
+int pyjlist_check(PyObject *obj)
+{
+    if (PyObject_TypeCheck(obj, &PyJList_Type)) {
         return 1;
+    }
     return 0;
 }
 
@@ -111,12 +115,13 @@ int pyjlist_check(PyObject *obj) {
  * Method for the + operator on pyjlist.  For example, result = o1 + o2, where
  * o1 is a pyjlist and result is a new pyjlist.
  */
-static PyObject* pyjlist_add(PyObject *o1, PyObject *o2) {
+static PyObject* pyjlist_add(PyObject *o1, PyObject *o2)
+{
     PyObject *result = NULL;
     PyObject *copy   = NULL;
 
     copy = pyjlist_new_copy(o1);
-    if(copy == NULL) {
+    if (copy == NULL) {
         // error indicators already set
         return NULL;
     }
@@ -130,12 +135,13 @@ static PyObject* pyjlist_add(PyObject *o1, PyObject *o2) {
  * Method for * operator on pyjlist.  For example, result = o * 5, where o is
  * a pyjlist and result is a new pyjlist.
  */
-static PyObject* pyjlist_fill(PyObject *o, Py_ssize_t count) {
+static PyObject* pyjlist_fill(PyObject *o, Py_ssize_t count)
+{
     PyObject *result = NULL;
     PyObject *copy   = NULL;
 
     copy = pyjlist_new_copy(o);
-    if(copy == NULL) {
+    if (copy == NULL) {
         // error indicators already set
         return NULL;
     }
@@ -149,31 +155,32 @@ static PyObject* pyjlist_fill(PyObject *o, Py_ssize_t count) {
  * Method for the getting items with the [int] operator on pyjlist.  For
  * example, result = o[i]
  */
-static PyObject* pyjlist_getitem(PyObject *o, Py_ssize_t i) {
+static PyObject* pyjlist_getitem(PyObject *o, Py_ssize_t i)
+{
     jobject       val  = NULL;
     Py_ssize_t    size = 0;
     PyJObject    *obj  = (PyJObject*) o;
     JNIEnv       *env  = pyembed_get_env();
 
-    if(listGet == 0) {
+    if (listGet == 0) {
         listGet = (*env)->GetMethodID(env, JLIST_TYPE, "get", "(I)Ljava/lang/Object;");
-        if(process_java_exception(env) || !listGet) {
+        if (process_java_exception(env) || !listGet) {
             return NULL;
         }
     }
 
     size = PyObject_Size(o);
-    if((i > size-1) || (i < 0)) {
+    if ((i > size - 1) || (i < 0)) {
         PyErr_Format(PyExc_IndexError, "list index %i out of range, size %i", (int) i, (int) size);
         return NULL;
     }
 
     val = (*env)->CallObjectMethod(env, obj->object, listGet, (jint) i);
-    if(process_java_exception(env)) {
+    if (process_java_exception(env)) {
         return NULL;
     }
 
-    if(val == NULL) {
+    if (val == NULL) {
         Py_RETURN_NONE;
     } else {
         return pyjobject_new(env, val);
@@ -184,20 +191,21 @@ static PyObject* pyjlist_getitem(PyObject *o, Py_ssize_t i) {
  * Method for getting slices with the [int:int] operator on pyjlist.  For
  * example, result = o[i1:i2]
  */
-static PyObject* pyjlist_getslice(PyObject *o, Py_ssize_t i1, Py_ssize_t i2) {
+static PyObject* pyjlist_getslice(PyObject *o, Py_ssize_t i1, Py_ssize_t i2)
+{
     jobject       result  = NULL;
     PyJObject    *obj     = (PyJObject*) o;
     JNIEnv       *env     = pyembed_get_env();
 
-    if(listSubList == 0) {
+    if (listSubList == 0) {
         listSubList = (*env)->GetMethodID(env, JLIST_TYPE, "subList", "(II)Ljava/util/List;");
-        if(process_java_exception(env) || !listSubList) {
+        if (process_java_exception(env) || !listSubList) {
             return NULL;
         }
     }
 
     result = (*env)->CallObjectMethod(env, obj->object, listSubList, (jint) i1, (jint) i2);
-    if(process_java_exception(env)) {
+    if (process_java_exception(env)) {
         return NULL;
     }
 
@@ -208,40 +216,41 @@ static PyObject* pyjlist_getslice(PyObject *o, Py_ssize_t i1, Py_ssize_t i2) {
  * Method for the setting items with the [int] operator on pyjlist.  For example,
  * o[i] = v
  */
-static int pyjlist_setitem(PyObject *o, Py_ssize_t i, PyObject *v) {
+static int pyjlist_setitem(PyObject *o, Py_ssize_t i, PyObject *v)
+{
     PyJObject    *obj      = (PyJObject*) o;
     JNIEnv       *env      = pyembed_get_env();
     jobject       value    = NULL;
 
-    if(v == Py_None) {
+    if (v == Py_None) {
         value = NULL;
     } else {
         value = pyembed_box_py(env, v);
-        if(process_java_exception(env)) {
+        if (process_java_exception(env)) {
             return -1;
-        } else if(!value) {
+        } else if (!value) {
             /*
              * with the way pyembed_box_py is currently implemented, shouldn't
              * be able to get here
              */
             PyObject *pystring = PyObject_Str((PyObject*) Py_TYPE(v));
             PyErr_Format(PyExc_TypeError,
-                        "__setitem__ received an incompatible type: %s",
-                        PyString_AsString(pystring));
+                         "__setitem__ received an incompatible type: %s",
+                         PyString_AsString(pystring));
             Py_XDECREF(pystring);
             return -1;
         }
     }
 
-    if(listSet == 0) {
+    if (listSet == 0) {
         listSet = (*env)->GetMethodID(env, JLIST_TYPE, "set", "(ILjava/lang/Object;)Ljava/lang/Object;");
-        if(process_java_exception(env) || !listSet) {
+        if (process_java_exception(env) || !listSet) {
             return -1;
         }
     }
 
     (*env)->CallObjectMethod(env, obj->object, listSet, (jint) i, value);
-    if(process_java_exception(env)) {
+    if (process_java_exception(env)) {
         return -1;
     }
 
@@ -253,33 +262,34 @@ static int pyjlist_setitem(PyObject *o, Py_ssize_t i, PyObject *v) {
  * Method for setting slices with the [int:int] operator on pyjlist.  For
  * example, o[i1:i2] = v where v is a sequence.
  */
-static int pyjlist_setslice(PyObject *o, Py_ssize_t i1, Py_ssize_t i2, PyObject *v) {
-   Py_ssize_t oSize;
-   Py_ssize_t vSize;
-   Py_ssize_t diff;
-   Py_ssize_t i, vi;
+static int pyjlist_setslice(PyObject *o, Py_ssize_t i1, Py_ssize_t i2, PyObject *v)
+{
+    Py_ssize_t oSize;
+    Py_ssize_t vSize;
+    Py_ssize_t diff;
+    Py_ssize_t i, vi;
 
-    if(!PySequence_Check(v)) {
+    if (!PySequence_Check(v)) {
         PyErr_Format(PyExc_TypeError,
-                "pyjlist can only slice assign a sequence");
+                     "pyjlist can only slice assign a sequence");
         return -1;
     }
 
     oSize = PySequence_Size(o);
     vSize = PySequence_Size(v);
-    if(i1 < 0) {
+    if (i1 < 0) {
         i1 = 0;
     }
-    if(i2 > oSize) {
+    if (i2 > oSize) {
         i2 = oSize;
     }
-    if(i1 >= i2) {
+    if (i1 >= i2) {
         PyErr_Format(PyExc_IndexError, "invalid slice indices: %i:%i",
-                (int) i1, (int) i2);
+                     (int) i1, (int) i2);
         return -1;
     }
     diff = i2 - i1;
-    if(diff != vSize) {
+    if (diff != vSize) {
         /*
          * TODO: Python lists support slice assignment of a different length,
          * but that gets complicated, so not planning on supporting it until
@@ -287,15 +297,15 @@ static int pyjlist_setslice(PyObject *o, Py_ssize_t i1, Py_ssize_t i2, PyObject 
          * list_ass_slice().
          */
         PyErr_Format(PyExc_IndexError,
-                "pyjlist only supports assigning a sequence of the same size as the slice, slice = [%i:%i], value size=%i",
-                (int) i1, (int) i2, (int) vSize);
+                     "pyjlist only supports assigning a sequence of the same size as the slice, slice = [%i:%i], value size=%i",
+                     (int) i1, (int) i2, (int) vSize);
         return -1;
     }
 
     vi = 0;
-    for(i = i1; i < i2; i++) {
+    for (i = i1; i < i2; i++) {
         PyObject *vVal = PySequence_GetItem(v, vi);
-        if(pyjlist_setitem(o, i, vVal) == -1) {
+        if (pyjlist_setitem(o, i, vVal) == -1) {
             /*
              * TODO This is not transactional if it fails partially through.
              * Not sure how to make that safe short of making a copy of o
@@ -315,44 +325,45 @@ static int pyjlist_setslice(PyObject *o, Py_ssize_t i1, Py_ssize_t i2, PyObject 
  * Method for the += operator on pyjlist.  For example, o1 += o2, where
  * o1 is a pyjlist.
  */
-static PyObject* pyjlist_inplace_add(PyObject *o1, PyObject *o2) {
+static PyObject* pyjlist_inplace_add(PyObject *o1, PyObject *o2)
+{
     jobject        value    = NULL;
     JNIEnv        *env      = pyembed_get_env();
     PyJObject     *self     = (PyJObject*) o1;
 
-    if(pyjlist_check(o2)) {
+    if (pyjlist_check(o2)) {
         value                     = ((PyJObject*) o2)->object;
     } else {
         value                     = pyembed_box_py(env, o2);
     }
 
-    if((*env)->IsInstanceOf(env, value, JCOLLECTION_TYPE)) {
+    if ((*env)->IsInstanceOf(env, value, JCOLLECTION_TYPE)) {
         /*
          * it's a Collection so we need to simulate a python + and combine the
          * two collections
          */
-        if(listAddAll == 0) {
+        if (listAddAll == 0) {
             listAddAll = (*env)->GetMethodID(env, JLIST_TYPE, "addAll", "(Ljava/util/Collection;)Z");
-            if(process_java_exception(env) || !listAddAll) {
+            if (process_java_exception(env) || !listAddAll) {
                 return NULL;
             }
         }
 
         (*env)->CallBooleanMethod(env, self->object, listAddAll, value);
-        if(process_java_exception(env)) {
+        if (process_java_exception(env)) {
             return NULL;
         }
     } else {
         // not a collection, add it as a single object
-        if(listAdd == 0) {
+        if (listAdd == 0) {
             listAdd = (*env)->GetMethodID(env, JLIST_TYPE, "add", "(Ljava/lang/Object;)Z");
-            if(process_java_exception(env) || !listAdd) {
+            if (process_java_exception(env) || !listAdd) {
                 return NULL;
             }
         }
 
         (*env)->CallBooleanMethod(env, self->object, listAdd, value);
-        if(process_java_exception(env)) {
+        if (process_java_exception(env)) {
             return NULL;
         }
     }
@@ -366,34 +377,35 @@ static PyObject* pyjlist_inplace_add(PyObject *o1, PyObject *o2) {
  * Method for *= operator on pyjlist.  For example, o *= 5, where o is
  * a pyjlist.
  */
-static PyObject* pyjlist_inplace_fill(PyObject *o, Py_ssize_t count) {
+static PyObject* pyjlist_inplace_fill(PyObject *o, Py_ssize_t count)
+{
     PyJObject      *self    = (PyJObject*) o;
     JNIEnv         *env     = pyembed_get_env();
 
-    if(count < 1) {
-        if(listClear == 0) {
+    if (count < 1) {
+        if (listClear == 0) {
             listClear = (*env)->GetMethodID(env, JLIST_TYPE, "clear", "()V");
-            if(process_java_exception(env) || !listClear) {
+            if (process_java_exception(env) || !listClear) {
                 return NULL;
             }
         }
 
         (*env)->CallVoidMethod(env, self->object, listClear);
-        if(process_java_exception(env)) {
+        if (process_java_exception(env)) {
             return NULL;
         }
     } else if (count > 1) {
         int               i     = 0;
         PyObject         *copy  = pyjlist_new_copy(o);
-        if(copy == NULL) {
+        if (copy == NULL) {
             // error indicators already set
             return NULL;
         }
 
         // TODO there's probably a better way to do this
-        for(i = 1; i < count; i++) {
+        for (i = 1; i < count; i++) {
             PyObject    *result = pyjlist_inplace_add(o, copy);
-            if(!result) {
+            if (!result) {
                 // error indicators already set
                 return NULL;
             } else {
@@ -408,25 +420,28 @@ static PyObject* pyjlist_inplace_fill(PyObject *o, Py_ssize_t count) {
     return o;
 }
 
-static PyObject* pyjlist_subscript(PyObject *self, PyObject *item) {
-    if(PyInt_Check(item)) {
+static PyObject* pyjlist_subscript(PyObject *self, PyObject *item)
+{
+    if (PyInt_Check(item)) {
         long i = PyInt_AS_LONG(item);
-        if (i < 0)
+        if (i < 0) {
             i += (long) PyObject_Size(self);
+        }
         return pyjlist_getitem(self, (Py_ssize_t) i);
-    }
-    else if(PyLong_Check(item)) {
+    } else if (PyLong_Check(item)) {
         long i = PyLong_AsLong(item);
-        if (i == -1 && PyErr_Occurred())
+        if (i == -1 && PyErr_Occurred()) {
             return NULL;
-        if (i < 0)
+        }
+        if (i < 0) {
             i += (long) PyObject_Size(self);
+        }
         return pyjlist_getitem(self, (Py_ssize_t) i);
-    } else if(PySlice_Check(item)) {
+    } else if (PySlice_Check(item)) {
         Py_ssize_t start, stop, step, slicelength;
 
 #if PY_MAJOR_VERSION >= 3
-        if(PySlice_GetIndicesEx(item, PyObject_Size(self), &start, &stop, &step, &slicelength) < 0) {
+        if (PySlice_GetIndicesEx(item, PyObject_Size(self), &start, &stop, &step, &slicelength) < 0) {
             // error will already be set
             return NULL;
         }
@@ -436,15 +451,15 @@ static PyObject* pyjlist_subscript(PyObject *self, PyObject *item) {
          * item.  Python fixed the method signature in 3.2 to take item as a
          * PyObject*
          */
-        if(PySlice_GetIndicesEx((PySliceObject *) item, PyObject_Size(self), &start, &stop, &step, &slicelength) < 0) {
+        if (PySlice_GetIndicesEx((PySliceObject *) item, PyObject_Size(self), &start, &stop, &step, &slicelength) < 0) {
             // error will already be set
             return NULL;
         }
 #endif
 
-        if(slicelength <= 0) {
+        if (slicelength <= 0) {
             return pyjlist_getslice(self, 0, 0);
-        } else if(step != 1) {
+        } else if (step != 1) {
             PyErr_SetString(PyExc_TypeError, "pyjlist slices must have step of 1");
             return NULL;
         } else {
@@ -456,25 +471,28 @@ static PyObject* pyjlist_subscript(PyObject *self, PyObject *item) {
     }
 }
 
-static int pyjlist_set_subscript(PyObject* self, PyObject* item, PyObject* value) {
-    if(PyInt_Check(item)) {
+static int pyjlist_set_subscript(PyObject* self, PyObject* item, PyObject* value)
+{
+    if (PyInt_Check(item)) {
         long i = PyInt_AS_LONG(item);
-        if (i < 0)
+        if (i < 0) {
             i += (long) PyObject_Size(self);
+        }
         return pyjlist_setitem(self, (Py_ssize_t) i, value);
-    }
-    else if(PyLong_Check(item)) {
+    } else if (PyLong_Check(item)) {
         long i = PyLong_AsLong(item);
-        if (i == -1 && PyErr_Occurred())
+        if (i == -1 && PyErr_Occurred()) {
             return -1;
-        if (i < 0)
+        }
+        if (i < 0) {
             i += (long) PyObject_Size(self);
+        }
         return pyjlist_setitem(self, (Py_ssize_t) i, value);
-    } else if(PySlice_Check(item)) {
+    } else if (PySlice_Check(item)) {
         Py_ssize_t start, stop, step, slicelength;
 
 #if PY_MAJOR_VERSION >= 3
-        if(PySlice_GetIndicesEx(item, PyObject_Size(self), &start, &stop, &step, &slicelength) < 0) {
+        if (PySlice_GetIndicesEx(item, PyObject_Size(self), &start, &stop, &step, &slicelength) < 0) {
             // error will already be set
             return -1;
         }
@@ -484,15 +502,15 @@ static int pyjlist_set_subscript(PyObject* self, PyObject* item, PyObject* value
          * item.  Python fixed the method signature in 3.2 to take item as a
          * PyObject*
          */
-        if(PySlice_GetIndicesEx((PySliceObject *) item, PyObject_Size(self), &start, &stop, &step, &slicelength) < 0) {
+        if (PySlice_GetIndicesEx((PySliceObject *) item, PyObject_Size(self), &start, &stop, &step, &slicelength) < 0) {
             // error will already be set
             return -1;
         }
 #endif
 
-        if(slicelength <= 0) {
+        if (slicelength <= 0) {
             return 0;
-        } else if(step != 1) {
+        } else if (step != 1) {
             PyErr_SetString(PyExc_TypeError, "pyjlist slices must have step of 1");
             return -1;
         } else {
@@ -510,16 +528,16 @@ static PyMethodDef pyjlist_methods[] = {
 };
 
 static PySequenceMethods pyjlist_seq_methods = {
-        0, // inherited       /* sq_length */
-        pyjlist_add,          /* sq_concat */
-        pyjlist_fill,         /* sq_repeat */
-        pyjlist_getitem,      /* sq_item */
-        pyjlist_getslice,     /* sq_slice */
-        pyjlist_setitem,      /* sq_ass_item */
-        pyjlist_setslice,     /* sq_ass_slice */
-        0, // inherited       /* sq_contains */
-        pyjlist_inplace_add,  /* sq_inplace_concat */
-        pyjlist_inplace_fill, /* sq_inplace_repeat */
+    0, // inherited       /* sq_length */
+    pyjlist_add,          /* sq_concat */
+    pyjlist_fill,         /* sq_repeat */
+    pyjlist_getitem,      /* sq_item */
+    pyjlist_getslice,     /* sq_slice */
+    pyjlist_setitem,      /* sq_ass_item */
+    pyjlist_setslice,     /* sq_ass_slice */
+    0, // inherited       /* sq_contains */
+    pyjlist_inplace_add,  /* sq_inplace_concat */
+    pyjlist_inplace_fill, /* sq_inplace_repeat */
 };
 
 static PyMappingMethods pyjlist_map_methods = {

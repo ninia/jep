@@ -40,7 +40,8 @@ static int pyjcollection_contains(PyObject*, PyObject*);
  * News up a pyjcollection, which is just a pyjiterable with a few methods
  * attached to it.  This should only be called from pyjobject_new().
  */
-PyJCollectionObject* pyjcollection_new() {
+PyJCollectionObject* pyjcollection_new()
+{
     // pyjobject will have already initialized PyJCollection_Type
     return PyObject_NEW(PyJCollectionObject, &PyJCollection_Type);
 }
@@ -49,29 +50,32 @@ PyJCollectionObject* pyjcollection_new() {
 /*
  * Checks if the object is a pyjcollection.
  */
-int pyjcollection_check(PyObject *obj) {
-    if(PyObject_TypeCheck(obj, &PyJCollection_Type))
+int pyjcollection_check(PyObject *obj)
+{
+    if (PyObject_TypeCheck(obj, &PyJCollection_Type)) {
         return 1;
+    }
     return 0;
 }
 
 /*
  * Gets the size of the collection.
  */
-static Py_ssize_t pyjcollection_len(PyObject* self) {
+static Py_ssize_t pyjcollection_len(PyObject* self)
+{
     Py_ssize_t    len   = 0;
     PyJObject    *pyjob = (PyJObject*) self;
     JNIEnv       *env   = pyembed_get_env();
 
-    if(collectionSize == 0) {
+    if (collectionSize == 0) {
         collectionSize = (*env)->GetMethodID(env, JCOLLECTION_TYPE, "size", "()I");
-        if(process_java_exception(env) || !collectionSize) {
+        if (process_java_exception(env) || !collectionSize) {
             return -1;
         }
     }
 
     len = (*env)->CallIntMethod(env, pyjob->object, collectionSize);
-    if(process_java_exception(env)) {
+    if (process_java_exception(env)) {
         return -1;
     }
     return len;
@@ -82,45 +86,46 @@ static Py_ssize_t pyjcollection_len(PyObject* self) {
  * Method for the __contains__() method on pyjcollection, frequently used by the
  * in operator.  For example, if v in o:
  */
-static int pyjcollection_contains(PyObject *o, PyObject *v) {
+static int pyjcollection_contains(PyObject *o, PyObject *v)
+{
     jboolean      result   = JNI_FALSE;
     PyJObject    *obj      = (PyJObject*) o;
     JNIEnv       *env      = pyembed_get_env();
     jobject       value    = NULL;
 
-    if(v == Py_None) {
+    if (v == Py_None) {
         value = NULL;
     } else {
         value = pyembed_box_py(env, v);
-        if(process_java_exception(env)) {
+        if (process_java_exception(env)) {
             return -1;
-        } else if(!value) {
+        } else if (!value) {
             /*
              * with the way pyembed_box_py is currently implemented, shouldn't
              * be able to get here
              */
             PyObject *pystring = PyObject_Str((PyObject*) Py_TYPE(v));
             PyErr_Format(PyExc_TypeError,
-                        "__contains__ received an incompatible type: %s",
-                        PyString_AsString(pystring));
+                         "__contains__ received an incompatible type: %s",
+                         PyString_AsString(pystring));
             Py_XDECREF(pystring);
             return -1;
         }
     }
 
-    if(collectionContains == 0) {
+    if (collectionContains == 0) {
         collectionContains = (*env)->GetMethodID(env, JCOLLECTION_TYPE, "contains", "(Ljava/lang/Object;)Z");
-        if(process_java_exception(env) || !collectionContains) {
+        if (process_java_exception(env) || !collectionContains) {
             return -1;
         }
     }
 
     result = (*env)->CallBooleanMethod(env, obj->object, collectionContains, value);
-    if(process_java_exception(env)) {
+    if (process_java_exception(env)) {
         return -1;
     }
 
-    if(result) {
+    if (result) {
         return 1;
     } else {
         return 0;
@@ -133,16 +138,16 @@ static PyMethodDef pyjcollection_methods[] = {
 };
 
 static PySequenceMethods pyjcollection_seq_methods = {
-        pyjcollection_len,      /* sq_length */
-        0,                      /* sq_concat */
-        0,                      /* sq_repeat */
-        0,                      /* sq_item */
-        0,                      /* sq_slice */
-        0,                      /* sq_ass_item */
-        0,                      /* sq_ass_slice */
-        pyjcollection_contains, /* sq_contains */
-        0,                      /* sq_inplace_concat */
-        0,                      /* sq_inplace_repeat */
+    pyjcollection_len,      /* sq_length */
+    0,                      /* sq_concat */
+    0,                      /* sq_repeat */
+    0,                      /* sq_item */
+    0,                      /* sq_slice */
+    0,                      /* sq_ass_item */
+    0,                      /* sq_ass_slice */
+    pyjcollection_contains, /* sq_contains */
+    0,                      /* sq_inplace_concat */
+    0,                      /* sq_inplace_repeat */
 };
 
 

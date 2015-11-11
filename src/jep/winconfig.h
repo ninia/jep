@@ -8,7 +8,7 @@
 
 // MSVC 6 doesn't have
 # if _MSC_VER < 1310
-    typedef jlong intptr_t;
+typedef jlong intptr_t;
 # endif
 #endif
 

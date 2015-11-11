@@ -1,5 +1,5 @@
 /* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
-/* 
+/*
    jep - Java Embedded Python
 
    Copyright (c) 2015 JEP AUTHORS.
@@ -9,7 +9,7 @@
    This software is provided 'as-is', without any express or implied
    warranty. In no event will the authors be held liable for any
    damages arising from the use of this software.
-   
+
    Permission is granted to anyone to use this software for any
    purpose, including commercial applications, and to alter it and
    redistribute it freely, subject to the following restrictions:
@@ -23,7 +23,7 @@
    must not be misrepresented as being the original software.
 
    3. This notice may not be removed or altered from any source
-   distribution.   
+   distribution.
 */
 
 #include "Jep.h"
@@ -49,7 +49,8 @@ JNIEXPORT jobject JNICALL Java_jep_InvocationHandler_invoke
  jlong _target,
  jobjectArray args,
  jintArray types,
- jint returnType) {
+ jint returnType)
+{
 
     JepThread     *jepThread;
     jobject        ret;
@@ -62,7 +63,7 @@ JNIEXPORT jobject JNICALL Java_jep_InvocationHandler_invoke
     callable = NULL;
 
     jepThread = (JepThread *) (intptr_t) _jepThread;
-    if(!jepThread) {
+    if (!jepThread) {
         THROW_JEP(env, "Couldn't get thread objects.");
         return NULL;
     }
@@ -75,8 +76,9 @@ JNIEXPORT jobject JNICALL Java_jep_InvocationHandler_invoke
     callable = PyObject_GetAttrString(target, (char *) cname);
     release_utf_char(env, jname, cname);
 
-    if(process_py_exception(env, 0) || !callable)
+    if (process_py_exception(env, 0) || !callable) {
         goto EXIT;
+    }
 
     ret = pyembed_invoke(env, callable, args, types);
 

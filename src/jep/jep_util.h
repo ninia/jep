@@ -1,5 +1,5 @@
 /* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
-/* 
+/*
    jep - Java Embedded Python
 
    Copyright (c) JEP AUTHORS.
@@ -9,7 +9,7 @@
    This software is provided 'as-is', without any express or implied
    warranty. In no event will the authors be held liable for any
    damages arising from the use of this software.
-   
+
    Permission is granted to anyone to use this software for any
    purpose, including commercial applications, and to alter it and
    redistribute it freely, subject to the following restrictions:
@@ -23,7 +23,7 @@
    must not be misrepresented as being the original software.
 
    3. This notice may not be removed or altered from any source
-   distribution.   
+   distribution.
 */
 
 /*
@@ -41,12 +41,12 @@ char* pyunicode_to_utf8(PyObject *unicode);
 
 // 3.3 reworked unicode so we have special handling for 3.2
 #if PY_MAJOR_VERSION >= 3
- #if PY_MINOR_VERSION <= 2
-  #define PyString_AsString(str)            pyunicode_to_utf8(str)
-  #define PyString_AS_STRING(str)           pyunicode_to_utf8(str)
-  #define PyString_Size(str)                PyUnicode_GetSize(str)
-  #define PyString_GET_SIZE(str)            PyUnicode_GET_SIZE(str)
- #endif
+#if PY_MINOR_VERSION <= 2
+#define PyString_AsString(str)            pyunicode_to_utf8(str)
+#define PyString_AS_STRING(str)           pyunicode_to_utf8(str)
+#define PyString_Size(str)                PyUnicode_GetSize(str)
+#define PyString_GET_SIZE(str)            PyUnicode_GET_SIZE(str)
+#endif
 #endif
 
 // call toString() on jobject, make a python string and return

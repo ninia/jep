@@ -1,5 +1,5 @@
 /* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
-/* 
+/*
    jep - Java Embedded Python
 
    Copyright (c) 2015 JEP AUTHORS.
@@ -9,7 +9,7 @@
    This software is provided 'as-is', without any express or implied
    warranty. In no event will the authors be held liable for any
    damages arising from the use of this software.
-   
+
    Permission is granted to anyone to use this software for any
    purpose, including commercial applications, and to alter it and
    redistribute it freely, subject to the following restrictions:
@@ -23,7 +23,7 @@
    must not be misrepresented as being the original software.
 
    3. This notice may not be removed or altered from any source
-   distribution.   
+   distribution.
 */
 
 #include "Jep.h"
@@ -40,7 +40,8 @@ static jmethodID modifierIsPublic        = 0;
 
 
 
-int pyjclass_init(JNIEnv *env, PyObject *pyjob) {
+int pyjclass_init(JNIEnv *env, PyObject *pyjob)
+{
     PyJClassObject   *pyc         = NULL;
     jobject           langClass   = NULL;
     jobjectArray      initArray   = NULL;
@@ -52,46 +53,51 @@ int pyjclass_init(JNIEnv *env, PyObject *pyjob) {
 
     pyc = (PyJClassObject*) pyjob;
     pyc->initArray  = NULL;
-    
+
     pyjobject = (PyJObject *) pyjob;
 
     (*env)->PushLocalFrame(env, 5);
-    if(process_java_exception(env))
+    if (process_java_exception(env)) {
         return 0;
-    
+    }
+
     // ------------------------------ call Class.getConstructors()
 
     // well, first call getClass()
-    if(classGetConstructors == 0) {
+    if (classGetConstructors == 0) {
         jmethodID methodId;
-        
+
         methodId = (*env)->GetMethodID(env,
                                        pyjobject->clazz,
                                        "getClass",
                                        "()Ljava/lang/Class;");
-        if(process_java_exception(env) || !methodId)
+        if (process_java_exception(env) || !methodId) {
             goto EXIT_ERROR;
-        
+        }
+
         langClass = (*env)->CallObjectMethod(env, pyjobject->clazz, methodId);
-        if(process_java_exception(env) || !langClass)
+        if (process_java_exception(env) || !langClass) {
             goto EXIT_ERROR;
-        
+        }
+
         // then, find getContructors()
         classGetConstructors =
             (*env)->GetMethodID(env,
                                 langClass,
                                 "getConstructors",
                                 "()[Ljava/lang/reflect/Constructor;");
-        if(process_java_exception(env) || !classGetConstructors)
+        if (process_java_exception(env) || !classGetConstructors) {
             goto EXIT_ERROR;
+        }
     }
-    
+
     // then, call getConstructors()
     initArray = (jobjectArray) (*env)->CallObjectMethod(env,
-                                                        pyjobject->clazz,
-                                                        classGetConstructors);
-    if(process_java_exception(env) || !initArray)
+                pyjobject->clazz,
+                classGetConstructors);
+    if (process_java_exception(env) || !initArray) {
         goto EXIT_ERROR;
+    }
 
     pyc->initArray = (*env)->NewGlobalRef(env, initArray);
     pyc->initLen   = (*env)->GetArrayLength(env, pyc->initArray);
@@ -101,33 +107,37 @@ int pyjclass_init(JNIEnv *env, PyObject *pyjob) {
      * for each constructor to avoid repeated reflection lookups.
      */
     pyc->numArgsPerInit = malloc(sizeof(int) * pyc->initLen);
-    for(i = 0; i < pyc->initLen; i++) {
+    for (i = 0; i < pyc->initLen; i++) {
         constructor = (*env)->GetObjectArrayElement(env,
-                                                    pyc->initArray,
-                                                    i);
-        if(process_java_exception(env) || !constructor)
+                      pyc->initArray,
+                      i);
+        if (process_java_exception(env) || !constructor) {
             goto EXIT_ERROR;
+        }
 
 
         // we need to get the class java.lang.reflect.Constructor first
         initClass = (*env)->GetObjectClass(env, constructor);
-        if(process_java_exception(env) || !initClass)
+        if (process_java_exception(env) || !initClass) {
             goto EXIT_ERROR;
+        }
 
         // next, get parameters for constructor
-        if(classGetParmTypes == 0) {
+        if (classGetParmTypes == 0) {
             classGetParmTypes = (*env)->GetMethodID(env,
                                                     initClass,
                                                     "getParameterTypes",
                                                     "()[Ljava/lang/Class;");
-            if(process_java_exception(env) || !classGetParmTypes)
+            if (process_java_exception(env) || !classGetParmTypes) {
                 goto EXIT_ERROR;
+            }
         }
         parmArray = (jobjectArray) (*env)->CallObjectMethod(env,
-                                                            constructor,
-                                                            classGetParmTypes);
-        if(process_java_exception(env) || !parmArray)
+                    constructor,
+                    classGetParmTypes);
+        if (process_java_exception(env) || !parmArray) {
             goto EXIT_ERROR;
+        }
 
 
         // now we know how many parameters this constructor receives
@@ -139,12 +149,12 @@ int pyjclass_init(JNIEnv *env, PyObject *pyjob) {
      * code with public enum.  Note this will not allow the inner class to be
      * imported separately, it must be accessed through the enclosing class.
      */
-    if(!pyjclass_add_inner_classes(env, pyjobject)) {
+    if (!pyjclass_add_inner_classes(env, pyjobject)) {
         /*
          * let's just print the error to stderr and continue on without
          * inner class support, it's not the end of the world
          */
-        if(PyErr_Occurred()) {
+        if (PyErr_Occurred()) {
             PyErr_PrintEx(0);
         }
     }
@@ -154,9 +164,10 @@ int pyjclass_init(JNIEnv *env, PyObject *pyjob) {
 
 EXIT_ERROR:
     (*env)->PopLocalFrame(env, NULL);
-    if(pyc)
+    if (pyc) {
         pyjclass_dealloc(pyc);
-    
+    }
+
     return 0;
 }
 
@@ -169,79 +180,90 @@ EXIT_ERROR:
  * @return topClz if successful, otherwise NULL
  */
 static PyObject* pyjclass_add_inner_classes(JNIEnv *env,
-                                            PyJObject *topClz) {
+        PyJObject *topClz)
+{
     jobjectArray      innerArray    = NULL;
     jsize             innerSize     = 0;
 
-    if(classGetDeclaredClasses == 0) {
+    if (classGetDeclaredClasses == 0) {
         classGetDeclaredClasses = (*env)->GetMethodID(env,
-                                                      JCLASS_TYPE,
-                                                      "getDeclaredClasses",
-                                                      "()[Ljava/lang/Class;");
-        if(process_java_exception(env) || !classGetDeclaredClasses)
+                                  JCLASS_TYPE,
+                                  "getDeclaredClasses",
+                                  "()[Ljava/lang/Class;");
+        if (process_java_exception(env) || !classGetDeclaredClasses) {
             return NULL;
+        }
     }
 
-    if(classGetModifiers == 0) {
+    if (classGetModifiers == 0) {
         classGetModifiers = (*env)->GetMethodID(env, JCLASS_TYPE, "getModifiers",
-                "()I");
-        if(process_java_exception(env) || !classGetModifiers)
+                                                "()I");
+        if (process_java_exception(env) || !classGetModifiers) {
             return NULL;
+        }
     }
 
     innerArray = (*env)->CallObjectMethod(env,
-                                        topClz->clazz,
-                                        classGetDeclaredClasses);
-    if(process_java_exception(env) || !innerArray)
+                                          topClz->clazz,
+                                          classGetDeclaredClasses);
+    if (process_java_exception(env) || !innerArray) {
         return NULL;
+    }
 
     innerSize = (*env)->GetArrayLength(env, innerArray);
-    if(innerSize > 0) {
+    if (innerSize > 0) {
         int i;
 
         // setup to verify this inner class should be available
-        if(modifierIsPublic == 0) {
+        if (modifierIsPublic == 0) {
             modifierIsPublic = (*env)->GetStaticMethodID(env, JMODIFIER_TYPE, "isPublic", "(I)Z");
-            if(process_java_exception(env) || !modifierIsPublic)
+            if (process_java_exception(env) || !modifierIsPublic) {
                 return NULL;
+            }
         }
 
         // check each inner class to see if it's public
-        for(i=0; i < innerSize; i++) {
+        for (i = 0; i < innerSize; i++) {
             jclass    innerClz = NULL;
             jint      mods;
             jboolean  public;
 
             innerClz = (*env)->GetObjectArrayElement(env, innerArray, i);
-            if(process_java_exception(env) || !innerClz)
+            if (process_java_exception(env) || !innerClz) {
                 return NULL;
+            }
             mods = (*env)->CallIntMethod(env, innerClz, classGetModifiers);
-            if(process_java_exception(env))
+            if (process_java_exception(env)) {
                 return NULL;
+            }
             public = (*env)->CallBooleanMethod(env, JMODIFIER_TYPE, modifierIsPublic, mods);
-            if(process_java_exception(env))
+            if (process_java_exception(env)) {
                 return NULL;
+            }
 
-            if(public) {
+            if (public) {
                 PyObject        *attrClz    = NULL;
                 jstring          shortName  = NULL;
                 const char      *charName;
 
                 attrClz = pyjobject_new_class(env, innerClz);
-                if(process_java_exception(env) || !attrClz)
+                if (process_java_exception(env) || !attrClz) {
                     return NULL;
-                if(classGetSimpleName == 0) {
+                }
+                if (classGetSimpleName == 0) {
                     classGetSimpleName = (*env)->GetMethodID(env, JCLASS_TYPE, "getSimpleName", "()Ljava/lang/String;");
-                    if(process_java_exception(env) || !classGetSimpleName)
+                    if (process_java_exception(env) || !classGetSimpleName) {
                         return NULL;
+                    }
                 }
 
                 shortName = (*env)->CallObjectMethod(env, innerClz, classGetSimpleName);
-                if(process_java_exception(env) || !shortName)
+                if (process_java_exception(env) || !shortName) {
                     return NULL;
+                }
                 charName = jstring2char(env, shortName);
 
-                if(PyObject_SetAttrString((PyObject*) topClz, charName, attrClz) == -1) {
+                if (PyObject_SetAttrString((PyObject*) topClz, charName, attrClz) == -1) {
                     printf("Error adding inner class %s\n", charName);
                 } else {
                     PyObject *pyname = PyString_FromString(charName);
@@ -261,20 +283,23 @@ static PyObject* pyjclass_add_inner_classes(JNIEnv *env,
 }
 
 
-int pyjclass_check(PyObject *obj) {
-    if(PyObject_TypeCheck(obj, &PyJClass_Type)) {
+int pyjclass_check(PyObject *obj)
+{
+    if (PyObject_TypeCheck(obj, &PyJClass_Type)) {
         return 1;
     }
     return 0;
 }
 
 
-static void pyjclass_dealloc(PyJClassObject *self) {
+static void pyjclass_dealloc(PyJClassObject *self)
+{
 #if USE_DEALLOC
     JNIEnv *env = pyembed_get_env();
-    if(env) {
-        if(self->initArray)
+    if (env) {
+        if (self->initArray) {
             (*env)->DeleteGlobalRef(env, self->initArray);
+        }
     }
     free(self->numArgsPerInit);
     pyjobject_dealloc((PyJObject*) self);
@@ -285,7 +310,8 @@ static void pyjclass_dealloc(PyJClassObject *self) {
 // call constructor as a method and return pyjobject.
 PyObject* pyjclass_call(PyJClassObject *self,
                         PyObject *args,
-                        PyObject *keywords) {
+                        PyObject *keywords)
+{
     int            initPos     = 0;
     int            parmPos     = 0;
     int            parmLen     = 0;
@@ -298,165 +324,179 @@ PyObject* pyjclass_call(PyJClassObject *self,
     PyThreadState *_save;
     Py_ssize_t     pyArgLength = 0;
 
-    if(!PyTuple_Check(args)) {
+    if (!PyTuple_Check(args)) {
         PyErr_Format(PyExc_RuntimeError, "args is not a valid tuple");
         return NULL;
     }
-    
-    if(keywords != NULL) {
+
+    if (keywords != NULL) {
         PyErr_Format(PyExc_RuntimeError, "Keywords are not supported.");
         return NULL;
     }
 
     env = pyembed_get_env();
-    
+
     // use a local frame so we don't have to worry too much about references.
     // make sure if this method errors out, that this is popped off again
     (*env)->PushLocalFrame(env, 20);
-    if(process_java_exception(env))
+    if (process_java_exception(env)) {
         return NULL;
+    }
 
     pyArgLength = PyTuple_Size(args);
-    for(initPos = 0; initPos < self->initLen; initPos++) {
+    for (initPos = 0; initPos < self->initLen; initPos++) {
         parmLen = self->numArgsPerInit[initPos];
         // skip constructors that don't match the correct number of args
-        if(parmLen != pyArgLength) {
+        if (parmLen != pyArgLength) {
             continue;
         }
-        
+
         constructor = (*env)->GetObjectArrayElement(env,
-                                                    self->initArray,
-                                                    initPos);
-        if(process_java_exception(env) || !constructor)
+                      self->initArray,
+                      initPos);
+        if (process_java_exception(env) || !constructor) {
             goto EXIT_ERROR;
-        
+        }
+
         // get the class java.lang.reflect.Constructor first
         initClass = (*env)->GetObjectClass(env, constructor);
-        if(process_java_exception(env) || !initClass)
+        if (process_java_exception(env) || !initClass) {
             goto EXIT_ERROR;
-        
+        }
+
         // next, get parameters for constructor
-        if(classGetParmTypes == 0) {
+        if (classGetParmTypes == 0) {
             classGetParmTypes = (*env)->GetMethodID(env,
                                                     initClass,
                                                     "getParameterTypes",
                                                     "()[Ljava/lang/Class;");
-            if(process_java_exception(env) || !classGetParmTypes)
+            if (process_java_exception(env) || !classGetParmTypes) {
                 goto EXIT_ERROR;
+            }
         }
-        
+
         parmArray = (jobjectArray) (*env)->CallObjectMethod(env,
-                                                            constructor,
-                                                            classGetParmTypes);
-        if(process_java_exception(env) || !parmArray)
+                    constructor,
+                    classGetParmTypes);
+        if (process_java_exception(env) || !parmArray) {
             goto EXIT_ERROR;
+        }
 
         // next, find matching constructor for args
         // the counts match but maybe not the args themselves.
         jargs = (jvalue *) PyMem_Malloc(sizeof(jvalue) * parmLen);
-        if(!jargs) {
+        if (!jargs) {
             THROW_JEP(env, "Out of memory.");
             goto EXIT_ERROR;
         }
-        
-        for(parmPos = 0; parmPos < parmLen; parmPos++) {
+
+        for (parmPos = 0; parmPos < parmLen; parmPos++) {
             PyObject *param       = PyTuple_GetItem(args, parmPos);
             int       paramTypeId = -1;
             jobject   paramType   =
                 (jclass) (*env)->GetObjectArrayElement(env,
-                                                       parmArray,
-                                                       parmPos);
-            
-            if(process_java_exception(env) || !paramType)
+                        parmArray,
+                        parmPos);
+
+            if (process_java_exception(env) || !paramType) {
                 break;
-            
+            }
+
             paramTypeId = get_jtype(env, paramType);
-            if(PyErr_Occurred() || process_java_exception(env))
+            if (PyErr_Occurred() || process_java_exception(env)) {
                 goto EXIT_ERROR;
-            
-            if(paramTypeId == JARRAY_ID)
+            }
+
+            if (paramTypeId == JARRAY_ID) {
                 foundArray = 1;
-            
+            }
+
             // if java and python agree, continue checking
-            if(pyarg_matches_jtype(env, param, paramType, paramTypeId)) {
+            if (pyarg_matches_jtype(env, param, paramType, paramTypeId)) {
                 jargs[parmPos] = convert_pyarg_jvalue(env,
                                                       param,
                                                       paramType,
                                                       paramTypeId,
                                                       parmPos);
-                if(PyErr_Occurred() || process_java_exception(env))
+                if (PyErr_Occurred() || process_java_exception(env)) {
                     goto EXIT_ERROR;
-                
+                }
+
                 continue; // continue checking parameters
             }
-            
+
             break;
-                
+
         } // for each parameter type
-            
+
         // did they match?
-        if(parmPos == parmLen) {
+        if (parmPos == parmLen) {
             jmethodID methodId = NULL;
             jobject   obj  = NULL;
             PyObject *pobj = NULL;
-                
-            if(PyErr_Occurred() || process_java_exception(env))
+
+            if (PyErr_Occurred() || process_java_exception(env)) {
                 goto EXIT_ERROR;
-                
+            }
+
             // worked out, create new object
             methodId = (*env)->FromReflectedMethod(env,
                                                    constructor);
-            if(process_java_exception(env) || !methodId)
+            if (process_java_exception(env) || !methodId) {
                 goto EXIT_ERROR;
-                
+            }
+
             Py_UNBLOCK_THREADS;
             obj = (*env)->NewObjectA(env,
                                      ((PyJObject*) self)->clazz,
                                      methodId,
                                      jargs);
             Py_BLOCK_THREADS;
-            if(process_java_exception(env) || !obj)
+            if (process_java_exception(env) || !obj) {
                 goto EXIT_ERROR;
-                
+            }
+
             // finally, make pyjobject and return
             pobj = pyjobject_new(env, obj);
-            
+
             // we already closed the local frame, so make
             // sure to delete this local ref.
             PyMem_Free(jargs);
-            
+
             // re pin array if needed
-            if(foundArray) {
-                for(parmPos = 0; parmPos < parmLen; parmPos++) {
+            if (foundArray) {
+                for (parmPos = 0; parmPos < parmLen; parmPos++) {
                     PyObject *param = PyTuple_GetItem(args, parmPos);
-                    if(param && pyjarray_check(param))
+                    if (param && pyjarray_check(param)) {
                         pyjarray_pin((PyJArrayObject *) param);
+                    }
                 }
             }
-            
+
             (*env)->PopLocalFrame(env, NULL);
             return pobj;
         }
 
         // prevent memory leak
-        if(jargs) {
+        if (jargs) {
             PyMem_Free(jargs);
         }
         foundArray = 0;
     } // for each constructor
-    
-    
+
+
     (*env)->PopLocalFrame(env, NULL);
     PyErr_Format(PyExc_RuntimeError, "Couldn't find matching constructor.");
     return NULL;
-    
-    
+
+
 EXIT_ERROR:
-    if(jargs)
+    if (jargs) {
         PyMem_Free(jargs);
-    
+    }
+
     (*env)->PopLocalFrame(env, NULL);
-    
+
     return NULL;
 }
 
