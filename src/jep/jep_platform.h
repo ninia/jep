@@ -36,63 +36,63 @@
 #include <Python.h>
 
 #ifdef WIN32
-# include "winconfig.h"
+    #include "winconfig.h"
 #endif
 
 #if HAVE_CONFIG_H
-# include <config.h>
+    #include <config.h>
 #endif
 
 #if HAVE_UNISTD_H
-# include <sys/types.h>
-# include <unistd.h>
+    #include <sys/types.h>
+    #include <unistd.h>
 #endif
 
 
 #include <jni.h>
 
 #ifndef _Included_jep_platform
-#define _Included_jep_platform
+    #define _Included_jep_platform
 
-/* Windows compatibility */
-#ifdef WIN32
-typedef __int64 jeplong;
-#define FILE_SEP               '\\'
-#else
-typedef long long jeplong;
-#define FILE_SEP               '/'
-#endif // Windows compatibility
+    /* Windows compatibility */
+    #ifdef WIN32
+        typedef __int64 jeplong;
+        #define FILE_SEP               '\\'
+    #else
+        typedef long long jeplong;
+        #define FILE_SEP               '/'
+    #endif // Windows compatibility
 
 
-/* Python 3 compatibility */
-#if PY_MAJOR_VERSION >= 3
+    /* Python 3 compatibility */
+    #if PY_MAJOR_VERSION >= 3
 
-// see https://mail.python.org/pipermail/python-porting/2012-April/000289.html
-#define Py_TPFLAGS_HAVE_ITER 0
+        // see https://mail.python.org/pipermail/python-porting/2012-April/000289.html
+        #define Py_TPFLAGS_HAVE_ITER 0
 
-/* Python 3 does not support integers, only longs */
-#define PyInt_AsLong(i)                   PyLong_AsLong(i)
-#define PyInt_AS_LONG(i)                  PyLong_AsLong(i)
-#define PyInt_Check(i)                    PyLong_Check(i)
-#define PyInt_FromLong(i)                 PyLong_FromLong(i)
+        /* Python 3 does not support integers, only longs */
+        #define PyInt_AsLong(i)                   PyLong_AsLong(i)
+        #define PyInt_AS_LONG(i)                  PyLong_AsLong(i)
+        #define PyInt_Check(i)                    PyLong_Check(i)
+        #define PyInt_FromLong(i)                 PyLong_FromLong(i)
 
-/* Python 3 separated Strings into PyBytes and PyUnicode */
-#define PyString_FromString(str)          PyUnicode_FromString(str)
-#define PyString_Check(str)               PyUnicode_Check(str)
-#define PyString_FromFormat(fmt, ...)     PyUnicode_FromFormat(fmt, ##__VA_ARGS__)
+        /* Python 3 separated Strings into PyBytes and PyUnicode */
+        #define PyString_FromString(str)          PyUnicode_FromString(str)
+        #define PyString_Check(str)               PyUnicode_Check(str)
+        #define PyString_FromFormat(fmt, ...)     PyUnicode_FromFormat(fmt, ##__VA_ARGS__)
 
-/*
- * Python 3.3 drastically improved the unicode API.
- * For Python 3.2 support, see jep_util.h.
- */
-#if PY_MINOR_VERSION >= 3
-#define PyString_AsString(str)            PyUnicode_AsUTF8(str)
-#define PyString_AS_STRING(str)           PyUnicode_AsUTF8(str)
-#define PyString_Size(str)                PyUnicode_GetLength(str)
-#define PyString_GET_SIZE(str)            PyUnicode_GET_LENGTH(str)
-#endif // Python 3.3+ String compatibility
+        /*
+        * Python 3.3 drastically improved the unicode API.
+        * For Python 3.2 support, see jep_util.h.
+        */
+        #if PY_MINOR_VERSION >= 3
+            #define PyString_AsString(str)            PyUnicode_AsUTF8(str)
+            #define PyString_AS_STRING(str)           PyUnicode_AsUTF8(str)
+            #define PyString_Size(str)                PyUnicode_GetLength(str)
+            #define PyString_GET_SIZE(str)            PyUnicode_GET_LENGTH(str)
+        #endif // Python 3.3+ String compatibility
 
-#endif // Python 3 compatibility
+    #endif // Python 3 compatibility
 
 
 #endif // ifndef _Included_jep_platform

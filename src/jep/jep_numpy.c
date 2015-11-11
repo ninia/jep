@@ -36,7 +36,7 @@
 #define PY_ARRAY_UNIQUE_SYMBOL JEP_ARRAY_API
 /* if we have at least numpy 1.7, let's force the code to be 1.7 compliant */
 #ifdef NPY_1_7_API_VERSION
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+    #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #endif
 #include "numpy/arrayobject.h"
 
@@ -44,9 +44,9 @@
 /* this is ugly but the method signature of import_array() changes in Python 3 */
 static int numpyInitialized = 0;
 #if PY_MAJOR_VERSION >= 3
-static PyObject* init_numpy(void);
+    static PyObject* init_numpy(void);
 #else
-static void init_numpy(void);
+    static void init_numpy(void);
 #endif
 
 

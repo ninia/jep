@@ -39,7 +39,7 @@
 */
 
 #if STDC_HEADERS
-# include <stdio.h>
+    #include <stdio.h>
 #endif
 
 #include "Jep.h"
@@ -52,12 +52,12 @@
 
 
 #ifdef __APPLE__
-#ifndef WITH_NEXT_FRAMEWORK
-#include <crt_externs.h>
-// workaround for
-// http://bugs.python.org/issue1602133
-char **environ = NULL;
-#endif
+    #ifndef WITH_NEXT_FRAMEWORK
+        #include <crt_externs.h>
+        // workaround for
+        // http://bugs.python.org/issue1602133
+        char **environ = NULL;
+    #endif
 #endif
 
 static PyThreadState *mainThreadState = NULL;
@@ -78,8 +78,8 @@ static jmethodID loadClassMethod = 0;
 static jmethodID newProxyMethod = 0;
 
 #if PY_MAJOR_VERSION < 3
-// Integer(int)
-static jmethodID integerIConstructor = 0;
+    // Integer(int)
+    static jmethodID integerIConstructor = 0;
 #endif
 
 // Long(long)

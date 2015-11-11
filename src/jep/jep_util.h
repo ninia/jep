@@ -41,12 +41,12 @@ char* pyunicode_to_utf8(PyObject *unicode);
 
 // 3.3 reworked unicode so we have special handling for 3.2
 #if PY_MAJOR_VERSION >= 3
-#if PY_MINOR_VERSION <= 2
-#define PyString_AsString(str)            pyunicode_to_utf8(str)
-#define PyString_AS_STRING(str)           pyunicode_to_utf8(str)
-#define PyString_Size(str)                PyUnicode_GetSize(str)
-#define PyString_GET_SIZE(str)            PyUnicode_GET_SIZE(str)
-#endif
+    #if PY_MINOR_VERSION <= 2
+        #define PyString_AsString(str)            pyunicode_to_utf8(str)
+        #define PyString_AS_STRING(str)           pyunicode_to_utf8(str)
+        #define PyString_Size(str)                PyUnicode_GetSize(str)
+        #define PyString_GET_SIZE(str)            PyUnicode_GET_SIZE(str)
+    #endif
 #endif
 
 // call toString() on jobject, make a python string and return
