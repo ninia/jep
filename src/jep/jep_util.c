@@ -29,9 +29,12 @@
 #include "Jep.h"
 
 
-// -------------------------------------------------- primitive class types
-// these are shared for all threads, you shouldn't change them.
+/*
+ * Caching of jclass and jmethodID objects for optimal performance.  These
+ * are shared for all threads and should be considered constants.
+ */
 
+// primitive class types
 jclass JINT_TYPE     = NULL;
 jclass JLONG_TYPE    = NULL;
 jclass JOBJECT_TYPE  = NULL;

@@ -82,9 +82,9 @@
         #define PyString_FromFormat(fmt, ...)     PyUnicode_FromFormat(fmt, ##__VA_ARGS__)
 
         /*
-        * Python 3.3 drastically improved the unicode API.
-        * For Python 3.2 support, see jep_util.h.
-        */
+         * Python 3.3 drastically improved the unicode API.
+         * For Python 3.2 support, see jep_util.h.
+         */
         #if PY_MINOR_VERSION >= 3
             #define PyString_AsString(str)            PyUnicode_AsUTF8(str)
             #define PyString_AS_STRING(str)           PyUnicode_AsUTF8(str)

@@ -37,7 +37,10 @@ jmethodID stackTraceElemInit = 0;
 jmethodID setStackTrace = 0;
 
 
-// convert python exception to java.
+/*
+ * Converts a Python exception to a JepException.  Returns true if an
+ * exception was processed.
+ */
 int process_py_exception(JNIEnv *env, int printTrace)
 {
     JepThread *jepThread;
@@ -59,13 +62,9 @@ int process_py_exception(JNIEnv *env, int printTrace)
     }
 
     /*
-     * We only care about ptype and pvalue for the message.
-     * Many people consider it a security vulnerability
-     * to have the source code printed to the user's
-     * screen.  We'll try and attach the trace as the
-     * cause on the JepException so the application
-     * can determine if/how traces should be logged or
-     * shown.
+     * If there's a trace, we'll try and attach it as the cause on the
+     * JepException so the application can determine if/how stacktraces should
+     * be logged.
      */
 
     PyErr_Fetch(&ptype, &pvalue, &ptrace);
@@ -267,7 +266,7 @@ int process_py_exception(JNIEnv *env, int printTrace)
 
                         /*
                          * Make the stack trace element from python look like a normal
-                         * java stack trace element.  The order may seem wrong but
+                         * Java stack trace element.  The order may seem wrong but
                          * this makes it look best.
                          */
                         element = (*env)->NewObject(env, stackTraceElemClazz,
@@ -409,8 +408,10 @@ int process_import_exception(JNIEnv *env)
 }
 
 
-// convert java exception to pyerr.
-// true (1) if an exception was processed.
+/*
+ * Converts a Java exception to a PyErr.  Returns true if an exception was
+ * processed.
+ */
 int process_java_exception(JNIEnv *env)
 {
     jthrowable exception = NULL;
@@ -455,7 +456,7 @@ int process_java_exception(JNIEnv *env)
     stack = (*env)->CallObjectMethod(env, exception, fillInStacktrace);
     (*env)->DeleteLocalRef(env, stack);
 
-    // turn the java exception into a pyjobject so the interpreter can handle it
+    // turn the Java exception into a PyJObject so the interpreter can handle it
     jpyExc = pyjobject_new(env, exception);
     if ((*env)->ExceptionCheck(env) || !jpyExc) {
         PyErr_Format(PyExc_RuntimeError,
@@ -472,8 +473,8 @@ int process_java_exception(JNIEnv *env)
 }
 
 /*
- * Matches a jthrowable to an equivalent built-in python exception type.  This
- * is to enable more precise except/catch blocks in python for Java exceptions.
+ * Matches a jthrowable to an equivalent built-in Python exception type.  This
+ * is to enable more precise except/catch blocks in Python for Java exceptions.
  */
 static PyObject* pyerrtype_from_throwable(JNIEnv *env, jthrowable exception)
 {
