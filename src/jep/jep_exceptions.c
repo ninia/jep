@@ -359,7 +359,6 @@ int process_import_exception(JNIEnv *env)
 {
     jstring     estr;
     jthrowable  exception    = NULL;
-    jclass      clazz;
     PyObject   *pyException  = PyExc_ImportError;
     char       *message;
     JepThread  *jepThread;
@@ -386,13 +385,12 @@ int process_import_exception(JNIEnv *env)
     // we're already processing this one, clear the old
     (*env)->ExceptionClear(env);
 
-    clazz = (*env)->GetObjectClass(env, exception);
-    if ((*env)->ExceptionCheck(env) || !clazz) {
+    if ((*env)->ExceptionCheck(env)) {
         (*env)->ExceptionDescribe(env);
         return 1;
     }
 
-    estr = jobject_tostring(env, exception, clazz);
+    estr = jobject_tostring(env, exception);
     if ((*env)->ExceptionCheck(env) || !estr) {
         PyErr_Format(PyExc_RuntimeError, "toString() on exception failed.");
         return 1;
@@ -402,7 +400,6 @@ int process_import_exception(JNIEnv *env)
     PyErr_Format(pyException, "%s", message);
     release_utf_char(env, estr, message);
 
-    (*env)->DeleteLocalRef(env, clazz);
     (*env)->DeleteLocalRef(env, exception);
     return 1;
 }
@@ -416,11 +413,12 @@ int process_java_exception(JNIEnv *env)
 {
     jthrowable exception = NULL;
     jclass clazz;
-    PyObject *pyException;
+    PyObject *pyExceptionType;
     PyObject *jpyExc;
     JepThread *jepThread;
     jmethodID fillInStacktrace;
     jobjectArray stack;
+    PyThreadState *_save;
 
     if (!(*env)->ExceptionCheck(env)) {
         return 0;
@@ -451,10 +449,13 @@ int process_java_exception(JNIEnv *env)
     }
 
     // fill in the stack trace here to make sure we don't lose it
+    Py_UNBLOCK_THREADS
     fillInStacktrace = (*env)->GetMethodID(env, clazz, "getStackTrace",
                                            "()[Ljava/lang/StackTraceElement;");
     stack = (*env)->CallObjectMethod(env, exception, fillInStacktrace);
     (*env)->DeleteLocalRef(env, stack);
+    pyExceptionType = pyerrtype_from_throwable(env, exception);
+    Py_BLOCK_THREADS
 
     // turn the Java exception into a PyJObject so the interpreter can handle it
     jpyExc = pyjobject_new(env, exception);
@@ -464,8 +465,7 @@ int process_java_exception(JNIEnv *env)
         return 1;
     }
 
-    pyException = pyerrtype_from_throwable(env, exception);
-    PyErr_SetObject(pyException, jpyExc);
+    PyErr_SetObject(pyExceptionType, jpyExc);
     Py_DECREF(jpyExc);
     (*env)->DeleteLocalRef(env, clazz);
     (*env)->DeleteLocalRef(env, exception);

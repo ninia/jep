@@ -552,9 +552,9 @@ PyObject* pyjobject_str(PyJObject *self)
 
     env   = pyembed_get_env();
     if (self->object) {
-        pyres = jobject_topystring(env, self->object, self->clazz);
+        pyres = jobject_topystring(env, self->object);
     } else {
-        pyres = jobject_topystring(env, self->clazz, self->clazz);
+        pyres = jobject_topystring(env, self->clazz);
     }
 
     if (process_java_exception(env)) {

@@ -1617,7 +1617,7 @@ static PyObject* pyjarray_str(PyJArrayObject *self)
 #if PY_MAJOR_VERSION >= 3
     JNIEnv   *env = pyembed_get_env();
 
-    ret = jobject_topystring(env, self->object, self->clazz);
+    ret = jobject_topystring(env, self->object);
     return ret;
 #else
     // retained to not break former behavior
@@ -1630,11 +1630,6 @@ static PyObject* pyjarray_str(PyJArrayObject *self)
     case JBYTE_ID:
         ret = PyBytes_FromStringAndSize((const char *) self->pinnedArray,
                                         self->length);
-        return ret;
-
-    case JFLOAT_ID:
-        ret = PyBytes_FromStringAndSize((const char *) self->pinnedArray,
-                                        self->length * SIZEOF_FLOAT);
         return ret;
 
     default:

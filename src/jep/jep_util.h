@@ -52,13 +52,13 @@ char* pyunicode_to_utf8(PyObject *unicode);
 // call toString() on jobject, make a python string and return
 // sets error conditions as needed.
 // returns new reference to PyObject
-PyObject* jobject_topystring(JNIEnv*, jobject, jclass);
+PyObject* jobject_topystring(JNIEnv*, jobject);
 
 PyObject* pystring_split_last(PyObject*, char*);
 
 // call toString() on jobject and return result.
 // NULL on error
-jstring jobject_tostring(JNIEnv*, jobject, jclass);
+jstring jobject_tostring(JNIEnv*, jobject);
 
 // get a const char* string from java string.
 // you *must* call release when you're finished with it.

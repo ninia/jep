@@ -107,13 +107,13 @@ jmethodID getCharValue       = 0;
 // call toString() on jobject, make a python string and return
 // sets error conditions as needed.
 // returns new reference to PyObject
-PyObject* jobject_topystring(JNIEnv *env, jobject obj, jclass clazz)
+PyObject* jobject_topystring(JNIEnv *env, jobject obj)
 {
     const char *result;
     PyObject   *pyres;
     jstring     jstr;
 
-    jstr = jobject_tostring(env, obj, clazz);
+    jstr = jobject_tostring(env, obj);
     // it's possible, i guess. don't throw an error....
     if (process_java_exception(env) || jstr == NULL) {
         return PyString_FromString("");
@@ -236,17 +236,18 @@ char* pyunicode_to_utf8(PyObject *unicode)
 
 // call toString() on jobject and return result.
 // NULL on error
-jstring jobject_tostring(JNIEnv *env, jobject obj, jclass clazz)
+jstring jobject_tostring(JNIEnv *env, jobject obj)
 {
+    PyThreadState *_save;
     jstring     jstr;
 
-    if (!env || !obj || !clazz) {
+    if (!env || !obj) {
         return NULL;
     }
 
     if (objectToString == 0) {
         objectToString = (*env)->GetMethodID(env,
-                                             clazz,
+                                             JOBJECT_TYPE,
                                              "toString",
                                              "()Ljava/lang/String;");
         if (process_java_exception(env)) {
@@ -259,7 +260,9 @@ jstring jobject_tostring(JNIEnv *env, jobject obj, jclass clazz)
         return NULL;
     }
 
+    Py_UNBLOCK_THREADS
     jstr = (jstring) (*env)->CallObjectMethod(env, obj, objectToString);
+    Py_BLOCK_THREADS
     if (process_java_exception(env)) {
         return NULL;
     }
