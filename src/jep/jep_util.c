@@ -48,16 +48,14 @@ jclass JCHAR_TYPE    = NULL;
 jclass JBYTE_TYPE    = NULL;
 jclass JCLASS_TYPE   = NULL;
 
-#if USE_NUMPY
-    // cached types for primitive arrays
-    jclass JBOOLEAN_ARRAY_TYPE = NULL;
-    jclass JBYTE_ARRAY_TYPE    = NULL;
-    jclass JSHORT_ARRAY_TYPE   = NULL;
-    jclass JINT_ARRAY_TYPE     = NULL;
-    jclass JLONG_ARRAY_TYPE    = NULL;
-    jclass JFLOAT_ARRAY_TYPE   = NULL;
-    jclass JDOUBLE_ARRAY_TYPE  = NULL;
-#endif
+// cached types for primitive arrays
+jclass JBOOLEAN_ARRAY_TYPE = NULL;
+jclass JBYTE_ARRAY_TYPE    = NULL;
+jclass JSHORT_ARRAY_TYPE   = NULL;
+jclass JINT_ARRAY_TYPE     = NULL;
+jclass JLONG_ARRAY_TYPE    = NULL;
+jclass JFLOAT_ARRAY_TYPE   = NULL;
+jclass JDOUBLE_ARRAY_TYPE  = NULL;
 
 // cached types for interfaces
 jclass JLIST_TYPE       = NULL;

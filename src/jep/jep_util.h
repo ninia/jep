@@ -110,6 +110,15 @@ extern jclass JCHAR_TYPE;
 extern jclass JBYTE_TYPE;
 extern jclass JCLASS_TYPE;
 
+// cache primitive array types
+extern jclass JBOOLEAN_ARRAY_TYPE;
+extern jclass JBYTE_ARRAY_TYPE;
+extern jclass JSHORT_ARRAY_TYPE;
+extern jclass JINT_ARRAY_TYPE;
+extern jclass JLONG_ARRAY_TYPE;
+extern jclass JFLOAT_ARRAY_TYPE;
+extern jclass JDOUBLE_ARRAY_TYPE;
+
 // cache some frequently looked up interfaces
 extern jclass JLIST_TYPE;
 extern jclass JMAP_TYPE;

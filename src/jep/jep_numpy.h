@@ -44,16 +44,7 @@
 /* this whole file is a no-op if numpy support is disabled */
 #if USE_NUMPY
 
-    /* jclasses cached for faster performance */
-    extern jclass JBOOLEAN_ARRAY_TYPE;
-    extern jclass JBYTE_ARRAY_TYPE;
-    extern jclass JSHORT_ARRAY_TYPE;
-    extern jclass JINT_ARRAY_TYPE;
-    extern jclass JLONG_ARRAY_TYPE;
-    extern jclass JFLOAT_ARRAY_TYPE;
-    extern jclass JDOUBLE_ARRAY_TYPE;
     extern jclass JEP_NDARRAY_TYPE;
-
 
     /* methods to support numpy <-> java conversion */
     int npy_array_check(PyObject*);
