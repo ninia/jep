@@ -313,6 +313,8 @@ public final class Jep implements Closeable {
     public void isValidThread() throws JepException {
         if (this.thread != Thread.currentThread())
             throw new JepException("Invalid thread access.");
+        if (this.closed)
+            throw new JepException("Jep instance has been closed.");
         if (this.tstate == 0)
             throw new JepException("Initialization failed.");
     }
@@ -340,8 +342,6 @@ public final class Jep implements Closeable {
      *                if an error occurs
      */
     public void runScript(String script, ClassLoader cl) throws JepException {
-        if (this.closed)
-            throw new JepException("Jep has been closed.");
         isValidThread();
 
         if (script == null)
@@ -428,8 +428,6 @@ public final class Jep implements Closeable {
      *                if an error occurs
      */
     public boolean eval(String str) throws JepException {
-        if (this.closed)
-            throw new JepException("Jep has been closed.");
         isValidThread();
 
         try {
@@ -517,8 +515,6 @@ public final class Jep implements Closeable {
      *                if an error occurs
      */
     public Object getValue(String str) throws JepException {
-        if (this.closed)
-            throw new JepException("Jep has been closed.");
         isValidThread();
 
         return getValue(this.tstate, str);
@@ -537,8 +533,6 @@ public final class Jep implements Closeable {
      *                if an error occurs
      */
     public byte[] getValue_bytearray(String str) throws JepException {
-        if (this.closed)
-            throw new JepException("Jep has been closed.");
         isValidThread();
 
         return getValue_bytearray(this.tstate, str);
@@ -655,8 +649,6 @@ public final class Jep implements Closeable {
      *                if an error occurs
      */
     public void set(String name, Object v) throws JepException {
-        if (this.closed)
-            throw new JepException("Jep has been closed.");
         isValidThread();
 
         if (v instanceof Class) {
@@ -700,8 +692,6 @@ public final class Jep implements Closeable {
      *                if an error occurs
      */
     public void set(String name, String v) throws JepException {
-        if (this.closed)
-            throw new JepException("Jep has been closed.");
         isValidThread();
 
         set(tstate, name, v);
@@ -741,8 +731,6 @@ public final class Jep implements Closeable {
      *                if an error occurs
      */
     public void set(String name, int v) throws JepException {
-        if (this.closed)
-            throw new JepException("Jep has been closed.");
         isValidThread();
 
         set(tstate, name, v);
@@ -760,8 +748,6 @@ public final class Jep implements Closeable {
      *                if an error occurs
      */
     public void set(String name, short v) throws JepException {
-        if (this.closed)
-            throw new JepException("Jep has been closed.");
         isValidThread();
 
         set(tstate, name, v);
@@ -782,8 +768,6 @@ public final class Jep implements Closeable {
      *                if an error occurs
      */
     public void set(String name, char[] v) throws JepException {
-        if (this.closed)
-            throw new JepException("Jep has been closed.");
         isValidThread();
 
         set(tstate, name, new String(v));
@@ -801,8 +785,6 @@ public final class Jep implements Closeable {
      *                if an error occurs
      */
     public void set(String name, char v) throws JepException {
-        if (this.closed)
-            throw new JepException("Jep has been closed.");
         isValidThread();
 
         set(tstate, name, new String(new char[] { v }));
@@ -820,8 +802,6 @@ public final class Jep implements Closeable {
      *                if an error occurs
      */
     public void set(String name, byte b) throws JepException {
-        if (this.closed)
-            throw new JepException("Jep has been closed.");
         isValidThread();
 
         set(tstate, name, b);
@@ -839,8 +819,6 @@ public final class Jep implements Closeable {
      *                if an error occurs
      */
     public void set(String name, long v) throws JepException {
-        if (this.closed)
-            throw new JepException("Jep has been closed.");
         isValidThread();
 
         set(tstate, name, v);
@@ -861,8 +839,6 @@ public final class Jep implements Closeable {
      *                if an error occurs
      */
     public void set(String name, double v) throws JepException {
-        if (this.closed)
-            throw new JepException("Jep has been closed.");
         isValidThread();
 
         set(tstate, name, v);
@@ -883,8 +859,6 @@ public final class Jep implements Closeable {
      *                if an error occurs
      */
     public void set(String name, float v) throws JepException {
-        if (this.closed)
-            throw new JepException("Jep has been closed.");
         isValidThread();
 
         set(tstate, name, v);
@@ -907,8 +881,6 @@ public final class Jep implements Closeable {
      *                if an error occurs
      */
     public void set(String name, boolean[] v) throws JepException {
-        if (this.closed)
-            throw new JepException("Jep has been closed.");
         isValidThread();
 
         set(tstate, name, v);
@@ -929,8 +901,6 @@ public final class Jep implements Closeable {
      *                if an error occurs
      */
     public void set(String name, int[] v) throws JepException {
-        if (this.closed)
-            throw new JepException("Jep has been closed.");
         isValidThread();
 
         set(tstate, name, v);
@@ -951,8 +921,6 @@ public final class Jep implements Closeable {
      *                if an error occurs
      */
     public void set(String name, short[] v) throws JepException {
-        if (this.closed)
-            throw new JepException("Jep has been closed.");
         isValidThread();
 
         set(tstate, name, v);
@@ -973,8 +941,6 @@ public final class Jep implements Closeable {
      *                if an error occurs
      */
     public void set(String name, byte[] v) throws JepException {
-        if (this.closed)
-            throw new JepException("Jep has been closed.");
         isValidThread();
 
         set(tstate, name, v);
@@ -995,8 +961,6 @@ public final class Jep implements Closeable {
      *                if an error occurs
      */
     public void set(String name, long[] v) throws JepException {
-        if (this.closed)
-            throw new JepException("Jep has been closed.");
         isValidThread();
 
         set(tstate, name, v);
@@ -1017,8 +981,6 @@ public final class Jep implements Closeable {
      *                if an error occurs
      */
     public void set(String name, double[] v) throws JepException {
-        if (this.closed)
-            throw new JepException("Jep has been closed.");
         isValidThread();
 
         set(tstate, name, v);
@@ -1039,8 +1001,6 @@ public final class Jep implements Closeable {
      *                if an error occurs
      */
     public void set(String name, float[] v) throws JepException {
-        if (this.closed)
-            throw new JepException("Jep has been closed.");
         isValidThread();
 
         set(tstate, name, v);
