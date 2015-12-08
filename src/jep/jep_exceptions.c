@@ -31,10 +31,12 @@
 static PyObject* pyerrtype_from_throwable(JNIEnv*, jthrowable);
 
 // exception handling
-jmethodID jepExcInitStr = 0;
-jmethodID jepExcInitStrThrow = 0;
-jmethodID stackTraceElemInit = 0;
-jmethodID setStackTrace = 0;
+jmethodID jepExcInitStr       = 0;
+jmethodID jepExcInitStrThrow  = 0;
+jmethodID stackTraceElemInit  = 0;
+jmethodID setStackTrace       = 0;
+jmethodID getStackTrace       = 0;
+jmethodID getLocalizedMessage = 0;
 
 
 /*
@@ -88,25 +90,24 @@ int process_py_exception(JNIEnv *env, int printTrace)
             PyObject *v = NULL;
             if (pyjobject_check(pvalue)) {
                 // it's a java exception that came from process_java_exception
-                jmethodID getMessage;
+                jstring jmessage;
                 jexc = (PyJObject*) pvalue;
-                getMessage = (*env)->GetMethodID(env, jexc->clazz,
-                                                 "getLocalizedMessage", "()Ljava/lang/String;");
-                if (getMessage != NULL) {
-                    jstring jmessage;
-                    jmessage = (*env)->CallObjectMethod(env, jexc->object,
-                                                        getMessage);
-                    if (jmessage != NULL) {
-                        const char* charMessage;
-                        charMessage = jstring2char(env, jmessage);
-                        if (charMessage != NULL) {
-                            v = PyString_FromString(charMessage);
-                            release_utf_char(env, jmessage, charMessage);
-                        }
+
+                if (getLocalizedMessage == 0) {
+                    getLocalizedMessage = (*env)->GetMethodID(env, JTHROWABLE_TYPE,
+                                                              "getLocalizedMessage",
+                                                              "()Ljava/lang/String;");
+                }
+
+                jmessage = (*env)->CallObjectMethod(env, jexc->object,
+                                                    getLocalizedMessage);
+                if (jmessage != NULL) {
+                    const char* charMessage;
+                    charMessage = jstring2char(env, jmessage);
+                    if (charMessage != NULL) {
+                        v = PyString_FromString(charMessage);
+                        release_utf_char(env, jmessage, charMessage);
                     }
-                } else {
-                    printf(
-                        "Error getting method getLocalizedMessage() on java exception\n");
                 }
             }
 
@@ -134,7 +135,7 @@ int process_py_exception(JNIEnv *env, int printTrace)
             jepExcClazz = (*env)->FindClass(env, JEPEXCEPTION);
             if (jexc != NULL) {
                 // constructor JepException(String, Throwable)
-                if (jepExcInitStrThrow == NULL) {
+                if (jepExcInitStrThrow == 0) {
                     jepExcInitStrThrow = (*env)->GetMethodID(env, jepExcClazz,
                                          "<init>",
                                          "(Ljava/lang/String;Ljava/lang/Throwable;)V");
@@ -143,7 +144,7 @@ int process_py_exception(JNIEnv *env, int printTrace)
                                                  jepExcInitStrThrow, jmsg, jexc->object);
             } else {
                 // constructor JepException(String)
-                if (jepExcInitStr == NULL) {
+                if (jepExcInitStr == 0) {
                     jepExcInitStr = (*env)->GetMethodID(env, jepExcClazz,
                                                         "<init>", "(Ljava/lang/String;)V");
                 }
@@ -193,7 +194,7 @@ int process_py_exception(JNIEnv *env, int printTrace)
 
                 stackTraceElemClazz = (*env)->FindClass(env,
                                                         "Ljava/lang/StackTraceElement;");
-                if (stackTraceElemInit == NULL) {
+                if (stackTraceElemInit == 0) {
                     stackTraceElemInit =
                         (*env)->GetMethodID(env, stackTraceElemClazz,
                                             "<init>",
@@ -322,7 +323,7 @@ int process_py_exception(JNIEnv *env, int printTrace)
                 (*env)->DeleteLocalRef(env, stackArray);
 
                 if (jepException != NULL) {
-                    if (setStackTrace == NULL) {
+                    if (setStackTrace == 0) {
                         setStackTrace = (*env)->GetMethodID(env, jepExcClazz,
                                                             "setStackTrace",
                                                             "([Ljava/lang/StackTraceElement;)V");
@@ -412,11 +413,9 @@ int process_import_exception(JNIEnv *env)
 int process_java_exception(JNIEnv *env)
 {
     jthrowable exception = NULL;
-    jclass clazz;
     PyObject *pyExceptionType;
     PyObject *jpyExc;
     JepThread *jepThread;
-    jmethodID fillInStacktrace;
     jobjectArray stack;
     PyThreadState *_save;
 
@@ -442,17 +441,13 @@ int process_java_exception(JNIEnv *env)
     // we're already processing this one, clear the old
     (*env)->ExceptionClear(env);
 
-    clazz = (*env)->GetObjectClass(env, exception);
-    if ((*env)->ExceptionCheck(env) || !clazz) {
-        (*env)->ExceptionDescribe(env);
-        return 1;
-    }
-
     // fill in the stack trace here to make sure we don't lose it
     Py_UNBLOCK_THREADS
-    fillInStacktrace = (*env)->GetMethodID(env, clazz, "getStackTrace",
-                                           "()[Ljava/lang/StackTraceElement;");
-    stack = (*env)->CallObjectMethod(env, exception, fillInStacktrace);
+    if (getStackTrace == 0) {
+        getStackTrace = (*env)->GetMethodID(env, JTHROWABLE_TYPE, "getStackTrace",
+                                             "()[Ljava/lang/StackTraceElement;");
+    }
+    stack = (*env)->CallObjectMethod(env, exception, getStackTrace);
     (*env)->DeleteLocalRef(env, stack);
     pyExceptionType = pyerrtype_from_throwable(env, exception);
     Py_BLOCK_THREADS
@@ -467,7 +462,6 @@ int process_java_exception(JNIEnv *env)
 
     PyErr_SetObject(pyExceptionType, jpyExc);
     Py_DECREF(jpyExc);
-    (*env)->DeleteLocalRef(env, clazz);
     (*env)->DeleteLocalRef(env, exception);
     return 1;
 }

@@ -133,6 +133,7 @@ extern jclass JINT_OBJ_TYPE;
 extern jclass JLONG_OBJ_TYPE;
 extern jclass JDOUBLE_OBJ_TYPE;
 
+extern jclass JTHROWABLE_TYPE;
 extern jclass JMODIFIER_TYPE;
 extern jclass JARRAYLIST_TYPE;
 extern jclass JHASHMAP_TYPE;

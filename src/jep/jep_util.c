@@ -72,6 +72,7 @@ jclass JLONG_OBJ_TYPE   = NULL;
 jclass JDOUBLE_OBJ_TYPE = NULL;
 
 // cached types for frequently used classes
+jclass JTHROWABLE_TYPE   = NULL;
 jclass JMODIFIER_TYPE    = NULL;
 jclass JARRAYLIST_TYPE   = NULL;
 jclass JHASHMAP_TYPE     = NULL;
@@ -480,6 +481,7 @@ int cache_frequent_classes(JNIEnv *env)
     CACHE_CLASS(JINT_OBJ_TYPE, "java/lang/Integer");
     CACHE_CLASS(JLONG_OBJ_TYPE, "java/lang/Long");
     CACHE_CLASS(JDOUBLE_OBJ_TYPE, "java/lang/Double");
+    CACHE_CLASS(JTHROWABLE_TYPE, "java/lang/Throwable");
     CACHE_CLASS(JMODIFIER_TYPE, "java/lang/reflect/Modifier");
     CACHE_CLASS(JARRAYLIST_TYPE, "java/util/ArrayList");
     CACHE_CLASS(JHASHMAP_TYPE, "java/util/HashMap");
@@ -522,6 +524,7 @@ void unref_cache_frequent_classes(JNIEnv *env)
     UNCACHE_CLASS(JINT_OBJ_TYPE);
     UNCACHE_CLASS(JLONG_OBJ_TYPE);
     UNCACHE_CLASS(JDOUBLE_OBJ_TYPE);
+    UNCACHE_CLASS(JTHROWABLE_TYPE);
     UNCACHE_CLASS(JMODIFIER_TYPE);
     UNCACHE_CLASS(JARRAYLIST_TYPE);
     UNCACHE_CLASS(JHASHMAP_TYPE);
