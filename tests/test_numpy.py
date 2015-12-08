@@ -16,7 +16,7 @@ class TestNumpy(unittest.TestCase):
         Jep.get(String) to get a Java NDArray back and
         checks for equality/symmetry.
         """
-        if jep.USE_NUMPY:
+        if jep.JEP_NUMPY_ENABLED:
             self.test.testSetAndGet()
                 
     def testArgReturn(self):
@@ -25,7 +25,7 @@ class TestNumpy(unittest.TestCase):
         Java making a new one and adding 5 to the values,
         and then Java returning the new ndarray to python.
         """
-        if jep.USE_NUMPY:
+        if jep.JEP_NUMPY_ENABLED:
             import numpy
             x = numpy.array(range(10), numpy.int32)
             y = self.test.testArgAndReturn(x)
@@ -41,7 +41,7 @@ class TestNumpy(unittest.TestCase):
         Java making a new one and adding 5 to the values,
         and then Java returning the new ndarray to python.
         """
-        if jep.USE_NUMPY:
+        if jep.JEP_NUMPY_ENABLED:
             import numpy
             o = range(24)
             x = numpy.array(o, numpy.int32)
@@ -64,7 +64,7 @@ class TestNumpy(unittest.TestCase):
         or if you already know the dimensions in Java, or you don't
         want to depend on the java class NDArray.
         """
-        if jep.USE_NUMPY:
+        if jep.JEP_NUMPY_ENABLED:
             import numpy
             
             za = numpy.zeros((15, 5), numpy.bool)

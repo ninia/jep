@@ -77,7 +77,7 @@ jclass JMODIFIER_TYPE    = NULL;
 jclass JARRAYLIST_TYPE   = NULL;
 jclass JHASHMAP_TYPE     = NULL;
 jclass JCOLLECTIONS_TYPE = NULL;
-#if USE_NUMPY
+#if JEP_NUMPY_ENABLED
     jclass JEP_NDARRAY_TYPE = NULL;
 #endif
 
@@ -487,7 +487,7 @@ int cache_frequent_classes(JNIEnv *env)
     CACHE_CLASS(JHASHMAP_TYPE, "java/util/HashMap");
     CACHE_CLASS(JCOLLECTIONS_TYPE, "java/util/Collections");
 
-#if USE_NUMPY
+#if JEP_NUMPY_ENABLED
     CACHE_CLASS(JEP_NDARRAY_TYPE, "jep/NDArray");
 #endif
 
@@ -530,7 +530,7 @@ void unref_cache_frequent_classes(JNIEnv *env)
     UNCACHE_CLASS(JHASHMAP_TYPE);
     UNCACHE_CLASS(JCOLLECTIONS_TYPE);
 
-#if USE_NUMPY
+#if JEP_NUMPY_ENABLED
     UNCACHE_CLASS(JEP_NDARRAY_TYPE);
 #endif
 
@@ -1086,7 +1086,7 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
         if (param == Py_None) {
             ;
         }
-#if USE_NUMPY
+#if JEP_NUMPY_ENABLED
         else if (npy_array_check(param)) {
             jarray arr;
             jclass arrclazz;
@@ -1184,7 +1184,7 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
             val = PyString_AsString(param);
             obj = (*env)->NewStringUTF(env, (const char *) val);
         }
-#if USE_NUMPY
+#if JEP_NUMPY_ENABLED
         else if (npy_array_check(param)) {
             ret.l = convert_pyndarray_jndarray(env, param);
             return ret;

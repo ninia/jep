@@ -188,7 +188,7 @@ static PyObject* initjep(void)
         PyModule_AddIntConstant(modjep, "JFLOAT_ID", JFLOAT_ID);
         PyModule_AddIntConstant(modjep, "JCHAR_ID", JCHAR_ID);
         PyModule_AddIntConstant(modjep, "JBYTE_ID", JBYTE_ID);
-        PyModule_AddIntConstant(modjep, "USE_NUMPY", USE_NUMPY);
+        PyModule_AddIntConstant(modjep, "JEP_NUMPY_ENABLED", JEP_NUMPY_ENABLED);
     }
 
     return modjep;
@@ -1202,7 +1202,7 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result)
         return map;
     }
 
-#if USE_NUMPY
+#if JEP_NUMPY_ENABLED
     if (npy_array_check(result)) {
         return convert_pyndarray_jndarray(env, result);
     }

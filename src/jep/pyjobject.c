@@ -123,7 +123,7 @@ PyObject* pyjobject_new(JNIEnv *env, jobject obj)
     } else if (jtype == JCLASS_ID) {
         return pyjobject_new_class(env, obj);
     } else {
-#if USE_NUMPY
+#if JEP_NUMPY_ENABLED
         /*
          * check for jep/NDArray and autoconvert to numpy.ndarray instead of
          * pyjobject

@@ -37,12 +37,12 @@
 #define _Included_jep_numpy
 
 
-#ifndef USE_NUMPY
-    #define USE_NUMPY 1
+#ifndef JEP_NUMPY_ENABLED
+    #define JEP_NUMPY_ENABLED 1
 #endif
 
 /* this whole file is a no-op if numpy support is disabled */
-#if USE_NUMPY
+#if JEP_NUMPY_ENABLED
 
     extern jclass JEP_NDARRAY_TYPE;
 

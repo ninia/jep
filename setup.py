@@ -59,7 +59,7 @@ if __name__ == '__main__':
     defines=[
               ('PACKAGE', 'jep'),
               ('USE_DEALLOC', 1),
-              ('USE_NUMPY', numpy_found),
+              ('JEP_NUMPY_ENABLED', numpy_found),
               ('VERSION', '"{0}"'.format(VERSION)),
           ]
     if is_windows():

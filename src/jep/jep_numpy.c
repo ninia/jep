@@ -29,7 +29,7 @@
 #include "Jep.h"
 
 /* this whole file is a no-op if numpy support is disabled */
-#if USE_NUMPY
+#if JEP_NUMPY_ENABLED
 
 /* get numpy config so we can check the version of numpy */
 #include "numpy/numpyconfig.h"
