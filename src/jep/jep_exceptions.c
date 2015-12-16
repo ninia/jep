@@ -222,7 +222,7 @@ int process_py_exception(JNIEnv *env, int printTrace)
                     // python order is filename, line number, function name, line
                     charPyFile = PyString_AsString(
                                      PySequence_GetItem(stackEntry, 0));
-                    pyLineNum = (int) PySequence_AsLong(
+                    pyLineNum = (int) PyInt_AsLong(
                                     PySequence_GetItem(stackEntry, 1));
                     charPyFunc = PyString_AsString(
                                      PySequence_GetItem(stackEntry, 2));
