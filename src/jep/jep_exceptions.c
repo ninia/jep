@@ -221,12 +221,12 @@ int process_py_exception(JNIEnv *env, int printTrace)
                     // java order is classname, methodname, filename, lineNumber
                     // python order is filename, line number, function name, line
                     charPyFile = PyString_AsString(
-                                     PyTuple_GetItem(stackEntry, 0));
-                    pyLineNum = (int) PyInt_AsLong(
-                                    PyTuple_GetItem(stackEntry, 1));
+                                     PySequence_GetItem(stackEntry, 0));
+                    pyLineNum = (int) PySequence_AsLong(
+                                    PySequence_GetItem(stackEntry, 1));
                     charPyFunc = PyString_AsString(
-                                     PyTuple_GetItem(stackEntry, 2));
-                    pyLine = PyTuple_GetItem(stackEntry, 3);
+                                     PySequence_GetItem(stackEntry, 2));
+                    pyLine = PySequence_GetItem(stackEntry, 3);
 
                     /*
                      * if pyLine is None, this seems to imply it was an eval,
