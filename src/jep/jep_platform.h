@@ -56,10 +56,8 @@
 
     /* Windows compatibility */
     #ifdef WIN32
-        typedef __int64 jeplong;
         #define FILE_SEP               '\\'
     #else
-        typedef long long jeplong;
         #define FILE_SEP               '/'
     #endif // Windows compatibility
 
@@ -71,10 +69,10 @@
         #define Py_TPFLAGS_HAVE_ITER 0
 
         /* Python 3 does not support integers, only longs */
-        #define PyInt_AsLong(i)                   PyLong_AsLong(i)
-        #define PyInt_AS_LONG(i)                  PyLong_AsLong(i)
+        #define PyInt_AsLong(i)                   PyLong_AsLongLong(i)
+        #define PyInt_AS_LONG(i)                  PyLong_AsLongLong(i)
         #define PyInt_Check(i)                    PyLong_Check(i)
-        #define PyInt_FromLong(i)                 PyLong_FromLong(i)
+        #define PyInt_FromLong(i)                 PyLong_FromLongLong(i)
 
         /* Python 3 separated Strings into PyBytes and PyUnicode */
         #define PyString_FromString(str)          PyUnicode_FromString(str)

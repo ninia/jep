@@ -305,7 +305,7 @@ JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2J
     const char *name;
 
     name = jstring2char(env, jname);
-    pyembed_setparameter_long(env, (intptr_t) tstate, 0, name, (jeplong) jval);
+    pyembed_setparameter_long(env, (intptr_t) tstate, 0, name, (PY_LONG_LONG) jval);
     release_utf_char(env, jname, name);
 }
 

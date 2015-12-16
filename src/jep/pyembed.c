@@ -1030,7 +1030,7 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result)
 #endif
 
     if (PyLong_Check(result)) {
-        jeplong i = PyLong_AsLongLong(result);
+        PY_LONG_LONG i = PyLong_AsLongLong(result);
 
         if (longJConstructor == 0) {
             longJConstructor = (*env)->GetMethodID(env,
@@ -1752,7 +1752,7 @@ void pyembed_setparameter_long(JNIEnv *env,
                                intptr_t _jepThread,
                                intptr_t module,
                                const char *name,
-                               jeplong value)
+                               PY_LONG_LONG value)
 {
     PyObject      *pyvalue;
     PyObject      *pymodule;
