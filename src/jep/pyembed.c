@@ -975,7 +975,7 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result) {
 
     if(PyLong_Check(result)) {
         jclass clazz;
-        jeplong i = PyLong_AsLongLong(result);
+        PY_LONG_LONG i = PyLong_AsLongLong(result);
 
         clazz = (*env)->FindClass(env, "java/lang/Long");
 
@@ -1715,7 +1715,7 @@ void pyembed_setparameter_long(JNIEnv *env,
                                intptr_t _jepThread,
                                intptr_t module,
                                const char *name,
-                               jeplong value) {
+                               PY_LONG_LONG value) {
     PyObject      *pyvalue;
     PyObject      *pymodule;
     

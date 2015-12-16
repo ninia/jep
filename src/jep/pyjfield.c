@@ -491,7 +491,7 @@ PyObject* pyjfield_get(PyJfield_Object *self) {
         if(process_java_exception(env))
             return NULL;
         
-        result = PyLong_FromLongLong((jeplong) ret);
+        result = PyLong_FromLongLong((PY_LONG_LONG) ret);
         break;
     }
 

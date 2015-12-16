@@ -358,8 +358,8 @@ static int pyjarray_init(JNIEnv *env,
         }
 
         case JLONG_ID: {
-            int      i;
-            jeplong  v  = 0;
+            int           i;
+            PY_LONG_LONG  v  = 0;
             jlong   *ar = (jlong *) pyarray->pinnedArray;
 
             if(!value)

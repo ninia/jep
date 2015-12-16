@@ -48,10 +48,10 @@
 #define PyString_FromFormat(fmt, ...)     PyUnicode_FromFormat(fmt, ##__VA_ARGS__)
 // more string macros are defined for python 3 compatibility farther down...
 
-#define PyInt_AsLong(i)                   PyLong_AsLong(i)
-#define PyInt_AS_LONG(i)                  PyLong_AsLong(i)
+#define PyInt_AsLong(i)                   PyLong_AsLongLong(i)
+#define PyInt_AS_LONG(i)                  PyLong_AsLongLong(i)
 #define PyInt_Check(i)                    PyLong_Check(i)
-#define PyInt_FromLong(i)                 PyLong_FromLong(i)
+#define PyInt_FromLong(i)                 PyLong_FromLongLong(i)
 #endif 
 
 #ifndef USE_NUMPY
@@ -84,10 +84,8 @@
 
 
 #ifdef WIN32
-typedef __int64 jeplong;
 #define FILE_SEP               '\\'
 #else
-typedef long long jeplong;
 #define FILE_SEP               '/'
 #endif
 
