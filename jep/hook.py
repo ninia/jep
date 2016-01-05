@@ -19,20 +19,40 @@ class module(ModuleType):
         try:
             return super(module, self).__getattribute__(name)
         except AttributeError as ae:
-            clazz = forName('{0}.{1}'.format(self.__name__, name))
-            setattr(self, name, clazz)
-            return clazz
+            subpkgs = self.__classEnquirer__.getSubPackages(self.__name__)
+            if subpkgs and name in subpkgs:
+                fullname = self.__name__ + '.' + name
+                mod = makeModule(fullname, self.__loader__, self.__classEnquirer__)
+                return mod
+            else:
+                # assume it's a class and attempt the import
+                clazz = forName('{0}.{1}'.format(self.__name__, name))
+                setattr(self, name, clazz)
+                return clazz
 
     def __dir__(self):
         result = []
-        if self.__classEnquirer__.supportsPackageImport():
-            subpkgs = self.__classEnquirer__.getSubPackages(self.__name__)
+        subpkgs = self.__classEnquirer__.getSubPackages(self.__name__)
+        if subpkgs:
             for s in subpkgs:
                 result.append(s)
-            classnames = self.__classEnquirer__.getClassNames(self.__name__)
+        classnames = self.__classEnquirer__.getClassNames(self.__name__)
+        if classnames:
             for c in classnames:
                 result.append(c.split('.')[-1])
         return result
+
+
+def makeModule(fullname, loader, classEnquirer):
+    mod = module(fullname)
+    mod.__dict__.update({
+        '__loader__': loader,
+        '__path__': [],
+        '__file__': '<java>',
+        '__classEnquirer__': classEnquirer,
+        })
+    sys.modules[fullname] = mod
+    return mod
 
 
 class JepImporter(object):
@@ -50,33 +70,14 @@ class JepImporter(object):
     def load_module(self, fullname):
         if fullname in sys.modules:
             return sys.modules[fullname]
-
         split = fullname.split('.')
         if split[-1][0].islower():
             # it's a package/module
-            mod = module(fullname)
-            mod.__dict__.update({
-                '__loader__': self,
-                '__path__': [],
-                '__file__': '<java>',
-                '__classEnquirer__': self.classEnquirer,
-            })
-            sys.modules[fullname] = mod
-
-            #if self.classEnquirer.supportsPackageImport():
-                # get the list of classes in package and add them as attributes
-                # to the module
-           #     classlist = self.classEnquirer.getClassNames(fullname)
-           #     if classlist:
-           #         for name in classlist:
-           #             try:
-           #                 setattr(mod, name.split('.')[-1], forName(name))
-           #             except Exception:
-           #                 pass
+            mod = makeModule(fullname, self, self.classEnquirer)
         else:
+            # TODO investigate if this is still useful
             # It's a Java class, in general we will only reach here if
-            # self.classEnquirer.supportsPackageImport() is False (ie the class
-            # has not already been imported and set on the module).
+            # the class has not already been imported and set on the module.
             parentModName = '.'.join(split[0:-1])
             parentMod = sys.modules[parentModName]
             return parentMod.__getattr__(split[-1])
