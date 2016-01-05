@@ -141,4 +141,9 @@ public class NamingConventionClassEnquirer implements ClassEnquirer {
         return null;
     }
 
+    @Override
+    public String[] getSubPackages(String pkgName) {
+        return null;
+    }
+
 }

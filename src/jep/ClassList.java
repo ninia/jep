@@ -33,6 +33,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.jar.JarEntry;
@@ -51,8 +53,11 @@ public class ClassList implements ClassEnquirer {
 
     private static ClassList inst;
 
-    // storage for package, members
-    private static HashMap<String, ArrayList<String>> packages = new HashMap<String, ArrayList<String>>();
+    // storage for package, member classes
+    private Map<String, List<String>> packageToClassMap = new HashMap<String, List<String>>();
+
+    // storage for package, sub-packages based on classes found
+    private Map<String, List<String>> packageToSubPackageMap = new HashMap<String, List<String>>(); 
 
     private ClassList() throws JepException {
         loadClassPath();
@@ -229,10 +234,10 @@ public class ClassList implements ClassEnquirer {
 
     // add a class with given package name
     private void addClass(String pname, String cname) {
-        ArrayList<String> el = packages.get(pname.toString());
+        List<String> el = packageToClassMap.get(pname);
         if (el == null) {
             el = new ArrayList<String>();
-            packages.put(pname, el);
+            packageToClassMap.put(pname, el);
         }
 
         // convert to style we need in C code
@@ -242,16 +247,38 @@ public class ClassList implements ClassEnquirer {
         if (!el.contains(fqname)) {
             el.add(fqname);
         }
+
+        // now figure out any sub-packages based on the package name
+        int dotIdx = pname.indexOf(".");
+        while (dotIdx > -1) {
+            String pkgStart = pname.substring(0, dotIdx);
+            int nextDot = pname.indexOf(".", dotIdx+1);
+            String subPkg = null;
+            if (nextDot > -1) {
+              subPkg = pname.substring(dotIdx+1, nextDot);
+            } else {
+              subPkg = pname.substring(dotIdx+1);
+            }
+            List<String> pl = packageToSubPackageMap.get(pkgStart);
+            if (pl == null) {
+                pl = new ArrayList<String>();
+                packageToSubPackageMap.put(pkgStart, pl);
+            }
+            if (!pl.contains(subPkg)) {
+                pl.add(subPkg);
+            }
+            dotIdx = nextDot;
+        }
     }
 
     private String[] _get(String p) {
-        ArrayList<String> el = packages.get(p);
+        List<String> el = packageToClassMap.get(p);
         if (el == null) {
 
             // before we error out, find out if it really is a
             // package. maybe it just doesn't have any classes in it.
 
-            Set<String> keys = packages.keySet();
+            Set<String> keys = packageToClassMap.keySet();
             for (String key : keys) {
                 if (key.startsWith(p))
                     return new String[0];
@@ -275,6 +302,16 @@ public class ClassList implements ClassEnquirer {
     @Override
     public String[] getClassNames(String p) {
         return _get(p);
+    }
+
+    @Override
+    public String[] getSubPackages(String p) {
+        List<String> el = packageToSubPackageMap.get(p);
+        if (el == null) {
+            return new String[0];
+        }
+
+        return el.toArray(new String[0]);
     }
 
     /**

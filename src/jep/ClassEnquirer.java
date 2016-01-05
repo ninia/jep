@@ -112,4 +112,6 @@ public interface ClassEnquirer {
      */
     public String[] getClassNames(String pkgName);
 
+    public String[] getSubPackages(String pkgName);
+
 }
