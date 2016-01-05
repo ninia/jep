@@ -38,17 +38,6 @@ public interface ClassEnquirer {
 
     /*
      * TODO: Implement an OSGi class enquirer.
-     * 
-     * TODO Implement a pseudo-secure class enquirer. A normal import would go
-     * through the enquirer, but that can be stepped around by using
-     * jep.findClass(name). So a ClassEnquirer can't enforce security and Jep
-     * would still require a restricted ClassLoader to be secure. However, they
-     * could potentially be used in tandem for faster performance or dynamic
-     * behavior.
-     * 
-     * TODO Look into adding a method to get sub-packages, though there's not a
-     * good way to implement that in Java short of pre-determination of what is
-     * available.
      */
 
     /**
@@ -64,54 +53,33 @@ public interface ClassEnquirer {
      * @return true if it's likely supported by Java, false if it's likely
      *         python
      */
-    public boolean contains(String name);
-
-    /**
-     * Whether or not this ClassEnquirer supports importing Java classes at the
-     * package level in addition to the class level. For example, with the right
-     * ClassLoader Jep should always be able to successfully import Java classes
-     * with syntax such as:
-     * 
-     * <pre>
-     * <code>
-     * from java.util import ArrayList
-     * o = ArrayList()
-     * </code>
-     * </pre>
-     * 
-     * However, only in some scenarios can the package be imported separately
-     * without the fully qualified name, such as:
-     * 
-     * <pre>
-     * <code>
-     * import java.util as ju
-     * dir(ju)
-     * o = ju.ArrayList()
-     * </code>
-     * </pre>
-     * 
-     * This also roughly corresponds to whether or not
-     * <code>dir(javaPackage)</code> will return a list of available classes or
-     * only the classes that have been explicitly imported.
-     * 
-     * @return true if this ClassEnquirer supports import of packages in
-     *         addition to import of classes, false if it only supports
-     *         importing classes.
-     */
-    public boolean supportsPackageImport();
+    public boolean isJava(String name);
 
     /**
      * Given a Java package name, gets the fully-qualified classnames available
-     * for import in the package. In general this method should return null if
-     * {@link #supportsPackageImport()} returns false.
+     * for import in the package. This method is primarily used for
+     * introspection using Python's dir() method. This method can return null if
+     * dir() support is not necessary.
      * 
      * @param pkgName
      *            the name of a package the ClassEnquirer supports, such as
      *            java.util
-     * @return the list of classnames in the package
+     * @return the list of classnames in the package, or null
      */
     public String[] getClassNames(String pkgName);
 
+    /**
+     * Given a Java package name, gets the sub-packages available. For example,
+     * a sub-package of package "java" is "util", and a sub-package of package
+     * "java.util" is "concurrent". This method is primarily used for
+     * introspection using Python's dir() method. This method can return null if
+     * dir() support is not necessary.
+     * 
+     * @param pkgName
+     *            the name of a package the ClassEnquirer supports, such as
+     *            java.util
+     * @return the list of sub-packages in the package, or null
+     */
     public String[] getSubPackages(String pkgName);
 
 }

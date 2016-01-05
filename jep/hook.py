@@ -11,7 +11,7 @@ class module(ModuleType):
     a __getattr__ implementation for modules, this class can
     try to find classes manually.
 
-    Due to this Java limitation, some classes will not appear in dir()
+    Based on the ClassEnquirer used, some classes may not appear in dir()
     but will import correctly.
     """
 
@@ -25,7 +25,7 @@ class module(ModuleType):
                 mod = makeModule(fullname, self.__loader__, self.__classEnquirer__)
                 return mod
             else:
-                # assume it's a class and attempt the import
+                # assume it is a class and attempt the import
                 clazz = forName('{0}.{1}'.format(self.__name__, name))
                 setattr(self, name, clazz)
                 return clazz
@@ -63,8 +63,8 @@ class JepImporter(object):
             self.classEnquirer = forName('jep.ClassList').getInstance()
 
     def find_module(self, fullname, path=None):
-        if self.classEnquirer.contains(fullname):
-            return self  # found a java package with this name
+        if self.classEnquirer.isJava(fullname):
+            return self  # found a Java package or class with this name
         return None
 
     def load_module(self, fullname):
@@ -75,9 +75,9 @@ class JepImporter(object):
             # it's a package/module
             mod = makeModule(fullname, self, self.classEnquirer)
         else:
-            # TODO investigate if this is still useful
-            # It's a Java class, in general we will only reach here if
-            # the class has not already been imported and set on the module.
+            # Assume it is a Java class. In general we will only reach here if
+            # importing a fully-qualified classname. For example,
+            # import java.util.ArrayList
             parentModName = '.'.join(split[0:-1])
             parentMod = sys.modules[parentModName]
             return parentMod.__getattr__(split[-1])

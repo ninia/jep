@@ -57,7 +57,7 @@ public class ClassList implements ClassEnquirer {
     private Map<String, List<String>> packageToClassMap = new HashMap<String, List<String>>();
 
     // storage for package, sub-packages based on classes found
-    private Map<String, List<String>> packageToSubPackageMap = new HashMap<String, List<String>>(); 
+    private Map<String, List<String>> packageToSubPackageMap = new HashMap<String, List<String>>();
 
     private ClassList() throws JepException {
         loadClassPath();
@@ -252,12 +252,12 @@ public class ClassList implements ClassEnquirer {
         int dotIdx = pname.indexOf(".");
         while (dotIdx > -1) {
             String pkgStart = pname.substring(0, dotIdx);
-            int nextDot = pname.indexOf(".", dotIdx+1);
+            int nextDot = pname.indexOf(".", dotIdx + 1);
             String subPkg = null;
             if (nextDot > -1) {
-              subPkg = pname.substring(dotIdx+1, nextDot);
+                subPkg = pname.substring(dotIdx + 1, nextDot);
             } else {
-              subPkg = pname.substring(dotIdx+1);
+                subPkg = pname.substring(dotIdx + 1);
             }
             List<String> pl = packageToSubPackageMap.get(pkgStart);
             if (pl == null) {
@@ -315,20 +315,36 @@ public class ClassList implements ClassEnquirer {
     }
 
     /**
-     * classname contained in package
+     * Checks if the String is known to the ClassList as an available package or
+     * fully-qualified classname.
      * 
-     * @param p
-     *            a <code>String</code> value
-     * @return <code>String[]</code> array of class names
+     * @param s
+     *            a <code>String</code> to check
+     * @return if the String is considered a Java package or class
      */
     @Override
-    public boolean contains(String p) {
-        return _get(p) != null;
-    }
+    public boolean isJava(String s) {
+        // if it's a known package, _get(s) will return a String[]
+        boolean result = (_get(s) != null);
 
-    @Override
-    public boolean supportsPackageImport() {
-        return true;
+        if (!result) {
+            // it's possible s is a fully-qualified name, check for that
+            int lastDot = s.lastIndexOf(".");
+            if (lastDot > -1) {
+                String pkg = s.substring(0, lastDot);
+                String[] fqns = _get(pkg);
+                if (fqns != null) {
+                    for (String name : fqns) {
+                        if (s.equals(name)) {
+                            result = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        return result;
     }
 
     /**

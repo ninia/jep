@@ -119,7 +119,7 @@ public class NamingConventionClassEnquirer implements ClassEnquirer {
     }
 
     @Override
-    public boolean contains(String name) {
+    public boolean isJava(String name) {
         if (name == null) {
             throw new IllegalArgumentException("name must not be null");
         }
@@ -129,11 +129,6 @@ public class NamingConventionClassEnquirer implements ClassEnquirer {
             String[] split = name.split("\\.");
             return (split.length > 0 && javaNames.contains(split[0]));
         }
-    }
-
-    @Override
-    public boolean supportsPackageImport() {
-        return false;
     }
 
     @Override
