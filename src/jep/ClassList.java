@@ -315,36 +315,15 @@ public class ClassList implements ClassEnquirer {
     }
 
     /**
-     * Checks if the String is known to the ClassList as an available package or
-     * fully-qualified classname.
+     * Checks if the String is known to the ClassList as an available package
      * 
      * @param s
      *            a <code>String</code> to check
-     * @return if the String is considered a Java package or class
+     * @return if the String is considered a Java package
      */
     @Override
     public boolean isJava(String s) {
-        // if it's a known package, _get(s) will return a String[]
-        boolean result = (_get(s) != null);
-
-        if (!result) {
-            // it's possible s is a fully-qualified name, check for that
-            int lastDot = s.lastIndexOf(".");
-            if (lastDot > -1) {
-                String pkg = s.substring(0, lastDot);
-                String[] fqns = _get(pkg);
-                if (fqns != null) {
-                    for (String name : fqns) {
-                        if (s.equals(name)) {
-                            result = true;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        return result;
+        return (_get(s) != null);
     }
 
     /**

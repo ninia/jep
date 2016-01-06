@@ -30,7 +30,6 @@ class TestDir(unittest.TestCase):
         self.assertIn("size", d)
         self.assertIn("ensureCapacity", d)
 
-    @unittest.expectedFailure
     def test_dir_subpackage(self):
         import java
         d = dir(java)

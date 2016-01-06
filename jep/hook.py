@@ -64,23 +64,14 @@ class JepImporter(object):
 
     def find_module(self, fullname, path=None):
         if self.classEnquirer.isJava(fullname):
-            return self  # found a Java package or class with this name
+            return self  # found a Java package with this name
         return None
 
     def load_module(self, fullname):
         if fullname in sys.modules:
             return sys.modules[fullname]
-        split = fullname.split('.')
-        if split[-1][0].islower():
-            # it's a package/module
-            mod = makeModule(fullname, self, self.classEnquirer)
-        else:
-            # Assume it is a Java class. In general we will only reach here if
-            # importing a fully-qualified classname. For example,
-            # import java.util.ArrayList
-            parentModName = '.'.join(split[0:-1])
-            parentMod = sys.modules[parentModName]
-            return parentMod.__getattr__(split[-1])
+
+        mod = makeModule(fullname, self, self.classEnquirer)
         return mod
 
 
