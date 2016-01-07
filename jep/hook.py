@@ -24,6 +24,8 @@ class module(ModuleType):
                 fullname = self.__name__ + '.' + name
                 mod = makeModule(fullname, self.__loader__, self.__classEnquirer__)
                 return mod
+            elif name == '__all__':
+                return self.__dir__()
             else:
                 # assume it is a class and attempt the import
                 clazz = forName('{0}.{1}'.format(self.__name__, name))
