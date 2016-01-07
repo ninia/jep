@@ -1,0 +1,20 @@
+# Contributing to Jep
+
+## Reporting issues
+
+Please only report issues that you believe are bugs or feature requests.
+Questions about Jep should be directed to the
+[mailing list](https://groups.google.com/forum/#!forum/jep-project).
+
+When reporting bugs please include the Python version, Java version, and
+operating system.  It is also helpful if you can recreate or simulate the
+problem with a simple test with the Jep command line interpreter.
+
+## Contributing code
+
+If you're fixing an issue and it's not a lot of code, just go ahead and
+create a pull request.  Please include information about the fix on an
+issue, in the commit message, and/or in code comments.
+
+If you'd like to get more involved than just a fix here or there, then
+please send the current developers a message.

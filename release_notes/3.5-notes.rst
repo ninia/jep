@@ -15,3 +15,12 @@ Code cleanup
 ~~~~~~~~~~~~
 Major components of Jep were modularized, cleaned up, and formatted to
 improve maintainability of the code and encourage more contributions.
+
+
+Improved import hook and ClassEnquirer
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The jep import hook for importing Java classes into Python and the associated
+ClassEnquirer interface have been improved.  Jep is now able to support
+package introspection (list available sub-packages and classes) if implemented
+by the ClassEnquirer implementation.  The default implementation ClassList
+supports this capability.
