@@ -25,6 +25,7 @@
 package jep;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -57,8 +58,9 @@ public class NamingConventionClassEnquirer implements ClassEnquirer {
      * the default top level package names: java, javax, com, gov, org, edu,
      * mil, net
      */
-    protected static final List<String> TOP_LEVEL = Arrays.asList("java",
-            "javax", "com", "gov", "org", "edu", "mil", "net");
+    protected static final List<String> TOP_LEVEL = Collections
+            .unmodifiableList(Arrays.asList("java", "javax", "com", "gov",
+                    "org", "edu", "mil", "net"));
 
     protected Set<String> javaNames;
 
@@ -99,6 +101,10 @@ public class NamingConventionClassEnquirer implements ClassEnquirer {
             javaNames.addAll(TOP_LEVEL);
             for (String country : codes) {
                 javaNames.add(country.toLowerCase());
+            }
+
+            for (String restrictedPkg : ClassEnquirer.RESTRICTED_PKG_NAMES) {
+                javaNames.remove(restrictedPkg);
             }
         } else {
             javaNames = new HashSet<String>(TOP_LEVEL.size());

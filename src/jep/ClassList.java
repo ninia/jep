@@ -63,6 +63,11 @@ public class ClassList implements ClassEnquirer {
         loadClassPath();
         loadPackages();
         loadClassList();
+
+        for (String restrictedPkg : ClassEnquirer.RESTRICTED_PKG_NAMES) {
+            packageToClassMap.remove(restrictedPkg);
+            packageToSubPackageMap.remove(restrictedPkg);
+        }
     }
 
     /**

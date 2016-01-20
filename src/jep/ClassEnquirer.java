@@ -41,6 +41,15 @@ public interface ClassEnquirer {
      */
 
     /**
+     * Certain Java libraries (e.g. io.netty) may meet Java package naming
+     * standards but will conflict with modules that Python provides (e.g.
+     * import io). In general these package names should not be considered as
+     * Java packages unless a ClassEnquirer explicitly chooses to include them.
+     */
+    public static final String[] RESTRICTED_PKG_NAMES = new String[] { "io",
+            "re" };
+
+    /**
      * Checks if the name is likely available in Java. A return value of true
      * implies the name corresponds to a Java package or class, but does not
      * guarantee that an import will succeed. A return value of false implies
