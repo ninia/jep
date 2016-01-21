@@ -327,7 +327,7 @@ public class ClassList implements ClassEnquirer {
      * @return if the String is considered a Java package
      */
     @Override
-    public boolean isJava(String s) {
+    public boolean isJavaPackage(String s) {
         return (_get(s) != null);
     }
 

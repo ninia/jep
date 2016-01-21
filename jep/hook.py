@@ -65,7 +65,7 @@ class JepImporter(object):
             self.classEnquirer = forName('jep.ClassList').getInstance()
 
     def find_module(self, fullname, path=None):
-        if self.classEnquirer.isJava(fullname):
+        if self.classEnquirer.isJavaPackage(fullname):
             return self  # found a Java package with this name
         return None
 

@@ -50,19 +50,22 @@ public interface ClassEnquirer {
             "re" };
 
     /**
-     * Checks if the name is likely available in Java. A return value of true
-     * implies the name corresponds to a Java package or class, but does not
-     * guarantee that an import will succeed. A return value of false implies
-     * that an import from Java would fail, but does not guarantee that an
-     * import will fail.
+     * Checks if the name is likely available in Java as a package. A return
+     * value of true implies the name corresponds to a Java package, but does
+     * not guarantee that an import will succeed. A return value of false
+     * implies that an import from Java would fail, but does not guarantee that
+     * an import will fail. Note: A fully-qualified Java class name should
+     * return false since it is not a package name and the importer hook is
+     * expecting that.
      * 
      * @param name
      *            the name to check, such as java, java.util,
      *            java.util.ArrayList
-     * @return true if it's likely supported by Java, false if it's likely
-     *         python
+     * @return true if it's likely a package supported by Java, false if it's
+     *         likely a Python module (or a Java class name, or an invalid
+     *         import)
      */
-    public boolean isJava(String name);
+    public boolean isJavaPackage(String name);
 
     /**
      * Given a Java package name, gets the fully-qualified classnames available

@@ -125,7 +125,7 @@ public class NamingConventionClassEnquirer implements ClassEnquirer {
     }
 
     @Override
-    public boolean isJava(String name) {
+    public boolean isJavaPackage(String name) {
         if (name == null) {
             throw new IllegalArgumentException("name must not be null");
         }
@@ -133,7 +133,9 @@ public class NamingConventionClassEnquirer implements ClassEnquirer {
             return true;
         } else {
             String[] split = name.split("\\.");
-            return (split.length > 0 && javaNames.contains(split[0]));
+            int len = split.length;
+            return (len > 0 && javaNames.contains(split[0]) && Character
+                    .isLowerCase(split[len - 1].charAt(0)));
         }
     }
 
