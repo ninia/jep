@@ -16,8 +16,6 @@ class StdOutToJava(object):
 
     def flush(self):
         self.flushmethod()
-        
-        eval("sys.stdout = StdOutToJava()");
 
 
 class StdErrToJava(object):
