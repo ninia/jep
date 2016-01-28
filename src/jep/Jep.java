@@ -248,6 +248,12 @@ public final class Jep implements Closeable {
      */
     public Jep(boolean interactive, String includePath, ClassLoader cl,
             ClassEnquirer ce) throws JepException {
+        this(new JepConfig().setInteractive(interactive)
+                .setIncludePath(includePath).setClassLoader(cl)
+                .setClassEnquirer(ce));
+    }
+
+    public Jep(JepConfig config) throws JepException {
         if (threadUsed.get()) {
             /*
              * TODO: Throw a JepException if this is detected. This is
@@ -266,18 +272,19 @@ public final class Jep implements Closeable {
             System.err.println(warning.toString());
         }
 
-        if (cl == null)
+        if (config.classLoader == null)
             this.classLoader = this.getClass().getClassLoader();
         else
-            this.classLoader = cl;
+            this.classLoader = config.classLoader;
 
-        this.interactive = interactive;
+        this.interactive = config.interactive;
         this.tstate = init(this.classLoader);
         threadUsed.set(true);
         this.thread = Thread.currentThread();
 
         // why write C code if you don't have to? :-)
-        if (includePath != null) {
+        if (config.includePath != null) {
+            String includePath = config.includePath.toString();
 
             // Added for compatibility with Windows file system
             if (includePath.contains("\\")) {
@@ -290,6 +297,7 @@ public final class Jep implements Closeable {
         }
 
         eval("import jep");
+        ClassEnquirer ce = config.classEnquirer;
         if (ce == null) {
             ce = ClassList.getInstance();
         }
@@ -297,6 +305,12 @@ public final class Jep implements Closeable {
         eval("jep.hook.setupImporter(classlist)");
         eval("del classlist");
         eval(null); // flush
+
+        if (config.redirectOutputStreams) {
+            eval("from jep import redirect_streams");
+            eval("redirect_streams.setup()");
+            eval(null); // flush
+        }
     }
 
     private native long init(ClassLoader classloader) throws JepException;
@@ -1042,7 +1056,7 @@ public final class Jep implements Closeable {
                     .append(".\nPlease close() from the creating thread to ensure stability.");
             System.err.println(warning);
         }
-        
+
         // don't attempt close twice if something goes wrong
         this.closed = true;
 
