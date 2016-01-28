@@ -157,7 +157,7 @@ static PySequenceMethods pyjcollection_seq_methods = {
  */
 PyTypeObject PyJCollection_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "jep.PyJcollection",
+    "jep.PyJCollection",
     sizeof(PyJCollectionObject),
     0,
     0,                                        /* tp_dealloc */

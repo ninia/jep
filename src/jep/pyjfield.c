@@ -927,7 +927,7 @@ static PyMethodDef pyjfield_methods[] = {
 
 PyTypeObject PyJField_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "PyJfield",
+    "jep.PyJField",
     sizeof(PyJFieldObject),
     0,
     (destructor) pyjfield_dealloc,            /* tp_dealloc */

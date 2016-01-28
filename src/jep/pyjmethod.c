@@ -942,7 +942,7 @@ static PyMethodDef pyjmethod_methods[] = {
 
 PyTypeObject PyJmethod_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "jep.PyJmethod",
+    "jep.PyJMethod",
     sizeof(PyJMethodObject),
     0,
     (destructor) pyjmethod_dealloc,           /* tp_dealloc */

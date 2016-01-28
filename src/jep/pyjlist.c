@@ -567,7 +567,7 @@ static PyMappingMethods pyjlist_map_methods = {
  */
 PyTypeObject PyJList_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "jep.PyJlist",
+    "jep.PyJList",
     sizeof(PyJListObject),
     0,
     0,                                        /* tp_dealloc */

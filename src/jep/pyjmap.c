@@ -321,7 +321,7 @@ static PyMappingMethods pyjmap_map_methods = {
  */
 PyTypeObject PyJMap_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "jep.PyJmap",
+    "jep.PyJMap",
     sizeof(PyJMapObject),
     0,
     0,                                        /* tp_dealloc */

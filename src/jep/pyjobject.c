@@ -980,8 +980,8 @@ static struct PyMethodDef pyjobject_methods[] = {
 
 PyTypeObject PyJObject_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "PyJobject",                              /* tp_name */
-    sizeof(PyJObject),                 /* tp_basicsize */
+    "jep.PyJObject",                          /* tp_name */
+    sizeof(PyJObject),                        /* tp_basicsize */
     0,                                        /* tp_itemsize */
     (destructor) pyjobject_dealloc,           /* tp_dealloc */
     0,                                        /* tp_print */

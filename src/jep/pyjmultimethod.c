@@ -193,7 +193,7 @@ name as a single callable python object.");
 
 PyTypeObject PyJMultiMethod_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "jep.PyJmultiMethod",
+    "jep.PyJMultiMethod",
     sizeof(PyJMultiMethodObject),
     0,
     (destructor) pyjmultimethod_dealloc,      /* tp_dealloc */

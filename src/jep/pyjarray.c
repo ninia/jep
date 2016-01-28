@@ -1700,8 +1700,8 @@ static PyObject* pyjarray_iter(PyObject *);
 
 PyTypeObject PyJArray_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "jarray",                                 /* tp_name */
-    sizeof(PyJArrayObject),                  /* tp_basicsize */
+    "jep.PyJArray",                           /* tp_name */
+    sizeof(PyJArrayObject),                   /* tp_basicsize */
     0,                                        /* tp_itemsize */
     (destructor) pyjarray_dealloc,            /* tp_dealloc */
     0,                                        /* tp_print */
@@ -1751,15 +1751,15 @@ typedef struct {
     PyObject_HEAD
     long it_index;
     PyJArrayObject *it_seq; /* Set to NULL when iterator is exhausted */
-} PyJarrayIterObject;
+} PyJArrayIterObject;
 
-PyTypeObject PyJarrayIter_Type;
+PyTypeObject PyJArrayIter_Type;
 
 static PyObject *pyjarray_iter(PyObject *seq)
 {
-    PyJarrayIterObject *it;
+    PyJArrayIterObject *it;
 
-    if (PyType_Ready(&PyJarrayIter_Type) < 0) {
+    if (PyType_Ready(&PyJArrayIter_Type) < 0) {
         return NULL;
     }
 
@@ -1767,7 +1767,7 @@ static PyObject *pyjarray_iter(PyObject *seq)
         PyErr_BadInternalCall();
         return NULL;
     }
-    it = PyObject_New(PyJarrayIterObject, &PyJarrayIter_Type);
+    it = PyObject_New(PyJArrayIterObject, &PyJArrayIter_Type);
     if (it == NULL) {
         return NULL;
     }
@@ -1777,7 +1777,7 @@ static PyObject *pyjarray_iter(PyObject *seq)
     return (PyObject *)it;
 }
 
-static void pyjarrayiter_dealloc(PyJarrayIterObject *it)
+static void pyjarrayiter_dealloc(PyJArrayIterObject *it)
 {
     Py_XDECREF(it->it_seq);
     PyObject_Del(it);
@@ -1790,7 +1790,7 @@ PyObject* pyjarray_iter_self(PyObject *self)
     return self;
 }
 
-static PyObject *pyjarrayiter_next(PyJarrayIterObject *it)
+static PyObject *pyjarrayiter_next(PyJArrayIterObject *it)
 {
     PyJArrayObject *seq;
     PyObject *item;
@@ -1812,7 +1812,7 @@ static PyObject *pyjarrayiter_next(PyJarrayIterObject *it)
     return NULL;
 }
 
-static int pyjarrayiter_len(PyJarrayIterObject *it)
+static int pyjarrayiter_len(PyJArrayIterObject *it)
 {
     Py_ssize_t len;
     if (it->it_seq) {
@@ -1834,10 +1834,10 @@ PyObject* pyjarrayiter_getattr(PyObject *one, PyObject *two)
     return PyObject_GenericGetAttr(one, two);
 }
 
-PyTypeObject PyJarrayIter_Type = {
+PyTypeObject PyJArrayIter_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyjarrayiterator",                       /* tp_name */
-    sizeof(PyJarrayIterObject),               /* tp_basicsize */
+    "jep.PyJArrayIter",                       /* tp_name */
+    sizeof(PyJArrayIterObject),               /* tp_basicsize */
     0,                                        /* tp_itemsize */
     /* methods */
     (destructor) pyjarrayiter_dealloc,        /* tp_dealloc */

@@ -87,7 +87,7 @@ static PyMethodDef pyjiterable_methods[] = {
  */
 PyTypeObject PyJIterable_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "jep.PyJiterable",
+    "jep.PyJIterable",
     sizeof(PyJIterableObject),
     0,
     0,                                        /* tp_dealloc */

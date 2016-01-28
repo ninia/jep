@@ -121,7 +121,7 @@ static PyMethodDef pyjiterator_methods[] = {
  */
 PyTypeObject PyJIterator_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "jep.PyJiterator",
+    "jep.PyJIterator",
     sizeof(PyJIteratorObject),
     0,
     0,                                        /* tp_dealloc */
