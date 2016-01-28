@@ -8,9 +8,9 @@ import jep.JepException;
  * <pre>
  * PyObject.java - encapsulates a pointer to a PyObject
  *
- * Copyright (c) 2015 JEP AUTHORS.
+ * Copyright (c) 2016 JEP AUTHORS.
  *
- * This file is licenced under the the zlib/libpng License.
+ * This file is licensed under the the zlib/libpng License.
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any
