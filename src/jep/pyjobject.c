@@ -57,6 +57,14 @@ static void pyjobject_init_subtypes(void)
         return;
     }
 
+    // next do number
+    if (!PyJNumber_Type.tp_base) {
+        PyJNumber_Type.tp_base = &PyJObject_Type;
+    }
+    if (PyType_Ready(&PyJNumber_Type) < 0) {
+        return;
+    }
+
     // next do iterable
     if (!PyJIterable_Type.tp_base) {
         PyJIterable_Type.tp_base = &PyJObject_Type;
@@ -153,6 +161,8 @@ PyObject* pyjobject_new(JNIEnv *env, jobject obj)
             pyjob = (PyJObject*) pyjmap_new();
         } else if ((*env)->IsInstanceOf(env, obj, JITERATOR_TYPE)) {
             pyjob = (PyJObject*) pyjiterator_new();
+        } else if ((*env)->IsInstanceOf(env, obj, JNUMBER_TYPE)) {
+            pyjob = (PyJObject*) pyjnumber_new();
         } else {
             pyjob = PyObject_NEW(PyJObject, &PyJObject_Type);
         }

@@ -64,7 +64,7 @@ int pyjmap_check(PyObject *obj)
 /*
  * Gets the size of the map.
  */
-static Py_ssize_t pyjmap_len(PyObject* self)
+static Py_ssize_t pyjmap_len(PyObject *self)
 {
     Py_ssize_t    len   = 0;
     PyJObject    *pyjob = (PyJObject*) self;

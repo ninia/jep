@@ -67,11 +67,14 @@ jclass JCOMPARABLE_TYPE = NULL;
 
 // cached types for Object equivalents of primitives
 jclass JBOOL_OBJ_TYPE   = NULL;
+jclass JBYTE_OBJ_TYPE   = NULL;
+jclass JSHORT_OBJ_TYPE  = NULL;
 jclass JINT_OBJ_TYPE    = NULL;
 jclass JLONG_OBJ_TYPE   = NULL;
 jclass JDOUBLE_OBJ_TYPE = NULL;
 
 // cached types for frequently used classes
+jclass JNUMBER_TYPE      = NULL;
 jclass JTHROWABLE_TYPE   = NULL;
 jclass JMODIFIER_TYPE    = NULL;
 jclass JARRAYLIST_TYPE   = NULL;
@@ -478,9 +481,12 @@ int cache_frequent_classes(JNIEnv *env)
     CACHE_CLASS(JCOLLECTION_TYPE, "java/util/Collection");
     CACHE_CLASS(JCOMPARABLE_TYPE, "java/lang/Comparable");
     CACHE_CLASS(JBOOL_OBJ_TYPE, "java/lang/Boolean");
+    CACHE_CLASS(JBYTE_OBJ_TYPE, "java/lang/Byte");
+    CACHE_CLASS(JSHORT_OBJ_TYPE, "java/lang/Short");
     CACHE_CLASS(JINT_OBJ_TYPE, "java/lang/Integer");
     CACHE_CLASS(JLONG_OBJ_TYPE, "java/lang/Long");
     CACHE_CLASS(JDOUBLE_OBJ_TYPE, "java/lang/Double");
+    CACHE_CLASS(JNUMBER_TYPE, "java/lang/Number");
     CACHE_CLASS(JTHROWABLE_TYPE, "java/lang/Throwable");
     CACHE_CLASS(JMODIFIER_TYPE, "java/lang/reflect/Modifier");
     CACHE_CLASS(JARRAYLIST_TYPE, "java/util/ArrayList");
@@ -521,9 +527,12 @@ void unref_cache_frequent_classes(JNIEnv *env)
     UNCACHE_CLASS(JCOLLECTION_TYPE);
     UNCACHE_CLASS(JCOMPARABLE_TYPE);
     UNCACHE_CLASS(JBOOL_OBJ_TYPE);
+    UNCACHE_CLASS(JBYTE_OBJ_TYPE);
+    UNCACHE_CLASS(JSHORT_OBJ_TYPE);
     UNCACHE_CLASS(JINT_OBJ_TYPE);
     UNCACHE_CLASS(JLONG_OBJ_TYPE);
     UNCACHE_CLASS(JDOUBLE_OBJ_TYPE);
+    UNCACHE_CLASS(JNUMBER_TYPE);
     UNCACHE_CLASS(JTHROWABLE_TYPE);
     UNCACHE_CLASS(JMODIFIER_TYPE);
     UNCACHE_CLASS(JARRAYLIST_TYPE);

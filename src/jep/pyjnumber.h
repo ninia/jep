@@ -27,27 +27,26 @@
 */
 
 /*
- * Convenience header for including all of the headers of Jep.  Not to be
- * confused with jep.h which is generated at build time by javah.  This file
- * is inspired by the ease of use of including Python.h.
+ * A PyJNumberObject is a PyJObject with some extra methods attached to meet
+ * the python Number protocol/interface.  It should only be used where the
+ * underlying jobject of the PyJObject is an implementation of java.lang.Number.
  */
 
-/* jep_platform needs to be included first, see comments in jep_platform.h */
 #include "jep_platform.h"
-#include "jep_util.h"
-#include "jep_exceptions.h"
-#include "jep_numpy.h"
-
-#include "pyembed.h"
-#include "pyjarray.h"
-#include "pyjclass.h"
-#include "pyjcollection.h"
-#include "pyjfield.h"
-#include "pyjiterable.h"
-#include "pyjiterator.h"
-#include "pyjlist.h"
-#include "pyjmap.h"
-#include "pyjmethod.h"
-#include "pyjmultimethod.h"
-#include "pyjnumber.h"
 #include "pyjobject.h"
+
+#ifndef _Included_pyjnumber
+#define _Included_pyjnumber
+
+PyAPI_DATA(PyTypeObject) PyJNumber_Type;
+
+typedef struct {
+    PyJObject obj; /* magic inheritance */
+} PyJNumberObject;
+
+
+PyJNumberObject* pyjnumber_new(void);
+int pyjnumber_check(PyObject*);
+
+
+#endif // ndef pyjnumber
