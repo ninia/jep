@@ -163,7 +163,9 @@ static PyObject* pyjnumber_absolute(PyObject *x) {
 static int pyjnumber_nonzero(PyObject *x) {
     JNIEnv *env = pyembed_get_env();
 
-    TO_PYTHON_NUMBER(env, x);
+    if (pyjnumber_check(x)) {
+        x = java_number_to_python(env, x); 
+    }
 
     return PyObject_IsTrue(x);
 }
@@ -230,10 +232,6 @@ static PyObject* pyjnumber_float(PyObject *x) {
 
 
 static PyObject* java_number_to_python(JNIEnv *env, PyObject* n) {
-    jmethodID  getValue = NULL;
-    PyObject  *result   = NULL;
-    int        isInt    = 0;
-    int        isLong   = 0;
     PyJObject *jnumber  = (PyJObject*) n;
 
     if ((*env)->IsInstanceOf(env, jnumber->object, JBYTE_OBJ_TYPE) ||
@@ -379,7 +377,11 @@ PyTypeObject PyJNumber_Type = {
     0,                                        /* tp_getattro */
     0,                                        /* tp_setattro */
     0,                                        /* tp_as_buffer */
+#if PY_MAJOR_VERSION < 3
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_CHECKTYPES,/* tp_flags */
+#else
+    Py_TPFLAGS_DEFAULT,                        /* tp_flags */
+#endif
     "jnumber",                                /* tp_doc */
     0,                                        /* tp_traverse */
     0,                                        /* tp_clear */
