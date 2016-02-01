@@ -62,141 +62,159 @@ int pyjnumber_check(PyObject *obj)
     if (pyjnumber_check(var)) {\
         var = java_number_to_python(env, var);\
     } else if (PyNumber_Check(var)) {\
-        var = var;\
+        Py_INCREF(var);\
     }\
     else {\
-          Py_INCREF(Py_NotImplemented);       \
-          return Py_NotImplemented;           \
+        Py_INCREF(Py_NotImplemented);       \
+        return Py_NotImplemented;           \
     }\
+
+#define CALL_UNARY(env, methodname, var)\
+    TO_PYTHON_NUMBER(env, var);\
+    result = methodname(var);\
+    Py_DECREF(var);\
+
+#define CALL_BINARY(env, methodname, var1, var2)\
+    TO_PYTHON_NUMBER(env, var1);\
+    TO_PYTHON_NUMBER(env, var2);\
+    result = methodname(var1, var2);\
+    Py_DECREF(var1);\
+    Py_DECREF(var2);\
 
 
 static PyObject* pyjnumber_add(PyObject *x, PyObject *y) {
-    JNIEnv *env = pyembed_get_env();
+    PyObject *result = NULL;
+    JNIEnv   *env    = pyembed_get_env();
 
-    TO_PYTHON_NUMBER(env, x);
-    TO_PYTHON_NUMBER(env, y);
-
-    return PyNumber_Add(x, y);
+    CALL_BINARY(env, PyNumber_Add, x, y);
+    return result;
 }
 
 static PyObject* pyjnumber_subtract(PyObject *x, PyObject *y) {
-    JNIEnv *env = pyembed_get_env();
+    PyObject *result = NULL;
+    JNIEnv   *env    = pyembed_get_env();
 
-    TO_PYTHON_NUMBER(env, x);
-    TO_PYTHON_NUMBER(env, y);
-
-    return PyNumber_Subtract(x, y);
+    CALL_BINARY(env, PyNumber_Subtract, x, y);
+    return result;
 }
 
 static PyObject* pyjnumber_multiply(PyObject *x, PyObject *y) {
-    JNIEnv *env = pyembed_get_env();
+    PyObject *result = NULL;
+    JNIEnv   *env    = pyembed_get_env();
 
-    TO_PYTHON_NUMBER(env, x);
-    TO_PYTHON_NUMBER(env, y);
-
-    return PyNumber_Multiply(x, y);
+    CALL_BINARY(env, PyNumber_Multiply, x, y);
+    return result;
 }
 
 #if PY_MAJOR_VERSION < 3
 static PyObject* pyjnumber_divide(PyObject *x, PyObject *y) {
-    JNIEnv *env = pyembed_get_env();
+    PyObject *result = NULL;
+    JNIEnv   *env    = pyembed_get_env();
 
-    TO_PYTHON_NUMBER(env, x);
-    TO_PYTHON_NUMBER(env, y);
-
-    return PyNumber_Divide(x, y);
+    CALL_BINARY(env, PyNumber_Divide, x, y);
+    return result;
 }
 #endif
 
 static PyObject* pyjnumber_remainder(PyObject *x, PyObject *y) {
-    JNIEnv *env = pyembed_get_env();
+    PyObject *result = NULL;
+    JNIEnv   *env    = pyembed_get_env();
 
-    TO_PYTHON_NUMBER(env, x);
-    TO_PYTHON_NUMBER(env, y);
-
-    return PyNumber_Remainder(x, y);
+    CALL_BINARY(env, PyNumber_Remainder, x, y);
+    return result;
 }
 
 static PyObject* pyjnumber_divmod(PyObject *x, PyObject *y) {
-    JNIEnv *env = pyembed_get_env();
+    PyObject *result = NULL;
+    JNIEnv   *env    = pyembed_get_env();
 
-    TO_PYTHON_NUMBER(env, x);
-    TO_PYTHON_NUMBER(env, y);
-
-    return PyNumber_Divmod(x, y);
+    CALL_BINARY(env, PyNumber_Divmod, x, y);
+    return result;
 }
 
 static PyObject* pyjnumber_power(PyObject *x, PyObject *y, PyObject *z) {
-    JNIEnv *env = pyembed_get_env();
+    PyObject *result = NULL;
+    JNIEnv   *env    = pyembed_get_env();
 
     TO_PYTHON_NUMBER(env, x);
     TO_PYTHON_NUMBER(env, y);
     TO_PYTHON_NUMBER(env, z);
 
-    return PyNumber_Power(x, y, z);
+    result = PyNumber_Power(x, y, z);
+    Py_DECREF(x);
+    Py_DECREF(y);
+    Py_DECREF(z);
+    return result;
 }
 
 static PyObject* pyjnumber_negative(PyObject *x) {
-    JNIEnv *env = pyembed_get_env();
+    PyObject *result = NULL;
+    JNIEnv   *env    = pyembed_get_env();
 
-    TO_PYTHON_NUMBER(env, x);
-
-    return PyNumber_Negative(x);
+    CALL_UNARY(env, PyNumber_Negative, x);
+    return result;
 }
 
 static PyObject* pyjnumber_positive(PyObject *x) {
-    JNIEnv *env = pyembed_get_env();
+    PyObject *result = NULL;
+    JNIEnv   *env    = pyembed_get_env();
 
-    TO_PYTHON_NUMBER(env, x);
-
-    return PyNumber_Positive(x);
+    CALL_UNARY(env, PyNumber_Positive, x);
+    return result;
 }
 
 static PyObject* pyjnumber_absolute(PyObject *x) {
-    JNIEnv *env = pyembed_get_env();
+    PyObject *result = NULL;
+    JNIEnv   *env    = pyembed_get_env();
 
-    TO_PYTHON_NUMBER(env, x);
-
-    return PyNumber_Absolute(x);
+    CALL_UNARY(env, PyNumber_Absolute, x);
+    return result;
 }
 
 static int pyjnumber_nonzero(PyObject *x) {
-    JNIEnv *env = pyembed_get_env();
+    JNIEnv *env    = pyembed_get_env();
+    int     result = -1;
 
     if (pyjnumber_check(x)) {
-        x = java_number_to_python(env, x); 
+        x = java_number_to_python(env, x);
     }
 
-    return PyObject_IsTrue(x);
+    result = PyObject_IsTrue(x);
+    Py_DECREF(x);
+    return result;
 }
 
 static PyObject* pyjnumber_floordivide(PyObject *x, PyObject *y) {
-    JNIEnv *env = pyembed_get_env();
+    PyObject *result = NULL;
+    JNIEnv   *env    = pyembed_get_env();
 
-    TO_PYTHON_NUMBER(env, x);
-    TO_PYTHON_NUMBER(env, y);
-
-    return PyNumber_FloorDivide(x, y);
+    CALL_BINARY(env, PyNumber_FloorDivide, x, y);
+    return result;
 }
 
 static PyObject* pyjnumber_truedivide(PyObject *x, PyObject *y) {
-    JNIEnv *env = pyembed_get_env();
+    PyObject *result = NULL;
+    JNIEnv   *env    = pyembed_get_env();
 
-    TO_PYTHON_NUMBER(env, x);
-    TO_PYTHON_NUMBER(env, y);
-
-    return PyNumber_TrueDivide(x, y);
+    CALL_BINARY(env, PyNumber_TrueDivide, x, y);
+    return result;
 }
 
 static PyObject* pyjnumber_index(PyObject *x) {
-    JNIEnv *env = pyembed_get_env();
+    PyObject *result = NULL;
+    JNIEnv   *env    = pyembed_get_env();
     TO_PYTHON_NUMBER(env, x);
+
     if (PyLong_Check(x)) {
-        return PyNumber_Index(x);
+        result = PyNumber_Index(x);
+        Py_DECREF(x);
+        return result;
     }
 #if PY_MAJOR_VERSION < 3
     else if (PyInt_Check(x)) {
-        return PyNumber_Index(x);
+        result = PyNumber_Index(x);
+        Py_DECREF(x);
+        return result;
     }
 #endif
     else {
