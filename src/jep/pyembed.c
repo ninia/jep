@@ -62,6 +62,8 @@
 
 static PyThreadState *mainThreadState = NULL;
 
+int pyembed_version_unsafe(void);
+
 static PyObject* pyembed_findclass(PyObject*, PyObject*);
 static PyObject* pyembed_forname(PyObject*, PyObject*);
 static PyObject* pyembed_set_print_stack(PyObject*, PyObject*);
@@ -206,6 +208,11 @@ void pyembed_startup(void)
 #endif
 
     if (mainThreadState != NULL) {
+        // this shouldn't happen but to be safe, don't initialize twice
+        return;
+    }
+
+    if (pyembed_version_unsafe()) {
         return;
     }
 
@@ -215,6 +222,52 @@ void pyembed_startup(void)
     // save a pointer to the main PyThreadState object
     mainThreadState = PyThreadState_Get();
     PyEval_ReleaseThread(mainThreadState);
+}
+
+/*
+ * Verify the Python major.minor at runtime matches the Python major.minor
+ * that Jep was built against.  If they don't match, refuse to initialize Jep
+ * and instead throw an exception because a mismatch could cause a JVM crash.
+ */
+int pyembed_version_unsafe(void) {
+    const char *pyversion = NULL;
+    char       *version   = NULL;
+    char       *major     = NULL;
+    char       *minor     = NULL;
+    int         i         = 0;
+
+    pyversion = Py_GetVersion();
+    version = malloc(sizeof(char) * strlen(pyversion));
+    strcpy(version, pyversion);
+    major = version;
+
+    while (version[i] != '\0') {
+        if (!isdigit(version[i])) {
+            version[i] = '\0';
+            if (minor == NULL) {
+                minor = version + i + 1;
+            }
+        }
+        i += 1;
+    }
+
+    if (atoi(major) != PY_MAJOR_VERSION || atoi(minor) != PY_MINOR_VERSION) {
+        char *msg;
+        JNIEnv *env = pyembed_get_env();
+
+        msg = malloc(sizeof(char) * 200);
+        memset(msg, '\0', 200);
+        sprintf(msg,
+                "Jep will not initialize because it was compiled against Python %i.%i but is running against Python %s.%s",
+                PY_MAJOR_VERSION, PY_MINOR_VERSION, major, minor);
+        THROW_JEP(env, msg);
+        free(version);
+        free(msg);
+        return 1;
+    }
+
+    free(version);
+    return 0;
 }
 
 
