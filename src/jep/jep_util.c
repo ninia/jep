@@ -1311,7 +1311,7 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
             return ret;
         }
 
-        bvalue = PyInt_AsLong(param);
+        bvalue = (long) PyInt_AsLong(param);
         if (bvalue > 0) {
             ret.z = JNI_TRUE;
         } else {

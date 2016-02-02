@@ -431,7 +431,7 @@ static PyObject* pyjlist_inplace_fill(PyObject *o, Py_ssize_t count)
 static PyObject* pyjlist_subscript(PyObject *self, PyObject *item)
 {
     if (PyInt_Check(item)) {
-        long i = PyInt_AS_LONG(item);
+        long i = (long) PyInt_AS_LONG(item);
         if (i < 0) {
             i += (long) PyObject_Size(self);
         }
@@ -486,7 +486,7 @@ static int pyjlist_set_subscript(PyObject* self, PyObject* item,
                                  PyObject* value)
 {
     if (PyInt_Check(item)) {
-        long i = PyInt_AS_LONG(item);
+        long i = (long) PyInt_AS_LONG(item);
         if (i < 0) {
             i += (long) PyObject_Size(self);
         }

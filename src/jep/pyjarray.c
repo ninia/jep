@@ -105,7 +105,7 @@ PyObject* pyjarray_new_v(PyObject *isnull, PyObject *args)
     }
 
     if (PyInt_Check(one)) {
-        size = PyInt_AsLong(one);
+        size = (long) PyInt_AsLong(one);
 
         if (PyInt_Check(two)) {
             typeId = (int) PyInt_AsLong(two);
@@ -297,7 +297,7 @@ static int pyjarray_init(JNIEnv *env,
             jint *ar = (jint *) pyarray->pinnedArray;
 
             if (value && PyInt_Check(value)) {
-                v = PyInt_AS_LONG(value);
+                v = (long) PyInt_AS_LONG(value);
             }
 
             for (i = 0; i < pyarray->length; i++) {
@@ -315,7 +315,7 @@ static int pyjarray_init(JNIEnv *env,
 
             if (!value || !PyString_Check(value)) {
                 if (value && PyInt_Check(value)) {
-                    v = PyInt_AS_LONG(value);
+                    v = (long) PyInt_AS_LONG(value);
                 }
 
                 for (i = 0; i < pyarray->length; i++) {
@@ -340,7 +340,7 @@ static int pyjarray_init(JNIEnv *env,
             jbyte *ar = (jbyte *) pyarray->pinnedArray;
 
             if (value && PyInt_Check(value)) {
-                v = PyInt_AS_LONG(value);
+                v = (long) PyInt_AS_LONG(value);
             }
 
             for (i = 0; i < pyarray->length; i++) {
@@ -378,7 +378,7 @@ static int pyjarray_init(JNIEnv *env,
             jboolean *ar = (jboolean *) pyarray->pinnedArray;
 
             if (value && PyInt_Check(value)) {
-                v = PyInt_AS_LONG(value);
+                v = (long) PyInt_AS_LONG(value);
             }
 
             for (i = 0; i < pyarray->length; i++) {
@@ -414,7 +414,7 @@ static int pyjarray_init(JNIEnv *env,
             jshort *ar = (jshort *) pyarray->pinnedArray;
 
             if (value && PyInt_Check(value)) {
-                v  = PyInt_AS_LONG(value);
+                v  = (long) PyInt_AS_LONG(value);
             }
 
             for (i = 0; i < pyarray->length; i++) {
@@ -944,7 +944,7 @@ static PyObject* pyjarray_item(PyJArrayObject *self, Py_ssize_t pos)
 
     case JCHAR_ID: {
         char val[2];
-        val[0] = ((jchar *) self->pinnedArray)[pos];
+        val[0] = (char) ((jchar *) self->pinnedArray)[pos];
         val[1] = '\0';
         ret = PyString_FromString(val);
         break;
@@ -1559,7 +1559,7 @@ static PyObject* pyjarray_slice(PyObject *_self, Py_ssize_t ilow,
 static PyObject* pyjarray_subscript(PyJArrayObject *self, PyObject *item)
 {
     if (PyInt_Check(item)) {
-        long i = PyInt_AS_LONG(item);
+        long i = (long) PyInt_AS_LONG(item);
         if (i < 0) {
             i += self->length;
         }
