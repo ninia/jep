@@ -138,7 +138,9 @@ static PyObject* pyjnumber_power(PyObject *x, PyObject *y, PyObject *z) {
 
     TO_PYTHON_NUMBER(env, x);
     TO_PYTHON_NUMBER(env, y);
-    TO_PYTHON_NUMBER(env, z);
+    if (z != Py_None) {
+        TO_PYTHON_NUMBER(env, z);
+    }
 
     result = PyNumber_Power(x, y, z);
     Py_DECREF(x);
