@@ -229,7 +229,8 @@ void pyembed_startup(void)
  * that Jep was built against.  If they don't match, refuse to initialize Jep
  * and instead throw an exception because a mismatch could cause a JVM crash.
  */
-int pyembed_version_unsafe(void) {
+int pyembed_version_unsafe(void)
+{
     const char *pyversion = NULL;
     char       *version   = NULL;
     char       *major     = NULL;

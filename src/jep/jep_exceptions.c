@@ -445,7 +445,7 @@ int process_java_exception(JNIEnv *env)
     Py_UNBLOCK_THREADS
     if (getStackTrace == 0) {
         getStackTrace = (*env)->GetMethodID(env, JTHROWABLE_TYPE, "getStackTrace",
-                                             "()[Ljava/lang/StackTraceElement;");
+                                            "()[Ljava/lang/StackTraceElement;");
     }
     stack = (*env)->CallObjectMethod(env, exception, getStackTrace);
     (*env)->DeleteLocalRef(env, stack);
