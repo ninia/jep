@@ -46,26 +46,26 @@ Exception handling has been improved in a variety of ways:
   enable more precise catching of certain Java exception types in Python. 
 
 
-Faster PyJobject instantiation and wrapping
+Faster PyJObject instantiation and wrapping
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Jep has been optimized to more quickly instantiate Java objects from the Python
 interpreter and more quickly wrap Java objects that the Python interpreter
 receives.
 
 
-Added PyJlist type
+Added PyJList type
 ~~~~~~~~~~~~~~~~~~
-A new type PyJlist has been created to enable developers to more closely match
-Python syntax when working with Java Lists.  PyJlist extends PyJobject to retain
+A new type PyJList has been created to enable developers to more closely match
+Python syntax when working with Java Lists.  PyJList extends PyJObject to retain
 all previous functionality while also implementing Python's sequence protocol.
 This enables commands such as *for x in obj:* where obj is a java.util.List.
 
 * https://docs.oracle.com/javase/7/docs/api/java/util/List.html
 
 
-Implemented __hash__ on pyjobject
+Implemented __hash__ on PyJObject
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-PyJobject now implements Python's __hash__() by delegating to the Java object's
+PyJObject now implements Python's __hash__() by delegating to the Java object's
 hashCode() method.
 
 
@@ -73,10 +73,9 @@ More precise imports
 ~~~~~~~~~~~~~~~~~~~~
 An interface of ClassEnquirer has been introduced to enable more advanced
 control of imports.  A ClassEnquirer indicates to the import hook if an import
-is expected to be a Java package or class or a Python module.  By default Jep
+is expected to be a Java package or a Python module.  By default Jep
 will continue to use jep.ClassList for determining imports.  The ClassEnquirer
 interface can also be used to force lazy or eager loading of Java classes.
 
 https://www.python.org/dev/peps/pep-0302/  
-
 

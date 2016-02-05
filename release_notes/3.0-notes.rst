@@ -29,9 +29,9 @@ similar to running a Python interpreter from the command line.  The Jep
 interpreter has access to Java classes on the classpath.
 
 
-Implemented rich compare on PyJobject
+Implemented rich compare on PyJObject
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-PyJobject now implements Python's rich compare by delegating to the Java
+PyJObject now implements Python's rich compare by delegating to the Java
 object's equals(Object) method.
 
 https://www.python.org/dev/peps/pep-0207/

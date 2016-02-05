@@ -1,7 +1,7 @@
 Jep 3.5 Release Notes
 *********************
 This release emphasized improved performance and code cleanup.  It is
-compatible with Python 2.6, 2.7, 3.2, 3.3, and 3.4.
+compatible with Python 2.6, 2.7, 3.2, 3.3, 3.4, and 3.5.
 
 
 Improved performance
@@ -24,3 +24,21 @@ ClassEnquirer interface have been improved for consistency and ease of use.
 Jep is also now able to support package introspection (list available
 sub-packages and classes) if implemented by the ClassEnquirer implementation.
 The default implementation ClassList supports this capability.
+
+
+Added PyJNumber type
+~~~~~~~~~~~~~~~~~~~~
+A new type PyJNumber has been created to enable developers to more closely match
+Python syntax when working with Java Numbers.  PyJNumber extends PyJObject to
+retain all previous functionality.  PyJNumbers can be used in math operations
+with Python numbers, but the result will always be a Python number.  If the
+return type or precision of a mathematical operation are important, it is
+not recommended to use PyJNumber's convenience methods/operators.
+
+
+Redirect streams
+~~~~~~~~~~~~~~~~
+Jep can now redirect Python's stdout and stderr to Java's System.out and
+System.err.  This may assist logging in some applications and is available
+through the new Jep(JepConfig) constructor.
+
