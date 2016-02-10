@@ -37,9 +37,8 @@ import java.util.Set;
  * a Python sub-interpreter should be considered as a Java package/class. This
  * enquirer can check for import statements beginning with java, com, gov, etc
  * and country codes such as us, uk, fr, ch, etc.
- * <p>
+ * </p>
  * 
- * <p>
  * This class is useful for the following scenarios:
  * <ul>
  * <li>You don't want the overhead of initializing
@@ -47,7 +46,6 @@ import java.util.Set;
  * <li>You don't want all the classes in a package automatically imported</li>
  * <li>You don't have Python modules that resemble Java package names</li>
  * </ul>
- * </p>
  * 
  * @author [ndjensen at gmail.com] Nate Jensen
  * @version $Id$

@@ -53,7 +53,7 @@ public class JepConfig {
      * Sets whether <code>Jep.eval(String)</code> should support the slower
      * behavior of potentially waiting for multiple statements
      * 
-     * @param interactive
+     * @param interactive whether the Jep instance should be interactive
      * @return a reference to this JepConfig
      */
     public JepConfig setInteractive(boolean interactive) {
@@ -65,7 +65,7 @@ public class JepConfig {
      * Sets a path of directories separated by File.pathSeparator that will be
      * appended to the sub-intepreter's <code>sys.path</code>
      * 
-     * @param includePath
+     * @param includePath directory or directories to include on sys.path
      * @return a reference to this JepConfig
      */
     public JepConfig setIncludePath(String includePath) {
@@ -80,7 +80,7 @@ public class JepConfig {
      * Adds a path of directories separated by File.pathSeparator that will be
      * appended to the sub-intepreter's <code>sys.path</code>
      * 
-     * @param includePaths
+     * @param includePaths directories to include on sys.path
      * @return a reference to this JepConfig
      */
     public JepConfig addIncludePaths(String... includePaths) {
@@ -99,7 +99,7 @@ public class JepConfig {
     /**
      * Sets the ClassLoader to use when importing Java classes from Python
      * 
-     * @param classLoader
+     * @param classLoader the initial ClassLoader for the Jep instance
      * @return a reference to this JepConfig
      */
     public JepConfig setClassLoader(ClassLoader classLoader) {
@@ -111,7 +111,7 @@ public class JepConfig {
      * Sets a ClassEnquirer to determine which imports are Python vs Java, or
      * null for the default {@link ClassList}
      * 
-     * @param classEnquirer
+     * @param classEnquirer the ClassEnquirer for the Jep instance
      * @return a reference to this JepConfig
      */
     public JepConfig setClassEnquirer(ClassEnquirer classEnquirer) {
@@ -123,7 +123,7 @@ public class JepConfig {
      * Sets whether to redirect the Python sys.stdout and sys.stderr streams to
      * the Java System.out and System.err streams
      * 
-     * @param redirectOutputStreams
+     * @param redirectOutputStreams whether to redirect Python streams to Java
      * @return a reference to this JepConfig
      */
     public JepConfig setRedirectOutputStreams(boolean redirectOutputStreams) {

@@ -432,8 +432,10 @@ public final class Jep implements Closeable {
      * </code>
      * </pre>
      * 
+     * <p>
      * Also, Python does not readily return object values from eval(). Use
-     * {@link #getValue(String)} instead. </p>
+     * {@link #getValue(String)} instead.
+     * </p>
      * 
      * @param str
      *            a <code>String</code> statement to eval
