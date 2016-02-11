@@ -39,9 +39,12 @@ except ImportError:
                    and doesn't work with Jep!
                    """
         print(msg)
-except WindowsError as we:
-    print("Windows error importing readline: " + str(we))
-    print("Please try using the latest pyreadline from https://github.com/pyreadline/pyreadline")
+except OSError as e:
+    if hasattr(e, 'winerror'):
+        print("Windows error importing readline: " + str(e))
+        print("Please try using the latest pyreadline from https://github.com/pyreadline/pyreadline")
+    else:
+        traceback.print_exc()
 
 if has_readline:
     try:
