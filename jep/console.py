@@ -1,3 +1,4 @@
+from __future__ import print_function
 import traceback
 import os
 import sys
@@ -19,7 +20,7 @@ except ImportError:
         has_readline = True
     except ImportError:
         msg = """
-              No readline available.
+              No readline available. History will not be available.
               """
         if os.name == "posix":
             msg += """
@@ -44,7 +45,7 @@ except OSError as e:
         print("Windows error importing readline: " + str(e))
         print("Please try using the latest pyreadline from https://github.com/pyreadline/pyreadline")
     else:
-        traceback.print_exc()
+        print("Error importing readline: " + str(e))        
 
 if has_readline:
     try:
