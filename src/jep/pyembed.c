@@ -1239,11 +1239,11 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result)
         pos = 0;
         while (PyDict_Next(result, &pos, &key, &value)) {
             jkey = pyembed_box_py(env, key);
-            if (!jkey) {
+            if (jkey == NULL && PyErr_Occurred()) {
                 return NULL;
             }
             jvalue = pyembed_box_py(env, value);
-            if (!jvalue) {
+            if (jvalue == NULL && PyErr_Occurred()) {
                 return NULL;
             }
 
