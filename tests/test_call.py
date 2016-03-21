@@ -2,6 +2,7 @@ import unittest
 
 import jep
 Test = jep.findClass('jep.test.Test')
+Boolean =  jep.findClass('java.lang.Boolean')
 
 class TestTypes(unittest.TestCase):
     def setUp(self):
@@ -72,3 +73,9 @@ class TestTypes(unittest.TestCase):
 
         self.assertEqual(String, String)
         self.assertNotEqual(String, Integer)
+
+    def test_boxing(self):
+        self.assertTrue(Boolean.TRUE.equals(True))
+        self.assertFalse(Boolean.TRUE.equals(1))
+        self.assertFalse(Boolean.TRUE.equals(1.5))
+

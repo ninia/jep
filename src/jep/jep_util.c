@@ -1201,9 +1201,14 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
 #endif
         else {
             if (!pyjobject_check(param)) {
-                PyErr_Format(PyExc_TypeError,
-                             "Expected object parameter at %i.",
-                             pos + 1);
+                obj = pyembed_box_py(env, param);
+                if ((*env)->IsInstanceOf(env, obj, paramType)){
+                    ret.l = obj;
+                }else{
+                    PyErr_Format(PyExc_TypeError,
+                                 "Expected object parameter at %i.",
+                                 pos + 1);
+                }
                 return ret;
             }
 
