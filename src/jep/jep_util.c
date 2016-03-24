@@ -1172,54 +1172,36 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
     }
 
     case JOBJECT_ID: {
-        jobject obj = NULL;
-        // none is okay, we'll translate to null
-        if (param == Py_None) {
-            ;
-        } else if (PyString_Check(param)) {
-            char *val;
+        jobject obj = pyembed_box_py(env, param);
+        if (obj != NULL && !(*env)->IsInstanceOf(env, obj, paramType)) {
+            jmethodID getName;
+            jstring expTypeJavaName, actTypeJavaName = NULL;
+            const char *expTypeName, *actTypeName;
 
-            // strings count as objects here
-            if (!(*env)->IsAssignableFrom(env,
-                                          JSTRING_TYPE,
-                                          paramType)) {
-                PyErr_Format(
-                    PyExc_TypeError,
-                    "Tried to set a string on an incomparable parameter %i.",
-                    pos + 1);
-                return ret;
+            getName = (*env)->GetMethodID(env, JCLASS_TYPE, "getName",
+                                          "()Ljava/lang/String;");
+            expTypeJavaName = (*env)->CallObjectMethod(env, paramType, getName);
+            expTypeName = (*env)->GetStringUTFChars(env, expTypeJavaName, 0);
+            if (pyjclass_check(param)) {
+                actTypeJavaName = (*env)->CallObjectMethod(env, JCLASS_TYPE, getName);
+                actTypeName = (*env)->GetStringUTFChars(env, actTypeJavaName, 0);
+            } else if (pyjobject_check(param)) {
+                actTypeJavaName = (*env)->CallObjectMethod(env, ((PyJObject *) param)->clazz,
+                                  getName);
+                actTypeName = (*env)->GetStringUTFChars(env, actTypeJavaName, 0);
+            } else {
+                actTypeName = param->ob_type->tp_name;
+            }
+            PyErr_Format(PyExc_TypeError,
+                         "Expected %s at parameter %i but received a %s.",
+                         expTypeName, pos + 1, actTypeName);
+            (*env)->ReleaseStringUTFChars(env, expTypeJavaName, expTypeName);
+            if (actTypeJavaName) {
+                (*env)->ReleaseStringUTFChars(env, actTypeJavaName, actTypeName);
             }
 
-            val = PyString_AsString(param);
-            obj = (*env)->NewStringUTF(env, (const char *) val);
+            obj = NULL;
         }
-#if JEP_NUMPY_ENABLED
-        else if (npy_array_check(param)) {
-            ret.l = convert_pyndarray_jndarray(env, param);
-            return ret;
-        }
-#endif
-        else {
-            if (!pyjobject_check(param)) {
-                PyErr_Format(PyExc_TypeError,
-                             "Expected object parameter at %i.",
-                             pos + 1);
-                return ret;
-            }
-
-            // check object itself is assignable to that type.
-            if (!(*env)->IsAssignableFrom(env,
-                                          ((PyJObject *) param)->clazz,
-                                          paramType)) {
-                PyErr_Format(PyExc_TypeError,
-                             "Incorrect object type at %i.",
-                             pos + 1);
-                return ret;
-            }
-
-            obj = ((PyJObject *) param)->object;
-        }
-
         ret.l = obj;
         return ret;
     }
