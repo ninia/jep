@@ -1178,7 +1178,6 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
             jstring expTypeJavaName, actTypeJavaName = NULL;
             const char *expTypeName, *actTypeName;
 
-
             getName = (*env)->GetMethodID(env, JCLASS_TYPE, "getName",
                                           "()Ljava/lang/String;");
             expTypeJavaName = (*env)->CallObjectMethod(env, paramType, getName);
