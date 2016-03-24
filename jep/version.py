@@ -1,2 +1,2 @@
-__VERSION__ = '3.5.0'
+__VERSION__ = '3.5.1'
 VERSION = __VERSION__
