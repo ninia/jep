@@ -102,9 +102,15 @@ static PyObject* pyjmultimethod_call(PyObject *multimethod,
     PyObject* methodName             = NULL;
     /*
      * cand is a method that passes the simple compatiblity check but the
-     * complex check has not run yet.
+     * complex check may not have been run.
      */
     PyJMethodObject* cand           = NULL;
+    /*
+     * If multiple methods have the same number of args then a complex check
+     * is done to find the best match, in this case candMatch has the current
+     * match value for the current cand.
+     */
+    int               candMatch      = 0;
     Py_ssize_t        methodCount    = 0;
     Py_ssize_t        methodPosition = 0;
     Py_ssize_t        argsSize       = 0;
@@ -132,15 +138,21 @@ static PyObject* pyjmultimethod_call(PyObject *multimethod,
                                   methodPosition);
         if (pyjmethod_check_simple_compat(method, env, methodName, argsSize)) {
             if (cand) {
-                if (pyjmethod_check_complex_compat(cand, env, args)) {
-                    // cand is completly compatible, call it
-                    break;
-                } else if (PyErr_Occurred()) {
+                if (!candMatch) {
+                    candMatch = pyjmethod_check_complex_compat(cand, env, args);
+                }
+                if (PyErr_Occurred()) {
                     cand = NULL;
                     break;
-                } else {
+                } else if (!candMatch) {
                     // cand was not compatible, replace it with method.
                     cand = method;
+                } else {
+                    int methodMatch = pyjmethod_check_complex_compat(method, env, args);
+                    if (methodMatch > candMatch) {
+                        cand = method;
+                        candMatch = methodMatch;
+                    }
                 }
             } else if (PyErr_Occurred()) {
                 break;

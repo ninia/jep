@@ -2,7 +2,9 @@ import unittest
 
 import jep
 Test = jep.findClass('jep.test.Test')
-Boolean =  jep.findClass('java.lang.Boolean')
+Boolean = jep.findClass('java.lang.Boolean')
+StringBuilder = jep.findClass('java.lang.StringBuilder')
+ArrayList = jep.findClass('java.util.ArrayList')
 
 class TestTypes(unittest.TestCase):
     def setUp(self):
@@ -79,3 +81,16 @@ class TestTypes(unittest.TestCase):
         self.assertFalse(Boolean.TRUE.equals(1))
         self.assertFalse(Boolean.TRUE.equals(1.5))
 
+    def test_overload(self):
+        builder = StringBuilder()
+        builder.append(1)
+        self.assertTrue(builder.toString() == "1")
+        builder = StringBuilder()
+        builder.append(StringBuilder)
+        self.assertTrue(builder.toString() == "class java.lang.StringBuilder")
+        list = ArrayList()
+        list.add("One")
+        list.add("Two")
+        list.add("Three")
+        list.remove(1)
+        self.assertEqual(list.size(), 2)

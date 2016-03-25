@@ -366,12 +366,13 @@ int pyjmethod_check_simple_compat(PyJMethodObject* method, JNIEnv* env,
 int pyjmethod_check_complex_compat(PyJMethodObject* method, JNIEnv* env,
                                    PyObject* args)
 {
-    int match = 1;
+    int matchTotal = 1;
     int parampos;
 
     for (parampos = 0; parampos < method->lenParameters; parampos += 1) {
         PyObject* param       = PyTuple_GetItem(args, parampos + 1);
         int       paramTypeId;
+        int       match;
         jclass    paramType   = (jclass) (*env)->GetObjectArrayElement(env,
                                 method->parameters, parampos);
 
@@ -392,9 +393,10 @@ int pyjmethod_check_complex_compat(PyJMethodObject* method, JNIEnv* env,
         if (!match) {
             break;
         }
+        matchTotal += match;
     }
 
-    return match;
+    return matchTotal;
 }
 
 // pyjmethod_call. where the magic happens.

@@ -704,119 +704,119 @@ int pyarg_matches_jtype(JNIEnv *env,
                         jclass paramType,
                         int paramTypeId)
 {
-
-    switch (paramTypeId) {
-
-    case JCHAR_ID:
-        // must not be null...
-        if (PyString_Check(param) && PyString_GET_SIZE(param) == 1) {
+    if (PyBool_Check(param)) {
+        switch (paramTypeId) {
+        case JBOOLEAN_ID:
+            return 6;
+        case JBYTE_ID:
+            return 5;
+        case JSHORT_ID:
+            return 4;
+        case JINT_ID:
+            return 3;
+        case JLONG_ID:
+            return 2;
+        case JOBJECT_ID:
             return 1;
         }
-        return 0;
-
-    case JSTRING_ID:
-
-        if (param == Py_None) {
+    } else if (PyLong_Check(param)) {
+        switch (paramTypeId) {
+        case JLONG_ID:
+            return 6;
+        case JINT_ID:
+            return 5;
+        case JSHORT_ID:
+            return 4;
+        case JBYTE_ID:
+            return 3;
+        case JBOOLEAN_ID:
+            return 2;
+        case JOBJECT_ID:
             return 1;
         }
-
-        if (PyString_Check(param)) {
+    } else if (PyInt_Check(param)) {
+        switch (paramTypeId) {
+        case JINT_ID:
+            return 6;
+        case JLONG_ID:
+            return 5;
+        case JSHORT_ID:
+            return 4;
+        case JBYTE_ID:
+            return 3;
+        case JBOOLEAN_ID:
+            return 2;
+        case JOBJECT_ID:
             return 1;
         }
-
-        if (pyjobject_check(param)) {
-            // check if the object itself can cast to parameter type.
-            if ((*env)->IsAssignableFrom(env,
-                                         ((PyJObject *) param)->clazz,
-                                         paramType)) {
+    } else if (PyString_Check(param)) {
+        switch (paramTypeId) {
+        case JSTRING_ID:
+            return 3;
+        case JCHAR_ID:
+            if (PyString_GET_SIZE(param) == 1) {
+                return 2;
+            }
+            break;
+        case JOBJECT_ID:
+            if ((*env)->IsAssignableFrom(env, JSTRING_TYPE, paramType)) {
                 return 1;
             }
         }
-
-        break;
-
-    case JARRAY_ID:
-        if (param == Py_None) {
+    } else if (PyFloat_Check(param)) {
+        switch (paramTypeId) {
+        case JFLOAT_ID:
+        case JDOUBLE_ID:
             return 1;
         }
-
-        if (pyjarray_check(param)) {
-            // check if the object itself can cast to parameter type.
+    } else if (param == Py_None) {
+        switch (paramTypeId) {
+        case JOBJECT_ID:
+            return 4;
+        case JARRAY_ID:
+            return 3;
+        case JSTRING_ID:
+            return 2;
+        case JCLASS_ID:
+            return 1;
+        }
+    } else if (pyjarray_check(param)) {
+        switch (paramTypeId) {
+        case JARRAY_ID:
             if ((*env)->IsAssignableFrom(env,
                                          ((PyJArrayObject *) param)->clazz,
                                          paramType)) {
-                return 1;
+                return 2;
             }
-        }
-
-        break;
-
-    case JCLASS_ID:
-        if (param == Py_None) {
+            break;
+        case JOBJECT_ID:
             return 1;
         }
-
-        if (pyjclass_check(param)) {
-            return 1;
-        }
-
-        break;
-
-    case JOBJECT_ID:
-        if (param == Py_None) {
-            return 1;
-        }
-
-        if (pyjobject_check(param)) {
-            // check if the object itself can cast to parameter type.
+    } else if (pyjclass_check(param)) {
+        switch (paramTypeId) {
+        case JCLASS_ID:
+            return 2;
+        case JOBJECT_ID:
             if ((*env)->IsAssignableFrom(env,
-                                         ((PyJObject *) param)->clazz,
+                                         JCLASS_TYPE,
                                          paramType)) {
                 return 1;
             }
         }
-
-        if (PyString_Check(param)) {
-            if ((*env)->IsAssignableFrom(env,
-                                         JSTRING_TYPE,
-                                         paramType)) {
+    } else if (pyjobject_check(param)) {
+        switch (paramTypeId) {
+        case JOBJECT_ID:
+            if ((*env)->IsSameObject(env,
+                                     ((PyJObject *) param)->clazz,
+                                     paramType)) {
+                return 2;
+            } else if ((*env)->IsAssignableFrom(env,
+                                                ((PyJObject *) param)->clazz,
+                                                paramType)) {
                 return 1;
             }
         }
-
-        break;
-
-    case JBYTE_ID:
-    case JSHORT_ID:
-    case JINT_ID:
-        if (PyInt_Check(param)) {
-            return 1;
-        }
-        break;
-
-    case JFLOAT_ID:
-    case JDOUBLE_ID:
-        if (PyFloat_Check(param)) {
-            return 1;
-        }
-        break;
-
-    case JLONG_ID:
-        if (PyLong_Check(param)) {
-            return 1;
-        }
-        if (PyInt_Check(param)) {
-            return 1;
-        }
-        break;
-
-    case JBOOLEAN_ID:
-        if (PyInt_Check(param)) {
-            return 1;
-        }
-        break;
     }
-
     // no match
     return 0;
 }
