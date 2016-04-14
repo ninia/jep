@@ -8,3 +8,4 @@ include AUTHORS
 include runtests.py
 include README.rst
 include src/jep/classlist_*.txt
+include src/scripts/jep.bat
