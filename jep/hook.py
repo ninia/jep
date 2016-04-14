@@ -48,6 +48,7 @@ class JepImporter(object):
                 '__loader__': self,
                 '__path__': [],
                 '__file__': '<java>',
+                '__package__': None,
             })
             sys.modules[fullname] = mod
 
