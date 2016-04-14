@@ -51,6 +51,7 @@ def makeModule(fullname, loader, classEnquirer):
         '__loader__': loader,
         '__path__': [],
         '__file__': '<java>',
+        '__package__': None,
         '__classEnquirer__': classEnquirer,
         })
     sys.modules[fullname] = mod
