@@ -90,6 +90,10 @@ def get_java_include():
     include_win32 = os.path.join(inc, 'win32')
     if os.path.exists(include_win32):
         paths.append(include_win32)
+
+    include_bsd = os.path.join(inc, 'freebsd')
+    if os.path.exists(include_bsd):
+        paths.append(include_bsd)
     return paths
 
 
