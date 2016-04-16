@@ -1,5 +1,5 @@
 from distutils import sysconfig
-from commands.util import is_osx, is_windows
+from commands.util import is_osx, is_windows, is_bsd
 import os
 
 def get_python_libs():
@@ -13,7 +13,7 @@ def get_python_libs():
     if ldv:
         v = ldv
     libs = ['python' + v]
-    if not is_windows():
+    if not is_windows() and not is_bsd():
         libs.append('dl')
     return libs
 
