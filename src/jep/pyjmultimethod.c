@@ -101,14 +101,14 @@ static PyObject* pyjmultimethod_call(PyObject *multimethod,
     PyJMultiMethodObject* mm         = NULL;
     PyObject* methodName             = NULL;
     /*
-     * cand is a method that passes the simple compatiblity check but the
-     * complex check may not have been run.
+     * cand is a candidate method that passes the simple compatiblity check but
+     * the complex check may not have been run.
      */
     PyJMethodObject* cand           = NULL;
     /*
      * If multiple methods have the same number of args then a complex check
      * is done to find the best match, in this case candMatch has the current
-     * match value for the current cand.
+     * match value for the current candidate method.
      */
     int               candMatch      = 0;
     Py_ssize_t        methodCount    = 0;
