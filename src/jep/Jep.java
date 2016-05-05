@@ -28,6 +28,8 @@ import java.io.Closeable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.SynchronousQueue;
 
 import jep.python.PyModule;
 import jep.python.PyObject;
@@ -101,8 +103,9 @@ public final class Jep implements Closeable {
      * created from.
      */
     private static class TopInterpreter implements Closeable {
-        Object keepAlive = new Object();
-
+        Thread thread;
+        BlockingQueue<String> importQueue = new SynchronousQueue<String>();
+        BlockingQueue<Object> importResults = new SynchronousQueue<Object>();
         Throwable error;
 
         /**
@@ -114,32 +117,40 @@ public final class Jep implements Closeable {
          * @throws Error
          */
         private void initialize() throws Error {
-            Thread thread = new Thread(new Runnable() {
+            thread = new Thread(new Runnable() {
 
                 @Override
                 public void run() {
-                    synchronized (keepAlive) {
-                        try {
-                            initializePython();
-                        } catch (Throwable t) {
-                            error = t;
-                        } finally {
-                            synchronized (TopInterpreter.this) {
-                                TopInterpreter.this.notify();
+                    try {
+                        initializePython();
+                    } catch (Throwable t) {
+                        error = t;
+                    } finally {
+                        synchronized (TopInterpreter.this) {
+                            TopInterpreter.this.notify();
+                        }
+                    }
+                    /*
+                     * We need to keep this top interpreter thread around. It
+                     * might be used for importing shared modules. Even if it is
+                     * not used it must remain running because if its thread
+                     * shuts down while another thread is in python, then the
+                     * thread state can get messed up leading to stability/GIL
+                     * issues.
+                     */
+                    try {
+                        while(true){
+                            String nextImport = importQueue.take();
+                            Object result = nextImport;
+                            try{
+                                Jep.sharedImport(nextImport);
+                            } catch(JepException e){
+                                result = e;
                             }
+                            importResults.put(result);
                         }
-                        /*
-                         * We need to keep this top interpreter thread around.
-                         * It's not going to be used again but if its thread
-                         * shuts down while another thread is in python, then
-                         * the thread state can get messed up leading to
-                         * stability/GIL issues.
-                         */
-                        try {
-                            keepAlive.wait();
-                        } catch (InterruptedException e) {
-                            // ignore
-                        }
+                    } catch (InterruptedException e) {
+                        // ignore
                     }
                 }
             });
@@ -164,8 +175,18 @@ public final class Jep implements Closeable {
          */
         @Override
         public void close() {
-            synchronized (keepAlive) {
-                keepAlive.notify();
+            thread.interrupt();
+        }
+
+        public void sharedImport(String module) throws JepException{
+            try{
+                importQueue.put(module);
+                Object result = importResults.take();
+                if(result instanceof JepException){
+                    throw new JepException(((JepException) result).getLocalizedMessage());
+                }
+            }catch(InterruptedException e){
+                throw new JepException(e);
             }
         }
     }
@@ -198,6 +219,8 @@ public final class Jep implements Closeable {
             int hashRandomizationFlag);
 
     private static native void initializePython();
+
+    private static native void sharedImport(String module) throws JepException;
 
     /**
      * Creates the TopInterpreter instance that will be used by Jep. This should
@@ -361,9 +384,17 @@ public final class Jep implements Closeable {
             ce = ClassList.getInstance();
         }
         set("classlist", ce);
-        eval("jep.hook.setupImporter(classlist)");
+        eval("jep.java_import_hook.setupImporter(classlist)");
         eval("del classlist");
         eval(null); // flush
+        if(config.sharedModules != null && !config.sharedModules.isEmpty()){
+            set("sharedModules", config.sharedModules);
+            set("sharedImporter", topInterpreter);
+            eval("jep.shared_modules_hook.setupImporter(sharedModules,sharedImporter)");
+            eval("del sharedModules");
+            eval("del sharedImporter");
+            eval(null); // flush
+        }
 
         if (config.redirectOutputStreams) {
             eval("from jep import redirect_streams");
@@ -1124,6 +1155,13 @@ public final class Jep implements Closeable {
         // close all the PyObjects we created
         for (int i = 0; i < this.pythonObjects.size(); i++)
             pythonObjects.get(i).close();
+        
+        try{
+            eval(this.tstate, "import jep");
+            eval(this.tstate, "jep.shared_modules_hook.teardownImporter()");
+        }catch(JepException e){
+            throw new RuntimeException(e);
+        }
 
         this.close(tstate);
         this.tstate = 0;

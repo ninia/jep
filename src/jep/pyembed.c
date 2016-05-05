@@ -62,6 +62,9 @@
 
 static PyThreadState *mainThreadState = NULL;
 
+/* Saved for cross thread access to shared modules. */
+static PyObject* mainThreadModules = NULL;
+
 int pyembed_version_unsafe(void);
 
 static PyObject* pyembed_findclass(PyObject*, PyObject*);
@@ -140,7 +143,6 @@ static struct PyModuleDef jep_module_def = {
 };
 #endif
 
-
 static PyObject* initjep(void)
 {
     PyObject *modjep;
@@ -169,6 +171,7 @@ static PyObject* initjep(void)
         PyModule_AddIntConstant(modjep, "JCHAR_ID", JCHAR_ID);
         PyModule_AddIntConstant(modjep, "JBYTE_ID", JBYTE_ID);
         PyModule_AddIntConstant(modjep, "JEP_NUMPY_ENABLED", JEP_NUMPY_ENABLED);
+        PyModule_AddObject(modjep, "topInterpreterModules", mainThreadModules);
     }
 
     return modjep;
@@ -208,6 +211,7 @@ void pyembed_preinit(jint noSiteFlag,
 
 void pyembed_startup(void)
 {
+    PyObject* sysModule = NULL;
 #ifdef __APPLE__
 #ifndef WITH_NEXT_FRAMEWORK
 // workaround for
@@ -228,10 +232,19 @@ void pyembed_startup(void)
     Py_Initialize();
     PyEval_InitThreads();
 
+    /* 
+     * Save a global reference to the sys.modules form the main thread to
+     * support shared modules 
+     */
+    sysModule = PyImport_ImportModule("sys");
+    mainThreadModules = PyObject_GetAttrString(sysModule, "modules");
+    Py_DECREF(sysModule);
+
     // save a pointer to the main PyThreadState object
     mainThreadState = PyThreadState_Get();
     PyEval_ReleaseThread(mainThreadState);
 }
+
 
 /*
  * Verify the Python major.minor at runtime matches the Python major.minor
@@ -299,12 +312,41 @@ void pyembed_shutdown(JavaVM *vm)
     }
 }
 
+/*
+ * Import a module on the main thread. This must be called from the same thread
+ * as pyembed_startup. On success the specified module will be available in the
+ * mainThreadModules. On failure this function will raise a java exception.
+ */
+void pyembed_shared_import(JNIEnv *env, jstring module)
+{
+    const char *moduleName = NULL;
+    PyObject   *pymodule   =  NULL;
+    PyEval_AcquireThread(mainThreadState);
+
+    moduleName = (*env)->GetStringUTFChars(env, module, 0);
+
+    pymodule = PyImport_ImportModule(moduleName);
+    if (pymodule) {
+        Py_DECREF(pymodule);
+    } else {
+        PyObject *ptype, *pvalue, *pvaluestr, *ptrace;
+        PyErr_Fetch(&ptype, &pvalue, &ptrace);
+        Py_DECREF(ptype);
+        Py_XDECREF(ptrace);
+        pvaluestr = PyObject_Str(pvalue);
+        Py_DECREF(pvalue);
+        THROW_JEP(env, PyString_AsString(pvaluestr));
+        Py_DECREF(pvaluestr);
+    }
+
+    (*env)->ReleaseStringUTFChars(env, module, moduleName);
+    PyEval_ReleaseThread(mainThreadState);
+}
 
 intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller)
 {
     JepThread *jepThread;
     PyObject  *tdict, *mod_main, *globals;
-
     if (cl == NULL) {
         THROW_JEP(env, "Invalid Classloader.");
         return 0;

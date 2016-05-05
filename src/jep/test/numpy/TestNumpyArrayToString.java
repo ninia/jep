@@ -1,6 +1,7 @@
 package jep.test.numpy;
 
 import jep.Jep;
+import jep.JepConfig;
 import jep.JepException;
 
 /**
@@ -19,7 +20,7 @@ public class TestNumpyArrayToString {
         Jep jep0 = null;
 
         try {
-            jep0 = new Jep();
+            jep0 = new Jep(new JepConfig().addSharedModule("numpy"));
             jep0.eval("import numpy");
 
             Thread t = new Thread() {
@@ -27,7 +28,7 @@ public class TestNumpyArrayToString {
                 public void run() {
                     Jep jep1 = null;
                     try {
-                        jep1 = new Jep();
+                        jep1 = new Jep(new JepConfig().addSharedModule("numpy"));
                         jep1.eval("import numpy");
                     } catch (JepException e) {
                         e.printStackTrace();

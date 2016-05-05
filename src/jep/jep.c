@@ -92,6 +92,17 @@ JNIEXPORT void JNICALL Java_jep_Jep_initializePython
 
 /*
  * Class:     jep_Jep
+ * Method:    sharedImport
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_jep_Jep_sharedImport
+(JNIEnv *env, jclass class, jstring module)
+{
+    pyembed_shared_import(env, module);
+}
+
+/*
+ * Class:     jep_Jep
  * Method:    init
  * Signature: (Ljava/lang/ClassLoader;)I
  */

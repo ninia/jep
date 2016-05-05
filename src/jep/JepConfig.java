@@ -25,6 +25,8 @@
 package jep;
 
 import java.io.File;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * <p>
@@ -49,6 +51,7 @@ public class JepConfig {
 
     protected boolean redirectOutputStreams = false;
 
+    protected Set<String> sharedModules = null;
     /**
      * Sets whether <code>Jep.eval(String)</code> should support the slower
      * behavior of potentially waiting for multiple statements
@@ -131,4 +134,35 @@ public class JepConfig {
         return this;
     }
 
+    /**
+     * Sets the names of modules which should be shared with other Jep
+     * sub-interpreters. This can make it possible to use modules which are
+     * not designed for use from Python sub-interpreters. This should not be
+     * necessary for any module written in Python but is intended for extensions
+     * that use the c-api. For a complete discussion of the types of problems
+     * that can require shared modules see the documentation on
+     * shared_modules_hook.py.
+     *
+     * @param sharedModules a set of module names that should be shared
+     * @return a reference to this JepConfig
+     */ 
+    public JepConfig setSharedModules(Set<String> sharedModules){
+        this.sharedModules = sharedModules;
+        return this;
+    }
+
+    /**
+     * Add a module name to the set of modules 
+     *
+     * @param sharedModules a set of module names that should be shared
+     * @return a reference to this JepConfig
+     * @see #setSharedModules(Set)
+     */ 
+    public JepConfig addSharedModule(String sharedModule) {
+        if(sharedModules == null){
+            sharedModules = new HashSet<String>();
+        }
+        sharedModules.add(sharedModule);
+        return this;
+    }
 }

@@ -58,7 +58,7 @@ def makeModule(fullname, loader, classEnquirer):
     return mod
 
 
-class JepImporter(object):
+class JepJavaImporter(object):
     def __init__(self, classEnquirer=None):
         if classEnquirer:
             self.classEnquirer = classEnquirer
@@ -81,8 +81,8 @@ class JepImporter(object):
 def setupImporter(classEnquirer):
     alreadySetup = False
     for importer in sys.meta_path:
-        if isinstance(importer, JepImporter):
+        if isinstance(importer, JepJavaImporter):
             alreadySetup = True
             break
     if not alreadySetup:
-        sys.meta_path.append(JepImporter(classEnquirer))
+        sys.meta_path.append(JepJavaImporter(classEnquirer))
