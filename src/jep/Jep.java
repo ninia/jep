@@ -152,7 +152,15 @@ public final class Jep implements Closeable {
             }
             if (error != null) {
                 if (error instanceof UnsatisfiedLinkError) {
-                    throw (UnsatisfiedLinkError) error;
+                    /*
+                     * This ensures the exception message
+                     * "no jep in java.library.path" while providing the full
+                     * stacktrace of what thread tried to initialize Jep.
+                     */
+                    UnsatisfiedLinkError up = new UnsatisfiedLinkError(
+                            error.getMessage());
+                    up.initCause(error);
+                    throw up;
                 }
                 throw new Error(error);
             }
@@ -482,7 +490,7 @@ public final class Jep implements Closeable {
             return false;
         } catch (JepException e) {
             this.evalLines = null;
-            throw new JepException(e);
+            throw e;
         }
     }
 

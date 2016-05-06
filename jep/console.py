@@ -70,7 +70,17 @@ def prompt(jep):
             try:
                 ran = jep.eval(line)
             except Exception as err:
-                traceback.print_exc()
+                printedErr = False
+                try:
+                    if len(err.args):
+                        if 'printStackTrace' in dir(err.args[0]):
+                            err.args[0].printStackTrace()
+                            printedErr = True
+                except Exception as exc:
+                    print("Error printing stacktrace:", str(exc))
+                finally:
+                    if not printedErr:
+                        print(str(err))
 
             try:
                 if ran:
