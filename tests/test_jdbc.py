@@ -9,12 +9,16 @@ from jep import jdbc as dbapi
 from java.lang import Integer, Long, Double
 from java.sql import Date, Timestamp, Time
 
-@unittest.skipIf(sys.platform.startswith("win"), "file access issues on Windows")
+skip = sys.platform.startswith('win')
+if not skip:
+    try:
+        findClass('org.sqlite.JDBC')
+    except:
+        skip = True
+
+@unittest.skipIf(skip, 'file access issues on Windows or JDBC not on classpath')
 class TestJdbc(unittest.TestCase):
     jdbc_url = 'jdbc:sqlite:build/test.db'
-
-    def setUp(self):
-        findClass('org.sqlite.JDBC')
 
     def tearDown(self):
         if os.path.exists('build/test.db'):
