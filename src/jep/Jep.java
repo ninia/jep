@@ -101,7 +101,7 @@ public final class Jep implements Closeable {
      * be created from.
      */
     private static class TopInterpreter implements Closeable {
-        Object initLock;
+        Object initLock = new Object();
         Throwable error;
 
         /**
@@ -117,23 +117,22 @@ public final class Jep implements Closeable {
 
                 @Override
                 public void run() {
-                    try {
-                        initializePython();
-                    } catch (Throwable t) {
-                        error = t;
-                    } finally {
-                        synchronized (TopInterpreter.this) {
-                            TopInterpreter.this.notify();
+                    synchronized(initLock) {
+                        try {
+                            initializePython();
+                        } catch (Throwable t) {
+                            error = t;
+                        } finally {
+                            synchronized (TopInterpreter.this) {
+                                TopInterpreter.this.notify();
+                            }
                         }
-                    }
-                    /*
-                     * We need to keep this top interpreter thread around. It's
-                     * not going to be used again but if its thread shuts down
-                     * while another thread is in python, then the thread state
-                     * can get messed up leading to stability/GIL issues.
-                     */
-                    initLock = new Object();
-                    synchronized (initLock) {
+                        /*
+                         * We need to keep this top interpreter thread around. It's
+                         * not going to be used again but if its thread shuts down
+                         * while another thread is in python, then the thread state
+                         * can get messed up leading to stability/GIL issues.
+                         */
                         try {
                             initLock.wait();
                         } catch (InterruptedException e) {
@@ -162,10 +161,9 @@ public final class Jep implements Closeable {
          * Stop the interpreter thread.
          */
         @Override
-        public synchronized void close() {
-            if (null != initLock) {
+        public void close() {
+            synchronized(initLock) {
                 initLock.notify();
-                initLock = null;
             }
         }
     }
