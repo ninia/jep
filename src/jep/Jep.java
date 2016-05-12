@@ -57,6 +57,8 @@ public final class Jep implements Closeable {
 
     private static final String THREAD_WARN = "JEP THREAD WARNING: ";
 
+    private static TopInterpreter topInterpreter = null;
+
     private boolean closed = false;
 
     private long tstate = 0;
@@ -95,17 +97,18 @@ public final class Jep implements Closeable {
     };
 
     /**
-     * Loads the jep library (e.g. libjep.so or jep.dll) and initializes the
-     * main Python interpreter that all sub-interpreters will be created from.
+     * Initializes the main Python interpreter that all sub-interpreters will
+     * be created from.
      */
-    private static class TopInterpreter {
+    private static class TopInterpreter implements Closeable {
+        Object initLock = new Object();
         Throwable error;
 
         /**
-         * Loads the jep library, which will in turn initialize CPython, ie
-         * Py_Initialize(). We load on a separate thread to try and avoid GIL
-         * issues that come about from a sub-interpreter being on the same
-         * thread as the top/main interpreter.
+         * Initializes CPython, by calling a native function in the jep module,
+         * and ultimately Py_Initialize(). We load on a separate thread to try
+         * and avoid GIL issues that come about from a sub-interpreter being
+         * on the same thread as the top/main interpreter.
          * 
          * @throws Error
          */
@@ -114,23 +117,22 @@ public final class Jep implements Closeable {
 
                 @Override
                 public void run() {
-                    try {
-                        System.loadLibrary("jep");
-                    } catch (Throwable t) {
-                        error = t;
-                    } finally {
-                        synchronized (TopInterpreter.this) {
-                            TopInterpreter.this.notify();
+                    synchronized(initLock) {
+                        try {
+                            initializePython();
+                        } catch (Throwable t) {
+                            error = t;
+                        } finally {
+                            synchronized (TopInterpreter.this) {
+                                TopInterpreter.this.notify();
+                            }
                         }
-                    }
-                    /*
-                     * We need to keep this top interpreter thread around. It's
-                     * not going to be used again but if its thread shuts down
-                     * while another thread is in python, then the thread state
-                     * can get messed up leading to stability/GIL issues.
-                     */
-                    Object initLock = new Object();
-                    synchronized (initLock) {
+                        /*
+                         * We need to keep this top interpreter thread around. It's
+                         * not going to be used again but if its thread shuts down
+                         * while another thread is in python, then the thread state
+                         * can get messed up leading to stability/GIL issues.
+                         */
                         try {
                             initLock.wait();
                         } catch (InterruptedException e) {
@@ -151,25 +153,71 @@ public final class Jep implements Closeable {
                 }
             }
             if (error != null) {
-                if (error instanceof UnsatisfiedLinkError) {
-                    /*
-                     * This ensures the exception message
-                     * "no jep in java.library.path" while providing the full
-                     * stacktrace of what thread tried to initialize Jep.
-                     */
-                    UnsatisfiedLinkError up = new UnsatisfiedLinkError(
-                            error.getMessage());
-                    up.initCause(error);
-                    throw up;
-                }
                 throw new Error(error);
+            }
+        }
+
+        /**
+         * Stop the interpreter thread.
+         */
+        @Override
+        public void close() {
+            synchronized(initLock) {
+                initLock.notify();
             }
         }
     }
 
     static {
-        TopInterpreter python = new TopInterpreter();
-        python.initialize();
+        System.loadLibrary("jep");
+    }
+
+    /**
+     * Sets interpreter settings for the top Python interpreter. This method
+     * must be called before the first Jep instance is created in the process.
+     *
+     * @param config the python configuration to use.
+     */
+    public static void setInitParams(PyConfig config) throws JepException {
+        if (null != topInterpreter) {
+            throw new JepException(
+              "Jep.setInitParams called after initializing python interpreter.");
+        }
+        setInitParams(
+            config.noSiteFlag,
+            config.noUserSiteDirectory,
+            config.ignoreEnvironmentFlag);
+    }
+
+    private static native void setInitParams(
+        int noSiteFlag,
+        int noUserSiteDiretory,
+        int ignoreEnvironmentFlag);
+
+    private static native void initializePython();
+
+    /**
+     * Creates the TopInterpreter instance that will be used by Jep.
+     * This should be called from all Jep constructors to ensure the native
+     * module has been loaded and initialized before a valid Jep instance is
+     * produced.
+     *
+     * @throws Error
+     */
+    private synchronized static void createTopInterpreter() throws Error {
+        if (null == topInterpreter) {
+            try {
+                topInterpreter = new TopInterpreter();
+                topInterpreter.initialize();
+            } catch (Throwable t) {
+                topInterpreter.close();
+                throw t;
+            }
+        } else if (null != topInterpreter.error) {
+            throw new Error(
+                "The main python interpreter previously failed to initialize.",
+                topInterpreter.error);
+        }
     }
 
     // -------------------------------------------------- constructors
@@ -262,6 +310,7 @@ public final class Jep implements Closeable {
     }
 
     public Jep(JepConfig config) throws JepException {
+        createTopInterpreter();
         if (threadUsed.get()) {
             /*
              * TODO: Throw a JepException if this is detected. This is

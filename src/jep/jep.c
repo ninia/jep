@@ -48,7 +48,6 @@ BOOL APIENTRY DllMain(HANDLE hModule,
 JNIEXPORT jint JNICALL
 JNI_OnLoad(JavaVM *vm, void *reserved)
 {
-    pyembed_startup();
     return JNI_VERSION_1_2;
 }
 
@@ -59,6 +58,32 @@ JNI_OnUnload(JavaVM *vm, void *reserved)
     pyembed_shutdown(vm);
 }
 
+
+/*
+ * Class:     jep_Jep
+ * Method:    setInitParams
+ * Signature: (III)V
+ */
+JNIEXPORT void JNICALL Java_jep_Jep_setInitParams
+(JNIEnv *env,
+ jclass class,
+ jint noSiteFlag,
+ jint noUserSiteDirectory,
+ jint ignoreEnvironmentFlag)
+{
+    pyembed_preinit(noSiteFlag, noUserSiteDirectory, ignoreEnvironmentFlag);
+}
+
+/*
+ * Class:     jep_Jep
+ * Method:    initializePython
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_jep_Jep_initializePython
+(JNIEnv *env, jclass class)
+{
+    pyembed_startup();
+}
 
 /*
  * Class:     jep_Jep

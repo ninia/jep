@@ -196,6 +196,20 @@ static PyObject* initjep(void)
     return modjep;
 }
 
+void pyembed_preinit(jint noSiteFlag,
+                     jint noUserSiteDirectory,
+                     jint ignoreEnvironmentFlag)
+{
+    if (noSiteFlag >= 0) {
+        Py_NoSiteFlag = noSiteFlag;
+    }
+    if (noUserSiteDirectory >= 0) {
+        Py_NoUserSiteDirectory = noUserSiteDirectory;
+    }
+    if (ignoreEnvironmentFlag >= 0) {
+        Py_IgnoreEnvironmentFlag = ignoreEnvironmentFlag;
+    }
+}
 
 void pyembed_startup(void)
 {
