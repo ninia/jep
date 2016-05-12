@@ -101,7 +101,7 @@ public final class Jep implements Closeable {
      * be created from.
      */
     private static class TopInterpreter implements Closeable {
-        Object initLock = new Object();
+        Object keepAlive = new Object();
         Throwable error;
 
         /**
@@ -117,7 +117,7 @@ public final class Jep implements Closeable {
 
                 @Override
                 public void run() {
-                    synchronized(initLock) {
+                    synchronized(keepAlive) {
                         try {
                             initializePython();
                         } catch (Throwable t) {
@@ -134,7 +134,7 @@ public final class Jep implements Closeable {
                          * can get messed up leading to stability/GIL issues.
                          */
                         try {
-                            initLock.wait();
+                            keepAlive.wait();
                         } catch (InterruptedException e) {
                             // ignore
                         }
@@ -162,8 +162,8 @@ public final class Jep implements Closeable {
          */
         @Override
         public void close() {
-            synchronized(initLock) {
-                initLock.notify();
+            synchronized(keepAlive) {
+                keepAlive.notify();
             }
         }
     }
