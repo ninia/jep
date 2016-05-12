@@ -267,8 +267,7 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
     release_utf_char(env, className, cClassName);
     pyAttrName = PyString_FromString("java_name");
     if (PyObject_SetAttr((PyObject *) pyjob, pyAttrName, pyClassName) == -1) {
-        PyErr_Format(PyExc_RuntimeError,
-                     "Couldn't add java_name as attribute.");
+        goto EXIT_ERROR;
     } else {
         pyjobject_addfield(pyjob, pyAttrName);
     }
@@ -413,9 +412,8 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
             name = PyJmultiMethod_GetName(cached);
         }
         if (name) {
-            if (PyObject_SetAttr((PyObject *) pyjob, name, cached) != 0) {
-                PyErr_SetString(PyExc_RuntimeError,
-                                "Couldn't add method as attribute.");
+            if (PyObject_SetAttr((PyObject *) pyjob, name, cached) == -1) {
+                goto EXIT_ERROR;
             } else {
                 pyjobject_addmethod(pyjob, name);
             }
@@ -463,8 +461,8 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
         if (pyjfield->pyFieldName && PyString_Check(pyjfield->pyFieldName)) {
             if (PyObject_SetAttr((PyObject *) pyjob,
                                  pyjfield->pyFieldName,
-                                 (PyObject *) pyjfield) != 0) {
-                printf("WARNING: couldn't add field.\n");
+                                 (PyObject *) pyjfield) == -1) {
+                goto EXIT_ERROR;
             } else {
                 pyjobject_addfield(pyjob, pyjfield->pyFieldName);
             }
