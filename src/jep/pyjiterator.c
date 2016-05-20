@@ -87,13 +87,6 @@ int pyjiterator_check(PyObject *obj) {
     return 0;
 }
 
-/*
- * Gets the iterator (itself).
- */
-PyObject* pyjiterator_getiter(PyObject* self) {
-    return self;
-}
-
 PyObject* pyjiterator_next(PyObject* self) {
     jmethodID         hasNext   = NULL;
     jboolean          nextAvail = JNI_FALSE;
@@ -165,8 +158,8 @@ PyTypeObject PyJiterator_Type = {
     0,                                        /* tp_clear */
     0,                                        /* tp_richcompare */
     0,                                        /* tp_weaklistoffset */
-    (getiterfunc) pyjiterator_getiter,        /* tp_iter */
-    (iternextfunc) pyjiterator_next,         /* tp_iternext */
+    PyObject_SelfIter,                        /* tp_iter */
+    (iternextfunc) pyjiterator_next,          /* tp_iternext */
     pyjiterator_methods,                      /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
