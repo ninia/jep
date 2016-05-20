@@ -62,7 +62,7 @@ int pyjiterator_check(PyObject *obj)
     return 0;
 }
 
-{
+
 PyObject* pyjiterator_next(PyObject* self)
 {
     jboolean      nextAvail = JNI_FALSE;
