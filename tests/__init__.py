@@ -12,4 +12,5 @@ from .test_dir import *
 from .test_numpy import *
 from .test_method_memory import *
 from .test_numbers import *
+from .test_iterators import *
 
