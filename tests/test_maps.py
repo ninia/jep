@@ -28,4 +28,11 @@ class TestMaps(unittest.TestCase):
         self.assertEqual(jmap["b"], pymap["b"])
         self.assertEqual(jmap["c"], pymap["c"])
         self.assertEqual(len(jmap), len(pymap))
-        
+
+    def test_del(self):
+        jmap = makeJavaMap()
+        pymap = makePythonDict()
+        with self.assertRaises(NotImplementedError):
+            del jmap['a']
+        del pymap['a']
+        #assertEqual(jmap, pymap)

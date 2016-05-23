@@ -217,7 +217,12 @@ static int pyjmap_setitem(PyObject *o, PyObject *key, PyObject *v) {
     PyJobject_Object *obj      = (PyJobject_Object*) o;
     JNIEnv           *env      = pyembed_get_env();
 
-    if(v == Py_None) {
+    if (v == NULL) {
+        PyErr_Format(PyExc_NotImplementedError,
+                     "del from PyJmap not supported yet");
+        return -1;
+    }
+    else if(v == Py_None) {
         value = NULL;
     } else {
         value = pyembed_box_py(env, v);

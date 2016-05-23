@@ -234,6 +234,11 @@ static int pyjlist_setitem(PyObject *o, Py_ssize_t i, PyObject *v) {
     JNIEnv           *env      = pyembed_get_env();
     jobject           value    = NULL;
 
+    if (v == NULL) {
+        PyErr_Format(PyExc_NotImplementedError,
+                     "del from PyJlist not supported yet");
+        return -1;
+    }
     if(v == Py_None) {
         value = NULL;
     } else {
