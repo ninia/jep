@@ -238,8 +238,7 @@ static int pyjlist_setitem(PyObject *o, Py_ssize_t i, PyObject *v) {
         PyErr_Format(PyExc_NotImplementedError,
                      "del from PyJlist not supported yet");
         return -1;
-    }
-    if(v == Py_None) {
+    } else if(v == Py_None) {
         value = NULL;
     } else {
         value = pyembed_box_py(env, v);

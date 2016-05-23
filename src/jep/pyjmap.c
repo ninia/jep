@@ -221,8 +221,7 @@ static int pyjmap_setitem(PyObject *o, PyObject *key, PyObject *v) {
         PyErr_Format(PyExc_NotImplementedError,
                      "del from PyJmap not supported yet");
         return -1;
-    }
-    else if(v == Py_None) {
+    } else if(v == Py_None) {
         value = NULL;
     } else {
         value = pyembed_box_py(env, v);
