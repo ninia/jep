@@ -237,7 +237,7 @@ static PyObject* pyjclass_add_inner_classes(JNIEnv *env,
             if (process_java_exception(env)) {
                 return NULL;
             }
-            public = (*env)->CallBooleanMethod(env, JMODIFIER_TYPE, modifierIsPublic, mods);
+            public = (*env)->CallStaticBooleanMethod(env, JMODIFIER_TYPE, modifierIsPublic, mods);
             if (process_java_exception(env)) {
                 return NULL;
             }

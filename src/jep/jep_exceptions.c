@@ -193,7 +193,7 @@ int process_py_exception(JNIEnv *env, int printTrace)
                 jclass stackTraceElemClazz;
 
                 stackTraceElemClazz = (*env)->FindClass(env,
-                                                        "Ljava/lang/StackTraceElement;");
+                                                        "java/lang/StackTraceElement");
                 if (stackTraceElemInit == 0) {
                     stackTraceElemInit =
                         (*env)->GetMethodID(env, stackTraceElemClazz,
