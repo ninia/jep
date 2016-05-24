@@ -262,6 +262,9 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
                                            "()Ljava/lang/String;");
     }
     className = (*env)->CallObjectMethod(env, pyjob->clazz, classGetName);
+    if (process_java_exception(env) || !className) {
+        goto EXIT_ERROR;
+    }
     cClassName = jstring2char(env, className);
     pyClassName = PyString_FromString(cClassName);
     release_utf_char(env, className, cClassName);

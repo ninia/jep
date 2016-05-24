@@ -323,6 +323,9 @@ void release_utf_char(JNIEnv *env, jstring str, const char *v)
             (*env)->DeleteLocalRef(env, clazz);\
         }\
         clazz = (*env)->CallObjectMethod(env, array, classGetComponentType);\
+        if ((*env)->ExceptionCheck(env)){\
+            return 0;\
+        }\
         primitive = (*env)->NewGlobalRef(env, clazz);\
         (*env)->DeleteLocalRef(env, clazz);\
     }\
@@ -698,14 +701,14 @@ int get_jtype(JNIEnv *env, jclass clazz)
 }
 
 
-/* 
- * Determines how well a parameter matches the expected type. For example a 
+/*
+ * Determines how well a parameter matches the expected type. For example a
  * python integer can be passed to java as a bool, int, long, or
  * java.lang.Integer. A bool is not very descriptive so it would return a much
  * lower value than an int. A return value of 0 indicates there is no match,
  * for example a python int cannot be used as a java.util.List. Larger return
  * values indicate a better match.
- */ 
+ */
 int pyarg_matches_jtype(JNIEnv *env,
                         PyObject *param,
                         jclass paramType,

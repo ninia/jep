@@ -95,12 +95,19 @@ int process_py_exception(JNIEnv *env, int printTrace)
 
                 if (getLocalizedMessage == 0) {
                     getLocalizedMessage = (*env)->GetMethodID(env, JTHROWABLE_TYPE,
-                                                              "getLocalizedMessage",
-                                                              "()Ljava/lang/String;");
+                                          "getLocalizedMessage",
+                                          "()Ljava/lang/String;");
                 }
 
                 jmessage = (*env)->CallObjectMethod(env, jexc->object,
                                                     getLocalizedMessage);
+                if ((*env)->ExceptionCheck(env)) {
+                    fprintf(stderr,
+                            "Error while processing a Python exception, unexpected java exception.\n");
+                    PyErr_Restore(ptype, pvalue, ptrace);
+                    PyErr_Print();
+                    return 1;
+                }
                 if (jmessage != NULL) {
                     const char* charMessage;
                     charMessage = jstring2char(env, jmessage);
@@ -330,6 +337,13 @@ int process_py_exception(JNIEnv *env, int printTrace)
                     }
                     (*env)->CallObjectMethod(env, jepException, setStackTrace,
                                              reverse);
+                    if ((*env)->ExceptionCheck(env)) {
+                        fprintf(stderr,
+                                "Error while processing a Python exception, unexpected java exception.\n");
+                        PyErr_Restore(ptype, pvalue, ptrace);
+                        PyErr_Print();
+                        return 1;
+                    }
                 }
                 (*env)->DeleteLocalRef(env, reverse);
             }
@@ -441,13 +455,23 @@ int process_java_exception(JNIEnv *env)
     // we're already processing this one, clear the old
     (*env)->ExceptionClear(env);
 
-    // fill in the stack trace here to make sure we don't lose it
+    /*
+     * Java does not fill in a stack trace until getStackTrace is called, if it
+     * is not called now then the stack trace can be lost so even though this
+     * looks like a noop it is very important.
+     */
     Py_UNBLOCK_THREADS
     if (getStackTrace == 0) {
         getStackTrace = (*env)->GetMethodID(env, JTHROWABLE_TYPE, "getStackTrace",
                                             "()[Ljava/lang/StackTraceElement;");
     }
     stack = (*env)->CallObjectMethod(env, exception, getStackTrace);
+    if ((*env)->ExceptionCheck(env)) {
+        PyErr_Format(PyExc_RuntimeError,
+                     "wrapping java exception in pyjobject failed.");
+        return 1;
+
+    }
     (*env)->DeleteLocalRef(env, stack);
     pyExceptionType = pyerrtype_from_throwable(env, exception);
     Py_BLOCK_THREADS

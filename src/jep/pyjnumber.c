@@ -61,6 +61,9 @@ int pyjnumber_check(PyObject *obj)
 #define TO_PYTHON_NUMBER(env, var)\
     if (pyjnumber_check(var)) {\
         var = java_number_to_python(env, var);\
+        if (var == NULL){\
+            return NULL;\
+        }\
     } else if (PyNumber_Check(var)) {\
         Py_INCREF(var);\
     }\
@@ -190,6 +193,9 @@ static int pyjnumber_nonzero(PyObject *x)
 
     if (pyjnumber_check(x)) {
         x = java_number_to_python(env, x);
+        if (x == NULL) {
+            return result;
+        }
     }
 
     result = PyObject_IsTrue(x);
@@ -253,7 +259,9 @@ static PyObject* pyjnumber_long(PyObject *x)
     JNIEnv   *env    = pyembed_get_env();
 
     result = java_number_to_pythonintlong(env, x);
-    if (PyInt_Check(result)) {
+    if (result == NULL) {
+        return result;
+    } else if (PyInt_Check(result)) {
         PyObject *longResult = PyLong_FromLong(PyInt_AS_LONG(result));
         Py_DECREF(result);
         return longResult;
@@ -309,11 +317,17 @@ static PyObject* java_number_to_pythonintlong(JNIEnv *env, PyObject* n)
             (*env)->IsInstanceOf(env, jnumber->object, JSHORT_OBJ_TYPE) ||
             (*env)->IsInstanceOf(env, jnumber->object, JINT_OBJ_TYPE)) {
         jint result = (*env)->CallIntMethod(env, jnumber->object, intValue);
+        if (process_java_exception(env)) {
+            return NULL;
+        }
         return PyInt_FromSsize_t(result);
     }
 #endif
 
     value = (*env)->CallLongMethod(env, jnumber->object, longValue);
+    if (process_java_exception(env)) {
+        return NULL;
+    }
     return PyLong_FromLongLong(value);
 }
 
@@ -332,6 +346,9 @@ static PyObject* java_number_to_pythonfloat(JNIEnv *env, PyObject* n)
     }
 
     value = (*env)->CallDoubleMethod(env, jnumber->object, doubleValue);
+    if (process_java_exception(env)) {
+        return NULL;
+    }
     return PyFloat_FromDouble(value);
 }
 
