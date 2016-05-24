@@ -54,8 +54,6 @@ char* pyunicode_to_utf8(PyObject *unicode);
 // returns new reference to PyObject
 PyObject* jobject_topystring(JNIEnv*, jobject);
 
-PyObject* pystring_split_last(PyObject*, char*);
-
 // call toString() on jobject and return result.
 // NULL on error
 jstring jobject_tostring(JNIEnv*, jobject);

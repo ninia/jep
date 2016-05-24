@@ -1783,13 +1783,6 @@ static void pyjarrayiter_dealloc(PyJArrayIterObject *it)
     PyObject_Del(it);
 }
 
-/* the iterator's __iter()__ */
-PyObject* pyjarray_iter_self(PyObject *self)
-{
-    Py_INCREF(self);
-    return self;
-}
-
 static PyObject *pyjarrayiter_next(PyJArrayIterObject *it)
 {
     PyJArrayObject *seq;
@@ -1862,7 +1855,7 @@ PyTypeObject PyJArrayIter_Type = {
     0,                                        /* tp_clear */
     0,                                        /* tp_richcompare */
     0,                                        /* tp_weaklistoffset */
-    pyjarray_iter_self,                       /* tp_iter */
+    PyObject_SelfIter,                        /* tp_iter */
     (iternextfunc) pyjarrayiter_next,         /* tp_iternext */
     0,                                        /* tp_methods */
     0,                                        /* tp_members */
