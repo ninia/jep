@@ -938,6 +938,10 @@ int pyjobject_setattr(PyJobject_Object *obj,
                              PyObject *v) {
     PyObject *pyname, *tuple;
 
+    if(v == NULL) {
+        PyErr_Format(PyExc_TypeError, "Deleting attributes from PyJobjects is not allowed");
+        return -1;
+    }
     if(!name) {
         PyErr_Format(PyExc_RuntimeError, "Invalid name: NULL.");
         return -1;
