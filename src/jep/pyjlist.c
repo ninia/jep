@@ -35,6 +35,7 @@ jmethodID listSubList      = 0;
 jmethodID listSet          = 0;
 jmethodID listAdd          = 0;
 jmethodID listClear        = 0;
+jmethodID listRemove       = 0;
 
 static PyObject* pyjlist_add(PyObject*, PyObject*);
 static PyObject* pyjlist_fill(PyObject*, Py_ssize_t);
@@ -219,7 +220,7 @@ static PyObject* pyjlist_getslice(PyObject *o, Py_ssize_t i1, Py_ssize_t i2)
 
 /*
  * Method for the setting items with the [int] operator on pyjlist.  For example,
- * o[i] = v
+ * o[i] = v.  Also supports del o[i]
  */
 static int pyjlist_setitem(PyObject *o, Py_ssize_t i, PyObject *v)
 {
@@ -228,10 +229,23 @@ static int pyjlist_setitem(PyObject *o, Py_ssize_t i, PyObject *v)
     jobject       value    = NULL;
 
     if (v == NULL) {
-        PyErr_Format(PyExc_NotImplementedError,
-                     "del from PyJlist not supported yet");
-        return -1;
-    } else if(v == Py_None) {
+        // this is a del PyJList[index] statement
+        if (listRemove == 0) {
+            listRemove = (*env)->GetMethodID(env, JLIST_TYPE, "remove",
+                                             "(I)Ljava/lang/Object;");
+            if (process_java_exception(env) || !listRemove) {
+                return -1;
+            }
+        }
+
+        (*env)->CallObjectMethod(env, obj->object, listRemove, (jint) i);
+        if (process_java_exception(env)) {
+            return -1;
+        }
+
+        // have to return 0 on success even though it's not documented
+        return 0;
+    } else if (v == Py_None) {
         value = NULL;
     } else {
         value = pyembed_box_py(env, v);

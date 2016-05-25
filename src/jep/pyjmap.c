@@ -31,6 +31,7 @@
 jmethodID mapSize        = 0;
 jmethodID mapGet         = 0;
 jmethodID mapPut         = 0;
+jmethodID mapRemove      = 0;
 jmethodID mapContainsKey = 0;
 jmethodID mapKeySet      = 0;
 jmethodID mapKeyItr      = 0;
@@ -195,7 +196,7 @@ static PyObject* pyjmap_getitem(PyObject *o, PyObject *key)
 
 /*
  * Method for the setting items with the [key] operator on pyjmap.  For example,
- * o[key] = v
+ * o[key] = v.  Also supports del o[key]
  */
 static int pyjmap_setitem(PyObject *o, PyObject *key, PyObject *v)
 {
@@ -205,10 +206,42 @@ static int pyjmap_setitem(PyObject *o, PyObject *key, PyObject *v)
     JNIEnv       *env      = pyembed_get_env();
 
     if (v == NULL) {
-        PyErr_Format(PyExc_NotImplementedError,
-                     "del from PyJmap not supported yet");
-        return -1;
-    } else if(v == Py_None) {
+        // this is a del PyJMap[key] statement
+        if (!pyjmap_contains_key(o, key)) {
+            PyObject *pystr = PyObject_Str(key);
+            PyErr_Format(PyExc_KeyError,
+                         "KeyError: %s",
+                         PyString_AsString(pystr));
+            Py_XDECREF(pystr);
+            return -1;
+        }
+
+        if (mapRemove == 0) {
+            mapRemove = (*env)->GetMethodID(env, JMAP_TYPE, "remove",
+                                            "(Ljava/lang/Object;)Ljava/lang/Object;");
+            if (process_java_exception(env) || !mapRemove) {
+                return -1;
+            }
+        }
+
+        if (pyjobject_check(key)) {
+            jkey = ((PyJObject*) key)->object;
+        } else {
+            jvalue jvkey = convert_pyarg_jvalue(env, key, JOBJECT_TYPE, JOBJECT_ID, 1);
+            jkey = jvkey.l;
+            if (process_java_exception(env) || !jkey) {
+                return -1;
+            }
+        }
+
+        (*env)->CallObjectMethod(env, obj->object, mapRemove, jkey);
+        if (process_java_exception(env)) {
+            return -1;
+        }
+
+        // have to return 0 on success even though it's not documented
+        return 0;
+    } else if (v == Py_None) {
         value = NULL;
     } else {
         value = pyembed_box_py(env, v);

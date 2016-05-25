@@ -121,7 +121,15 @@ class TestLists(unittest.TestCase):
     def test_del(self):
         jlist = makeJavaList()
         pylist = makePythonList()
-        with self.assertRaises(NotImplementedError):
-            del jlist[0]
+        with self.assertRaises(IndexError):
+            del jlist[COUNT+5]
+        with self.assertRaises(IndexError):
+            del pylist[COUNT+5]
+        
+        del jlist[0]
         del pylist[0]
-        #self.assertEqual(jlist, pylist)
+        self.assertSequenceEqual(jlist, pylist)
+        
+        del jlist[-1]
+        del pylist[-1]
+        self.assertSequenceEqual(jlist, pylist)
