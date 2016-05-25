@@ -186,7 +186,7 @@ static PyObject* pyjlist_getitem(PyObject *o, Py_ssize_t i)
     if (val == NULL) {
         Py_RETURN_NONE;
     } else {
-        return pyjobject_new(env, val);
+        return convert_jobject_pyobject(env, val);
     }
 }
 

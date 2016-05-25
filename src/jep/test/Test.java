@@ -262,6 +262,7 @@ public class Test implements Runnable {
     // -------------------------------------------------- fields
 
     public String stringField = "a stringField";
+    public Object objectStringField = stringField;
     public boolean booleanField = true;
     public short shortField = 321;
     public int intField = 123;
@@ -346,6 +347,10 @@ public class Test implements Runnable {
 
     public String getStringField() {
         return stringField;
+    }
+
+    public Object getObjectStringField() {
+        return objectStringField;
     }
 
     public void setStringField(String stringField) {

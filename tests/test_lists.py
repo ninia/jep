@@ -117,3 +117,13 @@ class TestLists(unittest.TestCase):
         jlist *= 2
         pylist *= 2
         self.assertSequenceEqual(jlist, pylist)
+
+    def test_getstringbyindex(self):
+        jlist = ArrayList();
+        jlist.add("string")
+        self.assertEqual(jlist[0], "string")
+
+    def test_getstringbyiterator(self):
+        jlist = ArrayList();
+        jlist.add("string")
+        self.assertEqual(next(iter(jlist)), "string")

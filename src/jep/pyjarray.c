@@ -916,7 +916,7 @@ static PyObject* pyjarray_item(PyJArrayObject *self, Py_ssize_t pos)
         if (process_java_exception(env))
             ;
         else if (obj != NULL) {
-            ret = (PyObject *) pyjobject_new(env, obj);
+            ret = convert_jobject_pyobject(env, obj);
         } else {
             // null is okay
             Py_INCREF(Py_None);

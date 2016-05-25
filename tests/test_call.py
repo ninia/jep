@@ -33,6 +33,9 @@ class TestTypes(unittest.TestCase):
         obj = self.test.getObject()
         self.assertEqual("list 0", str(obj.get(0)))
 
+    def test_stringasobject(self):
+        self.assertEqual(self.test.getStringField(), self.test.getObjectStringField())
+
     def test_getstring_array(self):
         obj = self.test.getStringArray()
         self.assertEqual('one', obj[0])

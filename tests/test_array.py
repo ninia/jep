@@ -11,6 +11,13 @@ class TestArray(unittest.TestCase):
         ar[1] = 22
         self.assertEqual([12, 22], list(ar[0:2]))
 
+    def test_string_index_conversion(self):
+        from java.lang import Object
+        from java.lang import String
+        ar = jarray(1, Object)
+        ar[0] = String("String")
+        self.assertEqual(ar[0], "String")
+
     def test_read_file(self):
         from java.io import FileInputStream
         from java.lang import String

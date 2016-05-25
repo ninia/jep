@@ -155,3 +155,5 @@ class TestFields(unittest.TestCase):
         from java.lang import Class
         self.assertNotEqual(Integer, Class)
 
+    def test_object_string_field(self):
+        self.assertEqual(self.test.objectStringField, self.test.stringField)

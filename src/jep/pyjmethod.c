@@ -624,7 +624,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
         Py_BLOCK_THREADS;
         if (!process_java_exception(env) && obj != NULL) {
-            result = pyjobject_new(env, obj);
+            result = convert_jobject_pyobject(env, obj);
         }
 
         break;

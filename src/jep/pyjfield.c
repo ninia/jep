@@ -346,7 +346,7 @@ PyObject* pyjfield_get(PyJFieldObject *self)
             Py_RETURN_NONE;
         }
 
-        result = pyjobject_new(env, obj);
+        result = convert_jobject_pyobject(env, obj);
         break;
     }
 
