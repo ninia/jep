@@ -118,6 +118,22 @@ class TestLists(unittest.TestCase):
         pylist *= 2
         self.assertSequenceEqual(jlist, pylist)
 
+    def test_del(self):
+        jlist = makeJavaList()
+        pylist = makePythonList()
+        with self.assertRaises(IndexError):
+            del jlist[COUNT+5]
+        with self.assertRaises(IndexError):
+            del pylist[COUNT+5]
+        
+        del jlist[0]
+        del pylist[0]
+        self.assertSequenceEqual(jlist, pylist)
+        
+        del jlist[-1]
+        del pylist[-1]
+        self.assertSequenceEqual(jlist, pylist)
+        
     def test_getstringbyindex(self):
         jlist = ArrayList();
         jlist.add("string")
@@ -127,3 +143,4 @@ class TestLists(unittest.TestCase):
         jlist = ArrayList();
         jlist.add("string")
         self.assertEqual(next(iter(jlist)), "string")
+        
