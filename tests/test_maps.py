@@ -1,7 +1,6 @@
 import unittest
 
 from java.util import HashMap
-from java.lang import Integer
 
 def makeJavaMap():
     return makeDict(HashMap())
@@ -10,10 +9,10 @@ def makePythonDict():
     return makeDict({})
 
 def makeDict(obj):
-    obj["a"] = Integer(1)
-    obj["b"] = Integer(2)
+    obj["a"] = 1
+    obj["b"] = 2
     obj["c"] = "XYZ"
-    obj["a"] = Integer(-1)
+    obj["a"] = -1
     return obj
     
 

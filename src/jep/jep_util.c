@@ -72,6 +72,8 @@ jclass JSHORT_OBJ_TYPE  = NULL;
 jclass JINT_OBJ_TYPE    = NULL;
 jclass JLONG_OBJ_TYPE   = NULL;
 jclass JDOUBLE_OBJ_TYPE = NULL;
+jclass JFLOAT_OBJ_TYPE  = NULL;
+jclass JCHAR_OBJ_TYPE  = NULL;
 
 // cached types for frequently used classes
 jclass JNUMBER_TYPE      = NULL;
@@ -409,6 +411,8 @@ int cache_frequent_classes(JNIEnv *env)
     CACHE_CLASS(JINT_OBJ_TYPE, "java/lang/Integer");
     CACHE_CLASS(JLONG_OBJ_TYPE, "java/lang/Long");
     CACHE_CLASS(JDOUBLE_OBJ_TYPE, "java/lang/Double");
+    CACHE_CLASS(JFLOAT_OBJ_TYPE, "java/lang/Float");
+    CACHE_CLASS(JCHAR_OBJ_TYPE, "java/lang/Character");
     CACHE_CLASS(JNUMBER_TYPE, "java/lang/Number");
     CACHE_CLASS(JTHROWABLE_TYPE, "java/lang/Throwable");
     CACHE_CLASS(JMODIFIER_TYPE, "java/lang/reflect/Modifier");
@@ -455,6 +459,8 @@ void unref_cache_frequent_classes(JNIEnv *env)
     UNCACHE_CLASS(JINT_OBJ_TYPE);
     UNCACHE_CLASS(JLONG_OBJ_TYPE);
     UNCACHE_CLASS(JDOUBLE_OBJ_TYPE);
+    UNCACHE_CLASS(JFLOAT_OBJ_TYPE);
+    UNCACHE_CLASS(JCHAR_OBJ_TYPE);
     UNCACHE_CLASS(JNUMBER_TYPE);
     UNCACHE_CLASS(JTHROWABLE_TYPE);
     UNCACHE_CLASS(JMODIFIER_TYPE);
@@ -818,6 +824,21 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
     // wrap as a object... try to be diligent.
 
     case JOBJECT_ID:
+        if ((*env)->IsInstanceOf(env, val, JNUMBER_TYPE)) {
+            if ((*env)->IsInstanceOf(env, val, JINT_OBJ_TYPE)) {
+                return convert_jobject(env, val, JINT_ID);
+            } else if ((*env)->IsInstanceOf(env, val, JLONG_OBJ_TYPE)) {
+                return convert_jobject(env, val, JLONG_ID);
+            } else if ((*env)->IsInstanceOf(env, val, JDOUBLE_OBJ_TYPE)) {
+                return convert_jobject(env, val, JDOUBLE_ID);
+            } else if ((*env)->IsInstanceOf(env, val, JFLOAT_OBJ_TYPE)) {
+                return convert_jobject(env, val, JFLOAT_ID);
+            }
+        } else if ((*env)->IsInstanceOf(env, val, JBOOL_OBJ_TYPE)) {
+            return convert_jobject(env, val, JBOOLEAN_ID);
+        } else if ((*env)->IsInstanceOf(env, val, JCHAR_OBJ_TYPE)) {
+            return convert_jobject(env, val, JCHAR_ID);
+        }
         return (PyObject *) pyjobject_new(env, val);
 
     case JBOOLEAN_ID: {
@@ -839,9 +860,9 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
         }
 
         if (b) {
-            return Py_BuildValue("i", 1);
+            Py_RETURN_TRUE;
         }
-        return Py_BuildValue("i", 0);
+        Py_RETURN_FALSE;
     }
 
     case JBYTE_ID:              /* pass through */
@@ -861,7 +882,7 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
             return NULL;
         }
 
-        return Py_BuildValue("i", b);
+        return Py_BuildValue("l", b);
     }
 
     case JDOUBLE_ID: {

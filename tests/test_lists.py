@@ -10,17 +10,13 @@ COUNT = 17
 def makeJavaList():
     jlist = ArrayList()
     for i in range(COUNT):
-        jlist.add(Integer(i))
+        jlist.add(i)
     return jlist
 
 def makePythonList():
     pylist = []
     for i in range(COUNT):
-        # At present have to make it a java.lang.Integer for
-        # assertSequenceEqual to work. If in the future a  
-        # java.lang.Integer can compare equality to a python int,
-        # then this should be updated to use python ints.
-        pylist.append(Integer(i))
+        pylist.append(i)
     return pylist
 
 
@@ -69,21 +65,21 @@ class TestLists(unittest.TestCase):
     def test_setitem(self):
         jlist = makeJavaList()
         pylist = makePythonList()
-        jlist[5] = Integer(55)
-        pylist[5] = Integer(55)
-        jlist[-3] = Integer(99)
-        pylist[-3] = Integer(99)
+        jlist[5] = 55
+        pylist[5] = 55
+        jlist[-3] = 99
+        pylist[-3] = 99
         self.assertSequenceEqual(jlist, pylist)
 
     def test_setslice(self):
         jlist = makeJavaList()
         pylist = makePythonList()
-        jlist[2:4] = [Integer(7), Integer(1)]
-        pylist[2:4] = [Integer(7), Integer(1)]
+        jlist[2:4] = [7, 1]
+        pylist[2:4] = [7, 1]
         self.assertEqual(len(jlist), len(pylist))
         self.assertSequenceEqual(jlist, pylist)
-        jlist[9:-5] = [Integer(4), Integer(88), Integer(19)]
-        pylist[9:-5] = [Integer(4), Integer(88), Integer(19)]
+        jlist[9:-5] = [4, 88, 19]
+        pylist[9:-5] = [4, 88, 19]
         self.assertEqual(len(jlist), len(pylist))
         self.assertSequenceEqual(jlist, pylist)
         
@@ -97,10 +93,10 @@ class TestLists(unittest.TestCase):
     def test_addequals(self):
         jlist = makeJavaList()
         pylist = makePythonList()
-        jlist += [Integer(COUNT + 1)]
-        pylist += [Integer(COUNT + 1)]
+        jlist += [COUNT + 1]
+        pylist += [COUNT + 1]
         self.assertSequenceEqual(jlist, pylist)
-        toAdd = [Integer(1), Integer(2), Integer(3)]
+        toAdd = [1, 2, 3]
         jlist += toAdd
         pylist += toAdd
         self.assertSequenceEqual(jlist, pylist)

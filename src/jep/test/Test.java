@@ -285,6 +285,14 @@ public class Test implements Runnable {
         this.booleanField = booleanField;
     }
 
+    public Boolean testBooleanObject(Boolean bool){
+        return bool;
+    }
+
+    public Object testObjectPassThrough(Object bool){
+        return bool;
+    }
+
     public byte getByteField() {
         return byteField;
     }
@@ -294,6 +302,10 @@ public class Test implements Runnable {
     }
 
     public char getCharField() {
+        return charField;
+    }
+
+    public Character getCharacterField() {
         return charField;
     }
 

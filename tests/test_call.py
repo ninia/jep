@@ -18,16 +18,23 @@ class TestTypes(unittest.TestCase):
         self.assertEqual(0, testEnum.ordinal())
 
     def test_long(self):
-        self.assertEqual(9223372036854775807, self.test.getClassLong().longValue())
+        self.assertEqual(9223372036854775807, self.test.getClassLong())
 
     def test_double(self):
-        self.assertEqual(4.9E-324, self.test.getClassDouble().doubleValue())
+        self.assertEqual(4.9E-324, self.test.getClassDouble())
 
     def test_float(self):
-        self.assertAlmostEqual(3.4028234663852886e+38, self.test.getClassFloat().floatValue())
+        self.assertAlmostEqual(3.4028234663852886e+38, self.test.getClassFloat())
 
     def test_intobj(self):
-        self.assertEqual(-2147483648, self.test.getInteger().intValue())
+        self.assertEqual(-2147483648, self.test.getInteger())
+
+    def test_boolobj(self):
+        self.assertTrue(self.test.testBooleanObject(True))
+        self.assertFalse(self.test.testBooleanObject(False))
+
+    def test_charobj(self):
+        self.assertEquals(self.test.getCharacterField(), 'c')
 
     def test_getobj(self):
         obj = self.test.getObject()
@@ -80,9 +87,10 @@ class TestTypes(unittest.TestCase):
         self.assertNotEqual(String, Integer)
 
     def test_boxing(self):
-        self.assertTrue(Boolean.TRUE.equals(True))
-        self.assertFalse(Boolean.TRUE.equals(1))
-        self.assertFalse(Boolean.TRUE.equals(1.5))
+        self.assertEquals(self.test.testObjectPassThrough(True), True)
+        self.assertEquals(self.test.testObjectPassThrough(1), 1)
+        self.assertEquals(self.test.testObjectPassThrough(1.5), 1.5)
+        self.assertEquals(self.test.testObjectPassThrough("string"), "string")
 
     def test_overload(self):
         builder = StringBuilder()
