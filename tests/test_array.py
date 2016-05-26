@@ -18,6 +18,15 @@ class TestArray(unittest.TestCase):
         ar[0] = String("String")
         self.assertEqual(ar[0], "String")
 
+    def test_set_string_array(self):
+        from java.lang import String
+        from jep.test import Test
+        t = Test()
+        ar = jarray(1, String)
+        ar[0] = String("String")
+        result = t.setStringArray(ar)
+        self.assertEqual(result[0], ar[0])
+
     def test_read_file(self):
         from java.io import FileInputStream
         from java.lang import String

@@ -214,6 +214,10 @@ public class Test implements Runnable {
         };
     }
 
+    public String[] setStringArray(String[] array) {
+        return array;
+    }
+
     public int[] getIntArray() {
         return new int[] { 1, 2 };
     }
