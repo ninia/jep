@@ -5,7 +5,7 @@ class TestObject(unittest.TestCase):
 
     def test_hash(self):
         o = Object()
-        self.assertTrue(isinstance(int), hash(o))
+        self.assertTrue(isinstance(hash(o), int))
 
     def test_str(self):
         o = Object()
