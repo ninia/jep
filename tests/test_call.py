@@ -34,7 +34,7 @@ class TestTypes(unittest.TestCase):
         self.assertFalse(self.test.testBooleanObject(False))
 
     def test_charobj(self):
-        self.assertEquals(self.test.getCharacterField(), 'c')
+        self.assertEqual(self.test.getCharacterField(), 'c')
 
     def test_getobj(self):
         obj = self.test.getObject()

@@ -3,7 +3,6 @@ import unittest
 import jep
 Test = jep.findClass('jep.test.Test')
 from java.util import ArrayList
-from java.lang import Integer
 
 COUNT = 17
 
@@ -42,8 +41,8 @@ class TestLists(unittest.TestCase):
 
     def test_contains(self):
         jlist = makeJavaList()
-        self.assertTrue(Integer(14) in jlist)
-        self.assertFalse(Integer(20) in jlist)
+        self.assertTrue(14 in jlist)
+        self.assertFalse(20 in jlist)
         self.assertFalse("abc" in jlist)
         self.assertFalse("0" in jlist)
 

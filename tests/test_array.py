@@ -70,6 +70,7 @@ class TestArray(unittest.TestCase):
         fin = FileInputStream(filename)
         ar = jarray(20, JBYTE_ID)
         count = fin.read(ar)
+        fin.close()
         s = String(ar, 0, count)
         self.assertEqual(str(s).strip(), 'aewrv3v')
 

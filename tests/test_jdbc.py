@@ -9,7 +9,7 @@ from jep import jdbc as dbapi
 from java.lang import Integer, Long, Double
 from java.sql import Date, Timestamp, Time
 
-skip = sys.platform.startswith('win')
+skip = sys.platform.startswith('win') or sys.platform.startswith('freebsd')
 if not skip:
     try:
         findClass('org.sqlite.JDBC')
