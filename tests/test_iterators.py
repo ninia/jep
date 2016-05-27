@@ -15,6 +15,6 @@ class TestIterators(unittest.TestCase):
             self.assertIn("a", i)
     
     def test_iter_itr_crash(self):
-        from jep_pipe import jep_pipe
+        from .jep_pipe import jep_pipe
         with jep_pipe(['jep', 'tests/iter_itr_crash.py']) as p:
-            assert p.readline() == 'success: no crash\n'
+            self.assertEqual(next(p), 'success: no crash\n')
