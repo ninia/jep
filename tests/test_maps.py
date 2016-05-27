@@ -17,15 +17,25 @@ def makeDict(obj):
     
 
 class TestMaps(unittest.TestCase):
-    def setUp(self):
-        pass
-    
-    def test_map(self):
+
+    def test_iter(self):
+        jmap = makeJavaMap()
+        pymap = makePythonDict()
+        for item in jmap:
+            self.assertIn(item, pymap)
+        for item in pymap:
+            self.assertIn(item, jmap)
+
+    def test_getitem(self):
         jmap = makeJavaMap()
         pymap = makePythonDict()
         self.assertEqual(jmap["a"], pymap["a"])
         self.assertEqual(jmap["b"], pymap["b"])
         self.assertEqual(jmap["c"], pymap["c"])
+
+    def test_len(self):
+        jmap = makeJavaMap()
+        pymap = makePythonDict()
         self.assertEqual(len(jmap), len(pymap))
 
     def test_del(self):
@@ -43,4 +53,3 @@ class TestMaps(unittest.TestCase):
         for i in jmap:
             pydict[i] = jmap[i]
         self.assertEqual(pydict, pymap)
-
