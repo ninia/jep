@@ -350,11 +350,7 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
             rmethod = (*env)->GetObjectArrayElement(env, methodArray, i);
 
             // make new PyJMethodObject, linked to pyjob
-            if (pyjob->object) {
-                pymethod = pyjmethod_new(env, rmethod, pyjob);
-            } else {
-                pymethod = pyjmethod_new_static(env, rmethod, pyjob);
-            }
+            pymethod = pyjmethod_new(env, rmethod, pyjob);
 
             if (!pymethod) {
                 continue;
