@@ -209,9 +209,9 @@ public final class Jep implements Closeable {
             try {
                 topInterpreter = new TopInterpreter();
                 topInterpreter.initialize();
-            } catch (Throwable t) {
+            } catch (Error e) {
                 topInterpreter.close();
-                throw t;
+                throw e;
             }
         } else if (null != topInterpreter.error) {
             throw new Error(
