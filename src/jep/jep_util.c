@@ -882,7 +882,7 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
             return NULL;
         }
 
-        return Py_BuildValue("l", b);
+        return PyLong_FromLongLong(b);
     }
 
     case JDOUBLE_ID: {
