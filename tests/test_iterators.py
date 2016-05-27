@@ -1,4 +1,5 @@
 import unittest
+import sys
 
 class TestIterators(unittest.TestCase):
     def setUp(self):
@@ -13,7 +14,8 @@ class TestIterators(unittest.TestCase):
         itr = x.iterator()
         for i in x:
             self.assertIn("a", i)
-    
+
+    @unittest.skipIf(sys.platform.startswith("win"), "subprocess complications on Windows")
     def test_iter_itr_crash(self):
         from .jep_pipe import jep_pipe
         with jep_pipe(['jep', 'tests/iter_itr_crash.py']) as p:
