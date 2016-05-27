@@ -29,6 +29,6 @@ def jep_pipe(argv):
 
     try:
         p = subprocess.Popen(argv, stdout=subprocess.PIPE)
-        yield p.stdout
+        yield(line.decode('utf-8') for line in p.stdout)
     finally:
         p.kill()
