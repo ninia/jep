@@ -87,10 +87,10 @@ class TestTypes(unittest.TestCase):
         self.assertNotEqual(String, Integer)
 
     def test_boxing(self):
-        self.assertEquals(self.test.testObjectPassThrough(True), True)
-        self.assertEquals(self.test.testObjectPassThrough(1), 1)
-        self.assertEquals(self.test.testObjectPassThrough(1.5), 1.5)
-        self.assertEquals(self.test.testObjectPassThrough("string"), "string")
+        self.assertEqual(self.test.testObjectPassThrough(True), True)
+        self.assertEqual(self.test.testObjectPassThrough(1), 1)
+        self.assertEqual(self.test.testObjectPassThrough(1.5), 1.5)
+        self.assertEqual(self.test.testObjectPassThrough("string"), "string")
 
     def test_overload(self):
         builder = StringBuilder()
