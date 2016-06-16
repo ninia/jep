@@ -62,16 +62,21 @@ JNI_OnUnload(JavaVM *vm, void *reserved)
 /*
  * Class:     jep_Jep
  * Method:    setInitParams
- * Signature: (III)V
+ * Signature: (IIIIIII)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_setInitParams
 (JNIEnv *env,
  jclass class,
  jint noSiteFlag,
  jint noUserSiteDirectory,
- jint ignoreEnvironmentFlag)
+ jint ignoreEnvironmentFlag,
+ jint verboseFlag,
+ jint optimizeFlag,
+ jint dontWriteBytecodeFlag,
+ jint hashRandomizationFlag)
 {
-    pyembed_preinit(noSiteFlag, noUserSiteDirectory, ignoreEnvironmentFlag);
+    pyembed_preinit(noSiteFlag, noUserSiteDirectory, ignoreEnvironmentFlag,
+                    verboseFlag, optimizeFlag, dontWriteBytecodeFlag, hashRandomizationFlag);
 }
 
 /*

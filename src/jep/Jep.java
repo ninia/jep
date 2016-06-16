@@ -97,18 +97,19 @@ public final class Jep implements Closeable {
     };
 
     /**
-     * Initializes the main Python interpreter that all sub-interpreters will
-     * be created from.
+     * Initializes the main Python interpreter that all sub-interpreters will be
+     * created from.
      */
     private static class TopInterpreter implements Closeable {
         Object keepAlive = new Object();
+
         Throwable error;
 
         /**
          * Initializes CPython, by calling a native function in the jep module,
          * and ultimately Py_Initialize(). We load on a separate thread to try
-         * and avoid GIL issues that come about from a sub-interpreter being
-         * on the same thread as the top/main interpreter.
+         * and avoid GIL issues that come about from a sub-interpreter being on
+         * the same thread as the top/main interpreter.
          * 
          * @throws Error
          */
@@ -117,7 +118,7 @@ public final class Jep implements Closeable {
 
                 @Override
                 public void run() {
-                    synchronized(keepAlive) {
+                    synchronized (keepAlive) {
                         try {
                             initializePython();
                         } catch (Throwable t) {
@@ -128,10 +129,11 @@ public final class Jep implements Closeable {
                             }
                         }
                         /*
-                         * We need to keep this top interpreter thread around. It's
-                         * not going to be used again but if its thread shuts down
-                         * while another thread is in python, then the thread state
-                         * can get messed up leading to stability/GIL issues.
+                         * We need to keep this top interpreter thread around.
+                         * It's not going to be used again but if its thread
+                         * shuts down while another thread is in python, then
+                         * the thread state can get messed up leading to
+                         * stability/GIL issues.
                          */
                         try {
                             keepAlive.wait();
@@ -162,7 +164,7 @@ public final class Jep implements Closeable {
          */
         @Override
         public void close() {
-            synchronized(keepAlive) {
+            synchronized (keepAlive) {
                 keepAlive.notify();
             }
         }
@@ -175,33 +177,33 @@ public final class Jep implements Closeable {
     /**
      * Sets interpreter settings for the top Python interpreter. This method
      * must be called before the first Jep instance is created in the process.
-     *
-     * @param config the python configuration to use.
+     * 
+     * @param config
+     *            the python configuration to use.
      */
     public static void setInitParams(PyConfig config) throws JepException {
         if (null != topInterpreter) {
             throw new JepException(
-              "Jep.setInitParams called after initializing python interpreter.");
+                    "Jep.setInitParams called after initializing python interpreter.");
         }
-        setInitParams(
-            config.noSiteFlag,
-            config.noUserSiteDirectory,
-            config.ignoreEnvironmentFlag);
+        setInitParams(config.noSiteFlag, config.noUserSiteDirectory,
+                config.ignoreEnvironmentFlag, config.verboseFlag,
+                config.optimizeFlag, config.dontWriteBytecodeFlag,
+                config.hashRandomizationFlag);
     }
 
-    private static native void setInitParams(
-        int noSiteFlag,
-        int noUserSiteDiretory,
-        int ignoreEnvironmentFlag);
+    private static native void setInitParams(int noSiteFlag,
+            int noUserSiteDiretory, int ignoreEnvironmentFlag, int verboseFlag,
+            int optimizeFlag, int dontWriteBytecodeFlag,
+            int hashRandomizationFlag);
 
     private static native void initializePython();
 
     /**
-     * Creates the TopInterpreter instance that will be used by Jep.
-     * This should be called from all Jep constructors to ensure the native
-     * module has been loaded and initialized before a valid Jep instance is
-     * produced.
-     *
+     * Creates the TopInterpreter instance that will be used by Jep. This should
+     * be called from all Jep constructors to ensure the native module has been
+     * loaded and initialized before a valid Jep instance is produced.
+     * 
      * @throws Error
      */
     private synchronized static void createTopInterpreter() throws Error {
@@ -215,8 +217,8 @@ public final class Jep implements Closeable {
             }
         } else if (null != topInterpreter.error) {
             throw new Error(
-                "The main python interpreter previously failed to initialize.",
-                topInterpreter.error);
+                    "The main python interpreter previously failed to initialize.",
+                    topInterpreter.error);
         }
     }
 

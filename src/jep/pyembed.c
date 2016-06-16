@@ -198,7 +198,11 @@ static PyObject* initjep(void)
 
 void pyembed_preinit(jint noSiteFlag,
                      jint noUserSiteDirectory,
-                     jint ignoreEnvironmentFlag)
+                     jint ignoreEnvironmentFlag,
+                     jint verboseFlag,
+                     jint optimizeFlag,
+                     jint dontWriteBytecodeFlag,
+                     jint hashRandomizationFlag)
 {
     if (noSiteFlag >= 0) {
         Py_NoSiteFlag = noSiteFlag;
@@ -209,6 +213,19 @@ void pyembed_preinit(jint noSiteFlag,
     if (ignoreEnvironmentFlag >= 0) {
         Py_IgnoreEnvironmentFlag = ignoreEnvironmentFlag;
     }
+    if (verboseFlag >= 0) {
+        Py_VerboseFlag = verboseFlag;
+    }
+    if (optimizeFlag >= 0) {
+        Py_OptimizeFlag = optimizeFlag;
+    }
+    if (dontWriteBytecodeFlag >= 0) {
+        Py_DontWriteBytecodeFlag = dontWriteBytecodeFlag;
+    }
+    if (hashRandomizationFlag >= 0) {
+        Py_HashRandomizationFlag = hashRandomizationFlag;
+    }
+
 }
 
 void pyembed_startup(void)
