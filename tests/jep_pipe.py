@@ -56,5 +56,3 @@ def build_java_process_cmd(javaTestName):
     lib_path += System.getProperty("java.library.path")
     
     return ['java', '-cp', cp, lib_path, javaTestName]
-    
-    

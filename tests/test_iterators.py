@@ -18,5 +18,5 @@ class TestIterators(unittest.TestCase):
     @unittest.skipIf(sys.platform.startswith("win"), "subprocess complications on Windows")
     def test_iter_itr_crash(self):
         from .jep_pipe import jep_pipe
-        with jep_pipe(['jep', 'tests/iter_itr_crash.py']) as p:
+        with jep_pipe(['jep', 'tests/subprocess/iter_itr_crash.py']) as p:
             self.assertEqual(next(p), 'success: no crash\n')
