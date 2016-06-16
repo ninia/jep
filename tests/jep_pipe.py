@@ -32,3 +32,29 @@ def jep_pipe(argv):
         yield(line.decode('utf-8') for line in p.stdout)
     finally:
         p.kill()
+
+
+def build_java_process_cmd(javaTestName):
+    """
+    Builds a list of args to provide to the jep_pipe method's call to
+    subprocess.Popen.  This will take care of setting up the Java classpath
+    and the -Djava.library.path variable necessary to run a Java main()
+    from the command line.  This method should be used in conjunction with
+    tests that get built into the jep.test jar and are Java mains().
+    
+    Args:
+            javaTestName: a fully-qualified name of a Java class with a main()
+                            method
+    
+    Returns:
+            a list of values to be passed to jep_pipe (subprocess.Popen)
+    """
+    from java.lang import System
+    cp = System.getProperty('java.class.path')
+        
+    lib_path = '-Djava.library.path='
+    lib_path += System.getProperty("java.library.path")
+    
+    return ['java', '-cp', cp, lib_path, javaTestName]
+    
+    
