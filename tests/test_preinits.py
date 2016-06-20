@@ -25,7 +25,7 @@ class TestPreInits(unittest.TestCase):
         
         index = 0
         from .jep_pipe import jep_pipe
-        from itertools import izip
         with jep_pipe(build_java_process_cmd('jep.test.TestPreInitVariables')) as p:
-            for got_line, expected_line in izip(p, expected):
-                self.assertEqual(got_line, expected_line)
+            for got_line in p:
+                self.assertEqual(got_line, expected[index])
+                index += 1
