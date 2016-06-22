@@ -26,30 +26,17 @@
    distribution.
 */
 
-/*
- * A PyJClassObject is a PyJObject with a __call__ method attached, where
- * the call method can invoke the Java object's constructors.
- */
-
 #include "jep_platform.h"
-#include "pyjobject.h"
+#include "pyjmethod.h"
 
-#ifndef _Included_pyjclass
-#define _Included_pyjclass
+#ifndef _Included_pyjconstructor
+#define _Included_pyjconstructor
 
-PyAPI_DATA(PyTypeObject) PyJClass_Type;
+PyAPI_DATA(PyTypeObject) PyJConstructor_Type;
 
-typedef struct {
-    PyJObject  obj;            /* magic inheritance */
-    /*
-     * A python callable, either a PyJConstructor or PyJMultiMethod with many
-     * PyJConstructors
-     */
-    PyObject  *constructor;
-} PyJClassObject;
+/* Second arg must be a java.lang.reflect.Constructor */
+PyAPI_FUNC(PyObject*) PyJConstructor_New(JNIEnv*, jobject);
 
-int pyjclass_init(JNIEnv*, PyObject*);
-PyObject* pyjclass_call(PyJClassObject*, PyObject*, PyObject*);
-int pyjclass_check(PyObject*);
+PyAPI_FUNC(int) PyJConstructor_Check(PyObject*);
 
-#endif // ndef pyjclass
+#endif // ndef pyjconstructor

@@ -48,6 +48,7 @@
 #include "pyjlist.h"
 #include "pyjmap.h"
 #include "pyjmethod.h"
+#include "pyjconstructor.h"
 #include "pyjmultimethod.h"
 #include "pyjnumber.h"
 #include "pyjobject.h"

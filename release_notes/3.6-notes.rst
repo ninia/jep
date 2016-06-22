@@ -12,8 +12,8 @@ Jep can now be built on FreeBSD.
 Improved method choosing
 ~~~~~~~~~~~~~~~~~~~~~~~~
 Jep now has improved method choosing when Python tries to call a Java
-method that is overloaded.  Methods will be chosen based off of how closely
-the Python inputs match the Java argument types.
+method that is overloaded.  Methods and Constructors will be chosen based
+off of how closely the Python inputs match the Java argument types.
 
 
 Python initialization variables
