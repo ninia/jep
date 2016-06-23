@@ -1,8 +1,11 @@
 package jep.test.numpy;
 
+import java.nio.IntBuffer;
+
 import jep.Jep;
 import jep.JepException;
 import jep.NDArray;
+import jep.DirectNDArray;
 
 /**
  * TestNumpy.java. Runs a variety of simple tests to verify numpy interactions
@@ -169,6 +172,17 @@ public class TestNumpy {
         }
 
         return new NDArray<int[]>(newData, array.getDimensions());
+    }
+
+    /**
+     * Called from python to verify that a Java method's return type of DirectNDArray
+     * can be auto-converted to a numpy ndarray.
+     * 
+     * @param array
+     * @return the argument
+     */
+    public DirectNDArray<IntBuffer> testDirectArgAndReturn(DirectNDArray<IntBuffer> array) {
+        return array;
     }
 
     /**

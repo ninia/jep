@@ -87,6 +87,7 @@ jclass JHASHMAP_TYPE     = NULL;
 jclass JCOLLECTIONS_TYPE = NULL;
 #if JEP_NUMPY_ENABLED
     jclass JEP_NDARRAY_TYPE = NULL;
+    jclass JEP_DNDARRAY_TYPE = NULL;
 #endif
 
 // exception cached types
@@ -395,6 +396,7 @@ int cache_frequent_classes(JNIEnv *env)
 
 #if JEP_NUMPY_ENABLED
     CACHE_CLASS(JEP_NDARRAY_TYPE, "jep/NDArray");
+    CACHE_CLASS(JEP_DNDARRAY_TYPE, "jep/DirectNDArray");
 #endif
 
     // find and cache exception types we check for
@@ -809,8 +811,22 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
             return convert_jobject(env, val, JBOOLEAN_ID);
         } else if ((*env)->IsInstanceOf(env, val, JCHAR_OBJ_TYPE)) {
             return convert_jobject(env, val, JCHAR_ID);
+        }else{
+            PyObject* ret = (PyObject *) pyjobject_new(env, val);
+#if JEP_NUMPY_ENABLED
+        /*
+         * check for jep/DirectNDArray and autoconvert to numpy.ndarray
+         * pyjobject
+         */
+            if (jdndarray_check(env, val)) {
+                return convert_jdndarray_pyndarray(env, ret);
+            }
+            if (PyErr_Occurred()) {
+                return NULL;
+            }
+#endif
+            return ret;
         }
-        return (PyObject *) pyjobject_new(env, val);
 
     case JBOOLEAN_ID: {
         jboolean b;

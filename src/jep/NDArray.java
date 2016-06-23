@@ -48,13 +48,7 @@ import java.util.Arrays;
  * 
  * @author [ndjensen at gmail.com] Nate Jensen
  */
-public class NDArray<T extends Object> {
-
-    protected final T data;
-
-    protected final int[] dimensions;
-
-    protected final boolean unsigned;
+public class NDArray<T extends Object> extends AbstractNDArray<T>{
 
     /**
      * Constructor for a Java NDArray. Presumes the data is one dimensional.
@@ -63,7 +57,7 @@ public class NDArray<T extends Object> {
      *            a one-dimensional primitive array such as float[], int[]
      */
     public NDArray(T data) {
-        this(data, false, null);
+        super(data);
     }
 
     /**
@@ -75,7 +69,7 @@ public class NDArray<T extends Object> {
      *            whether the data is to be interpreted as unsigned
      */
     public NDArray(T data, boolean unsigned) {
-        this(data, unsigned, null);
+        super(data, unsigned);
     }
 
     /**
@@ -88,7 +82,7 @@ public class NDArray<T extends Object> {
      *            numpy.ndarray dimensions in C-contiguous order)
      */
     public NDArray(T data, int... dimensions) {
-        this(data, false, dimensions);
+        super(data, dimensions);
     }
 
     /**
@@ -103,6 +97,11 @@ public class NDArray<T extends Object> {
      *            numpy.ndarray dimensions in C-contiguous order)
      */
     public NDArray(T data, boolean unsigned, int... dimensions) {
+        super(data, unsigned, dimensions);
+    }
+
+    @Override
+    protected void validate(T data){
         /*
          * java generics don't give us a nice Class that all the primitive
          * arrays extend, so we must enforce the type safety at runtime instead
@@ -118,56 +117,11 @@ public class NDArray<T extends Object> {
                     "NDArray only supports numeric primitives, not char[]");
 
         }
-
-        int dataLength = Array.getLength(data);
-        if (dimensions == null) {
-            // presume one dimensional
-            dimensions = new int[1];
-            dimensions[0] = dataLength;
-        }
-
-        // validate data size matches dimensions size
-        int dimSize = 1;
-        for (int i = 0; i < dimensions.length; i++) {
-            if (dimensions[i] < 0) {
-                throw new IllegalArgumentException(
-                        "Dimensions cannot be negative, received "
-                                + dimensions[i]);
-            }
-            dimSize *= dimensions[i];
-        }
-
-        if (dimSize != dataLength) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("NDArray data length ");
-            sb.append(dataLength);
-            sb.append(" does not match size specified by dimensions [");
-            for (int i = 0; i < dimensions.length; i++) {
-                sb.append(dimensions[i]);
-                if (i < dimensions.length - 1) {
-                    sb.append(" * ");
-                }
-            }
-            sb.append("]");
-            throw new IllegalArgumentException(sb.toString());
-        }
-
-        // passed the safety checks
-        this.data = data;
-        this.dimensions = dimensions;
-        this.unsigned = unsigned;
     }
 
-    public int[] getDimensions() {
-        return dimensions;
-    }
-
-    public boolean isUnsigned() {
-        return unsigned;
-    }
-
-    public T getData() {
-        return data;
+    @Override
+    protected int getLength(T data){
+        return Array.getLength(data);
     }
 
     @Override

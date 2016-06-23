@@ -490,11 +490,7 @@ jobject PyObject_As_jobject(JNIEnv *env, PyObject *pyobject,
         return pydict_as_jobject(env, pyobject, expectedType);
 #if JEP_NUMPY_ENABLED
     } else if (npy_array_check(pyobject)) {
-        if ((*env)->IsAssignableFrom(env, JEP_NDARRAY_TYPE, expectedType)) {
-            return convert_pyndarray_jndarray(env, pyobject);
-        } else {
-            return convert_pyndarray_jprimitivearray(env, pyobject, expectedType);
-        }
+        return convert_pyndarray_jobject(env, pyobject, expectedType);
 #endif
     } else if ((*env)->IsAssignableFrom(env, JSTRING_TYPE, expectedType)) {
         return (jobject) PyObject_As_jstring(env, pyobject);
