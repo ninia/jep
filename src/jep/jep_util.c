@@ -51,6 +51,7 @@ jclass JCLASS_TYPE   = NULL;
 // cached types for primitive arrays
 jclass JBOOLEAN_ARRAY_TYPE = NULL;
 jclass JBYTE_ARRAY_TYPE    = NULL;
+jclass JCHAR_ARRAY_TYPE   = NULL;
 jclass JSHORT_ARRAY_TYPE   = NULL;
 jclass JINT_ARRAY_TYPE     = NULL;
 jclass JLONG_ARRAY_TYPE    = NULL;
@@ -292,6 +293,7 @@ int cache_primitive_classes(JNIEnv *env)
 
     CACHE_PRIMITIVE_ARRAY(JBOOLEAN_TYPE, JBOOLEAN_ARRAY_TYPE, "[Z");
     CACHE_PRIMITIVE_ARRAY(JBYTE_TYPE, JBYTE_ARRAY_TYPE, "[B");
+    CACHE_PRIMITIVE_ARRAY(JCHAR_TYPE, JCHAR_ARRAY_TYPE, "[C");
     CACHE_PRIMITIVE_ARRAY(JSHORT_TYPE, JSHORT_ARRAY_TYPE, "[S");
     CACHE_PRIMITIVE_ARRAY(JINT_TYPE, JINT_ARRAY_TYPE, "[I");
     CACHE_PRIMITIVE_ARRAY(JLONG_TYPE, JLONG_ARRAY_TYPE, "[J");
@@ -321,33 +323,6 @@ int cache_primitive_classes(JNIEnv *env)
         }
 
         JVOID_TYPE = (*env)->NewGlobalRef(env, tmpclazz);
-        (*env)->DeleteLocalRef(env, tmpclazz);
-        (*env)->DeleteLocalRef(env, tmpobj);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if (JCHAR_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "java/lang/Character");
-        if ((*env)->ExceptionOccurred(env)) {
-            return 0;
-        }
-
-        fieldId = (*env)->GetStaticFieldID(env,
-                                           clazz,
-                                           "TYPE",
-                                           "Ljava/lang/Class;");
-        if ((*env)->ExceptionOccurred(env)) {
-            return 0;
-        }
-
-        tmpclazz = (jclass) (*env)->GetStaticObjectField(env,
-                   clazz,
-                   fieldId);
-        if ((*env)->ExceptionOccurred(env)) {
-            return 0;
-        }
-
-        JCHAR_TYPE = (*env)->NewGlobalRef(env, tmpclazz);
         (*env)->DeleteLocalRef(env, tmpclazz);
         (*env)->DeleteLocalRef(env, tmpobj);
         (*env)->DeleteLocalRef(env, clazz);

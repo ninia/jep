@@ -111,6 +111,7 @@ extern jclass JCLASS_TYPE;
 // cache primitive array types
 extern jclass JBOOLEAN_ARRAY_TYPE;
 extern jclass JBYTE_ARRAY_TYPE;
+extern jclass JCHAR_ARRAY_TYPE;
 extern jclass JSHORT_ARRAY_TYPE;
 extern jclass JINT_ARRAY_TYPE;
 extern jclass JLONG_ARRAY_TYPE;
