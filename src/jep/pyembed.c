@@ -634,6 +634,7 @@ static PyObject* pyembed_forname(PyObject *self, PyObject *args)
     jclass     objclazz;
     jstring    jstr;
     JepThread *jepThread;
+    PyObject  *result;
 
     if (!PyArg_ParseTuple(args, "s", &name)) {
         return NULL;
@@ -661,11 +662,13 @@ static PyObject* pyembed_forname(PyObject *self, PyObject *args)
                cl,
                loadClassMethod,
                jstr);
+    (*env)->DeleteLocalRef(env, jstr);
     if (process_java_exception(env) || !objclazz) {
         return NULL;
     }
-
-    return (PyObject *) pyjobject_new_class(env, objclazz);
+    result = (PyObject *) pyjobject_new_class(env, objclazz);
+    (*env)->DeleteLocalRef(env, objclazz);
+    return result;
 }
 
 
@@ -703,7 +706,9 @@ static PyObject* pyembed_findclass(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    return (PyObject *) pyjobject_new_class(env, clazz);
+    PyObject* result = (PyObject *) pyjobject_new_class(env, clazz);
+    (*env)->DeleteLocalRef(env, clazz);
+    return result;
 }
 
 
@@ -1209,6 +1214,7 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result)
                 return NULL;
             }
             (*env)->CallBooleanMethod(env, list, arraylistAdd, value);
+            (*env)->DeleteLocalRef(env, value);
             if (process_java_exception(env)) {
                 (*env)->DeleteLocalRef(env, list);
                 return NULL;
@@ -1279,6 +1285,8 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result)
             }
 
             (*env)->CallObjectMethod(env, map, hashmapPut, jkey, jvalue);
+            (*env)->DeleteLocalRef(env, jkey);
+            (*env)->DeleteLocalRef(env, jvalue);
             if (process_java_exception(env)) {
                 return NULL;
             }

@@ -78,6 +78,8 @@ jclass JCHAR_OBJ_TYPE  = NULL;
 
 // cached types for frequently used classes
 jclass JNUMBER_TYPE      = NULL;
+jclass JMETHOD_TYPE      = NULL;
+jclass JFIELD_TYPE       = NULL;
 jclass JTHROWABLE_TYPE   = NULL;
 jclass JMODIFIER_TYPE    = NULL;
 jclass JARRAYLIST_TYPE   = NULL;
@@ -281,7 +283,6 @@ int cache_primitive_classes(JNIEnv *env)
 {
     jclass   clazz, tmpclazz = NULL;
     jfieldID fieldId;
-    jobject  tmpobj          = NULL;
 
     if (classGetComponentType == 0) {
         classGetComponentType = (*env)->GetMethodID(env, JCLASS_TYPE,
@@ -324,7 +325,6 @@ int cache_primitive_classes(JNIEnv *env)
 
         JVOID_TYPE = (*env)->NewGlobalRef(env, tmpclazz);
         (*env)->DeleteLocalRef(env, tmpclazz);
-        (*env)->DeleteLocalRef(env, tmpobj);
         (*env)->DeleteLocalRef(env, clazz);
     }
 
@@ -389,6 +389,8 @@ int cache_frequent_classes(JNIEnv *env)
     CACHE_CLASS(JFLOAT_OBJ_TYPE, "java/lang/Float");
     CACHE_CLASS(JCHAR_OBJ_TYPE, "java/lang/Character");
     CACHE_CLASS(JNUMBER_TYPE, "java/lang/Number");
+    CACHE_CLASS(JMETHOD_TYPE, "java/lang/reflect/Method");
+    CACHE_CLASS(JFIELD_TYPE, "java/lang/reflect/Field");
     CACHE_CLASS(JTHROWABLE_TYPE, "java/lang/Throwable");
     CACHE_CLASS(JMODIFIER_TYPE, "java/lang/reflect/Modifier");
     CACHE_CLASS(JARRAYLIST_TYPE, "java/util/ArrayList");
@@ -437,6 +439,8 @@ void unref_cache_frequent_classes(JNIEnv *env)
     UNCACHE_CLASS(JFLOAT_OBJ_TYPE);
     UNCACHE_CLASS(JCHAR_OBJ_TYPE);
     UNCACHE_CLASS(JNUMBER_TYPE);
+    UNCACHE_CLASS(JMETHOD_TYPE);
+    UNCACHE_CLASS(JFIELD_TYPE);
     UNCACHE_CLASS(JTHROWABLE_TYPE);
     UNCACHE_CLASS(JMODIFIER_TYPE);
     UNCACHE_CLASS(JARRAYLIST_TYPE);
@@ -926,20 +930,9 @@ PyObject* convert_jobject_pyobject(JNIEnv *env, jobject val)
     int typeId         = -1;
 
     if (val != NULL) {
-        jclass    retClass = NULL;
-        jmethodID getClass = NULL;
-
-        getClass = (*env)->GetMethodID(env, JOBJECT_TYPE, "getClass",
-                                       "()Ljava/lang/Class;");
-        if (process_java_exception(env) || !getClass) {
-            return NULL;
-        }
-
-        retClass = (*env)->CallObjectMethod(env, val, getClass);
-        if (process_java_exception(env) || !retClass) {
-            return NULL;
-        }
+        jclass retClass = (*env)->GetObjectClass(env, val);
         typeId = get_jtype(env, retClass);
+        (*env)->DeleteLocalRef(env, retClass);
     }
 
     return convert_jobject(env, val, typeId);
@@ -1041,6 +1034,7 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
                              pos + 1);
                 return ret;
             }
+            (*env)->DeleteLocalRef(env, arrclazz);
 
             ret.l = arr;
             return ret;

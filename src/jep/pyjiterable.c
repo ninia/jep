@@ -60,20 +60,33 @@ PyObject* pyjiterable_getiter(PyObject* obj)
     jobject       iter     = NULL;
     PyJObject    *pyjob    = (PyJObject*) obj;
     JNIEnv       *env      = pyembed_get_env();
+    PyObject     *result   = NULL;
 
     if (iterator == 0) {
         iterator = (*env)->GetMethodID(env, JITERABLE_TYPE, "iterator",
                                        "()Ljava/util/Iterator;");
-        if (process_java_exception(env) || !iterator) {
+        if (!iterator) {
+            process_java_exception(env);
             return NULL;
         }
     }
-
-    iter = (*env)->CallObjectMethod(env, pyjob->object, iterator);
-    if (process_java_exception(env) || !iter) {
+    if ((*env)->PushLocalFrame(env, 16) != 0) {
+        process_java_exception(env);
         return NULL;
     }
-    return pyjobject_new(env, iter);
+
+    iter = (*env)->CallObjectMethod(env, pyjob->object, iterator);
+    if (process_java_exception(env)) {
+        goto FINALLY;
+    } else if (!iter) {
+        PyErr_SetString(PyExc_TypeError,
+                        "java.util.Iterable returned a null value from iterator()");
+        goto FINALLY;
+    }
+    result = pyjobject_new(env, iter);
+FINALLY:
+    (*env)->PopLocalFrame(env, NULL);
+    return result;
 }
 
 

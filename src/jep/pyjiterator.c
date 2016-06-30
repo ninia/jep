@@ -71,7 +71,8 @@ PyObject* pyjiterator_next(PyObject* self)
 
     if (itrHasNext == 0) {
         itrHasNext = (*env)->GetMethodID(env, JITERATOR_TYPE, "hasNext", "()Z");
-        if (process_java_exception(env) || !itrHasNext) {
+        if (!itrHasNext) {
+            process_java_exception(env);
             return NULL;
         }
     }
@@ -83,21 +84,29 @@ PyObject* pyjiterator_next(PyObject* self)
 
     if (nextAvail) {
         jobject   nextItem;
+        PyObject* result;
 
         if (itrNext == 0) {
             itrNext = (*env)->GetMethodID(env, JITERATOR_TYPE, "next",
                                           "()Ljava/lang/Object;");
-            if (process_java_exception(env) || !itrNext) {
+            if (!itrNext) {
+                process_java_exception(env);
                 return NULL;
             }
         }
-
+        if (!(*env)->PushLocalFrame(env, 16) == 0) {
+            process_java_exception(env);
+            return NULL;
+        }
         nextItem = (*env)->CallObjectMethod(env, pyjob->object, itrNext);
         if (process_java_exception(env)) {
+            (*env)->PopLocalFrame(env, NULL);
             return NULL;
         }
 
-        return convert_jobject_pyobject(env, nextItem);
+        result = convert_jobject_pyobject(env, nextItem);
+        (*env)->PopLocalFrame(env, NULL);
+        return result;
     }
 
     return NULL;

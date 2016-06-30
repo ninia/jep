@@ -35,7 +35,7 @@
 static void pyjmethod_dealloc(PyJMethodObject *self);
 
 // cache methodIds
-static jmethodID classGetName        = 0;
+static jmethodID methodGetName        = 0;
 static jmethodID methodGetType       = 0;
 static jmethodID methodGetParmTypes  = 0;
 static jmethodID methodGetModifiers  = 0;
@@ -49,7 +49,6 @@ PyJMethodObject* pyjmethod_new(JNIEnv *env,
                                PyJObject *pyjobject)
 {
     PyJMethodObject *pym          = NULL;
-    jclass            rmethodClass = NULL;
     const char       *methodName   = NULL;
     jstring           jstr         = NULL;
 
@@ -67,24 +66,17 @@ PyJMethodObject* pyjmethod_new(JNIEnv *env,
 
     // ------------------------------ get method name
 
-    rmethodClass = (*env)->GetObjectClass(env, rmethod);
-    if (process_java_exception(env) || !rmethodClass) {
-        goto EXIT_ERROR;
-    }
 
-    if (classGetName == 0) {
-        classGetName = (*env)->GetMethodID(env,
-                                           rmethodClass,
-                                           "getName",
-                                           "()Ljava/lang/String;");
-        if (process_java_exception(env) || !classGetName) {
+    if (methodGetName == 0) {
+        methodGetName = (*env)->GetMethodID(env, JMETHOD_TYPE, "getName",
+                                            "()Ljava/lang/String;");
+        if (!methodGetName) {
+            process_java_exception(env);
             goto EXIT_ERROR;
         }
     }
 
-    jstr = (jstring) (*env)->CallObjectMethod(env,
-            rmethod,
-            classGetName);
+    jstr = (jstring) (*env)->CallObjectMethod(env, rmethod, methodGetName);
     if (process_java_exception(env) || !jstr) {
         goto EXIT_ERROR;
     }
@@ -94,14 +86,10 @@ PyJMethodObject* pyjmethod_new(JNIEnv *env,
     (*env)->ReleaseStringUTFChars(env, jstr, methodName);
     (*env)->DeleteLocalRef(env, jstr);
 
-    (*env)->DeleteLocalRef(env, rmethodClass);
     return pym;
 
 
 EXIT_ERROR:
-    if (rmethodClass) {
-        (*env)->DeleteLocalRef(env, rmethodClass);
-    }
 
     if (pym) {
         pyjmethod_dealloc(pym);
@@ -117,7 +105,6 @@ int pyjmethod_init(JNIEnv *env, PyJMethodObject *self)
     jobjectArray      paramArray             = NULL;
     jint              modifier               = -1;
     jboolean          isStatic               = JNI_FALSE;
-    jclass            rmethodClass           = NULL;
 
     // use a local frame so we don't have to worry too much about local refs.
     // make sure if this method errors out, that this is poped off again
@@ -126,15 +113,9 @@ int pyjmethod_init(JNIEnv *env, PyJMethodObject *self)
         return 0;
     }
 
-    rmethodClass = (*env)->GetObjectClass(env, self->rmethod);
-    if (process_java_exception(env) || !rmethodClass) {
-        goto EXIT_ERROR;
-    }
-
     // ------------------------------ get methodid
 
-    methodId = (*env)->FromReflectedMethod(env,
-                                           self->rmethod);
+    methodId = (*env)->FromReflectedMethod(env, self->rmethod);
     if (process_java_exception(env) || !methodId) {
         goto EXIT_ERROR;
     }
@@ -145,18 +126,15 @@ int pyjmethod_init(JNIEnv *env, PyJMethodObject *self)
     // ------------------------------ get return type
 
     if (methodGetType == 0) {
-        methodGetType = (*env)->GetMethodID(env,
-                                            rmethodClass,
-                                            "getReturnType",
+        methodGetType = (*env)->GetMethodID(env, JMETHOD_TYPE, "getReturnType",
                                             "()Ljava/lang/Class;");
-        if (process_java_exception(env) || !methodGetType) {
+        if (!methodGetType) {
+            process_java_exception(env);
             goto EXIT_ERROR;
         }
     }
 
-    returnType = (*env)->CallObjectMethod(env,
-                                          self->rmethod,
-                                          methodGetType);
+    returnType = (*env)->CallObjectMethod(env, self->rmethod, methodGetType);
     if (process_java_exception(env) || !returnType) {
         goto EXIT_ERROR;
     }
@@ -169,18 +147,16 @@ int pyjmethod_init(JNIEnv *env, PyJMethodObject *self)
 
     // ------------------------------ get parameter array
 
+
     if (methodGetParmTypes == 0) {
-        methodGetParmTypes = (*env)->GetMethodID(env,
-                             rmethodClass,
-                             "getParameterTypes",
+        methodGetParmTypes = (*env)->GetMethodID(env, JMETHOD_TYPE, "getParameterTypes",
                              "()[Ljava/lang/Class;");
-        if (process_java_exception(env) || !methodGetParmTypes) {
+        if (!methodGetParmTypes) {
+            process_java_exception(env);
             goto EXIT_ERROR;
         }
     }
-
-    paramArray = (jobjectArray) (*env)->CallObjectMethod(env,
-                 self->rmethod,
+    paramArray = (jobjectArray) (*env)->CallObjectMethod(env, self->rmethod,
                  methodGetParmTypes);
     if (process_java_exception(env) || !paramArray) {
         goto EXIT_ERROR;
@@ -194,15 +170,13 @@ int pyjmethod_init(JNIEnv *env, PyJMethodObject *self)
 
         // call getModifers()
         if (methodGetModifiers == 0) {
-            methodGetModifiers = (*env)->GetMethodID(env,
-                                 rmethodClass,
-                                 "getModifiers",
+            methodGetModifiers = (*env)->GetMethodID(env, JMETHOD_TYPE, "getModifiers",
                                  "()I");
-            if (process_java_exception(env) || !methodGetModifiers) {
+            if (!methodGetModifiers) {
+                process_java_exception(env);
                 goto EXIT_ERROR;
             }
         }
-
         modifier = (*env)->CallIntMethod(env,
                                          self->rmethod,
                                          methodGetModifiers);
@@ -211,10 +185,7 @@ int pyjmethod_init(JNIEnv *env, PyJMethodObject *self)
         }
 
         // caching this methodid caused a crash on the mac
-        methodId = (*env)->GetStaticMethodID(env,
-                                             JMODIFIER_TYPE,
-                                             "isStatic",
-                                             "(I)Z");
+        methodId = (*env)->GetStaticMethodID(env, JMODIFIER_TYPE, "isStatic", "(I)Z");
         if (process_java_exception(env) || !methodId) {
             goto EXIT_ERROR;
         }

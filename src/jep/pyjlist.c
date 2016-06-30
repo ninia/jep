@@ -66,6 +66,7 @@ PyObject* pyjlist_new_copy(PyObject *toCopy)
     jobject       newList     = NULL;
     PyJObject    *obj         = (PyJObject*) toCopy;
     JNIEnv       *env         = pyembed_get_env();
+    PyObject     *result      = NULL;
 
 
     if (!pyjlist_check(toCopy)) {
@@ -76,30 +77,38 @@ PyObject* pyjlist_new_copy(PyObject *toCopy)
     if (classNewInstance == 0) {
         classNewInstance = (*env)->GetMethodID(env, JCLASS_TYPE, "newInstance",
                                                "()Ljava/lang/Object;");
-        if (process_java_exception(env) || !classNewInstance) {
+        if (!classNewInstance) {
+            process_java_exception(env);
             return NULL;
         }
+    }
+    if (listAddAll == 0) {
+        listAddAll = (*env)->GetMethodID(env, JLIST_TYPE, "addAll",
+                                         "(Ljava/util/Collection;)Z");
+        if (!listAddAll) {
+            process_java_exception(env);
+            return NULL;
+        }
+    }
+    if ((*env)->PushLocalFrame(env, 16) != 0) {
+        process_java_exception(env);
+        return NULL;
     }
 
     newList = (*env)->CallObjectMethod(env, obj->clazz, classNewInstance);
     if (process_java_exception(env) || !newList) {
-        return NULL;
-    }
-
-    if (listAddAll == 0) {
-        listAddAll = (*env)->GetMethodID(env, JLIST_TYPE, "addAll",
-                                         "(Ljava/util/Collection;)Z");
-        if (process_java_exception(env) || !listAddAll) {
-            return NULL;
-        }
+        goto FINALLY;
     }
 
     (*env)->CallBooleanMethod(env, newList, listAddAll, obj->object);
     if (process_java_exception(env)) {
-        return NULL;
+        goto FINALLY;
     }
 
-    return pyjobject_new(env, newList);
+    result = pyjobject_new(env, newList);
+FINALLY:
+    (*env)->PopLocalFrame(env, NULL);
+    return result;
 }
 
 /*
@@ -167,7 +176,8 @@ static PyObject* pyjlist_getitem(PyObject *o, Py_ssize_t i)
 
     if (listGet == 0) {
         listGet = (*env)->GetMethodID(env, JLIST_TYPE, "get", "(I)Ljava/lang/Object;");
-        if (process_java_exception(env) || !listGet) {
+        if (!listGet) {
+            process_java_exception(env);
             return NULL;
         }
     }
@@ -179,15 +189,24 @@ static PyObject* pyjlist_getitem(PyObject *o, Py_ssize_t i)
         return NULL;
     }
 
+    if ((*env)->PushLocalFrame(env, 16) != 0) {
+        process_java_exception(env);
+        return NULL;
+    }
+
     val = (*env)->CallObjectMethod(env, obj->object, listGet, (jint) i);
     if (process_java_exception(env)) {
+        (*env)->PopLocalFrame(env, NULL);
         return NULL;
     }
 
     if (val == NULL) {
+        (*env)->PopLocalFrame(env, NULL);
         Py_RETURN_NONE;
     } else {
-        return convert_jobject_pyobject(env, val);
+        PyObject *result = convert_jobject_pyobject(env, val);
+        (*env)->PopLocalFrame(env, NULL);
+        return result;
     }
 }
 
@@ -200,22 +219,31 @@ static PyObject* pyjlist_getslice(PyObject *o, Py_ssize_t i1, Py_ssize_t i2)
     jobject       result  = NULL;
     PyJObject    *obj     = (PyJObject*) o;
     JNIEnv       *env     = pyembed_get_env();
+    PyObject     *pyres   = NULL;
 
     if (listSubList == 0) {
         listSubList = (*env)->GetMethodID(env, JLIST_TYPE, "subList",
                                           "(II)Ljava/util/List;");
-        if (process_java_exception(env) || !listSubList) {
+        if (!listSubList) {
+            process_java_exception(env);
             return NULL;
         }
+    }
+    if ((*env)->PushLocalFrame(env, 16) != 0) {
+        process_java_exception(env);
+        return NULL;
     }
 
     result = (*env)->CallObjectMethod(env, obj->object, listSubList, (jint) i1,
                                       (jint) i2);
     if (process_java_exception(env)) {
-        return NULL;
+        goto FINALLY;
     }
 
-    return pyjobject_new(env, result);
+    pyres = pyjobject_new(env, result);
+FINALLY:
+    (*env)->PopLocalFrame(env, NULL);
+    return pyres;
 }
 
 /*
@@ -227,13 +255,15 @@ static int pyjlist_setitem(PyObject *o, Py_ssize_t i, PyObject *v)
     PyJObject    *obj      = (PyJObject*) o;
     JNIEnv       *env      = pyembed_get_env();
     jobject       value    = NULL;
+    int           result   = -1;
 
     if (v == NULL) {
         // this is a del PyJList[index] statement
         if (listRemove == 0) {
             listRemove = (*env)->GetMethodID(env, JLIST_TYPE, "remove",
                                              "(I)Ljava/lang/Object;");
-            if (process_java_exception(env) || !listRemove) {
+            if (!listRemove) {
+                process_java_exception(env);
                 return -1;
             }
         }
@@ -245,12 +275,27 @@ static int pyjlist_setitem(PyObject *o, Py_ssize_t i, PyObject *v)
 
         // have to return 0 on success even though it's not documented
         return 0;
-    } else if (v == Py_None) {
+    }
+
+    if (listSet == 0) {
+        listSet = (*env)->GetMethodID(env, JLIST_TYPE, "set",
+                                      "(ILjava/lang/Object;)Ljava/lang/Object;");
+        if (!listSet) {
+            process_java_exception(env);
+            return -1;
+        }
+    }
+    if ((*env)->PushLocalFrame(env, 16) != 0) {
+        process_java_exception(env);
+        return -1;
+    }
+
+    if (v == Py_None) {
         value = NULL;
     } else {
         value = pyembed_box_py(env, v);
         if (process_java_exception(env)) {
-            return -1;
+            goto FINALLY;
         } else if (!value) {
             /*
              * with the way pyembed_box_py is currently implemented, shouldn't
@@ -261,25 +306,20 @@ static int pyjlist_setitem(PyObject *o, Py_ssize_t i, PyObject *v)
                          "__setitem__ received an incompatible type: %s",
                          PyString_AsString(pystring));
             Py_XDECREF(pystring);
-            return -1;
+            goto FINALLY;
         }
     }
 
-    if (listSet == 0) {
-        listSet = (*env)->GetMethodID(env, JLIST_TYPE, "set",
-                                      "(ILjava/lang/Object;)Ljava/lang/Object;");
-        if (process_java_exception(env) || !listSet) {
-            return -1;
-        }
-    }
 
     (*env)->CallObjectMethod(env, obj->object, listSet, (jint) i, value);
     if (process_java_exception(env)) {
-        return -1;
+        goto FINALLY;
     }
-
     // have to return 0 on success even though it's not documented
-    return 0;
+    result = 0;
+FINALLY:
+    (*env)->PopLocalFrame(env, NULL);
+    return result;
 }
 
 /*
@@ -355,6 +395,12 @@ static PyObject* pyjlist_inplace_add(PyObject *o1, PyObject *o2)
     jobject        value    = NULL;
     JNIEnv        *env      = pyembed_get_env();
     PyJObject     *self     = (PyJObject*) o1;
+    PyObject      *result   = NULL;
+
+    if ((*env)->PushLocalFrame(env, 16) != 0) {
+        process_java_exception(env);
+        return NULL;
+    }
 
     if (pyjlist_check(o2)) {
         value                     = ((PyJObject*) o2)->object;
@@ -371,32 +417,34 @@ static PyObject* pyjlist_inplace_add(PyObject *o1, PyObject *o2)
             listAddAll = (*env)->GetMethodID(env, JLIST_TYPE, "addAll",
                                              "(Ljava/util/Collection;)Z");
             if (process_java_exception(env) || !listAddAll) {
-                return NULL;
+                goto FINALLY;
             }
         }
 
         (*env)->CallBooleanMethod(env, self->object, listAddAll, value);
         if (process_java_exception(env)) {
-            return NULL;
+            goto FINALLY;
         }
     } else {
         // not a collection, add it as a single object
         if (listAdd == 0) {
             listAdd = (*env)->GetMethodID(env, JLIST_TYPE, "add", "(Ljava/lang/Object;)Z");
             if (process_java_exception(env) || !listAdd) {
-                return NULL;
+                goto FINALLY;
             }
         }
 
         (*env)->CallBooleanMethod(env, self->object, listAdd, value);
         if (process_java_exception(env)) {
-            return NULL;
+            goto FINALLY;
         }
     }
 
+    result = o1;
     Py_INCREF(o1);
-
-    return o1;
+FINALLY:
+    (*env)->PopLocalFrame(env, NULL);
+    return result;
 }
 
 /*

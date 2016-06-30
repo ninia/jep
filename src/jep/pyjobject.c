@@ -33,7 +33,6 @@ static void pyjobject_addmethod(PyJObject*, PyObject*);
 static void pyjobject_init_subtypes(void);
 static int  subtypes_initialized = 0;
 
-static jmethodID objectGetClass  = 0;
 static jmethodID objectEquals    = 0;
 static jmethodID objectHashCode  = 0;
 static jmethodID classGetMethods = 0;
@@ -170,12 +169,13 @@ PyObject* pyjobject_new(JNIEnv *env, jobject obj)
 
 
     pyjob->object      = (*env)->NewGlobalRef(env, obj);
-    pyjob->clazz       = (*env)->NewGlobalRef(env, (*env)->GetObjectClass(env,
-                         obj));
+    pyjob->clazz       = (*env)->NewGlobalRef(env, objClz);
     pyjob->attr        = PyList_New(0);
     pyjob->methods     = PyList_New(0);
     pyjob->fields      = PyList_New(0);
     pyjob->finishAttr  = 0;
+
+    (*env)->DeleteLocalRef(env, objClz);
 
     if (pyjobject_init(env, pyjob)) {
         return (PyObject *) pyjob;
@@ -224,7 +224,6 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
     jobjectArray      methodArray = NULL;
     jobjectArray      fieldArray  = NULL;
     int               i, len = 0;
-    jobject           langClass   = NULL;
 
     jstring           className   = NULL;
     const char       *cClassName  = NULL;
@@ -237,30 +236,19 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
     (*env)->PushLocalFrame(env, 20);
     // ------------------------------ call Class.getMethods()
 
-    // well, first call getClass()
-    if (objectGetClass == 0) {
-        objectGetClass = (*env)->GetMethodID(env,
-                                             pyjob->clazz,
-                                             "getClass",
-                                             "()Ljava/lang/Class;");
-        if (process_java_exception(env) || !objectGetClass) {
-            goto EXIT_ERROR;
-        }
-    }
-
-    langClass = (*env)->CallObjectMethod(env, pyjob->clazz, objectGetClass);
-    if (process_java_exception(env) || !langClass) {
-        goto EXIT_ERROR;
-    }
-
     /*
      * attach attribute java_name to the pyjobject instance to assist with
      * understanding the type at runtime
      */
     if (classGetName == 0) {
-        classGetName = (*env)->GetMethodID(env, langClass, "getName",
+        classGetName = (*env)->GetMethodID(env, JCLASS_TYPE, "getName",
                                            "()Ljava/lang/String;");
+        if (!classGetName) {
+            process_java_exception(env);
+            goto EXIT_ERROR;
+        }
     }
+
     className = (*env)->CallObjectMethod(env, pyjob->clazz, classGetName);
     if (process_java_exception(env) || !className) {
         goto EXIT_ERROR;
@@ -277,18 +265,15 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
     pyjob->javaClassName = pyClassName;
     Py_DECREF(pyAttrName);
     (*env)->DeleteLocalRef(env, className);
-
     // then, get methodid for getMethods()
     if (classGetMethods == 0) {
-        classGetMethods = (*env)->GetMethodID(env,
-                                              langClass,
-                                              "getMethods",
+        classGetMethods = (*env)->GetMethodID(env, JCLASS_TYPE, "getMethods",
                                               "()[Ljava/lang/reflect/Method;");
-        if (process_java_exception(env) || !classGetMethods) {
+        if (!classGetMethods) {
+            process_java_exception(env);
             goto EXIT_ERROR;
         }
     }
-
     /*
      * Performance improvement.  The code below is very similar to previous
      * versions except methods are now cached in memory.
@@ -333,7 +318,6 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
         // so what i did here was find the methodid using langClass,
         // but then i call the method using clazz. methodIds for java
         // classes are shared....
-
         methodArray = (jobjectArray) (*env)->CallObjectMethod(env, pyjob->clazz,
                       classGetMethods);
         if (process_java_exception(env) || !methodArray) {
@@ -422,13 +406,11 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
 
 
     // ------------------------------ process fields
-
     if (classGetFields == 0) {
-        classGetFields = (*env)->GetMethodID(env,
-                                             langClass,
-                                             "getFields",
+        classGetFields = (*env)->GetMethodID(env,  JCLASS_TYPE, "getFields",
                                              "()[Ljava/lang/reflect/Field;");
-        if (process_java_exception(env) || !classGetFields) {
+        if (!classGetFields) {
+            process_java_exception(env);
             goto EXIT_ERROR;
         }
     }

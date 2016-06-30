@@ -35,9 +35,9 @@
 
 static void pyjfield_dealloc(PyJFieldObject *self);
 
-static jmethodID classGetName = 0;
-static jmethodID classGetType = 0;
-static jmethodID classGetMod  = 0;
+static jmethodID fieldGetName = 0;
+static jmethodID fieldGetType = 0;
+static jmethodID fieldGetMod  = 0;
 static jmethodID modIsStatic  = 0;
 
 PyJFieldObject* pyjfield_new(JNIEnv *env,
@@ -45,7 +45,6 @@ PyJFieldObject* pyjfield_new(JNIEnv *env,
                              PyJObject *pyjobject)
 {
     PyJFieldObject *pyf;
-    jclass           rfieldClass = NULL;
     jstring          jstr        = NULL;
     const char      *fieldName   = NULL;
 
@@ -63,24 +62,16 @@ PyJFieldObject* pyjfield_new(JNIEnv *env,
 
     // ------------------------------ get field name
 
-    rfieldClass = (*env)->GetObjectClass(env, rfield);
-    if (process_java_exception(env) || !rfieldClass) {
-        goto EXIT_ERROR;
-    }
-
-    if (classGetName == 0) {
-        classGetName = (*env)->GetMethodID(env,
-                                           rfieldClass,
-                                           "getName",
+    if (fieldGetName == 0) {
+        fieldGetName = (*env)->GetMethodID(env, JFIELD_TYPE, "getName",
                                            "()Ljava/lang/String;");
-        if (process_java_exception(env) || !classGetName) {
+        if (!fieldGetName) {
+            process_java_exception(env);
             goto EXIT_ERROR;
         }
     }
 
-    jstr = (jstring) (*env)->CallObjectMethod(env,
-            rfield,
-            classGetName);
+    jstr = (jstring) (*env)->CallObjectMethod(env, rfield, fieldGetName);
     if (process_java_exception(env) || !jstr) {
         goto EXIT_ERROR;
     }
@@ -104,8 +95,6 @@ EXIT_ERROR:
 
 static int pyjfield_init(JNIEnv *env, PyJFieldObject *self)
 {
-    jfieldID         fieldId;
-    jclass           rfieldClass = NULL;
     jobject          fieldType   = NULL;
     jint             modifier    = -1;
     jboolean         isStatic    = JNI_TRUE;
@@ -117,66 +106,47 @@ static int pyjfield_init(JNIEnv *env, PyJFieldObject *self)
         return 0;
     }
 
-    rfieldClass = (*env)->GetObjectClass(env, self->rfield);
-    if (process_java_exception(env) || !rfieldClass) {
-        goto EXIT_ERROR;
-    }
 
 
     // ------------------------------ get fieldid
 
-    fieldId = (*env)->FromReflectedField(env,
-                                         self->rfield);
-    if (process_java_exception(env) || !fieldId) {
-        goto EXIT_ERROR;
-    }
-
-    self->fieldId = fieldId;
+    self->fieldId = (*env)->FromReflectedField(env,
+                    self->rfield);
 
 
     // ------------------------------ get return type
 
-    if (classGetType == 0) {
-        classGetType = (*env)->GetMethodID(env,
-                                           rfieldClass,
-                                           "getType",
+    if (fieldGetType == 0) {
+        fieldGetType = (*env)->GetMethodID(env, JFIELD_TYPE, "getType",
                                            "()Ljava/lang/Class;");
-        if (process_java_exception(env) || !classGetType) {
+        if (!fieldGetType) {
+            process_java_exception(env);
             goto EXIT_ERROR;
         }
     }
 
-    fieldType = (*env)->CallObjectMethod(env,
-                                         self->rfield,
-                                         classGetType);
+    fieldType = (*env)->CallObjectMethod(env, self->rfield, fieldGetType);
     if (process_java_exception(env) || !fieldType) {
         goto EXIT_ERROR;
     }
 
-    {
-        self->fieldTypeId = get_jtype(env, fieldType);
+    self->fieldTypeId = get_jtype(env, fieldType);
 
-        if (process_java_exception(env)) {
-            goto EXIT_ERROR;
-        }
+    if (process_java_exception(env)) {
+        goto EXIT_ERROR;
     }
 
     // ------------------------------ get isStatic
 
     // call getModifers()
-    if (classGetMod == 0) {
-        classGetMod = (*env)->GetMethodID(env,
-                                          rfieldClass,
-                                          "getModifiers",
-                                          "()I");
-        if (process_java_exception(env) || !classGetMod) {
+    if (fieldGetMod == 0) {
+        fieldGetMod = (*env)->GetMethodID(env, JFIELD_TYPE, "getModifiers", "()I");
+        if (!fieldGetMod) {
+            process_java_exception(env);
             goto EXIT_ERROR;
         }
     }
-
-    modifier = (*env)->CallIntMethod(env,
-                                     self->rfield,
-                                     classGetMod);
+    modifier = (*env)->CallIntMethod(env, self->rfield, field1GetMod);
     if (process_java_exception(env)) {
         goto EXIT_ERROR;
     }

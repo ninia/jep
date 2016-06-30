@@ -69,7 +69,8 @@ static Py_ssize_t pyjcollection_len(PyObject* self)
 
     if (collectionSize == 0) {
         collectionSize = (*env)->GetMethodID(env, JCOLLECTION_TYPE, "size", "()I");
-        if (process_java_exception(env) || !collectionSize) {
+        if (!collectionSize) {
+            process_java_exception(env);
             return -1;
         }
     }
@@ -88,17 +89,31 @@ static Py_ssize_t pyjcollection_len(PyObject* self)
  */
 static int pyjcollection_contains(PyObject *o, PyObject *v)
 {
-    jboolean      result   = JNI_FALSE;
+    int           result   = -1;
+    jboolean      jresult  = JNI_FALSE;
     PyJObject    *obj      = (PyJObject*) o;
     JNIEnv       *env      = pyembed_get_env();
     jobject       value    = NULL;
 
+    if (collectionContains == 0) {
+        collectionContains = (*env)->GetMethodID(env, JCOLLECTION_TYPE, "contains",
+                             "(Ljava/lang/Object;)Z");
+        if (!collectionContains) {
+            process_java_exception(env);
+            return -1;
+        }
+    }
+
+    if ((*env)->PushLocalFrame(env, 16) != 0) {
+        process_java_exception(env);
+        return -1;
+    }
     if (v == Py_None) {
         value = NULL;
     } else {
         value = pyembed_box_py(env, v);
         if (process_java_exception(env)) {
-            return -1;
+            goto FINALLY;
         } else if (!value) {
             /*
              * with the way pyembed_box_py is currently implemented, shouldn't
@@ -109,28 +124,23 @@ static int pyjcollection_contains(PyObject *o, PyObject *v)
                          "__contains__ received an incompatible type: %s",
                          PyString_AsString(pystring));
             Py_XDECREF(pystring);
-            return -1;
-        }
-    }
-
-    if (collectionContains == 0) {
-        collectionContains = (*env)->GetMethodID(env, JCOLLECTION_TYPE, "contains",
-                             "(Ljava/lang/Object;)Z");
-        if (process_java_exception(env) || !collectionContains) {
-            return -1;
+            goto FINALLY;
         }
     }
 
     result = (*env)->CallBooleanMethod(env, obj->object, collectionContains, value);
     if (process_java_exception(env)) {
-        return -1;
+        goto FINALLY;
     }
 
-    if (result) {
-        return 1;
+    if (result == JNI_TRUE) {
+        result = 1;
     } else {
-        return 0;
+        result = 0;
     }
+FINALLY:
+    (*env)->PopLocalFrame(env, NULL);
+    return result;
 }
 
 

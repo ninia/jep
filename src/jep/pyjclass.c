@@ -43,11 +43,9 @@ static jmethodID modifierIsPublic        = 0;
 int pyjclass_init(JNIEnv *env, PyObject *pyjob)
 {
     PyJClassObject   *pyc         = NULL;
-    jobject           langClass   = NULL;
     jobjectArray      initArray   = NULL;
     PyJObject        *pyjobject   = NULL;
     jobject           constructor = NULL;
-    jclass            initClass   = NULL;
     jobjectArray      parmArray   = NULL;
     int               i;
 
@@ -63,27 +61,11 @@ int pyjclass_init(JNIEnv *env, PyObject *pyjob)
 
     // ------------------------------ call Class.getConstructors()
 
-    // well, first call getClass()
     if (classGetConstructors == 0) {
-        jmethodID methodId;
-
-        methodId = (*env)->GetMethodID(env,
-                                       pyjobject->clazz,
-                                       "getClass",
-                                       "()Ljava/lang/Class;");
-        if (process_java_exception(env) || !methodId) {
-            goto EXIT_ERROR;
-        }
-
-        langClass = (*env)->CallObjectMethod(env, pyjobject->clazz, methodId);
-        if (process_java_exception(env) || !langClass) {
-            goto EXIT_ERROR;
-        }
-
         // then, find getContructors()
         classGetConstructors =
             (*env)->GetMethodID(env,
-                                langClass,
+                                JCLASS_TYPE,
                                 "getConstructors",
                                 "()[Ljava/lang/reflect/Constructor;");
         if (process_java_exception(env) || !classGetConstructors) {
@@ -116,18 +98,16 @@ int pyjclass_init(JNIEnv *env, PyObject *pyjob)
         }
 
 
-        // we need to get the class java.lang.reflect.Constructor first
-        initClass = (*env)->GetObjectClass(env, constructor);
-        if (process_java_exception(env) || !initClass) {
-            goto EXIT_ERROR;
-        }
 
         // next, get parameters for constructor
         if (classGetParmTypes == 0) {
+            // we need to get the class java.lang.reflect.Constructor first
+            jclass initClass = (*env)->GetObjectClass(env, constructor);
             classGetParmTypes = (*env)->GetMethodID(env,
                                                     initClass,
                                                     "getParameterTypes",
                                                     "()[Ljava/lang/Class;");
+            (*env)->DeleteLocalRef(env, initClass);
             if (process_java_exception(env) || !classGetParmTypes) {
                 goto EXIT_ERROR;
             }
@@ -237,7 +217,8 @@ static PyObject* pyjclass_add_inner_classes(JNIEnv *env,
             if (process_java_exception(env)) {
                 return NULL;
             }
-            public = (*env)->CallStaticBooleanMethod(env, JMODIFIER_TYPE, modifierIsPublic, mods);
+            public = (*env)->CallStaticBooleanMethod(env, JMODIFIER_TYPE, modifierIsPublic,
+                     mods);
             if (process_java_exception(env)) {
                 return NULL;
             }
@@ -319,7 +300,6 @@ PyObject* pyjclass_call(PyJClassObject *self,
     int            parmLen     = 0;
     jobjectArray   parmArray   = NULL;
     JNIEnv        *env;
-    jclass         initClass   = NULL;
     jobject        constructor = NULL;
     jvalue        *jargs       = NULL;
     int            foundArray  = 0;
@@ -360,18 +340,16 @@ PyObject* pyjclass_call(PyJClassObject *self,
             goto EXIT_ERROR;
         }
 
-        // get the class java.lang.reflect.Constructor first
-        initClass = (*env)->GetObjectClass(env, constructor);
-        if (process_java_exception(env) || !initClass) {
-            goto EXIT_ERROR;
-        }
 
         // next, get parameters for constructor
         if (classGetParmTypes == 0) {
+            // get the class java.lang.reflect.Constructor first
+            jclass initClass = (*env)->GetObjectClass(env, constructor);
             classGetParmTypes = (*env)->GetMethodID(env,
                                                     initClass,
                                                     "getParameterTypes",
                                                     "()[Ljava/lang/Class;");
+            (*env)->DeleteLocalRef(env, initClass);
             if (process_java_exception(env) || !classGetParmTypes) {
                 goto EXIT_ERROR;
             }

@@ -134,6 +134,8 @@ extern jclass JINT_OBJ_TYPE;
 extern jclass JLONG_OBJ_TYPE;
 extern jclass JDOUBLE_OBJ_TYPE;
 
+extern jclass JMETHOD_TYPE;
+extern jclass JFIELD_TYPE;
 extern jclass JNUMBER_TYPE;
 extern jclass JTHROWABLE_TYPE;
 extern jclass JMODIFIER_TYPE;
