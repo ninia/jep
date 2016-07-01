@@ -146,7 +146,7 @@ static int pyjfield_init(JNIEnv *env, PyJFieldObject *self)
             goto EXIT_ERROR;
         }
     }
-    modifier = (*env)->CallIntMethod(env, self->rfield, field1GetMod);
+    modifier = (*env)->CallIntMethod(env, self->rfield, fieldGetMod);
     if (process_java_exception(env)) {
         goto EXIT_ERROR;
     }
