@@ -114,7 +114,12 @@ public class NDArray<T extends Object> {
             throw new IllegalArgumentException(
                     "NDArray only supports primitive arrays, received "
                             + data.getClass().getName());
+        }else if(data instanceof char[]){
+            throw new IllegalArgumentException(
+                    "NDArray only supports numeric primitives, not char[]");
+
         }
+
 
         int dataLength = Array.getLength(data);
         if (dimensions == null) {

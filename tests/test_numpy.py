@@ -71,10 +71,6 @@ class TestNumpy(unittest.TestCase):
         ba.fill(1)
         self.assertTrue(self.test.callByteMethod(ba))
             
-        ca = numpy.zeros((15, 5), numpy.uint16)
-        ca.fill(2)
-        self.assertTrue(self.test.callCharMethod(ca))
-            
         sa = numpy.zeros((15, 5), numpy.short)
         sa.fill(2)
         self.assertTrue(self.test.callShortMethod(sa))
@@ -95,3 +91,7 @@ class TestNumpy(unittest.TestCase):
         da.fill(True)
         self.assertTrue(self.test.callDoubleMethod(da))
 
+    def testCharArrayCreation(self):
+        NDArray = jep.findClass("jep.NDArray")
+        with self.assertRaises(ValueError):
+            NDArray(jep.jarray(4, jep.JCHAR_ID))
