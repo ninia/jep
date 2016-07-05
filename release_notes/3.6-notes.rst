@@ -40,4 +40,5 @@ Java NDarrays.  *Contributed by Tim Verbelen.*
 Other changes
 ~~~~~~~~~~~~~
 * Jep is more efficient when transforming Python ndarrays to/from Java
-NDArrays.
+ NDArrays.
+
