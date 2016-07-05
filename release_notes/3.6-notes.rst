@@ -1,0 +1,43 @@
+Jep 3.6 Release Notes
+*********************
+This release emphasized consistency and new features.  It is compatible
+with Python 2.6, 2.7, 3.2, 3.3, 3.4, and 3.5.
+
+
+FreeBSD support
+~~~~~~~~~~~~~~~
+Jep can now be built on FreeBSD.
+
+
+Improved method choosing
+~~~~~~~~~~~~~~~~~~~~~~~~
+Jep now has improved method choosing when Python tries to call a Java
+method that is overloaded.  Methods will be chosen based off of how closely
+the Python inputs match the Java argument types.
+
+
+Python initialization variables
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Jep now supports configuring global Python interpreter variables before
+the Python interpreter has been initialized.  These global variables
+correspond roughly to the Python command line arguments such as
+python -B or python -E.  For more information, see the javadoc on PyConfig
+and/or run python --help from a command line.  *Contributed by Jeff Stein.*
+
+
+Improved Java memory efficiency
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Jep now manages local references more efficiently, freeing up Java heap
+memory earlier for long running Python code.
+
+
+Unsigned NDArray support
+~~~~~~~~~~~~~~~~~~~~~~~~
+Jep now supports unsigned Python ndarrays transforming to/from unsigned
+Java NDarrays.  *Contributed by Tim Verbelen.*
+
+
+Other changes
+~~~~~~~~~~~~~
+* Jep is more efficient when transforming Python ndarrays to/from Java
+NDArrays.
