@@ -55,6 +55,8 @@ public class NDArray<T extends Object> {
 
     protected final int[] dimensions;
 
+     protected final boolean unsigned;
+
     /**
      * Constructor for a Java NDArray. Presumes the data is one dimensional.
      * 
@@ -62,7 +64,19 @@ public class NDArray<T extends Object> {
      *            a one-dimensional primitive array such as float[], int[]
      */
     public NDArray(T data) {
-        this(data, null);
+        this(data, false, null);
+    }
+
+    /**
+     * Constructor for a Java NDArray. Presumes the data is one dimensional.
+     * 
+     * @param data
+     *            a one-dimensional primitive array such as float[], int[]     
+     * @param unsigend 
+     *            whether the data is to be interpreted as unsigned
+     */
+    public NDArray(T data, boolean unsigned) {
+        this(data, unsigned, null);
     }
 
     /**
@@ -75,6 +89,21 @@ public class NDArray<T extends Object> {
      *            numpy.ndarray dimensions in C-contiguous order)
      */
     public NDArray(T data, int... dimensions) {
+	this(data, false, dimensions);
+    }
+
+    /**
+     * Constructor for a Java NDArray.
+     * 
+     * @param data
+     *            a one-dimensional primitive array such as float[], int[]
+     * @param unsigend 
+     *            whether the data is to be interpreted as unsigned
+     * @param dimensions
+     *            the conceptual dimensions of the data (corresponds to the
+     *            numpy.ndarray dimensions in C-contiguous order)
+     */
+    public NDArray(T data, boolean unsigned, int... dimensions) {
         /*
          * java generics don't give us a nice Class that all the primitive
          * arrays extend, so we must enforce the type safety at runtime instead
@@ -123,10 +152,15 @@ public class NDArray<T extends Object> {
         // passed the safety checks
         this.data = data;
         this.dimensions = dimensions;
+	this.unsigned = unsigned;
     }
 
     public int[] getDimensions() {
         return dimensions;
+    }
+
+    public boolean isUnsigned(){
+	return unsigned;
     }
 
     public T getData() {
@@ -146,6 +180,11 @@ public class NDArray<T extends Object> {
         }
 
         NDArray<?> other = (NDArray<?>) obj;
+	// unsigned should be same	 
+	if(this.unsigned != other.unsigned){
+	    return false;
+	}
+
         /*
          * compare dimensions first cause that's most likely a shorter array to
          * compare and will be faster
@@ -216,7 +255,7 @@ public class NDArray<T extends Object> {
             }
 
         }
-        result = prime * result + Arrays.hashCode(dimensions);
+        result = prime * result + Arrays.hashCode(dimensions) + (unsigned ? 1 : 0);
         return result;
     }
 
