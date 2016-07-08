@@ -128,12 +128,12 @@ static int pyjcollection_contains(PyObject *o, PyObject *v)
         }
     }
 
-    result = (*env)->CallBooleanMethod(env, obj->object, collectionContains, value);
+    jresult = (*env)->CallBooleanMethod(env, obj->object, collectionContains, value);
     if (process_java_exception(env)) {
         goto FINALLY;
     }
 
-    if (result == JNI_TRUE) {
+    if (jresult == JNI_TRUE) {
         result = 1;
     } else {
         result = 0;

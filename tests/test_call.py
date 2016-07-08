@@ -99,6 +99,16 @@ class TestTypes(unittest.TestCase):
         result = Test.test20Args(*args)
         self.assertEqual(args, list(result))
 
+    def test_deepList(self):
+        # Make sure type conversion works when a list contains a list...
+        l = [self.test]
+        for i in range(50):
+            l = [l]
+        result = self.test.testObjectPassThrough(l)
+        for i in range(50):
+            result = result[0];
+        self.assertEquals(self.test, result[0])
+
     def test_overload(self):
         builder = StringBuilder()
         builder.append(1)

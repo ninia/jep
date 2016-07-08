@@ -1195,6 +1195,10 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result)
             return NULL;
         }
 
+        if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
+            process_java_exception(env);
+            return NULL;
+        }
         for (i = 0; i < size; i++) {
             PyObject *item;
             jobject value;
@@ -1210,16 +1214,18 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result)
                  * java exceptions will have been transformed to python
                  * exceptions by this point
                  */
-                (*env)->DeleteLocalRef(env, list);
+                (*env)->PopLocalFrame(env, NULL);
                 return NULL;
             }
             (*env)->CallBooleanMethod(env, list, arraylistAdd, value);
             (*env)->DeleteLocalRef(env, value);
             if (process_java_exception(env)) {
-                (*env)->DeleteLocalRef(env, list);
+                (*env)->PopLocalFrame(env, NULL);
                 return NULL;
             }
         }
+
+        (*env)->PopLocalFrame(env, NULL);
 
         if (modifiable) {
             return list;
@@ -1273,14 +1279,21 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result)
             return NULL;
         }
 
+        if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
+            process_java_exception(env);
+            return NULL;
+        }
+
         pos = 0;
         while (PyDict_Next(result, &pos, &key, &value)) {
             jkey = pyembed_box_py(env, key);
             if (jkey == NULL && PyErr_Occurred()) {
+                (*env)->PopLocalFrame(env, NULL);
                 return NULL;
             }
             jvalue = pyembed_box_py(env, value);
             if (jvalue == NULL && PyErr_Occurred()) {
+                (*env)->PopLocalFrame(env, NULL);
                 return NULL;
             }
 
@@ -1288,9 +1301,11 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result)
             (*env)->DeleteLocalRef(env, jkey);
             (*env)->DeleteLocalRef(env, jvalue);
             if (process_java_exception(env)) {
+                (*env)->PopLocalFrame(env, NULL);
                 return NULL;
             }
         }
+        (*env)->PopLocalFrame(env, NULL);
 
         return map;
     }
