@@ -280,19 +280,19 @@ jobject convert_pyndarray_jndarray(JNIEnv *env, PyObject *pyobj)
         desiredType = JINT_ARRAY_TYPE;
     } else if (paType == NPY_INT32) {
         desiredType = JINT_ARRAY_TYPE;
-       usigned = 1;
+        usigned = 1;
     } else if (paType == NPY_INT64) {
-       desiredType = JLONG_ARRAY_TYPE;
+        desiredType = JLONG_ARRAY_TYPE;
     } else if (paType == NPY_UINT64) {
         desiredType = JLONG_ARRAY_TYPE;
         usigned = 1;
     } else if (paType == NPY_FLOAT32) {
-       desiredType = JFLOAT_ARRAY_TYPE;
+        desiredType = JFLOAT_ARRAY_TYPE;
     } else if (paType == NPY_FLOAT64) {
         desiredType = JDOUBLE_ARRAY_TYPE;
     } else {
         PyErr_Format(PyExc_TypeError,
-                         "Unable to determine corresponding Java type for ndarray: %d",paType);
+                     "Unable to determine corresponding Java type for ndarray: %d", paType);
         return NULL;
     }
 
@@ -406,14 +406,14 @@ PyObject* convert_jndarray_pyndarray(JNIEnv *env, jobject obj)
 
     if (ndarrayIsUnsigned == 0) {
         ndarrayIsUnsigned = (*env)->GetMethodID(env, JEP_NDARRAY_TYPE, "isUnsigned",
-                                             "()Z");
+                                                "()Z");
         if (process_java_exception(env) || !ndarrayIsUnsigned) {
             return NULL;
         }
     }
 
     usigned = (*env)->CallBooleanMethod(env, obj, ndarrayIsUnsigned);
-    if (process_java_exception(env)){
+    if (process_java_exception(env)) {
         return NULL;
     }
 
