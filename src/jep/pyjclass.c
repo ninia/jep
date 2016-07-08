@@ -54,8 +54,8 @@ int pyjclass_init(JNIEnv *env, PyObject *pyjob)
 
     pyjobject = (PyJObject *) pyjob;
 
-    (*env)->PushLocalFrame(env, 5);
-    if (process_java_exception(env)) {
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
+        process_java_exception(env);
         return 0;
     }
 
@@ -318,14 +318,13 @@ PyObject* pyjclass_call(PyJClassObject *self,
 
     env = pyembed_get_env();
 
-    // use a local frame so we don't have to worry too much about references.
-    // make sure if this method errors out, that this is popped off again
-    (*env)->PushLocalFrame(env, 20);
-    if (process_java_exception(env)) {
+    pyArgLength = PyTuple_Size(args);
+
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS + pyArgLength) != 0) {
+        process_java_exception(env);
         return NULL;
     }
 
-    pyArgLength = PyTuple_Size(args);
     for (initPos = 0; initPos < self->initLen; initPos++) {
         parmLen = self->numArgsPerInit[initPos];
         // skip constructors that don't match the correct number of args

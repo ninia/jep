@@ -106,10 +106,8 @@ int pyjmethod_init(JNIEnv *env, PyJMethodObject *self)
     jint              modifier               = -1;
     jboolean          isStatic               = JNI_FALSE;
 
-    // use a local frame so we don't have to worry too much about local refs.
-    // make sure if this method errors out, that this is poped off again
-    (*env)->PushLocalFrame(env, 20);
-    if (process_java_exception(env)) {
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
+        process_java_exception(env);
         return 0;
     }
 
@@ -368,8 +366,10 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
     // ------------------------------ build jargs off python values
 
-    // hopefully 40 local references are enough per method call
-    (*env)->PushLocalFrame(env, 40);
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS + self->lenParameters) != 0) {
+        process_java_exception(env);
+        return NULL;
+    }
     for (pos = 0; pos < self->lenParameters; pos++) {
         PyObject *param = NULL;
         int paramTypeId = -1;

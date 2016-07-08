@@ -70,7 +70,7 @@ PyObject* pyjiterable_getiter(PyObject* obj)
             return NULL;
         }
     }
-    if ((*env)->PushLocalFrame(env, 16) != 0) {
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
         process_java_exception(env);
         return NULL;
     }

@@ -92,6 +92,13 @@ class TestTypes(unittest.TestCase):
         self.assertEqual(self.test.testObjectPassThrough(1.5), 1.5)
         self.assertEqual(self.test.testObjectPassThrough("string"), "string")
 
+    def test_20args(self):
+        args = list()
+        for x in range(20):
+            args.append(Test())
+        result = Test.test20Args(*args)
+        self.assertEqual(args, list(result))
+
     def test_overload(self):
         builder = StringBuilder()
         builder.append(1)

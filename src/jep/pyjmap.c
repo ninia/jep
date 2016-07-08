@@ -106,7 +106,7 @@ static int pyjmap_contains_key(PyObject *self, PyObject *key)
             return -1;
         }
     }
-    if ((*env)->PushLocalFrame(env, 16) != 0) {
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
         process_java_exception(env);
         return -1;
     }
@@ -166,7 +166,7 @@ static PyObject* pyjmap_getitem(PyObject *o, PyObject *key)
             return NULL;
         }
     }
-    if ((*env)->PushLocalFrame(env, 16) != 0) {
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
         process_java_exception(env);
         return NULL;
     }
@@ -222,7 +222,7 @@ static int pyjmap_setitem(PyObject *o, PyObject *key, PyObject *v)
     JNIEnv       *env      = pyembed_get_env();
     int           result   = -1;
 
-    if ((*env)->PushLocalFrame(env, 16) != 0) {
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
         process_java_exception(env);
         return -1;
     }
@@ -342,7 +342,7 @@ PyObject* pyjmap_getiter(PyObject* obj)
         }
     }
 
-    if ((*env)->PushLocalFrame(env, 16) != 0) {
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
         process_java_exception(env);
         return NULL;
     }

@@ -90,7 +90,7 @@ PyObject* pyjlist_new_copy(PyObject *toCopy)
             return NULL;
         }
     }
-    if ((*env)->PushLocalFrame(env, 16) != 0) {
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
         process_java_exception(env);
         return NULL;
     }
@@ -189,7 +189,7 @@ static PyObject* pyjlist_getitem(PyObject *o, Py_ssize_t i)
         return NULL;
     }
 
-    if ((*env)->PushLocalFrame(env, 16) != 0) {
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
         process_java_exception(env);
         return NULL;
     }
@@ -229,7 +229,7 @@ static PyObject* pyjlist_getslice(PyObject *o, Py_ssize_t i1, Py_ssize_t i2)
             return NULL;
         }
     }
-    if ((*env)->PushLocalFrame(env, 16) != 0) {
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
         process_java_exception(env);
         return NULL;
     }
@@ -285,7 +285,7 @@ static int pyjlist_setitem(PyObject *o, Py_ssize_t i, PyObject *v)
             return -1;
         }
     }
-    if ((*env)->PushLocalFrame(env, 16) != 0) {
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
         process_java_exception(env);
         return -1;
     }
@@ -397,7 +397,7 @@ static PyObject* pyjlist_inplace_add(PyObject *o1, PyObject *o2)
     PyJObject     *self     = (PyJObject*) o1;
     PyObject      *result   = NULL;
 
-    if ((*env)->PushLocalFrame(env, 16) != 0) {
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
         process_java_exception(env);
         return NULL;
     }

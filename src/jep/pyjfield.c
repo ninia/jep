@@ -99,14 +99,10 @@ static int pyjfield_init(JNIEnv *env, PyJFieldObject *self)
     jint             modifier    = -1;
     jboolean         isStatic    = JNI_TRUE;
 
-    // use a local frame so we don't have to worry too much about local refs.
-    // make sure if this method errors out, that this is poped off again
-    (*env)->PushLocalFrame(env, 20);
-    if (process_java_exception(env)) {
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
+        process_java_exception(env);
         return 0;
     }
-
-
 
     // ------------------------------ get fieldid
 

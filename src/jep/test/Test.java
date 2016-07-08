@@ -475,7 +475,17 @@ public class Test implements Runnable {
     public static Class getStaticClass() {
         return Thread.currentThread().getClass();
     }
-    
+   
+    public static Object[] test20Args(Object arg1, Object arg2, Object arg3,
+            Object arg4, Object arg5, Object arg6, Object arg7, Object arg8,
+            Object arg9, Object arg10, Object arg11, Object arg12, Object arg13,
+            Object arg14, Object arg15, Object arg16, Object arg17, Object arg18,
+            Object arg19, Object arg20) {
+        return new Object[] {arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9,
+                             arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17,
+                             arg18, arg19, arg20};
+    }
+ 
     public static void testRestrictedClassLoader() throws Throwable {
         final Throwable[] t = new Throwable[1];
         Thread thread = new Thread(new Runnable() {

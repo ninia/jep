@@ -233,7 +233,10 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
     JepThread   *jepThread;
     PyObject    *cachedMethodList = NULL;
 
-    (*env)->PushLocalFrame(env, 20);
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
+        process_java_exception(env);
+        return 0;
+    }
     // ------------------------------ call Class.getMethods()
 
     /*
