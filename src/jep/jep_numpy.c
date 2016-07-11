@@ -337,31 +337,31 @@ PyObject* convert_jprimitivearray_pyndarray(JNIEnv *env,
 
     if ((*env)->IsInstanceOf(env, jo, JBOOLEAN_ARRAY_TYPE)) {
         pyob = PyArray_SimpleNew(ndims, dims, NPY_BOOL);
-        (*env)->GetBooleanArrayRegion(env, jo, 0, dimsize,
+        (*env)->GetBooleanArrayRegion(env, jo, 0, (jsize) dimsize,
                                       PyArray_DATA((PyArrayObject *) pyob));
     } else if ((*env)->IsInstanceOf(env, jo, JBYTE_ARRAY_TYPE)) {
         pyob = PyArray_SimpleNew(ndims, dims,  usigned ? NPY_UBYTE : NPY_BYTE);
-        (*env)->GetByteArrayRegion(env, jo, 0, dimsize,
+        (*env)->GetByteArrayRegion(env, jo, 0, (jsize) dimsize,
                                    PyArray_DATA((PyArrayObject *) pyob));
     } else if ((*env)->IsInstanceOf(env, jo, JSHORT_ARRAY_TYPE)) {
         pyob = PyArray_SimpleNew(ndims, dims, usigned ? NPY_UINT16 : NPY_INT16);
-        (*env)->GetShortArrayRegion(env, jo, 0, dimsize,
+        (*env)->GetShortArrayRegion(env, jo, 0, (jsize) dimsize,
                                     PyArray_DATA((PyArrayObject *) pyob));
     } else if ((*env)->IsInstanceOf(env, jo, JINT_ARRAY_TYPE)) {
         pyob = PyArray_SimpleNew(ndims, dims, usigned ? NPY_UINT32 : NPY_INT32);
-        (*env)->GetIntArrayRegion(env, jo, 0, dimsize,
+        (*env)->GetIntArrayRegion(env, jo, 0, (jsize) dimsize,
                                   PyArray_DATA((PyArrayObject *) pyob));
     } else if ((*env)->IsInstanceOf(env, jo, JLONG_ARRAY_TYPE)) {
         pyob = PyArray_SimpleNew(ndims, dims, usigned ? NPY_UINT64 : NPY_INT64);
-        (*env)->GetLongArrayRegion(env, jo, 0, dimsize,
+        (*env)->GetLongArrayRegion(env, jo, 0, (jsize) dimsize,
                                    PyArray_DATA((PyArrayObject *) pyob));
     } else if ((*env)->IsInstanceOf(env, jo, JFLOAT_ARRAY_TYPE)) {
         pyob = PyArray_SimpleNew(ndims, dims, NPY_FLOAT32);
-        (*env)->GetFloatArrayRegion(env, jo, 0, dimsize,
+        (*env)->GetFloatArrayRegion(env, jo, 0, (jsize) dimsize,
                                     PyArray_DATA((PyArrayObject *) pyob));
     } else if ((*env)->IsInstanceOf(env, jo, JDOUBLE_ARRAY_TYPE)) {
         pyob = PyArray_SimpleNew(ndims, dims, NPY_FLOAT64);
-        (*env)->GetDoubleArrayRegion(env, jo, 0, dimsize,
+        (*env)->GetDoubleArrayRegion(env, jo, 0, (jsize) dimsize,
                                      PyArray_DATA((PyArrayObject *) pyob));
     }
 

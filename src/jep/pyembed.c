@@ -675,6 +675,7 @@ static PyObject* pyembed_forname(PyObject *self, PyObject *args)
 static PyObject* pyembed_findclass(PyObject *self, PyObject *args)
 {
     JNIEnv    *env       = NULL;
+    PyObject  *result    = NULL;
     char      *name, *p;
     jclass     clazz;
     JepThread *jepThread;
@@ -706,7 +707,7 @@ static PyObject* pyembed_findclass(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    PyObject* result = (PyObject *) pyjobject_new_class(env, clazz);
+    result = (PyObject *) pyjobject_new_class(env, clazz);
     (*env)->DeleteLocalRef(env, clazz);
     return result;
 }

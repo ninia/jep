@@ -320,7 +320,7 @@ PyObject* pyjclass_call(PyJClassObject *self,
 
     pyArgLength = PyTuple_Size(args);
 
-    if ((*env)->PushLocalFrame(env, JLOCAL_REFS + pyArgLength) != 0) {
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS + (jint) pyArgLength) != 0) {
         process_java_exception(env);
         return NULL;
     }
