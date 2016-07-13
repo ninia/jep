@@ -67,13 +67,10 @@ PyJMethodObject* pyjmethod_new(JNIEnv *env,
     // ------------------------------ get method name
 
 
-    if (methodGetName == 0) {
-        methodGetName = (*env)->GetMethodID(env, JMETHOD_TYPE, "getName",
-                                            "()Ljava/lang/String;");
-        if (!methodGetName) {
-            process_java_exception(env);
-            goto EXIT_ERROR;
-        }
+    if (!JNI_METHOD(methodGetName, env, JMETHOD_TYPE, "getName",
+                    "()Ljava/lang/String;")) {
+        process_java_exception(env);
+        goto EXIT_ERROR;
     }
 
     jstr = (jstring) (*env)->CallObjectMethod(env, rmethod, methodGetName);
@@ -123,13 +120,10 @@ int pyjmethod_init(JNIEnv *env, PyJMethodObject *self)
 
     // ------------------------------ get return type
 
-    if (methodGetType == 0) {
-        methodGetType = (*env)->GetMethodID(env, JMETHOD_TYPE, "getReturnType",
-                                            "()Ljava/lang/Class;");
-        if (!methodGetType) {
-            process_java_exception(env);
-            goto EXIT_ERROR;
-        }
+    if (!JNI_METHOD(methodGetType, env, JMETHOD_TYPE, "getReturnType",
+                    "()Ljava/lang/Class;")) {
+        process_java_exception(env);
+        goto EXIT_ERROR;
     }
 
     returnType = (*env)->CallObjectMethod(env, self->rmethod, methodGetType);
@@ -146,13 +140,10 @@ int pyjmethod_init(JNIEnv *env, PyJMethodObject *self)
     // ------------------------------ get parameter array
 
 
-    if (methodGetParmTypes == 0) {
-        methodGetParmTypes = (*env)->GetMethodID(env, JMETHOD_TYPE, "getParameterTypes",
-                             "()[Ljava/lang/Class;");
-        if (!methodGetParmTypes) {
-            process_java_exception(env);
-            goto EXIT_ERROR;
-        }
+    if (!JNI_METHOD(methodGetParmTypes, env, JMETHOD_TYPE, "getParameterTypes",
+                    "()[Ljava/lang/Class;")) {
+        process_java_exception(env);
+        goto EXIT_ERROR;
     }
     paramArray = (jobjectArray) (*env)->CallObjectMethod(env, self->rmethod,
                  methodGetParmTypes);
@@ -167,13 +158,9 @@ int pyjmethod_init(JNIEnv *env, PyJMethodObject *self)
     if (self->isStatic != 1) { // may already know that
 
         // call getModifers()
-        if (methodGetModifiers == 0) {
-            methodGetModifiers = (*env)->GetMethodID(env, JMETHOD_TYPE, "getModifiers",
-                                 "()I");
-            if (!methodGetModifiers) {
-                process_java_exception(env);
-                goto EXIT_ERROR;
-            }
+        if (!JNI_METHOD(methodGetModifiers, env, JMETHOD_TYPE, "getModifiers", "()I")) {
+            process_java_exception(env);
+            goto EXIT_ERROR;
         }
         modifier = (*env)->CallIntMethod(env,
                                          self->rmethod,

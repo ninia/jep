@@ -233,14 +233,10 @@ jobject convert_pyndarray_jndarray(JNIEnv *env, PyObject *pyobj)
     jboolean       usigned   = 0;
 
     init_numpy();
-    if (ndarrayInit == 0) {
-        ndarrayInit = (*env)->GetMethodID(env,
-                                          JEP_NDARRAY_TYPE,
-                                          "<init>",
-                                          "(Ljava/lang/Object;Z[I)V");
-        if (process_java_exception(env) || !ndarrayInit) {
-            return NULL;
-        }
+    if (!JNI_METHOD(ndarrayInit, env, JEP_NDARRAY_TYPE, "<init>",
+                    "(Ljava/lang/Object;Z[I)V")) {
+        process_java_exception(env);
+        return NULL;
     }
 
     // setup the int[] constructor arg
@@ -388,28 +384,23 @@ PyObject* convert_jndarray_pyndarray(JNIEnv *env, jobject obj)
     int        i;
 
     init_numpy();
-    if (ndarrayGetDims == 0) {
-        ndarrayGetDims = (*env)->GetMethodID(env, JEP_NDARRAY_TYPE, "getDimensions",
-                                             "()[I");
-        if (process_java_exception(env) || !ndarrayGetDims) {
-            return NULL;
-        }
+
+    if (!JNI_METHOD(ndarrayGetDims, env, JEP_NDARRAY_TYPE, "getDimensions",
+                    "()[I")) {
+        process_java_exception(env);
+        return NULL;
     }
 
-    if (ndarrayGetData == 0) {
-        ndarrayGetData = (*env)->GetMethodID(env, JEP_NDARRAY_TYPE, "getData",
-                                             "()Ljava/lang/Object;");
-        if (process_java_exception(env) || !ndarrayGetData) {
-            return NULL;
-        }
+    if (!JNI_METHOD(ndarrayGetData, env, JEP_NDARRAY_TYPE, "getData",
+                    "()Ljava/lang/Object;")) {
+        process_java_exception(env);
+        return NULL;
     }
 
-    if (ndarrayIsUnsigned == 0) {
-        ndarrayIsUnsigned = (*env)->GetMethodID(env, JEP_NDARRAY_TYPE, "isUnsigned",
-                                                "()Z");
-        if (process_java_exception(env) || !ndarrayIsUnsigned) {
-            return NULL;
-        }
+    if (!JNI_METHOD(ndarrayIsUnsigned, env, JEP_NDARRAY_TYPE, "isUnsigned",
+                    "()Z")) {
+        process_java_exception(env);
+        return NULL;
     }
 
     usigned = (*env)->CallBooleanMethod(env, obj, ndarrayIsUnsigned);

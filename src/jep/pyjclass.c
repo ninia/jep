@@ -76,21 +76,16 @@ static PyObject* pyjclass_add_inner_class(JNIEnv *env, PyJObject *topClz,
     jboolean  public;
 
     // setup to verify this inner class should be available
-    if (classGetModifiers == 0) {
-        classGetModifiers = (*env)->GetMethodID(env, JCLASS_TYPE, "getModifiers",
-                                                "()I");
-        if (!classGetModifiers) {
-            process_java_exception(env);
-            return NULL;
-        }
+    if (!JNI_METHOD(classGetModifiers, env, JCLASS_TYPE, "getModifiers", "()I")) {
+        process_java_exception(env);
+        return NULL;
     }
     mods = (*env)->CallIntMethod(env, innerClz, classGetModifiers);
     if (process_java_exception(env)) {
         return NULL;
     }
     if (modifierIsPublic == 0) {
-        modifierIsPublic = (*env)->GetStaticMethodID(env, JMODIFIER_TYPE, "isPublic",
-                           "(I)Z");
+        modifierIsPublic = (*env)->GetStaticMethodID(env, JMODIFIER_TYPE, "isPublic", "(I)Z");
         if (!modifierIsPublic) {
             process_java_exception(env);
             return NULL;
@@ -111,13 +106,10 @@ static PyObject* pyjclass_add_inner_class(JNIEnv *env, PyJObject *topClz,
         if (!attrClz) {
             return NULL;
         }
-        if (classGetSimpleName == 0) {
-            classGetSimpleName = (*env)->GetMethodID(env, JCLASS_TYPE, "getSimpleName",
-                                 "()Ljava/lang/String;");
-            if (!classGetSimpleName) {
-                process_java_exception(env);
-                return NULL;
-            }
+        if (!JNI_METHOD(classGetSimpleName, env, JCLASS_TYPE, "getSimpleName",
+                        "()Ljava/lang/String;")) {
+            process_java_exception(env);
+            return NULL;
         }
 
         shortName = (*env)->CallObjectMethod(env, innerClz, classGetSimpleName);
@@ -153,13 +145,10 @@ static PyObject* pyjclass_add_inner_classes(JNIEnv *env,
     jobjectArray      innerArray    = NULL;
     jsize             innerSize     = 0;
 
-    if (classGetDeclaredClasses == 0) {
-        classGetDeclaredClasses = (*env)->GetMethodID(env, JCLASS_TYPE,
-                                  "getDeclaredClasses", "()[Ljava/lang/Class;");
-        if (!classGetDeclaredClasses) {
-            process_java_exception(env);
-            return NULL;
-        }
+    if (!JNI_METHOD(classGetDeclaredClasses, env, JCLASS_TYPE, "getDeclaredClasses",
+                    "()[Ljava/lang/Class;")) {
+        process_java_exception(env);
+        return NULL;
     }
 
     innerArray = (*env)->CallObjectMethod(env, topClz->clazz,
@@ -239,13 +228,10 @@ int pyjclass_init_constructors(PyJClassObject *pyc)
         return -1;
     }
 
-    if (classGetConstructors == 0) {
-        classGetConstructors = (*env)->GetMethodID(env, JCLASS_TYPE, "getConstructors",
-                               "()[Ljava/lang/reflect/Constructor;");
-        if (!classGetConstructors) {
-            process_java_exception(env);
-            goto EXIT_ERROR;
-        }
+    if (!JNI_METHOD(classGetConstructors, env, JCLASS_TYPE, "getConstructors",
+                    "()[Ljava/lang/reflect/Constructor;")) {
+        process_java_exception(env);
+        goto EXIT_ERROR;
     }
 
     initArray = (jobjectArray) (*env)->CallObjectMethod(env, clazz,

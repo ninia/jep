@@ -67,12 +67,9 @@ static Py_ssize_t pyjcollection_len(PyObject* self)
     PyJObject    *pyjob = (PyJObject*) self;
     JNIEnv       *env   = pyembed_get_env();
 
-    if (collectionSize == 0) {
-        collectionSize = (*env)->GetMethodID(env, JCOLLECTION_TYPE, "size", "()I");
-        if (!collectionSize) {
-            process_java_exception(env);
-            return -1;
-        }
+    if (!JNI_METHOD(collectionSize, env, JCOLLECTION_TYPE, "size", "()I")) {
+        process_java_exception(env);
+        return -1;
     }
 
     len = (*env)->CallIntMethod(env, pyjob->object, collectionSize);
@@ -95,13 +92,10 @@ static int pyjcollection_contains(PyObject *o, PyObject *v)
     JNIEnv       *env      = pyembed_get_env();
     jobject       value    = NULL;
 
-    if (collectionContains == 0) {
-        collectionContains = (*env)->GetMethodID(env, JCOLLECTION_TYPE, "contains",
-                             "(Ljava/lang/Object;)Z");
-        if (!collectionContains) {
-            process_java_exception(env);
-            return -1;
-        }
+    if (!JNI_METHOD(collectionContains, env, JCOLLECTION_TYPE, "contains",
+                    "(Ljava/lang/Object;)Z")) {
+        process_java_exception(env);
+        return -1;
     }
 
     if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
@@ -128,7 +122,8 @@ static int pyjcollection_contains(PyObject *o, PyObject *v)
         }
     }
 
-    jresult = (*env)->CallBooleanMethod(env, obj->object, collectionContains, value);
+    jresult = (*env)->CallBooleanMethod(env, obj->object, collectionContains,
+                                        value);
     if (process_java_exception(env)) {
         goto FINALLY;
     }

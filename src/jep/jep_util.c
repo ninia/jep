@@ -174,14 +174,10 @@ jstring jobject_tostring(JNIEnv *env, jobject obj)
         return NULL;
     }
 
-    if (objectToString == 0) {
-        objectToString = (*env)->GetMethodID(env,
-                                             JOBJECT_TYPE,
-                                             "toString",
-                                             "()Ljava/lang/String;");
-        if (process_java_exception(env)) {
-            return NULL;
-        }
+    if (!JNI_METHOD(objectToString, env, JOBJECT_TYPE, "toString",
+                    "()Ljava/lang/String;")) {
+        process_java_exception(env);
+        return NULL;
     }
 
     if (!objectToString) {
@@ -284,12 +280,9 @@ int cache_primitive_classes(JNIEnv *env)
     jclass   clazz, tmpclazz = NULL;
     jfieldID fieldId;
 
-    if (classGetComponentType == 0) {
-        classGetComponentType = (*env)->GetMethodID(env, JCLASS_TYPE,
-                                "getComponentType", "()Ljava/lang/Class;");
-        if ((*env)->ExceptionOccurred(env)) {
-            return 0;
-        }
+    if (!JNI_METHOD(classGetComponentType, env, JCLASS_TYPE, "getComponentType",
+                    "()Ljava/lang/Class;")) {
+        return 0;
     }
 
     CACHE_PRIMITIVE_ARRAY(JBOOLEAN_TYPE, JBOOLEAN_ARRAY_TYPE, "[Z");
@@ -472,14 +465,8 @@ int get_jtype(JNIEnv *env, jclass clazz)
     jboolean array  = JNI_FALSE;
 
     // have to find Class.isArray() method
-    if (objectIsArray == 0) {
-        objectIsArray = (*env)->GetMethodID(env,
-                                            JCLASS_TYPE,
-                                            "isArray",
-                                            "()Z");
-        if ((*env)->ExceptionCheck(env) || !objectIsArray) {
-            return -1;
-        }
+    if (!JNI_METHOD(objectIsArray, env, JCLASS_TYPE, "isArray", "()Z")) {
+        return -1;
     }
 
     // object checks
@@ -744,34 +731,25 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
     PyThreadState *_save;
 
     if (getIntValue == 0) {
-        jclass clazz;
+        int success = 1;
 
         // get all the methodIDs here. Faster this way for Number
         // subclasses, then we'll just call the right methods below
         Py_UNBLOCK_THREADS;
-        clazz = (*env)->FindClass(env, "java/lang/Number");
 
-        getIntValue = (*env)->GetMethodID(env,
-                                          clazz,
-                                          "intValue",
-                                          "()I");
-        getLongValue = (*env)->GetMethodID(env,
-                                           clazz,
-                                           "longValue",
-                                           "()J");
-        getDoubleValue = (*env)->GetMethodID(env,
-                                             clazz,
-                                             "doubleValue",
-                                             "()D");
-        getFloatValue = (*env)->GetMethodID(env,
-                                            clazz,
-                                            "floatValue",
-                                            "()F");
+        // Lookup each method only if the previous lookup succeeded
+        success = success
+                  && JNI_METHOD(getIntValue, env, JNUMBER_TYPE, "intValue", "()I");
+        success = success
+                  && JNI_METHOD(getLongValue, env, JNUMBER_TYPE, "longValue", "()J");
+        success = success
+                  && JNI_METHOD(getDoubleValue, env, JNUMBER_TYPE, "doubleValue", "()D");
+        success = success
+                  && JNI_METHOD(getFloatValue, env, JNUMBER_TYPE, "floatValue", "()F");
 
-        (*env)->DeleteLocalRef(env, clazz);
         Py_BLOCK_THREADS;
 
-        if ((*env)->ExceptionOccurred(env)) {
+        if (!success) {
             return NULL;
         }
     }
@@ -823,14 +801,8 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
     case JBOOLEAN_ID: {
         jboolean b;
 
-        if (getBooleanValue == 0) {
-            getBooleanValue = (*env)->GetMethodID(env,
-                                                  JBOOL_OBJ_TYPE,
-                                                  "booleanValue",
-                                                  "()Z");
-            if ((*env)->ExceptionOccurred(env)) {
-                return NULL;
-            }
+        if (!JNI_METHOD(getBooleanValue, env, JBOOL_OBJ_TYPE, "booleanValue", "()Z")) {
+            return NULL;
         }
 
         b = (*env)->CallBooleanMethod(env, val, getBooleanValue);
@@ -886,22 +858,8 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
     case JCHAR_ID: {
         jchar c;
 
-        if (getCharValue == 0) {
-            jclass clazz;
-
-            Py_UNBLOCK_THREADS;
-            clazz = (*env)->FindClass(env, "java/lang/Character");
-
-            getCharValue = (*env)->GetMethodID(env,
-                                               clazz,
-                                               "charValue",
-                                               "()C");
-            (*env)->DeleteLocalRef(env, clazz);
-            Py_BLOCK_THREADS;
-
-            if ((*env)->ExceptionOccurred(env)) {
-                return NULL;
-            }
+        if (!JNI_METHOD(getCharValue, env, JCHAR_OBJ_TYPE, "charValue", "()C")) {
+            return NULL;
         }
 
         c = (*env)->CallCharMethod(env, val, getCharValue);
@@ -1094,12 +1052,14 @@ jvalue convert_pyarg_jvalue(JNIEnv *env,
     case JOBJECT_ID: {
         jobject obj = pyembed_box_py(env, param);
         if (obj != NULL && !(*env)->IsInstanceOf(env, obj, paramType)) {
-            jmethodID getName;
+            jmethodID getName = NULL;
             jstring expTypeJavaName, actTypeJavaName = NULL;
             const char *expTypeName, *actTypeName;
-
-            getName = (*env)->GetMethodID(env, JCLASS_TYPE, "getName",
-                                          "()Ljava/lang/String;");
+            if (!JNI_METHOD(getName, env, JCLASS_TYPE, "getName", "()Ljava/lang/String;")) {
+                process_java_exception(env);
+                ret.l = NULL;
+                return ret;
+            }
             expTypeJavaName = (*env)->CallObjectMethod(env, paramType, getName);
             expTypeName = (*env)->GetStringUTFChars(env, expTypeJavaName, 0);
             if (pyjclass_check(param)) {

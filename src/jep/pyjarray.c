@@ -230,14 +230,10 @@ static int pyjarray_init(JNIEnv *env,
     // ------------------------------ first, get the array's type
 
     if (pyarray->componentType < 0) { // may already know that
-        if (objectComponentType == 0) {
-            objectComponentType = (*env)->GetMethodID(env,
-                                  JCLASS_TYPE,
-                                  "getComponentType",
-                                  "()Ljava/lang/Class;");
-            if (process_java_exception(env) || !objectComponentType) {
-                goto EXIT_ERROR;
-            }
+        if (!JNI_METHOD(objectComponentType, env, JCLASS_TYPE, "getComponentType",
+                        "()Ljava/lang/Class;")) {
+            process_java_exception(env);
+            goto EXIT_ERROR;
         }
 
         compType = (*env)->CallObjectMethod(env,

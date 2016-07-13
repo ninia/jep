@@ -1087,71 +1087,43 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result)
             b = JNI_TRUE;
         }
 
-        if (booleanBConstructor == 0) {
-            booleanBConstructor = (*env)->GetMethodID(env,
-                                  JBOOL_OBJ_TYPE,
-                                  "<init>",
-                                  "(Z)V");
-        }
-
-        if (!process_java_exception(env) && booleanBConstructor) {
-            return (*env)->NewObject(env, JBOOL_OBJ_TYPE, booleanBConstructor, b);
-        } else {
+        if (!JNI_METHOD(booleanBConstructor, env, JBOOL_OBJ_TYPE, "<init>", "(Z)V")) {
+            process_java_exception(env);
             return NULL;
         }
+        return (*env)->NewObject(env, JBOOL_OBJ_TYPE, booleanBConstructor, b);
     }
 
 #if PY_MAJOR_VERSION < 3
     if (PyInt_Check(result)) {
         jint i = (jint) PyInt_AS_LONG(result);
 
-        if (integerIConstructor == 0) {
-            integerIConstructor = (*env)->GetMethodID(env,
-                                  JINT_OBJ_TYPE,
-                                  "<init>",
-                                  "(I)V");
-        }
-
-        if (!process_java_exception(env) && integerIConstructor) {
-            return (*env)->NewObject(env, JINT_OBJ_TYPE, integerIConstructor, i);
-        } else {
+        if (!JNI_METHOD(integerIConstructor, env, JINT_OBJ_TYPE, "<init>", "(I)V")) {
+            process_java_exception(env);
             return NULL;
         }
+        return (*env)->NewObject(env, JINT_OBJ_TYPE, integerIConstructor, i);
     }
 #endif
 
     if (PyLong_Check(result)) {
         PY_LONG_LONG i = PyLong_AsLongLong(result);
 
-        if (longJConstructor == 0) {
-            longJConstructor = (*env)->GetMethodID(env,
-                                                   JLONG_OBJ_TYPE,
-                                                   "<init>",
-                                                   "(J)V");
-        }
-
-        if (!process_java_exception(env) && longJConstructor) {
-            return (*env)->NewObject(env, JLONG_OBJ_TYPE, longJConstructor, i);
-        } else {
+        if (!JNI_METHOD(longJConstructor, env, JLONG_OBJ_TYPE, "<init>", "(J)V")) {
+            process_java_exception(env);
             return NULL;
         }
+        return (*env)->NewObject(env, JLONG_OBJ_TYPE, longJConstructor, i);
     }
 
     if (PyFloat_Check(result)) {
         jdouble d = (jdouble) PyFloat_AS_DOUBLE(result);
 
-        if (doubleDConstructor == 0) {
-            doubleDConstructor = (*env)->GetMethodID(env,
-                                 JDOUBLE_OBJ_TYPE,
-                                 "<init>",
-                                 "(D)V");
-        }
-
-        if (!process_java_exception(env) && doubleDConstructor) {
-            return (*env)->NewObject(env, JDOUBLE_OBJ_TYPE, doubleDConstructor, d);
-        } else {
+        if (!JNI_METHOD(doubleDConstructor, env, JDOUBLE_OBJ_TYPE, "<init>", "(D)V")) {
+            process_java_exception(env);
             return NULL;
         }
+        return (*env)->NewObject(env, JDOUBLE_OBJ_TYPE, doubleDConstructor, d);
     }
 
     if (pyjarray_check(result)) {
@@ -1167,23 +1139,16 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result)
         Py_ssize_t size;
         int modifiable = PyList_Check(result);
 
-        if (arraylistIConstructor == 0) {
-            arraylistIConstructor = (*env)->GetMethodID(env,
-                                    JARRAYLIST_TYPE,
-                                    "<init>",
-                                    "(I)V");
-        }
-        if (arraylistAdd == 0) {
-            arraylistAdd = (*env)->GetMethodID(env,
-                                               JARRAYLIST_TYPE,
-                                               "add",
-                                               "(Ljava/lang/Object;)Z");
-        }
-
-        if (process_java_exception(env) || !arraylistIConstructor || !arraylistAdd) {
+        if (!JNI_METHOD(arraylistIConstructor, env, JARRAYLIST_TYPE, "<init>",
+                        "(I)V")) {
+            process_java_exception(env);
             return NULL;
         }
-
+        if (!JNI_METHOD(arraylistAdd, env, JARRAYLIST_TYPE, "add",
+                       "(Ljava/lang/Object;)Z")) {
+            process_java_exception(env);
+            return NULL;
+        }
 
         if (modifiable) {
             size = PyList_Size(result);
@@ -1257,20 +1222,13 @@ jobject pyembed_box_py(JNIEnv *env, PyObject *result)
         Py_ssize_t size, pos;
         PyObject *key, *value;
 
-        if (hashmapIConstructor == 0) {
-            hashmapIConstructor = (*env)->GetMethodID(env,
-                                  JHASHMAP_TYPE,
-                                  "<init>",
-                                  "(I)V");
+        if (!JNI_METHOD(hashmapIConstructor, env, JHASHMAP_TYPE, "<init>", "(I)V")) {
+            process_java_exception(env);
+            return NULL;
         }
-        if (hashmapPut == 0) {
-            hashmapPut = (*env)->GetMethodID(env,
-                                             JHASHMAP_TYPE,
-                                             "put",
-                                             "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-        }
-
-        if (process_java_exception(env) || !hashmapIConstructor || !hashmapPut) {
+        if (!JNI_METHOD(hashmapPut, env, JHASHMAP_TYPE, "put",
+                        "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;")) {
+            process_java_exception(env);
             return NULL;
         }
 

@@ -62,13 +62,10 @@ PyObject* pyjiterable_getiter(PyObject* obj)
     JNIEnv       *env      = pyembed_get_env();
     PyObject     *result   = NULL;
 
-    if (iterator == 0) {
-        iterator = (*env)->GetMethodID(env, JITERABLE_TYPE, "iterator",
-                                       "()Ljava/util/Iterator;");
-        if (!iterator) {
-            process_java_exception(env);
-            return NULL;
-        }
+    if (!JNI_METHOD(iterator, env, JITERABLE_TYPE, "iterator",
+                    "()Ljava/util/Iterator;")) {
+        process_java_exception(env);
+        return NULL;
     }
     if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
         process_java_exception(env);

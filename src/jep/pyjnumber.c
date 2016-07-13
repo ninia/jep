@@ -296,21 +296,16 @@ static PyObject* java_number_to_pythonintlong(JNIEnv *env, PyObject* n)
     jlong      value;
     PyJObject *jnumber  = (PyJObject*) n;
 
-    if (longValue == 0) {
-        longValue = (*env)->GetMethodID(env, JNUMBER_TYPE, "longValue", "()J");
-
-        if (process_java_exception(env)) {
-            return NULL;
-        }
+    if (!JNI_METHOD(longValue, env, JNUMBER_TYPE, "longValue", "()J")) {
+        process_java_exception(env);
+        return NULL;
     }
 
 #if PY_MAJOR_VERSION < 3
-    if (intValue == 0) {
-        intValue = (*env)->GetMethodID(env, JNUMBER_TYPE, "intValue", "()I");
+    if (!JNI_METHOD(intValue, env, JNUMBER_TYPE, "intValue", "()I")) {
 
-        if (process_java_exception(env)) {
-            return NULL;
-        }
+        process_java_exception(env);
+        return NULL;
     }
 
     if ((*env)->IsInstanceOf(env, jnumber->object, JBYTE_OBJ_TYPE) ||
@@ -337,12 +332,9 @@ static PyObject* java_number_to_pythonfloat(JNIEnv *env, PyObject* n)
     jdouble    value;
     PyJObject *jnumber  = (PyJObject*) n;
 
-    if (doubleValue == 0) {
-        doubleValue = (*env)->GetMethodID(env, JNUMBER_TYPE, "doubleValue", "()D");
-
-        if (process_java_exception(env)) {
-            return NULL;
-        }
+    if (!JNI_METHOD(doubleValue, env, JNUMBER_TYPE, "doubleValue", "()D")) {
+        process_java_exception(env);
+        return NULL;
     }
 
     value = (*env)->CallDoubleMethod(env, jnumber->object, doubleValue);

@@ -62,13 +62,10 @@ PyJFieldObject* pyjfield_new(JNIEnv *env,
 
     // ------------------------------ get field name
 
-    if (fieldGetName == 0) {
-        fieldGetName = (*env)->GetMethodID(env, JFIELD_TYPE, "getName",
-                                           "()Ljava/lang/String;");
-        if (!fieldGetName) {
-            process_java_exception(env);
-            goto EXIT_ERROR;
-        }
+    if (!JNI_METHOD(fieldGetName, env, JFIELD_TYPE, "getName",
+                    "()Ljava/lang/String;")) {
+        process_java_exception(env);
+        goto EXIT_ERROR;
     }
 
     jstr = (jstring) (*env)->CallObjectMethod(env, rfield, fieldGetName);
@@ -112,13 +109,10 @@ static int pyjfield_init(JNIEnv *env, PyJFieldObject *self)
 
     // ------------------------------ get return type
 
-    if (fieldGetType == 0) {
-        fieldGetType = (*env)->GetMethodID(env, JFIELD_TYPE, "getType",
-                                           "()Ljava/lang/Class;");
-        if (!fieldGetType) {
-            process_java_exception(env);
-            goto EXIT_ERROR;
-        }
+    if (!JNI_METHOD(fieldGetType, env, JFIELD_TYPE, "getType",
+                    "()Ljava/lang/Class;")) {
+        process_java_exception(env);
+        goto EXIT_ERROR;
     }
 
     fieldType = (*env)->CallObjectMethod(env, self->rfield, fieldGetType);
@@ -135,12 +129,9 @@ static int pyjfield_init(JNIEnv *env, PyJFieldObject *self)
     // ------------------------------ get isStatic
 
     // call getModifers()
-    if (fieldGetMod == 0) {
-        fieldGetMod = (*env)->GetMethodID(env, JFIELD_TYPE, "getModifiers", "()I");
-        if (!fieldGetMod) {
-            process_java_exception(env);
-            goto EXIT_ERROR;
-        }
+    if (!JNI_METHOD(fieldGetMod, env, JFIELD_TYPE, "getModifiers", "()I")) {
+        process_java_exception(env);
+        goto EXIT_ERROR;
     }
     modifier = (*env)->CallIntMethod(env, self->rfield, fieldGetMod);
     if (process_java_exception(env)) {

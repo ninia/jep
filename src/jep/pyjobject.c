@@ -243,13 +243,10 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
      * attach attribute java_name to the pyjobject instance to assist with
      * understanding the type at runtime
      */
-    if (classGetName == 0) {
-        classGetName = (*env)->GetMethodID(env, JCLASS_TYPE, "getName",
-                                           "()Ljava/lang/String;");
-        if (!classGetName) {
-            process_java_exception(env);
-            goto EXIT_ERROR;
-        }
+    if (!JNI_METHOD(classGetName, env, JCLASS_TYPE, "getName",
+                    "()Ljava/lang/String;")) {
+        process_java_exception(env);
+        goto EXIT_ERROR;
     }
 
     className = (*env)->CallObjectMethod(env, pyjob->clazz, classGetName);
@@ -269,13 +266,10 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
     Py_DECREF(pyAttrName);
     (*env)->DeleteLocalRef(env, className);
     // then, get methodid for getMethods()
-    if (classGetMethods == 0) {
-        classGetMethods = (*env)->GetMethodID(env, JCLASS_TYPE, "getMethods",
-                                              "()[Ljava/lang/reflect/Method;");
-        if (!classGetMethods) {
-            process_java_exception(env);
-            goto EXIT_ERROR;
-        }
+    if (!JNI_METHOD(classGetMethods, env, JCLASS_TYPE, "getMethods",
+                    "()[Ljava/lang/reflect/Method;")) {
+        process_java_exception(env);
+        goto EXIT_ERROR;
     }
     /*
      * Performance improvement.  The code below is very similar to previous
@@ -409,13 +403,10 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
 
 
     // ------------------------------ process fields
-    if (classGetFields == 0) {
-        classGetFields = (*env)->GetMethodID(env,  JCLASS_TYPE, "getFields",
-                                             "()[Ljava/lang/reflect/Field;");
-        if (!classGetFields) {
-            process_java_exception(env);
-            goto EXIT_ERROR;
-        }
+    if (!JNI_METHOD(classGetFields, env,  JCLASS_TYPE, "getFields",
+                    "()[Ljava/lang/reflect/Field;")) {
+        process_java_exception(env);
+        goto EXIT_ERROR;
     }
 
     fieldArray = (jobjectArray) (*env)->CallObjectMethod(env,
@@ -594,15 +585,10 @@ static PyObject* pyjobject_richcompare(PyJObject *self,
         // skip calling Object.equals() if op is > or <
         if (opid != Py_GT && opid != Py_LT) {
             // get the methodid for Object.equals()
-            if (objectEquals == 0) {
-                objectEquals = (*env)->GetMethodID(
-                                   env,
-                                   self->clazz,
-                                   "equals",
-                                   "(Ljava/lang/Object;)Z");
-                if (process_java_exception(env) || !objectEquals) {
-                    return NULL;
-                }
+            if (!JNI_METHOD(objectEquals, env, JOBJECT_TYPE, "equals",
+                            "(Ljava/lang/Object;)Z")) {
+                process_java_exception(env);
+                return NULL;
             }
 
             eq = (*env)->CallBooleanMethod(
@@ -656,7 +642,8 @@ static PyObject* pyjobject_richcompare(PyJObject *self,
 
             compareTo = (*env)->GetMethodID(env, JCOMPARABLE_TYPE, "compareTo",
                                             "(Ljava/lang/Object;)I");
-            if (process_java_exception(env) || !compareTo) {
+            if (!compareTo) {
+                process_java_exception(env);
                 return NULL;
             }
 
@@ -881,14 +868,9 @@ static long pyjobject_hash(PyJObject *self)
     JNIEnv *env = pyembed_get_env();
     int   hash = -1;
 
-    if (objectHashCode == 0) {
-        objectHashCode = (*env)->GetMethodID(env,
-                                             self->clazz,
-                                             "hashCode",
-                                             "()I");
-        if (process_java_exception(env) || !objectHashCode) {
-            return -1;
-        }
+    if (!JNI_METHOD(objectHashCode, env, JOBJECT_TYPE, "hashCode", "()I")) {
+        process_java_exception(env);
+        return -1;
     }
 
     if (self->object) {

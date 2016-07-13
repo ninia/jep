@@ -35,6 +35,15 @@
 #ifndef _Included_jep_util
 #define _Included_jep_util
 
+/*
+ * A wrapper around the JNI method GetMethodID which will cache the jmethodID
+ * to avoid repeated lookups. The first argument should be a variable for
+ * saving the jmethodID and the remaining arguments match the signature of
+ * GetMethodID. This macro "returns" 1 if the method is already cached or if
+ * the lookup succeeds and 0 if the lookup fails.
+ */
+#define JNI_METHOD(var, env, type, name, sig)\
+    (var || (var = (*env)->GetMethodID(env, type, name, sig)))
 
 // this function exists solely to support python 3.2
 char* pyunicode_to_utf8(PyObject *unicode);
