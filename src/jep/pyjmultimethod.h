@@ -43,15 +43,15 @@ typedef struct {
 
 /*
  * Both args must be PyJMethodObjects. A minimum of 2 methods is required to
- * make a PyJmultiMethod, after creation it is possible to add more than two
- * methods using PyJmultiMethod_Append.
+ * make a PyJMultiMethod, after creation it is possible to add more than two
+ * methods using PyJMultiMethod_Append.
  */
-PyAPI_FUNC(PyObject*) PyJmultiMethod_New(PyObject*, PyObject*);
+PyAPI_FUNC(PyObject*) PyJMultiMethod_New(PyObject*, PyObject*);
 /* Args must be a PyJMultiMethodObject and a PyJMethodObject */
-PyAPI_FUNC(int) PyJmultiMethod_Append(PyObject*, PyObject*);
+PyAPI_FUNC(int) PyJMultiMethod_Append(PyObject*, PyObject*);
 /* Check if the arg is a PyJMultiMethodObject */
-PyAPI_FUNC(int) PyJmultiMethod_Check(PyObject*);
+PyAPI_FUNC(int) PyJMultiMethod_Check(PyObject*);
 /* Get the name of a PyJMultiMethodObject, returns a new reference to the name */
-PyAPI_FUNC(PyObject*) PyJmultiMethod_GetName(PyObject*);
+PyAPI_FUNC(PyObject*) PyJMultiMethod_GetName(PyObject*);
 
 #endif // ndef pyjmultimethod

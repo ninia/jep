@@ -30,7 +30,7 @@
 
 static int pyjconstructor_init(JNIEnv*, PyJMethodObject*);
 
-static jmethodID constructorGetParmTypes = 0;
+static jmethodID constructorGetParamTypes = 0;
 
 /*
  * All constructors are named <init> so keep a single PyString around to use
@@ -40,11 +40,11 @@ static PyObject* initMethodName = NULL;
 
 PyObject* PyJConstructor_New(JNIEnv *env, jobject constructor)
 {
-    if (PyType_Ready(&PyJmethod_Type) < 0) {
+    if (PyType_Ready(&PyJMethod_Type) < 0) {
         return NULL;
     }
     if (!PyJConstructor_Type.tp_base) {
-        PyJConstructor_Type.tp_base = &PyJmethod_Type;
+        PyJConstructor_Type.tp_base = &PyJMethod_Type;
     }
     if (PyType_Ready(&PyJConstructor_Type) < 0) {
         return NULL;
@@ -93,11 +93,11 @@ static int pyjconstructor_init(JNIEnv *env, PyJMethodObject *self)
 
     self->methodId = (*env)->FromReflectedMethod(env, self->rmethod);
 
-    if (constructorGetParmTypes == 0) {
+    if (constructorGetParamTypes == 0) {
         jclass initClass = (*env)->GetObjectClass(env, self->rmethod);
-        constructorGetParmTypes = (*env)->GetMethodID(env, initClass,
+        constructorGetParamTypes = (*env)->GetMethodID(env, initClass,
                                   "getParameterTypes", "()[Ljava/lang/Class;");
-        if (!constructorGetParmTypes) {
+        if (!constructorGetParamTypes) {
             process_java_exception(env);
             goto EXIT_ERROR;
         }
@@ -105,7 +105,7 @@ static int pyjconstructor_init(JNIEnv *env, PyJMethodObject *self)
     }
 
     paramArray = (jobjectArray) (*env)->CallObjectMethod(env, self->rmethod,
-                 constructorGetParmTypes);
+                 constructorGetParamTypes);
     if (process_java_exception(env) || !paramArray) {
         goto EXIT_ERROR;
     }
@@ -136,12 +136,6 @@ static PyObject* pyjconstructor_call(PyJMethodObject *self, PyObject *args,
     if (keywords != NULL) {
         PyErr_Format(PyExc_TypeError, "Keywords are not supported.");
         return NULL;
-    }
-
-    if (!self->parameters) {
-        if (!pyjconstructor_init(env, self) || PyErr_Occurred()) {
-            return NULL;
-        }
     }
 
     if (self->lenParameters != PyTuple_GET_SIZE(args) - 1) {
@@ -262,7 +256,7 @@ PyTypeObject PyJConstructor_Type = {
     0,                                        /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
-    0, // &PyJmethod_Type                     /* tp_base */
+    0, // &PyJMethod_Type                     /* tp_base */
     0,                                        /* tp_dict */
     0,                                        /* tp_descr_get */
     0,                                        /* tp_descr_set */

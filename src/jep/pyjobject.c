@@ -347,16 +347,16 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
                         PyJMethodObject* cachedMethod = (PyJMethodObject*) cached;
                         if (PyObject_RichCompareBool(pymethod->pyMethodName, cachedMethod->pyMethodName,
                                                      Py_EQ)) {
-                            PyObject* multimethod = PyJmultiMethod_New((PyObject*) pymethod, cached);
+                            PyObject* multimethod = PyJMultiMethod_New((PyObject*) pymethod, cached);
                             PyList_SetItem(pyjMethodList, cacheIndex, multimethod);
                             multi = 1;
                             break;
                         }
-                    } else if (PyJmultiMethod_Check(cached)) {
-                        PyObject* methodName = PyJmultiMethod_GetName(cached);
+                    } else if (PyJMultiMethod_Check(cached)) {
+                        PyObject* methodName = PyJMultiMethod_GetName(cached);
                         if (PyObject_RichCompareBool(pymethod->pyMethodName, methodName, Py_EQ)) {
                             Py_DECREF(methodName);
-                            PyJmultiMethod_Append(cached, (PyObject*) pymethod);
+                            PyJMultiMethod_Append(cached, (PyObject*) pymethod);
                             multi = 1;
                             break;
                         } else {
@@ -388,8 +388,8 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
             PyJMethodObject* cachedMethod = (PyJMethodObject*) cached;
             name = cachedMethod->pyMethodName;
             Py_INCREF(name);
-        } else if (PyJmultiMethod_Check(cached)) {
-            name = PyJmultiMethod_GetName(cached);
+        } else if (PyJMultiMethod_Check(cached)) {
+            name = PyJMultiMethod_GetName(cached);
         }
         if (name) {
             if (PyObject_SetAttr((PyObject *) pyjob, name, cached) == -1) {
@@ -743,7 +743,7 @@ PyObject* pyjobject_getattr(PyJObject *obj,
     Py_DECREF(pyname);
 
     // method optimizations
-    if (pyjmethod_check(ret) || PyJmultiMethod_Check(ret)) {
+    if (pyjmethod_check(ret) || PyJMultiMethod_Check(ret)) {
         /*
          * TODO Should not bind non-static methods to pyjclass objects, but not
          * sure yet how to handle multimethods and static methods.

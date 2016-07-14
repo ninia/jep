@@ -52,11 +52,11 @@ PyJMethodObject* pyjmethod_new(JNIEnv *env,
     const char       *methodName   = NULL;
     jstring           jstr         = NULL;
 
-    if (PyType_Ready(&PyJmethod_Type) < 0) {
+    if (PyType_Ready(&PyJMethod_Type) < 0) {
         return NULL;
     }
 
-    pym                = PyObject_NEW(PyJMethodObject, &PyJmethod_Type);
+    pym                = PyObject_NEW(PyJMethodObject, &PyJMethod_Type);
     pym->rmethod       = (*env)->NewGlobalRef(env, rmethod);
     pym->parameters    = NULL;
     pym->lenParameters = 0;
@@ -227,7 +227,7 @@ static void pyjmethod_dealloc(PyJMethodObject *self)
 
 int pyjmethod_check(PyObject *obj)
 {
-    if (PyObject_TypeCheck(obj, &PyJmethod_Type)) {
+    if (PyObject_TypeCheck(obj, &PyJMethod_Type)) {
         return 1;
     }
     return 0;
@@ -835,7 +835,7 @@ static PyMethodDef pyjmethod_methods[] = {
 };
 
 
-PyTypeObject PyJmethod_Type = {
+PyTypeObject PyJMethod_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "jep.PyJMethod",
     sizeof(PyJMethodObject),

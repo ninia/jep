@@ -59,8 +59,8 @@ int pyjclass_init(JNIEnv *env, PyObject *pyjob)
 }
 
 /*
- * Adds a single inner classes as attributes to the pyjclass. This will check
- * if the inner class is public and will only add it if it is public. This is
+ * Adds a single inner class as attributes to the pyjclass. This will check if
+ * the inner class is public and will only add it if it is public. This is
  * intended to only be called from pyjclass_add_inner_classes().
  *
  * @param env the JNI environment
@@ -260,14 +260,14 @@ int pyjclass_init_constructors(PyJClassObject *pyc)
             pycallable = pyjinit;
         } else if (i == 1) {
             PyObject* firstInit = pycallable;
-            pycallable = PyJmultiMethod_New(firstInit, pyjinit);
+            pycallable = PyJMultiMethod_New(firstInit, pyjinit);
             Py_DECREF(firstInit);
             Py_DECREF(pyjinit);
             if (pycallable == NULL) {
                 goto EXIT_ERROR;
             }
         } else {
-            if (PyJmultiMethod_Append(pycallable, pyjinit) == -1) {
+            if (PyJMultiMethod_Append(pycallable, pyjinit) == -1) {
                 Py_DECREF(pyjinit);
                 goto EXIT_ERROR;
             }

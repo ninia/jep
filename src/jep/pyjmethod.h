@@ -33,7 +33,7 @@
 #define _Included_pyjmethod
 
 
-PyAPI_DATA(PyTypeObject) PyJmethod_Type;
+PyAPI_DATA(PyTypeObject) PyJMethod_Type;
 
 // i needed an object to store methods in. this is a callable
 // object and instances of these are dynamically added to a PyJobject

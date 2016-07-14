@@ -28,7 +28,7 @@
 
 #include "Jep.h"
 
-PyObject* PyJmultiMethod_New(PyObject* method1, PyObject* method2)
+PyObject* PyJMultiMethod_New(PyObject* method1, PyObject* method2)
 {
     PyJMultiMethodObject* mm = NULL;
 
@@ -36,7 +36,7 @@ PyObject* PyJmultiMethod_New(PyObject* method1, PyObject* method2)
         return NULL;
     }
     if (!pyjmethod_check(method1) || !pyjmethod_check(method2)) {
-        PyErr_SetString(PyExc_TypeError, "PyJmultiMethod can only hold PyJmethods");
+        PyErr_SetString(PyExc_TypeError, "PyJMultiMethod can only hold PyJMethods");
         return NULL;
     }
 
@@ -56,35 +56,35 @@ PyObject* PyJmultiMethod_New(PyObject* method1, PyObject* method2)
     return (PyObject *) mm;
 }
 
-int PyJmultiMethod_Append(PyObject* multimethod, PyObject* method)
+int PyJMultiMethod_Append(PyObject* multimethod, PyObject* method)
 {
     PyJMultiMethodObject* mm = NULL;
-    if (!PyJmultiMethod_Check(multimethod)) {
+    if (!PyJMultiMethod_Check(multimethod)) {
         PyErr_SetString(PyExc_TypeError,
-                        "PyJmultiMethod_Append received incorrect type");
+                        "PyJMultiMethod_Append received incorrect type");
         return -1;
     }
     if (!pyjmethod_check(method)) {
-        PyErr_SetString(PyExc_TypeError, "PyJmultiMethod can only hold PyJmethods");
+        PyErr_SetString(PyExc_TypeError, "PyJMultiMethod can only hold PyJMethods");
         return -1;
     }
     mm = (PyJMultiMethodObject*) multimethod;
     return PyList_Append(mm->methodList, method);
 }
 
-int PyJmultiMethod_Check(PyObject* object)
+int PyJMultiMethod_Check(PyObject* object)
 {
     return PyObject_TypeCheck(object, &PyJMultiMethod_Type);
 }
 
-PyObject* PyJmultiMethod_GetName(PyObject* multimethod)
+PyObject* PyJMultiMethod_GetName(PyObject* multimethod)
 {
     PyJMultiMethodObject* mm         = NULL;
     PyJMethodObject*     method     = NULL;
     PyObject*             methodName = NULL;
-    if (!PyJmultiMethod_Check(multimethod)) {
+    if (!PyJMultiMethod_Check(multimethod)) {
         PyErr_SetString(PyExc_TypeError,
-                        "PyJmultiMethod_GetName received incorrect type");
+                        "PyJMultiMethod_GetName received incorrect type");
         return NULL;
     }
     mm = (PyJMultiMethodObject*) multimethod;
@@ -121,14 +121,14 @@ static PyObject* pyjmultimethod_call(PyObject *multimethod,
         return NULL;
     }
 
-    if (!PyJmultiMethod_Check(multimethod)) {
+    if (!PyJMultiMethod_Check(multimethod)) {
         PyErr_SetString(PyExc_TypeError,
                         "pyjmultimethod_call_internal received incorrect type");
         return NULL;
     }
 
     mm = (PyJMultiMethodObject*) multimethod;
-    methodName = PyJmultiMethod_GetName(multimethod);
+    methodName = PyJMultiMethod_GetName(multimethod);
     methodCount = PyList_Size(mm->methodList);
     argsSize = PyTuple_Size(args) - 1;
     env = pyembed_get_env();
@@ -178,9 +178,9 @@ static PyObject* pyjmultimethod_call(PyObject *multimethod,
 PyObject* pyjmultimethod_getmethods(PyObject* multimethod)
 {
     PyJMultiMethodObject* mm         = NULL;
-    if (!PyJmultiMethod_Check(multimethod)) {
+    if (!PyJMultiMethod_Check(multimethod)) {
         PyErr_SetString(PyExc_TypeError,
-                        "PyJmultiMethod_GetName received incorrect type");
+                        "PyJMultiMethod_GetName received incorrect type");
         return NULL;
     }
     mm = (PyJMultiMethodObject*) multimethod;
@@ -194,13 +194,13 @@ static void pyjmultimethod_dealloc(PyJMultiMethodObject *self)
 }
 
 static PyGetSetDef pyjmultimethod_getsetlist[] = {
-    {"__name__", (getter) PyJmultiMethod_GetName, NULL},
+    {"__name__", (getter) PyJMultiMethod_GetName, NULL},
     {"__methods__", (getter) pyjmultimethod_getmethods, NULL},
     {NULL} /* Sentinel */
 };
 
 PyDoc_STRVAR(pyjmultimethod_doc,
-             "PyJmultiMethod wraps multiple java methods from the same class with the same\n\
+             "PyJMultiMethod wraps multiple java methods from the same class with the same\n\
 name as a single callable python object.");
 
 PyTypeObject PyJMultiMethod_Type = {
