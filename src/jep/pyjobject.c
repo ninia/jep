@@ -331,7 +331,7 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
             rmethod = (*env)->GetObjectArrayElement(env, methodArray, i);
 
             // make new PyJMethodObject, linked to pyjob
-            pymethod = pyjmethod_new(env, rmethod, pyjob);
+            pymethod = PyJMethod_New(env, rmethod);
 
             if (!pymethod) {
                 continue;
@@ -343,7 +343,7 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
                 int cacheIndex = 0;
                 for (cacheIndex = 0; cacheIndex < cacheLen; cacheIndex += 1) {
                     PyObject* cached = PyList_GetItem(pyjMethodList, cacheIndex);
-                    if (pyjmethod_check(cached)) {
+                    if (PyJMethod_Check(cached)) {
                         PyJMethodObject* cachedMethod = (PyJMethodObject*) cached;
                         if (PyObject_RichCompareBool(pymethod->pyMethodName, cachedMethod->pyMethodName,
                                                      Py_EQ)) {
@@ -384,7 +384,7 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
     for (i = 0; i < len; i++) {
         PyObject* name   = NULL;
         PyObject* cached = PyList_GetItem(cachedMethodList, i);
-        if (pyjmethod_check(cached)) {
+        if (PyJMethod_Check(cached)) {
             PyJMethodObject* cachedMethod = (PyJMethodObject*) cached;
             name = cachedMethod->pyMethodName;
             Py_INCREF(name);
@@ -743,7 +743,7 @@ PyObject* pyjobject_getattr(PyJObject *obj,
     Py_DECREF(pyname);
 
     // method optimizations
-    if (pyjmethod_check(ret) || PyJMultiMethod_Check(ret)) {
+    if (PyJMethod_Check(ret) || PyJMultiMethod_Check(ret)) {
         /*
          * TODO Should not bind non-static methods to pyjclass objects, but not
          * sure yet how to handle multimethods and static methods.

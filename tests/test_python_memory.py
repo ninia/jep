@@ -2,7 +2,7 @@
 # the total number of python references, because that would cause memory leaks.
 #
 # This test case will only run if python was built --with-pydebug because
-# otherwisee tehre is no way to track refcounts.
+# otherwise there is no way to track refcounts.
 #
 # In each test the refcount is expected to increase by 1, this one reference is
 # the variable refcount1.

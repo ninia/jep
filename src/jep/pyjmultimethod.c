@@ -35,7 +35,7 @@ PyObject* PyJMultiMethod_New(PyObject* method1, PyObject* method2)
     if (PyType_Ready(&PyJMultiMethod_Type) < 0) {
         return NULL;
     }
-    if (!pyjmethod_check(method1) || !pyjmethod_check(method2)) {
+    if (!PyJMethod_Check(method1) || !PyJMethod_Check(method2)) {
         PyErr_SetString(PyExc_TypeError, "PyJMultiMethod can only hold PyJMethods");
         return NULL;
     }
@@ -64,7 +64,7 @@ int PyJMultiMethod_Append(PyObject* multimethod, PyObject* method)
                         "PyJMultiMethod_Append received incorrect type");
         return -1;
     }
-    if (!pyjmethod_check(method)) {
+    if (!PyJMethod_Check(method)) {
         PyErr_SetString(PyExc_TypeError, "PyJMultiMethod can only hold PyJMethods");
         return -1;
     }
@@ -136,10 +136,10 @@ static PyObject* pyjmultimethod_call(PyObject *multimethod,
     for (methodPosition = 0; methodPosition < methodCount; methodPosition += 1) {
         PyJMethodObject* method = (PyJMethodObject*) PyList_GetItem(mm->methodList,
                                   methodPosition);
-        if (pyjmethod_check_simple_compat(method, env, methodName, argsSize)) {
+        if (PyJMethod_GetParameterCount(method, env) == argsSize) {
             if (cand) {
                 if (!candMatch) {
-                    candMatch = pyjmethod_check_complex_compat(cand, env, args);
+                    candMatch = PyJMethod_CheckArguments(cand, env, args);
                 }
                 if (PyErr_Occurred()) {
                     cand = NULL;
@@ -148,7 +148,7 @@ static PyObject* pyjmultimethod_call(PyObject *multimethod,
                     // cand was not compatible, replace it with method.
                     cand = method;
                 } else {
-                    int methodMatch = pyjmethod_check_complex_compat(method, env, args);
+                    int methodMatch = PyJMethod_CheckArguments(method, env, args);
                     if (methodMatch > candMatch) {
                         cand = method;
                         candMatch = methodMatch;
