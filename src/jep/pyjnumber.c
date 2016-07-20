@@ -150,6 +150,8 @@ static PyObject* pyjnumber_power(PyObject *x, PyObject *y, PyObject *z)
     TO_PYTHON_NUMBER(env, y);
     if (z != Py_None) {
         TO_PYTHON_NUMBER(env, z);
+    } else {
+        Py_INCREF(z);
     }
 
     result = PyNumber_Power(x, y, z);
@@ -274,6 +276,21 @@ static PyObject* pyjnumber_float(PyObject *x)
 {
     JNIEnv *env = pyembed_get_env();
     return java_number_to_pythonfloat(env, x);
+}
+
+static PyObject* pyjnumber_richcompare(PyObject *self,
+                                       PyObject *other,
+                                       int opid)
+{
+    PyObject *result = NULL;
+    JNIEnv   *env    = pyembed_get_env();
+
+    TO_PYTHON_NUMBER(env, self);
+    TO_PYTHON_NUMBER(env, other);
+    result = PyObject_RichCompare(self, other, opid);
+    Py_DECREF(self);
+    Py_DECREF(other);
+    return result;
 }
 
 
@@ -435,7 +452,7 @@ PyTypeObject PyJNumber_Type = {
     "jnumber",                                /* tp_doc */
     0,                                        /* tp_traverse */
     0,                                        /* tp_clear */
-    0,                                        /* tp_richcompare */
+    pyjnumber_richcompare,                    /* tp_richcompare */
     0,                                        /* tp_weaklistoffset */
     0,                                        /* tp_iter */
     0,                                        /* tp_iternext */
