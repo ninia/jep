@@ -359,8 +359,10 @@ static int pyjlist_setslice(PyObject *o, Py_ssize_t i1, Py_ssize_t i2,
              * and then replacing o's underlying jobject on success.  That
              * would slow it down though....
              */
+            Py_DECREF(vVal);
             return -1;
         }
+        Py_DECREF(vVal);
         vi++;
     }
 

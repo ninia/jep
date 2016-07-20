@@ -6,7 +6,7 @@ from java.lang import Integer
 
 class TestFields(unittest.TestCase):
     def setUp(self):
-        self.test = Test()
+        self.test = Test()        
 
     def test_string(self):
         self.assertEqual('a stringField', self.test.stringField)
@@ -82,6 +82,8 @@ class TestFields(unittest.TestCase):
         self.test.staticString = 'asdf'
         self.assertEqual('asdf', self.test.staticString)
         self.assertEqual('asdf', self.test.getStaticString())
+        # reset for potential multiple runs
+        self.test.staticString = 'stringField'
 
     def test_static_boolean_field(self):
         self.assertEqual(True, self.test.staticBoolean)
@@ -89,6 +91,8 @@ class TestFields(unittest.TestCase):
         self.test.staticBoolean = False
         self.assertEqual(False, self.test.staticBoolean)
         self.assertEqual(False, self.test.isStaticBoolean())
+        # reset for potential multiple runs
+        self.test.staticBoolean = True
 
     def test_static_short_field(self):
         self.assertEqual(321, self.test.staticShort)
@@ -96,6 +100,8 @@ class TestFields(unittest.TestCase):
         self.test.staticShort = 123
         self.assertEqual(123, self.test.staticShort)
         self.assertEqual(123, self.test.getStaticShort())
+        # reset for potential multiple runs
+        self.test.staticShort = 321
 
     def test_static_int_field(self):
         self.assertEqual(123, self.test.staticInt)
@@ -103,6 +109,8 @@ class TestFields(unittest.TestCase):
         self.test.staticInt = 345
         self.assertEqual(345, self.test.staticInt)
         self.assertEqual(345, self.test.getStaticInt())
+        # reset for potential multiple runs
+        self.test.staticInt = 123
 
     def test_static_long_field(self):
         self.assertEqual(9223372036854775807, self.test.staticLong)
@@ -110,6 +118,8 @@ class TestFields(unittest.TestCase):
         self.test.staticLong = 2
         self.assertEqual(2, self.test.staticLong)
         self.assertEqual(2, self.test.getStaticLong())
+        # reset for potential multiple runs
+        self.test.staticLong = 9223372036854775807
 
     def test_static_double_field(self):
         self.assertEqual(123.123, self.test.staticDouble)
@@ -117,6 +127,8 @@ class TestFields(unittest.TestCase):
         self.test.staticDouble = .3
         self.assertEqual(.3, self.test.staticDouble)
         self.assertEqual(.3, self.test.getStaticDouble())
+        # reset for potential multiple runs
+        self.test.staticDouble = 123.123
 
     def test_static_float_field(self):
         self.assertAlmostEqual(3.4028234663852886e+38, self.test.staticFloat)
@@ -124,6 +136,8 @@ class TestFields(unittest.TestCase):
         self.test.staticFloat = .1
         self.assertAlmostEqual(.1, self.test.staticFloat)
         self.assertAlmostEqual(.1, self.test.getStaticFloat())
+        # reset for potential multiple runs
+        self.test.staticFloat = 3.4028234663852886e+38
 
     def test_static_byte_field(self):
         self.assertEqual(125, self.test.staticByte)
@@ -131,6 +145,8 @@ class TestFields(unittest.TestCase):
         self.test.staticByte = 2
         self.assertEqual(2, self.test.staticByte)
         self.assertEqual(2, self.test.getStaticByte())
+        # reset for potential multiple runs
+        self.test.staticByte = 125
 
     def test_static_char_field(self):
         self.assertEqual('j', self.test.staticChar)
@@ -138,6 +154,8 @@ class TestFields(unittest.TestCase):
         self.test.staticChar = 'a'
         self.assertEqual('a', self.test.staticChar)
         self.assertEqual('a', self.test.getStaticChar())
+        # reset for potential multiple runs
+        self.test.staticChar = 'j'
 
     def test_static_class_field(self):
         self.assertNotEqual(None, self.test.staticClass)

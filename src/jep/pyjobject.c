@@ -910,14 +910,17 @@ static PyObject* pyjobject_dir(PyObject *o, PyObject* ignore)
         PyObject *item = PySequence_GetItem(self->methods, i);
         contains = PySequence_Contains(attrs, item);
         if (contains < 0) {
+            Py_DECREF(item);
             Py_DECREF(attrs);
             return NULL;
         } else if (contains == 0) {
             if (PyList_Append(attrs, item) < 0) {
+                Py_DECREF(item);
                 Py_DECREF(attrs);
                 return NULL;
             }
         }
+        Py_DECREF(item);
     }
 
     // TODO copy/paste is bad, turn it into a method
@@ -926,14 +929,17 @@ static PyObject* pyjobject_dir(PyObject *o, PyObject* ignore)
         PyObject *item = PySequence_GetItem(self->fields, i);
         contains = PySequence_Contains(attrs, item);
         if (contains < 0) {
+            Py_DECREF(item);
             Py_DECREF(attrs);
             return NULL;
         } else if (contains == 0) {
             if (PyList_Append(attrs, item) < 0) {
+                Py_DECREF(item);
                 Py_DECREF(attrs);
                 return NULL;
             }
         }
+        Py_DECREF(item);
     }
 
     if (PyList_Sort(attrs) < 0) {

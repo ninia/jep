@@ -101,3 +101,31 @@ class TestPythonRefCounts(unittest.TestCase):
         del result
         refcount2 = sys.gettotalrefcount()
         self.assertEquals(refcount1, refcount2 - 1)
+
+    def test_number_compare(self):
+        x = 5
+        from java.lang import Integer
+        y = Integer(9)
+        refcount1 = sys.gettotalrefcount()
+        result = x < y
+        del result
+        refcount2 = sys.gettotalrefcount()
+        self.assertEquals(refcount1, refcount2 - 1)
+
+    def test_list_setslice(self):
+        from java.util import ArrayList
+        jlist = ArrayList()
+        for i in range(5):
+            jlist.add(i)
+        refcount1 = sys.gettotalrefcount()
+        jlist[2:4] = [7, 19]
+        refcount2 = sys.gettotalrefcount()
+        self.assertEquals(refcount1, refcount2 - 1)
+
+    def test_dir_class(self):
+        from java.util import ArrayList
+        refcount1 = sys.gettotalrefcount()
+        result = dir(ArrayList)
+        del result
+        refcount2 = sys.gettotalrefcount()
+        self.assertEquals(refcount1, refcount2 - 1)

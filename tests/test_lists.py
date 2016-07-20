@@ -22,7 +22,7 @@ def makePythonList():
 class TestLists(unittest.TestCase):
     def setUp(self):
         self.test = Test()
-    
+
     def test_sequence(self):
         jlist = makeJavaList()
         pylist = makePythonList()
@@ -31,7 +31,7 @@ class TestLists(unittest.TestCase):
     def test_len(self):
         jlist = makeJavaList()
         self.assertEqual(len(jlist), COUNT)
-        
+
     def test_loop(self):
         n = 0
         jlist = makeJavaList()
@@ -81,7 +81,6 @@ class TestLists(unittest.TestCase):
         pylist[9:-5] = [4, 88, 19]
         self.assertEqual(len(jlist), len(pylist))
         self.assertSequenceEqual(jlist, pylist)
-        
 
     def test_add(self):
         jlist = makeJavaList()
@@ -99,7 +98,7 @@ class TestLists(unittest.TestCase):
         jlist += toAdd
         pylist += toAdd
         self.assertSequenceEqual(jlist, pylist)
-        
+
     def test_multiply(self):
         jlist = makeJavaList()
         x = jlist * 3
@@ -120,15 +119,15 @@ class TestLists(unittest.TestCase):
             del jlist[COUNT+5]
         with self.assertRaises(IndexError):
             del pylist[COUNT+5]
-        
+
         del jlist[0]
         del pylist[0]
         self.assertSequenceEqual(jlist, pylist)
-        
+
         del jlist[-1]
         del pylist[-1]
         self.assertSequenceEqual(jlist, pylist)
-        
+
     def test_getstringbyindex(self):
         jlist = ArrayList();
         jlist.add("string")
@@ -138,4 +137,3 @@ class TestLists(unittest.TestCase):
         jlist = ArrayList();
         jlist.add("string")
         self.assertEqual(next(iter(jlist)), "string")
-        
