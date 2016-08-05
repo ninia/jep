@@ -102,24 +102,9 @@ static int pyjcollection_contains(PyObject *o, PyObject *v)
         process_java_exception(env);
         return -1;
     }
-    if (v == Py_None) {
-        value = NULL;
-    } else {
-        value = pyembed_box_py(env, v);
-        if (process_java_exception(env)) {
-            goto FINALLY;
-        } else if (!value) {
-            /*
-             * with the way pyembed_box_py is currently implemented, shouldn't
-             * be able to get here
-             */
-            PyObject *pystring = PyObject_Str((PyObject*) Py_TYPE(v));
-            PyErr_Format(PyExc_TypeError,
-                         "__contains__ received an incompatible type: %s",
-                         PyString_AsString(pystring));
-            Py_XDECREF(pystring);
-            goto FINALLY;
-        }
+    value = PyObject_As_jobject(env, v, JOBJECT_TYPE);
+    if (!value && PyErr_Occurred()) {
+        goto FINALLY;
     }
 
     jresult = (*env)->CallBooleanMethod(env, obj->object, collectionContains,

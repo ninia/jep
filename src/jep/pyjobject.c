@@ -37,7 +37,6 @@ static jmethodID objectEquals    = 0;
 static jmethodID objectHashCode  = 0;
 static jmethodID classGetMethods = 0;
 static jmethodID classGetFields  = 0;
-static jmethodID classGetName    = 0;
 
 /*
  * MSVC requires tp_base to be set at runtime instead of in
@@ -243,13 +242,7 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
      * attach attribute java_name to the pyjobject instance to assist with
      * understanding the type at runtime
      */
-    if (!JNI_METHOD(classGetName, env, JCLASS_TYPE, "getName",
-                    "()Ljava/lang/String;")) {
-        process_java_exception(env);
-        goto EXIT_ERROR;
-    }
-
-    className = (*env)->CallObjectMethod(env, pyjob->clazz, classGetName);
+    className = (*env)->CallObjectMethod(env, pyjob->clazz, JCLASS_GET_NAME);
     if (process_java_exception(env) || !className) {
         goto EXIT_ERROR;
     }

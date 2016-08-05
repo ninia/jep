@@ -141,7 +141,9 @@ extern jclass JBYTE_OBJ_TYPE;
 extern jclass JSHORT_OBJ_TYPE;
 extern jclass JINT_OBJ_TYPE;
 extern jclass JLONG_OBJ_TYPE;
+extern jclass JFLOAT_OBJ_TYPE;
 extern jclass JDOUBLE_OBJ_TYPE;
+extern jclass JCHAR_OBJ_TYPE;
 
 extern jclass JMETHOD_TYPE;
 extern jclass JFIELD_TYPE;
@@ -152,4 +154,6 @@ extern jclass JARRAYLIST_TYPE;
 extern jclass JHASHMAP_TYPE;
 extern jclass JCOLLECTIONS_TYPE;
 
+// cache frequently used method
+extern jmethodID JCLASS_GET_NAME;
 #endif // ifndef _Included_jep_util

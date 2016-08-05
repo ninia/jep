@@ -15,6 +15,21 @@ Jep now has improved method choosing when Python tries to call a Java
 method that is overloaded.  Methods and Constructors will be chosen based
 off of how closely the Python inputs match the Java argument types.
 
+Improved primitive and boxed type conversions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Python "primitives" such as ints, floats, strings and boolean can now be passed
+directly to java methods which expect java boxed types such as Long, Short,
+Byte, Double, or Character(Integer and Double were already supported in older
+versions). Also java methods which return boxed types will now return the
+python equivalent instead. This autoboxing is not limited to just methods, the
+same types of conversions will occur for constructors, arrays, and fields. The
+new behavior is intended to make jep imitate the autoboxing performed by the
+java compiler. This change might break python written for older versions of jep
+if it is calling methods on the boxed types that are no longer returned from
+java methods. For example callinga a java method from python that returns an
+Integer and then calling intValue() to convert it to a primitive int will no
+longer work. In this case the Integer is automatically converted to an int so
+the call to intValue() is no longer necessary and can simply be removed.
 
 Python initialization variables
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -79,28 +79,6 @@ static jmethodID loadClassMethod = 0;
 // jep.Proxy.newProxyInstance
 static jmethodID newProxyMethod = 0;
 
-#if PY_MAJOR_VERSION < 3
-    // Integer(int)
-    static jmethodID integerIConstructor = 0;
-#endif
-
-// Long(long)
-static jmethodID longJConstructor = 0;
-
-// Double(double)
-static jmethodID doubleDConstructor = 0;
-
-// Boolean(boolean)
-static jmethodID booleanBConstructor = 0;
-
-// ArrayList(int)
-static jmethodID arraylistIConstructor = 0;
-static jmethodID arraylistAdd = 0;
-
-// HashMap(int)
-static jmethodID hashmapIConstructor = 0;
-static jmethodID hashmapPut = 0;
-
 static struct PyMethodDef jep_methods[] = {
     {
         "findClass",
@@ -810,7 +788,10 @@ jobject pyembed_invoke(JNIEnv *env,
     }
 
     // handles errors
-    ret = pyembed_box_py(env, pyret);
+    ret = PyObject_As_jobject(env, pyret, JOBJECT_TYPE);
+    if (!ret) {
+        process_py_exception(env, 0);
+    }
 
 EXIT:
     Py_XDECREF(pyargs);
@@ -1050,246 +1031,6 @@ void pyembed_setloader(JNIEnv *env, intptr_t _jepThread, jobject cl)
     jepThread->classloader = (*env)->NewGlobalRef(env, cl);
     PyEval_ReleaseThread(jepThread->tstate);
 }
-
-
-// convert pyobject to boxed java value
-jobject pyembed_box_py(JNIEnv *env, PyObject *result)
-{
-
-    if (result == Py_None) {
-        /*
-         * To ensure we get back a Java null instead of the word "None", we
-         * return NULL in this case.  All the other return NULLs below will
-         * set the error indicator which should be checked for and handled by
-         * code calling pyembed_box_py.
-         */
-        return NULL;
-    }
-
-    // class and object need to return a new local ref so the object
-    // isn't garbage collected.
-    if (pyjclass_check(result)) {
-        return (*env)->NewLocalRef(env, ((PyJObject *) result)->clazz);
-    }
-
-    if (pyjobject_check(result)) {
-        return (*env)->NewLocalRef(env, ((PyJObject *) result)->object);
-    }
-
-    if (PyString_Check(result)) {
-        char *s = PyString_AS_STRING(result);
-        return (*env)->NewStringUTF(env, (const char *) s);
-    }
-
-    if (PyBool_Check(result)) {
-        jboolean b = JNI_FALSE;
-        if (result == Py_True) {
-            b = JNI_TRUE;
-        }
-
-        if (!JNI_METHOD(booleanBConstructor, env, JBOOL_OBJ_TYPE, "<init>", "(Z)V")) {
-            process_java_exception(env);
-            return NULL;
-        }
-        return (*env)->NewObject(env, JBOOL_OBJ_TYPE, booleanBConstructor, b);
-    }
-
-#if PY_MAJOR_VERSION < 3
-    if (PyInt_Check(result)) {
-        jint i = (jint) PyInt_AS_LONG(result);
-
-        if (!JNI_METHOD(integerIConstructor, env, JINT_OBJ_TYPE, "<init>", "(I)V")) {
-            process_java_exception(env);
-            return NULL;
-        }
-        return (*env)->NewObject(env, JINT_OBJ_TYPE, integerIConstructor, i);
-    }
-#endif
-
-    if (PyLong_Check(result)) {
-        PY_LONG_LONG i = PyLong_AsLongLong(result);
-
-        if (!JNI_METHOD(longJConstructor, env, JLONG_OBJ_TYPE, "<init>", "(J)V")) {
-            process_java_exception(env);
-            return NULL;
-        }
-        return (*env)->NewObject(env, JLONG_OBJ_TYPE, longJConstructor, i);
-    }
-
-    if (PyFloat_Check(result)) {
-        jdouble d = (jdouble) PyFloat_AS_DOUBLE(result);
-
-        if (!JNI_METHOD(doubleDConstructor, env, JDOUBLE_OBJ_TYPE, "<init>", "(D)V")) {
-            process_java_exception(env);
-            return NULL;
-        }
-        return (*env)->NewObject(env, JDOUBLE_OBJ_TYPE, doubleDConstructor, d);
-    }
-
-    if (pyjarray_check(result)) {
-        PyJArrayObject *t = (PyJArrayObject *) result;
-        pyjarray_release_pinned(t, JNI_COMMIT);
-
-        return t->object;
-    }
-
-    if (PyList_Check(result) || PyTuple_Check(result)) {
-        jobject list;
-        Py_ssize_t i;
-        Py_ssize_t size;
-        int modifiable = PyList_Check(result);
-
-        if (!JNI_METHOD(arraylistIConstructor, env, JARRAYLIST_TYPE, "<init>",
-                        "(I)V")) {
-            process_java_exception(env);
-            return NULL;
-        }
-        if (!JNI_METHOD(arraylistAdd, env, JARRAYLIST_TYPE, "add",
-                       "(Ljava/lang/Object;)Z")) {
-            process_java_exception(env);
-            return NULL;
-        }
-
-        if (modifiable) {
-            size = PyList_Size(result);
-        } else {
-            size = PyTuple_Size(result);
-        }
-        list = (*env)->NewObject(env, JARRAYLIST_TYPE, arraylistIConstructor,
-                                 (int) size);
-        if (process_java_exception(env) || !list) {
-            return NULL;
-        }
-
-        if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
-            process_java_exception(env);
-            return NULL;
-        }
-        for (i = 0; i < size; i++) {
-            PyObject *item;
-            jobject value;
-
-            if (modifiable) {
-                item = PyList_GetItem(result, i);
-            } else {
-                item = PyTuple_GetItem(result, i);
-            }
-            value = pyembed_box_py(env, item);
-            if (value == NULL && PyErr_Occurred()) {
-                /*
-                 * java exceptions will have been transformed to python
-                 * exceptions by this point
-                 */
-                (*env)->PopLocalFrame(env, NULL);
-                return NULL;
-            }
-            (*env)->CallBooleanMethod(env, list, arraylistAdd, value);
-            (*env)->DeleteLocalRef(env, value);
-            if (process_java_exception(env)) {
-                (*env)->PopLocalFrame(env, NULL);
-                return NULL;
-            }
-        }
-
-        (*env)->PopLocalFrame(env, NULL);
-
-        if (modifiable) {
-            return list;
-        } else {
-            // make the tuple unmodifiable in Java
-            jmethodID unmodifiableList;
-
-            unmodifiableList = (*env)->GetStaticMethodID(env,
-                               JCOLLECTIONS_TYPE,
-                               "unmodifiableList",
-                               "(Ljava/util/List;)Ljava/util/List;");
-            if (process_java_exception(env) || !unmodifiableList) {
-                return NULL;
-            }
-            list = (*env)->CallStaticObjectMethod(env,
-                                                  JCOLLECTIONS_TYPE,
-                                                  unmodifiableList,
-                                                  list);
-            if (process_java_exception(env) || !list) {
-                return NULL;
-            }
-            return list;
-        }
-    } // end of list and tuple conversion
-
-    if (PyDict_Check(result)) {
-        jobject map, jkey, jvalue;
-        Py_ssize_t size, pos;
-        PyObject *key, *value;
-
-        if (!JNI_METHOD(hashmapIConstructor, env, JHASHMAP_TYPE, "<init>", "(I)V")) {
-            process_java_exception(env);
-            return NULL;
-        }
-        if (!JNI_METHOD(hashmapPut, env, JHASHMAP_TYPE, "put",
-                        "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;")) {
-            process_java_exception(env);
-            return NULL;
-        }
-
-        size = PyDict_Size(result);
-        map = (*env)->NewObject(env, JHASHMAP_TYPE, hashmapIConstructor, (jint) size);
-        if (process_java_exception(env) || !map) {
-            return NULL;
-        }
-
-        if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
-            process_java_exception(env);
-            return NULL;
-        }
-
-        pos = 0;
-        while (PyDict_Next(result, &pos, &key, &value)) {
-            jkey = pyembed_box_py(env, key);
-            if (jkey == NULL && PyErr_Occurred()) {
-                (*env)->PopLocalFrame(env, NULL);
-                return NULL;
-            }
-            jvalue = pyembed_box_py(env, value);
-            if (jvalue == NULL && PyErr_Occurred()) {
-                (*env)->PopLocalFrame(env, NULL);
-                return NULL;
-            }
-
-            (*env)->CallObjectMethod(env, map, hashmapPut, jkey, jvalue);
-            (*env)->DeleteLocalRef(env, jkey);
-            (*env)->DeleteLocalRef(env, jvalue);
-            if (process_java_exception(env)) {
-                (*env)->PopLocalFrame(env, NULL);
-                return NULL;
-            }
-        }
-        (*env)->PopLocalFrame(env, NULL);
-
-        return map;
-    }
-
-#if JEP_NUMPY_ENABLED
-    if (npy_array_check(result)) {
-        return convert_pyndarray_jndarray(env, result);
-    }
-#endif
-
-    // TODO find a better solution than this
-    // convert everything else to string
-    {
-        jobject ret;
-        char *tt;
-        PyObject *t = PyObject_Str(result);
-        tt = PyString_AsString(t);
-        ret = (jobject) (*env)->NewStringUTF(env, (const char *) tt);
-        Py_DECREF(t);
-
-        return ret;
-    }
-}
-
-
 jobject pyembed_getvalue_on(JNIEnv *env,
                             intptr_t _jepThread,
                             intptr_t _onModule,
@@ -1339,7 +1080,10 @@ jobject pyembed_getvalue_on(JNIEnv *env,
     }
 
     // convert results to jobject
-    ret = pyembed_box_py(env, result);
+    ret = PyObject_As_jobject(env, result, JOBJECT_TYPE);
+    if (!ret) {
+        process_py_exception(env, 1);
+    }
 
 EXIT:
     PyEval_ReleaseThread(jepThread->tstate);
@@ -1385,7 +1129,10 @@ jobject pyembed_getvalue(JNIEnv *env, intptr_t _jepThread, char *str)
     }
 
     // convert results to jobject
-    ret = pyembed_box_py(env, result);
+    ret = PyObject_As_jobject(env, result, JOBJECT_TYPE);
+    if (!ret) {
+        process_py_exception(env, 1);
+    }
 
 EXIT:
     PyEval_ReleaseThread(jepThread->tstate);

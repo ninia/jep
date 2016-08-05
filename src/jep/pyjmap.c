@@ -101,28 +101,14 @@ static int pyjmap_contains_key(PyObject *self, PyObject *key)
         process_java_exception(env);
         return -1;
     }
+
     if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
         process_java_exception(env);
         return -1;
     }
-    if (key == Py_None) {
-        jkey = NULL;
-    } else {
-        jkey = pyembed_box_py(env, key);
-        if (process_java_exception(env)) {
-            goto FINALLY;
-        } else if (!jkey) {
-            /*
-             * with the way pyembed_box_py is currently implemented, shouldn't
-             * be able to get here
-             */
-            PyObject *pystring = PyObject_Str((PyObject*) Py_TYPE(key));
-            PyErr_Format(PyExc_TypeError,
-                         "__contains__ received an incompatible type: %s",
-                         PyString_AsString(pystring));
-            Py_XDECREF(pystring);
-            goto FINALLY;
-        }
+    jkey = PyObject_As_jobject(env, key, JOBJECT_TYPE);
+    if (!jkey && PyErr_Occurred()) {
+        goto FINALLY;
     }
 
     jresult = (*env)->CallBooleanMethod(env, obj->object, mapContainsKey, jkey);
@@ -163,18 +149,9 @@ static PyObject* pyjmap_getitem(PyObject *o, PyObject *key)
         process_java_exception(env);
         return NULL;
     }
-    if (pyjobject_check(key)) {
-        jkey = ((PyJObject*) key)->object;
-    } else {
-        /*
-         * convert_pyarg_jvalue will leave jkey as NULL and set PyExc_TypeError
-         * if we can't handle the key type, which matches python's guidelines
-         */
-        jvalue jvkey = convert_pyarg_jvalue(env, key, JOBJECT_TYPE, JOBJECT_ID, 1);
-        jkey = jvkey.l;
-        if (process_java_exception(env) || !jkey) {
-            goto FINALLY;
-        }
+    jkey = PyObject_As_jobject(env, key, JOBJECT_TYPE);
+    if (!jkey && PyErr_Occurred()) {
+        goto FINALLY;
     }
 
     val = (*env)->CallObjectMethod(env, obj->object, mapGet, jkey);
@@ -231,14 +208,9 @@ static int pyjmap_setitem(PyObject *o, PyObject *key, PyObject *v)
             goto FINALLY;
         }
 
-        if (pyjobject_check(key)) {
-            jkey = ((PyJObject*) key)->object;
-        } else {
-            jvalue jvkey = convert_pyarg_jvalue(env, key, JOBJECT_TYPE, JOBJECT_ID, 1);
-            jkey = jvkey.l;
-            if (process_java_exception(env) || !jkey) {
-                goto FINALLY;
-            }
+        jkey = PyObject_As_jobject(env, key, JOBJECT_TYPE);
+        if (!jkey && PyErr_Occurred()) {
+            goto FINALLY;
         }
 
         if (!JNI_METHOD(mapRemove, env, JMAP_TYPE, "remove",
@@ -250,37 +222,15 @@ static int pyjmap_setitem(PyObject *o, PyObject *key, PyObject *v)
         if (process_java_exception(env)) {
             goto FINALLY;
         }
-        // have to return 0 on success even though it's not documented
-        result = 0;
     } else {
-        if (v == Py_None) {
-            value = NULL;
-        } else {
-            value = pyembed_box_py(env, v);
-            if (process_java_exception(env)) {
-                goto FINALLY;
-            } else if (!value) {
-                /*
-                 * with the way pyembed_box_py is currently implemented, shouldn't
-                 * be able to get here
-                 */
-                PyObject *pystring = PyObject_Str((PyObject*) Py_TYPE(v));
-                PyErr_Format(PyExc_TypeError,
-                             "__setitem__ received an incompatible type: %s",
-                             PyString_AsString(pystring));
-                Py_XDECREF(pystring);
-                goto FINALLY;
-            }
+        value = PyObject_As_jobject(env, v, JOBJECT_TYPE);
+        if (!value && PyErr_Occurred()) {
+            goto FINALLY;
         }
 
-        if (pyjobject_check(key)) {
-            jkey = ((PyJObject*) key)->object;
-        } else {
-            jvalue jvkey = convert_pyarg_jvalue(env, key, JOBJECT_TYPE, JOBJECT_ID, 1);
-            jkey = jvkey.l;
-            if (process_java_exception(env) || !jkey) {
-                goto FINALLY;
-            }
+        jkey = PyObject_As_jobject(env, key, JOBJECT_TYPE);
+        if (!jkey && PyErr_Occurred()) {
+            return -1;
         }
 
         if (!JNI_METHOD(mapPut, env, JMAP_TYPE, "put",

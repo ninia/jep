@@ -10,38 +10,9 @@ class TestTypes(unittest.TestCase):
     def setUp(self):
         self.test = Test()
 
-    def test_string(self):
-        self.assertEqual("toString(). Thanks for calling Java(tm).", self.test.toString())
-
     def test_enum(self):
         testEnum = self.test.getEnum()
         self.assertEqual(0, testEnum.ordinal())
-
-    def test_long(self):
-        self.assertEqual(9223372036854775807, self.test.getClassLong())
-
-    def test_double(self):
-        self.assertEqual(4.9E-324, self.test.getClassDouble())
-
-    def test_float(self):
-        self.assertAlmostEqual(3.4028234663852886e+38, self.test.getClassFloat())
-
-    def test_intobj(self):
-        self.assertEqual(-2147483648, self.test.getInteger())
-
-    def test_boolobj(self):
-        self.assertTrue(self.test.testBooleanObject(True))
-        self.assertFalse(self.test.testBooleanObject(False))
-
-    def test_charobj(self):
-        self.assertEqual(self.test.getCharacterField(), 'c')
-
-    def test_getobj(self):
-        obj = self.test.getObject()
-        self.assertEqual("list 0", str(obj.get(0)))
-
-    def test_stringasobject(self):
-        self.assertEqual(self.test.getStringField(), self.test.getObjectStringField())
 
     def test_getstring_array(self):
         obj = self.test.getStringArray()
@@ -85,12 +56,6 @@ class TestTypes(unittest.TestCase):
 
         self.assertEqual(String, String)
         self.assertNotEqual(String, Integer)
-
-    def test_boxing(self):
-        self.assertEqual(self.test.testObjectPassThrough(True), True)
-        self.assertEqual(self.test.testObjectPassThrough(1), 1)
-        self.assertEqual(self.test.testObjectPassThrough(1.5), 1.5)
-        self.assertEqual(self.test.testObjectPassThrough("string"), "string")
 
     def test_20args(self):
         args = list()

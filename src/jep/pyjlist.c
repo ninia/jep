@@ -1,3 +1,4 @@
+
 /* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
 /*
    jep - Java Embedded Python
@@ -272,24 +273,9 @@ static int pyjlist_setitem(PyObject *o, Py_ssize_t i, PyObject *v)
         return -1;
     }
 
-    if (v == Py_None) {
-        value = NULL;
-    } else {
-        value = pyembed_box_py(env, v);
-        if (process_java_exception(env)) {
-            goto FINALLY;
-        } else if (!value) {
-            /*
-             * with the way pyembed_box_py is currently implemented, shouldn't
-             * be able to get here
-             */
-            PyObject *pystring = PyObject_Str((PyObject*) Py_TYPE(v));
-            PyErr_Format(PyExc_TypeError,
-                         "__setitem__ received an incompatible type: %s",
-                         PyString_AsString(pystring));
-            Py_XDECREF(pystring);
-            goto FINALLY;
-        }
+    value = PyObject_As_jobject(env, v, JOBJECT_TYPE);
+    if (!value && PyErr_Occurred()) {
+        goto FINALLY;
     }
 
 
@@ -386,10 +372,9 @@ static PyObject* pyjlist_inplace_add(PyObject *o1, PyObject *o2)
         return NULL;
     }
 
-    if (pyjlist_check(o2)) {
-        value                     = ((PyJObject*) o2)->object;
-    } else {
-        value                     = pyembed_box_py(env, o2);
+    value = PyObject_As_jobject(env, o2, JOBJECT_TYPE);
+    if (!value && PyErr_Occurred()) {
+        return NULL;
     }
 
     if ((*env)->IsInstanceOf(env, value, JCOLLECTION_TYPE)) {

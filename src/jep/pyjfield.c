@@ -92,7 +92,6 @@ EXIT_ERROR:
 
 static int pyjfield_init(JNIEnv *env, PyJFieldObject *self)
 {
-    jobject          fieldType   = NULL;
     jint             modifier    = -1;
     jboolean         isStatic    = JNI_TRUE;
 
@@ -115,13 +114,12 @@ static int pyjfield_init(JNIEnv *env, PyJFieldObject *self)
         goto EXIT_ERROR;
     }
 
-    fieldType = (*env)->CallObjectMethod(env, self->rfield, fieldGetType);
-    if (process_java_exception(env) || !fieldType) {
+    self->fieldType = (*env)->CallObjectMethod(env, self->rfield, fieldGetType);
+    if (process_java_exception(env) || !self->fieldType) {
         goto EXIT_ERROR;
     }
 
-    self->fieldTypeId = get_jtype(env, fieldType);
-
+    self->fieldTypeId = get_jtype(env, self->fieldType);
     if (process_java_exception(env)) {
         goto EXIT_ERROR;
     }
@@ -165,6 +163,7 @@ static int pyjfield_init(JNIEnv *env, PyJFieldObject *self)
     } else {
         self->isStatic = 0;
     }
+    self->fieldType = (*env)->NewGlobalRef(env, self->fieldType);
 
     (*env)->PopLocalFrame(env, NULL);
     self->init = 1;
@@ -489,10 +488,7 @@ PyObject* pyjfield_get(PyJFieldObject *self)
 
 int pyjfield_set(PyJFieldObject *self, PyObject *value)
 {
-    JNIEnv   *env;
-    jvalue    jarg;
-
-    env = pyembed_get_env();
+    JNIEnv *env = pyembed_get_env();
 
     if (!self) {
         PyErr_Format(PyExc_RuntimeError, "Invalid self object.");
@@ -506,373 +502,136 @@ int pyjfield_set(PyJFieldObject *self, PyObject *value)
     }
 
     switch (self->fieldTypeId) {
-
     case JSTRING_ID:
-        if (!pyarg_matches_jtype(env, value, JSTRING_TYPE, self->fieldTypeId)) {
-            PyErr_Format(PyExc_RuntimeError, "Expected string.");
-            return -1;
-        }
-
-        jarg = convert_pyarg_jvalue(env,
-                                    value,
-                                    JSTRING_TYPE,
-                                    self->fieldTypeId,
-                                    1);
-        if (PyErr_Occurred()) {
-            return -1;
-        }
-
-        if (self->isStatic)
-            (*env)->SetStaticObjectField(env,
-                                         self->pyjobject->clazz,
-                                         self->fieldId,
-                                         jarg.l);
-        else
-            (*env)->SetObjectField(env,
-                                   self->pyjobject->object,
-                                   self->fieldId,
-                                   jarg.l);
-
-        if (process_java_exception(env)) {
-            return -1;
-        }
-
-        return 0; // success
-
-
     case JCLASS_ID:
-        if (!pyarg_matches_jtype(env, value, JCLASS_TYPE, self->fieldTypeId)) {
-            PyErr_Format(PyExc_RuntimeError, "Expected class.");
+    case JOBJECT_ID: {
+        jobject obj = PyObject_As_jobject(env, value, self->fieldType);
+        if (!obj && PyErr_Occurred()) {
             return -1;
         }
-        jarg = convert_pyarg_jvalue(env,
-                                    value,
-                                    JCLASS_TYPE,
-                                    self->fieldTypeId,
-                                    1);
-        if (PyErr_Occurred()) {
-            return -1;
+        if (self->isStatic) {
+            (*env)->SetStaticObjectField(env, self->pyjobject->clazz,
+                                         self->fieldId, obj);
+        } else {
+            (*env)->SetObjectField(env, self->pyjobject->object,
+                                   self->fieldId, obj);
         }
-
-        if (self->isStatic)
-            (*env)->SetStaticObjectField(env,
-                                         self->pyjobject->clazz,
-                                         self->fieldId,
-                                         jarg.l);
-        else
-            (*env)->SetObjectField(env,
-                                   self->pyjobject->object,
-                                   self->fieldId,
-                                   jarg.l);
-
-        if (process_java_exception(env)) {
-            return -1;
-        }
-
-        return 0; // success
-
-
-    case JOBJECT_ID:
-        if (!pyarg_matches_jtype(env, value, JOBJECT_TYPE, self->fieldTypeId)) {
-            PyErr_Format(PyExc_RuntimeError, "Expected object.");
-            return -1;
-        }
-
-        jarg = convert_pyarg_jvalue(env,
-                                    value,
-                                    JOBJECT_TYPE,
-                                    self->fieldTypeId,
-                                    1);
-        if (PyErr_Occurred()) {
-            return -1;
-        }
-
-        if (self->isStatic)
-            (*env)->SetStaticObjectField(env,
-                                         self->pyjobject->clazz,
-                                         self->fieldId,
-                                         jarg.l);
-        else
-            (*env)->SetObjectField(env,
-                                   self->pyjobject->object,
-                                   self->fieldId,
-                                   jarg.l);
-
-        if (process_java_exception(env)) {
-            return -1;
-        }
-
-        return 0; // success
-
-
-    case JINT_ID:
-        if (!pyarg_matches_jtype(env, value, JINT_TYPE, self->fieldTypeId)) {
-            PyErr_Format(PyExc_RuntimeError, "Expected int.");
-            return -1;
-        }
-
-        jarg = convert_pyarg_jvalue(env,
-                                    value,
-                                    JINT_TYPE,
-                                    self->fieldTypeId,
-                                    1);
-        if (PyErr_Occurred()) {
-            return -1;
-        }
-
-        if (self->isStatic)
-            (*env)->SetStaticIntField(env,
-                                      self->pyjobject->clazz,
-                                      self->fieldId,
-                                      jarg.i);
-        else
-            (*env)->SetIntField(env,
-                                self->pyjobject->object,
-                                self->fieldId,
-                                jarg.i);
-
-        if (process_java_exception(env)) {
-            return -1;
-        }
-
-        return 0; // success
-
-
-    case JCHAR_ID:
-        if (!pyarg_matches_jtype(env, value, JCHAR_TYPE, self->fieldTypeId)) {
-            PyErr_Format(PyExc_RuntimeError, "Expected char.");
-            return -1;
-        }
-
-        jarg = convert_pyarg_jvalue(env,
-                                    value,
-                                    JCHAR_TYPE,
-                                    self->fieldTypeId,
-                                    1);
-        if (PyErr_Occurred()) {
-            return -1;
-        }
-
-        if (self->isStatic)
-            (*env)->SetStaticCharField(env,
-                                       self->pyjobject->clazz,
-                                       self->fieldId,
-                                       jarg.c);
-        else
-            (*env)->SetCharField(env,
-                                 self->pyjobject->object,
-                                 self->fieldId,
-                                 jarg.c);
-
-        if (process_java_exception(env)) {
-            return -1;
-        }
-
-        return 0; // success
-
-
-    case JBYTE_ID:
-        if (!pyarg_matches_jtype(env, value, JBYTE_TYPE, self->fieldTypeId)) {
-            PyErr_Format(PyExc_RuntimeError, "Expected byte.");
-            return -1;
-        }
-
-        jarg = convert_pyarg_jvalue(env,
-                                    value,
-                                    JBYTE_TYPE,
-                                    self->fieldTypeId,
-                                    1);
-        if (PyErr_Occurred()) {
-            return -1;
-        }
-
-        if (self->isStatic)
-            (*env)->SetStaticByteField(env,
-                                       self->pyjobject->clazz,
-                                       self->fieldId,
-                                       jarg.b);
-        else
-            (*env)->SetByteField(env,
-                                 self->pyjobject->object,
-                                 self->fieldId,
-                                 jarg.b);
-
-        if (process_java_exception(env)) {
-            return -1;
-        }
-
-        return 0; // success
-
-
-    case JSHORT_ID:
-        if (!pyarg_matches_jtype(env, value, JSHORT_TYPE, self->fieldTypeId)) {
-            PyErr_Format(PyExc_RuntimeError, "Expected int.");
-            return -1;
-        }
-
-        jarg = convert_pyarg_jvalue(env,
-                                    value,
-                                    JSHORT_TYPE,
-                                    self->fieldTypeId,
-                                    1);
-        if (PyErr_Occurred()) {
-            return -1;
-        }
-
-        if (self->isStatic)
-            (*env)->SetStaticShortField(env,
-                                        self->pyjobject->clazz,
-                                        self->fieldId,
-                                        jarg.s);
-        else
-            (*env)->SetShortField(env,
-                                  self->pyjobject->object,
-                                  self->fieldId,
-                                  jarg.s);
-
-        if (process_java_exception(env)) {
-            return -1;
-        }
-
-        return 0; // success
-
-
-    case JDOUBLE_ID:
-        if (!pyarg_matches_jtype(env, value, JDOUBLE_TYPE, self->fieldTypeId)) {
-            PyErr_Format(PyExc_RuntimeError, "Expected float (jdouble).");
-            return -1;
-        }
-
-        jarg = convert_pyarg_jvalue(env,
-                                    value,
-                                    JDOUBLE_TYPE,
-                                    self->fieldTypeId,
-                                    1);
-        if (PyErr_Occurred()) {
-            return -1;
-        }
-
-        if (self->isStatic)
-            (*env)->SetStaticDoubleField(env,
-                                         self->pyjobject->clazz,
-                                         self->fieldId,
-                                         jarg.d);
-        else
-            (*env)->SetDoubleField(env,
-                                   self->pyjobject->object,
-                                   self->fieldId,
-                                   jarg.d);
-
-        if (process_java_exception(env)) {
-            return -1;
-        }
-
-        return 0; // success
-
-
-    case JFLOAT_ID:
-        if (!pyarg_matches_jtype(env, value, JFLOAT_TYPE, self->fieldTypeId)) {
-            PyErr_Format(PyExc_RuntimeError, "Expected float (jfloat).");
-            return -1;
-        }
-
-        jarg = convert_pyarg_jvalue(env,
-                                    value,
-                                    JFLOAT_TYPE,
-                                    self->fieldTypeId,
-                                    1);
-        if (PyErr_Occurred()) {
-            return -1;
-        }
-
-        if (self->isStatic)
-            (*env)->SetStaticFloatField(env,
-                                        self->pyjobject->clazz,
-                                        self->fieldId,
-                                        jarg.f);
-        else
-            (*env)->SetFloatField(env,
-                                  self->pyjobject->object,
-                                  self->fieldId,
-                                  jarg.f);
-
-        if (process_java_exception(env)) {
-            return -1;
-        }
-
-        return 0; // success
-
-
-    case JLONG_ID:
-        if (!pyarg_matches_jtype(env, value, JLONG_TYPE, self->fieldTypeId)) {
-            PyErr_Format(PyExc_RuntimeError, "Expected long.");
-            return -1;
-        }
-
-        jarg = convert_pyarg_jvalue(env,
-                                    value,
-                                    JLONG_TYPE,
-                                    self->fieldTypeId,
-                                    1);
-        if (PyErr_Occurred()) {
-            return -1;
-        }
-
-        if (self->isStatic)
-            (*env)->SetStaticLongField(env,
-                                       self->pyjobject->clazz,
-                                       self->fieldId,
-                                       jarg.j);
-        else
-            (*env)->SetLongField(env,
-                                 self->pyjobject->object,
-                                 self->fieldId,
-                                 jarg.j);
-
-        if (process_java_exception(env)) {
-            return -1;
-        }
-
-        return 0; // success
-
-
-    case JBOOLEAN_ID:
-        if (!pyarg_matches_jtype(env, value, JBOOLEAN_TYPE, self->fieldTypeId)) {
-            PyErr_Format(PyExc_RuntimeError, "Expected boolean.");
-            return -1;
-        }
-
-        jarg = convert_pyarg_jvalue(env,
-                                    value,
-                                    JBOOLEAN_TYPE,
-                                    self->fieldTypeId,
-                                    1);
-        if (PyErr_Occurred()) {
-            return -1;
-        }
-
-        if (self->isStatic)
-            (*env)->SetStaticBooleanField(env,
-                                          self->pyjobject->clazz,
-                                          self->fieldId,
-                                          jarg.z);
-        else
-            (*env)->SetBooleanField(env,
-                                    self->pyjobject->object,
-                                    self->fieldId,
-                                    jarg.z);
-
-        if (process_java_exception(env)) {
-            return -1;
-        }
-
-        return 0; // success
+        return 0;
     }
-
-
-    PyErr_Format(PyExc_RuntimeError,
-                 "Unknown field type %i.",
-                 self->fieldTypeId);
+    case JINT_ID: {
+        jint i = PyObject_As_jint(value);
+        if (i == -1 && PyErr_Occurred()) {
+            return -1;
+        }
+        if (self->isStatic) {
+            (*env)->SetStaticIntField(env, self->pyjobject->clazz,
+                                      self->fieldId, i);
+        } else {
+            (*env)->SetIntField(env, self->pyjobject->object,
+                                self->fieldId, i);
+        }
+        return 0;
+    }
+    case JCHAR_ID: {
+        jchar c = PyObject_As_jchar(value);
+        if (c == 0 && PyErr_Occurred()) {
+            return -1;
+        }
+        if (self->isStatic) {
+            (*env)->SetStaticCharField(env, self->pyjobject->clazz,
+                                       self->fieldId, c);
+        } else {
+            (*env)->SetCharField(env, self->pyjobject->object,
+                                 self->fieldId, c);
+        }
+        return 0;
+    }
+    case JBYTE_ID: {
+        jbyte b = PyObject_As_jbyte(value);
+        if (b == -1 && PyErr_Occurred()) {
+            return -1;
+        }
+        if (self->isStatic) {
+            (*env)->SetStaticByteField(env, self->pyjobject->clazz,
+                                       self->fieldId, b);
+        } else {
+            (*env)->SetByteField(env, self->pyjobject->object,
+                                 self->fieldId, b);
+        }
+        return 0;
+    }
+    case JSHORT_ID: {
+        jshort s = PyObject_As_jshort(value);
+        if (s == -1 && PyErr_Occurred()) {
+            return -1;
+        }
+        if (self->isStatic) {
+            (*env)->SetStaticShortField(env, self->pyjobject->clazz,
+                                        self->fieldId, s);
+        } else {
+            (*env)->SetShortField(env, self->pyjobject->object,
+                                  self->fieldId, s);
+        }
+        return 0;
+    }
+    case JDOUBLE_ID: {
+        jdouble d = PyObject_As_jdouble(value);
+        if (d == -1.0 && PyErr_Occurred()) {
+            return -1;
+        }
+        if (self->isStatic) {
+            (*env)->SetStaticDoubleField(env, self->pyjobject->clazz,
+                                         self->fieldId, d);
+        } else {
+            (*env)->SetDoubleField(env, self->pyjobject->object,
+                                   self->fieldId, d);
+        }
+        return 0;
+    }
+    case JFLOAT_ID: {
+        jfloat f = PyObject_As_jfloat(value);
+        if (f == -1.0 && PyErr_Occurred()) {
+            return -1;
+        }
+        if (self->isStatic) {
+            (*env)->SetStaticFloatField(env, self->pyjobject->clazz,
+                                        self->fieldId, f);
+        } else {
+            (*env)->SetFloatField(env, self->pyjobject->object,
+                                  self->fieldId, f);
+        }
+        return 0;
+    }
+    case JLONG_ID: {
+        jlong j = PyObject_As_jlong(value);
+        if (j == -1 && PyErr_Occurred()) {
+            return -1;
+        }
+        if (self->isStatic) {
+            (*env)->SetStaticLongField(env, self->pyjobject->clazz,
+                                       self->fieldId, j);
+        } else {
+            (*env)->SetLongField(env, self->pyjobject->object,
+                                 self->fieldId, j);
+        }
+        return 0;
+    }
+    case JBOOLEAN_ID: {
+        jboolean z = PyObject_As_jboolean(value);
+        if (PyErr_Occurred()) {
+            return -1;
+        }
+        if (self->isStatic) {
+            (*env)->SetStaticBooleanField(env, self->pyjobject->clazz,
+                                          self->fieldId, z);
+        } else {
+            (*env)->SetBooleanField(env, self->pyjobject->object,
+                                    self->fieldId, z);
+        }
+        return 0;
+    }
+    }
+    PyErr_Format(PyExc_RuntimeError, "Unknown field type %i.", self->fieldTypeId);
     return -1;
 }
 
