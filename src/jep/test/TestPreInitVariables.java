@@ -34,7 +34,7 @@ public class TestPreInitVariables {
         pyConfig.setHashRandomizationFlag(1);
         try {
             Jep.setInitParams(pyConfig);
-            jep = new Jep();
+            jep = new Jep(false, ".");
             jep.runScript("tests/subprocess/py_preinit.py");
         } catch (JepException e) {
             e.printStackTrace();

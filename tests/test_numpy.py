@@ -15,8 +15,24 @@ class TestNumpy(unittest.TestCase):
         of the different primitive types.  Then uses
         Jep.get(String) to get a Java NDArray back and
         checks for equality/symmetry.
+        
+        Also checks that in Java, new NDArray(args) does not
+        allow bad args through.
         """
-        self.test.testSetAndGet()
+        #self.test.testSetAndGet()
+        expected = [
+                    "NDArray blocked bad type args\n",
+                    "NDArray blocked bad dimensions args\n",
+                    "NDArray get/set checked out OK\n"
+                    ]
+        from tests.jep_pipe import build_java_process_cmd
+        from tests.jep_pipe import jep_pipe
+        
+        index = 0
+        with jep_pipe(build_java_process_cmd('jep.test.numpy.TestNumpy')) as p:
+            for got_line in p:
+                self.assertEqual(got_line, expected[index])
+                index += 1
                 
     def testArgReturn(self):
         """

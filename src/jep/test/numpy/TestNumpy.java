@@ -1,6 +1,5 @@
 package jep.test.numpy;
 
-import java.io.File;
 import jep.Jep;
 import jep.JepException;
 import jep.NDArray;
@@ -13,63 +12,14 @@ import jep.NDArray;
  * Created: Wed Apr 08 2015
  * 
  * @author [ndjensen at gmail.com] Nate Jensen
- * @version $Id$
  */
 public class TestNumpy {
 
-    // set to a high number to test for memory leaks
-    private static final int REPEAT = 1; // 0000000;
-
-    private static boolean PRINT = true;
-    
     /**
-     * Calls testSetAndGet(Jep) on a separate thread to avoid threading
-     * issues.  Waits for those results before returning.
-     * @throws Throwable
-     */
-    public void testSetAndGet() throws Throwable
-    {
-        final Throwable[] t = new Throwable[1];
-        Thread thread = new Thread(new Runnable() {
-
-            @Override
-            public void run() {
-                Jep jep = null;
-                try {
-                    jep = new Jep(true);
-                                        
-                } catch (Throwable th) {
-                    t[0] = th;
-                } finally {
-                    if(jep != null) {
-                        jep.close();
-                    }
-                    synchronized (TestNumpy.this) {
-                        TestNumpy.this.notify();
-                    }
-                }
-            }
-        });
-        
-        synchronized (TestNumpy.this) {
-            thread.start();
-            try {
-                TestNumpy.this.wait();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        
-        if(t[0] != null) {
-            throw t[0];
-        }
-
-    }
-
-    /**
-     * Sets NDArrays in a Jep interpreter, then gets them and verifies
-     * the conversion in both directions is safe, ie produces a symmetrical
-     * object despite a different reference/instance.
+     * Sets NDArrays in a Jep interpreter, then gets them and verifies the
+     * conversion in both directions is safe, ie produces a symmetrical object
+     * despite a different reference/instance.
+     * 
      * @param jep
      * @throws JepException
      */
@@ -77,8 +27,8 @@ public class TestNumpy {
         int[] dimensions = new int[] { 4 };
 
         // test boolean[]
-        NDArray<boolean[]> zarray = new NDArray<boolean[]>(new boolean[] { true, false,
-                true, true }, dimensions);
+        NDArray<boolean[]> zarray = new NDArray<boolean[]>(new boolean[] {
+                true, false, true, true }, dimensions);
         jep.set("zarray", zarray);
         String z_dtype = (String) jep.getValue("zarray.dtype");
         if (!"bool".equals(z_dtype)) {
@@ -95,8 +45,8 @@ public class TestNumpy {
         }
 
         // test byte[]
-        NDArray<byte[]> barray = new NDArray<byte[]>(new byte[] { 0x10, 0x00, 0x54,
-                032 }, dimensions);
+        NDArray<byte[]> barray = new NDArray<byte[]>(new byte[] { 0x10, 0x00,
+                0x54, 032 }, dimensions);
         jep.set("barray", barray);
         String b_dtype = (String) jep.getValue("barray.dtype");
         if (!"int8".equals(b_dtype)) {
@@ -113,8 +63,8 @@ public class TestNumpy {
         }
 
         // test short[]
-        NDArray<short[]> sarray = new NDArray<short[]>(new short[] { 5, 3, 1, 8 },
-                dimensions);
+        NDArray<short[]> sarray = new NDArray<short[]>(
+                new short[] { 5, 3, 1, 8 }, dimensions);
         jep.set("sarray", sarray);
         String s_dtype = (String) jep.getValue("sarray.dtype");
         if (!"int16".equals(s_dtype)) {
@@ -131,8 +81,8 @@ public class TestNumpy {
         }
 
         // test int[]
-        NDArray<int[]> iarray = new NDArray<int[]>(
-                new int[] { 547, 232, -675, 101 }, dimensions);
+        NDArray<int[]> iarray = new NDArray<int[]>(new int[] { 547, 232, -675,
+                101 }, dimensions);
         jep.set("iarray", iarray);
         String i_dtype = (String) jep.getValue("iarray.dtype");
         if (!"int32".equals(i_dtype)) {
@@ -167,8 +117,8 @@ public class TestNumpy {
         }
 
         // test float[]
-        NDArray<float[]> farray = new NDArray<float[]>(new float[] { 4.32f, -0.0001f,
-                349.285f, 3201.0f }, dimensions);
+        NDArray<float[]> farray = new NDArray<float[]>(new float[] { 4.32f,
+                -0.0001f, 349.285f, 3201.0f }, dimensions);
         jep.set("farray", farray);
         String f_dtype = (String) jep.getValue("farray.dtype");
         if (!"float32".equals(f_dtype)) {
@@ -185,8 +135,8 @@ public class TestNumpy {
         }
 
         // test double[]
-        NDArray<double[]> darray = new NDArray<double[]>(new double[] { 0.44321,
-                0.00015, -9.34278, 235574.53 }, dimensions);
+        NDArray<double[]> darray = new NDArray<double[]>(new double[] {
+                0.44321, 0.00015, -9.34278, 235574.53 }, dimensions);
         jep.set("darray", darray);
         String d_dtype = (String) jep.getValue("darray.dtype");
         if (!"float64".equals(d_dtype)) {
@@ -202,14 +152,13 @@ public class TestNumpy {
                     "double[].hashCode() before != double[].hasCode() after");
         }
 
-        if (PRINT) {
-            System.out.println("NDArray get/set checked out OK");
-        }
+        System.out.println("NDArray get/set checked out OK");
     }
 
     /**
      * Called from python to verify that a Java method's return type of NDArray
      * can be auto-converted to a numpy ndarray.
+     * 
      * @param array
      * @return a copy of the data + 5
      */
@@ -223,43 +172,10 @@ public class TestNumpy {
         return new NDArray<int[]>(newData, array.getDimensions());
     }
 
-
-    /**
-     * Helper method to support running the main() method to run from Java
-     * instead of python
-     * @param jep
-     */
-    public void runFromJava(Jep jep) {
-        try {
-            jep.eval("import test_numpy");
-            jep.eval("v = test_numpy.TestNumpy('testArgReturn')");            
-            jep.eval("v.setUp()");            
-            for (int i = 0; i < REPEAT; i++) {
-                this.testSetAndGet(jep);
-            }
-            for (int i = 0; i < REPEAT; i++) {
-                jep.eval("v.testArgReturn()");
-            }
-            System.out.println("return NDArray from Java checked out ok");
-            for (int i = 0; i < REPEAT; i++) {
-                jep.eval("v.testMultiDimensional()");
-            }
-            System.out.println("multi dimensional arrays checked out ok");
-            for (int i = 0; i < REPEAT; i++) {
-                jep.eval("v.testArrayParams()");            
-            }
-            System.out.println("Passing ndarrays to Java method as Java primitive[] checked out ok");
-        } catch (JepException e) {
-            e.printStackTrace();
-        } finally {
-            if (jep != null)
-                jep.close();
-        }
-    }
-
     /**
      * Verifies a numpy.ndarray of bool can automatically convert to a method
      * arg of boolean[]
+     * 
      * @param array
      * @return true on success
      */
@@ -270,6 +186,7 @@ public class TestNumpy {
     /**
      * Verifies a numpy.ndarray of byte can automatically convert to a method
      * arg of byte[]
+     * 
      * @param array
      * @return true on success
      */
@@ -280,6 +197,7 @@ public class TestNumpy {
     /**
      * Verifies a numpy.ndarray of int16 can automatically convert to a method
      * arg of short[]
+     * 
      * @param array
      * @return true on success
      */
@@ -290,6 +208,7 @@ public class TestNumpy {
     /**
      * Verifies a numpy.ndarray of int32 can automatically convert to a method
      * arg of int[]
+     * 
      * @param array
      * @return true on success
      */
@@ -300,6 +219,7 @@ public class TestNumpy {
     /**
      * Verifies a numpy.ndarray of int64 can automatically convert to a method
      * arg of long[]
+     * 
      * @param array
      * @return true on success
      */
@@ -310,6 +230,7 @@ public class TestNumpy {
     /**
      * Verifies a numpy.ndarray of float32 can automatically convert to a method
      * arg of float[]
+     * 
      * @param array
      * @return true on success
      */
@@ -320,6 +241,7 @@ public class TestNumpy {
     /**
      * Verifies a numpy.ndarray of float64 can automatically convert to a method
      * arg of double[]
+     * 
      * @param array
      * @return true on success
      */
@@ -339,9 +261,7 @@ public class TestNumpy {
             throw new RuntimeException(
                     "NDArray should have failed instantiation");
         } catch (IllegalArgumentException e) {
-            if (PRINT) {
-                System.out.println("NDArray blocked bad type args");
-            }
+            System.out.println("NDArray blocked bad type args");
         }
 
         float[] d = new float[200];
@@ -351,27 +271,18 @@ public class TestNumpy {
             throw new RuntimeException(
                     "NDArray should have failed instantiation");
         } catch (IllegalArgumentException e) {
-            if (PRINT) {
-                System.out.println("NDArray blocked bad dimensions args");
-            }
+            System.out.println("NDArray blocked bad dimensions args");
         }
     }
 
-    /**
-     * This main() is for running the tests from Java. If running from the tests
-     * from python, use python setup.py test.
-     * 
-     * @param args
-     */
-    public static void main(String[] args) {        
-        File pwd = new File("tests");
+    public static void main(String[] args) {
         TestNumpy test = null;
         Jep jep = null;
         try {
             test = new TestNumpy();
-            jep = new Jep(false, pwd.getPath());
-            test.runFromJava(jep);
+            jep = new Jep(false, ".");
             test.testNDArraySafety();
+            test.testSetAndGet(jep);
         } catch (JepException e) {
             e.printStackTrace();
         } finally {

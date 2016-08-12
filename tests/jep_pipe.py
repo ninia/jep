@@ -56,3 +56,24 @@ def build_java_process_cmd(javaTestName):
     lib_path += System.getProperty("java.library.path")
     
     return ['java', '-cp', cp, lib_path, javaTestName]
+
+
+def build_python_process_cmd(pythonTestName):
+    """
+    Builds a list of args to provide to the jep_pipe method's call to
+    subprocess.Popen.  This will take care of setting up the Java classpath
+    and the -Djava.library.path variable necessary to run a Java main()
+    from the command line.  This method should be used in conjunction with
+    the jep.Run class and then running a Python file that uses Jep.
+    
+    Args:
+            pythonTestName: path to a Python file that is using Jep
+    
+    
+    Returns:
+            a list of values to be passed to jep_pipe (subprocess.Popen)
+    """
+    java_cmd = build_java_process_cmd('jep.Run')
+    java_cmd += [pythonTestName]
+    return java_cmd
+

@@ -28,3 +28,20 @@ def get_python_lib_dir():
 
     return sysconfig.get_config_var('LIBDIR')
 
+def get_libpython():
+    """
+    Searches for the Python library, e.g. libpython<version>.so.
+    Primarily used for setting up LD_PRELOAD.
+    """
+    lib_python = os.path.join(sysconfig.get_config_var('LIBDIR'),
+                              sysconfig.get_config_var('LDLIBRARY'))
+    if os.path.exists(lib_python):
+        return lib_python
+    else:
+        # x64 systems will tend to also have a MULTIARCH folder
+        lib_python = os.path.join(sysconfig.get_config_var('LIBDIR'),
+                                  sysconfig.get_config_var('MULTIARCH'),
+                                  sysconfig.get_config_var('LDLIBRARY'))
+        if os.path.exists(lib_python):
+            return lib_python
+

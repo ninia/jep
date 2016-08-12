@@ -1,7 +1,11 @@
+from __future__ import print_function
 from distutils.cmd import Command
-from distutils.spawn import spawn
-from commands.util import is_windows
+from distutils import sysconfig
 from commands.util import configure_error
+from commands.util import is_osx
+from commands.util import is_windows
+from commands.link_util import link_native_lib
+from commands.python import get_libpython
 import os
 
 class test(Command):
@@ -14,22 +18,44 @@ class test(Command):
 
     def initialize_options(self):
         self.build_base = 'build'
-        self.java_build = os.path.join('build', 'join')
+        self.java_build = os.path.join('build', 'java')
 
     def finalize_options(self):
         pass
 
     def run(self):
-        os.environ['CLASSPATH'] = 'build/java/jep.test-{0}.jar{1}tests/lib/sqlitejdbc-v056.jar'.format(self.distribution.metadata.get_version(), os.pathsep)
-        if is_windows():
-            # Use full path as spawn will only search the system PATH for *.exe on Windows
-            if 'VIRTUAL_ENV' in os.environ:
-                py_loc = os.environ['VIRTUAL_ENV']
-            else:
-                if 'PYTHONHOME' in os.environ:
-                    py_loc = os.environ['PYTHONHOME']
-                else:
-                    configure_error('Please set the environment variable PYTHONHOME for running the tests on Windows without a virtualenv.')
-            spawn(['{0}\Scripts\jep.bat'.format(py_loc), 'runtests.py'], search_path=0)
-        else:
-            spawn(['jep', 'runtests.py'])
+        if not os.path.isdir('build'):
+            self.warn('build dir does not exist, please build before test')
+            return
+        
+        # setup java classpath
+        version = self.distribution.metadata.get_version()
+        classpath = os.path.join(self.java_build, 'jep-' + version + '.jar')
+        classpath += os.pathsep + os.path.join(self.java_build, 'jep.test-' + version + '.jar')
+        classpath += os.pathsep + 'tests/lib/sqlitejdbc-v056.jar'
+        
+        # setup environment variables
+        environment = {}
+        if not is_osx() and not is_windows():
+            environment['LD_LIBRARY_PATH'] = sysconfig.get_config_var('LIBDIR')
+            
+            # set the LD_PRELOAD environment variable if we can locate the
+            # libpython<version>.so library.
+            lib_python = get_libpython()            
+            if lib_python:
+                environment['LD_PRELOAD'] = lib_python
+
+        # find the jep library and makes sure it's named correctly
+        build_ext = self.get_finalized_command('build_ext')
+        jep_lib = build_ext.get_outputs()[0]
+        built_dir = os.path.dirname(jep_lib)
+        link_native_lib(built_dir, jep_lib)
+
+        # actually kick off the tests
+        import subprocess
+        args = ['java',
+                '-classpath', '{0}'.format(classpath),
+                '-Djava.library.path={0}'.format(built_dir),
+                'jep.Run', 'tests/runtests.py']
+        p = subprocess.Popen(args, env=environment)
+        p.wait()

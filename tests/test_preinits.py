@@ -1,7 +1,7 @@
 import unittest
 import sys
-
-from .jep_pipe import build_java_process_cmd
+from tests.jep_pipe import jep_pipe
+from tests.jep_pipe import build_java_process_cmd
 
 class TestPreInits(unittest.TestCase):
     def setUp(self):
@@ -23,8 +23,7 @@ class TestPreInits(unittest.TestCase):
                     "Py_HashRandomizationFlag 1\n"
                     ]
         
-        index = 0
-        from .jep_pipe import jep_pipe
+        index = 0        
         with jep_pipe(build_java_process_cmd('jep.test.TestPreInitVariables')) as p:
             for got_line in p:
                 self.assertEqual(got_line, expected[index])
