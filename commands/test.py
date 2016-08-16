@@ -25,9 +25,8 @@ class test(Command):
         pass
 
     def run(self):
-        if not os.path.isdir('build'):
-            self.warn('build dir does not exist, please build before test')
-            return
+        # make sure we're testing the latest
+        self.run_command('build')
         
         # setup java classpath
         version = self.distribution.metadata.get_version()
