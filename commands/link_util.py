@@ -8,6 +8,7 @@ from distutils import sysconfig
 from distutils.spawn import spawn
 import os
 import os.path
+import shutil
 
 
 def link_native_lib(output_dir, jep_lib_path):
@@ -29,7 +30,7 @@ def link_native_lib(output_dir, jep_lib_path):
             os.remove(jep_dll)
         # Do not use 'spawn' as that will run as a non-administrative user
         # that may no longer have access to the destination directory.
-        self.move_file(os.path.join(output_dir, jep_lib), jep_dll)
+        shutil.copy(os.path.join(output_dir, jep_lib), jep_dll)
 
     elif is_osx():
         # Apple says to put the file at /Library/Java/Extensions/libjep.jnilib,

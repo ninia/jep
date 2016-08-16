@@ -40,6 +40,8 @@ static PyObject* initMethodName = NULL;
 
 PyObject* PyJConstructor_New(JNIEnv *env, jobject constructor)
 {
+    PyJMethodObject* pym = NULL;
+
     if (PyType_Ready(&PyJMethod_Type) < 0) {
         return NULL;
     }
@@ -50,7 +52,7 @@ PyObject* PyJConstructor_New(JNIEnv *env, jobject constructor)
         return NULL;
     }
 
-    PyJMethodObject* pym = PyObject_NEW(PyJMethodObject, &PyJConstructor_Type);
+    pym = PyObject_NEW(PyJMethodObject, &PyJConstructor_Type);
     pym->rmethod       = (*env)->NewGlobalRef(env, constructor);
     pym->parameters    = NULL;
     pym->lenParameters = 0;
