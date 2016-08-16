@@ -44,10 +44,8 @@ and/or run python --help from a command line.  *Contributed by Jeff Stein.*
 
 Improved efficiency
 ~~~~~~~~~~~~~~~~~~~
-* Jep now manages local references more efficiently, freeing up Java heap
-memory earlier for long running Python code.
-* Jep is more efficient when transforming Python ndarrays to/from Java
-NDArrays.
+* Jep now manages local references more efficiently, freeing up Java heap memory earlier for long running Python code.
+* Jep is more efficient when transforming Python ndarrays to/from Java NDArrays.
 
 
 Unsigned NDArray support
@@ -57,7 +55,7 @@ Java NDarrays.  *Contributed by Tim Verbelen.*
 
 
 Compatibility notes
-===================
+*******************
 
 Autoboxing primitives
 ~~~~~~~~~~~~~~~~~~~~~
