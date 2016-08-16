@@ -86,9 +86,7 @@ class TestLists(unittest.TestCase):
         jlist = makeJavaList()
         x = jlist + [1, 2, 3]
         self.assertIn('jep.PyJList', str(type(x)))
-        self.assertEqual(len(x), COUNT + 3)
-        with self.assertRaises(TypeError):
-            x += None
+        self.assertEqual(len(x), COUNT + 3)        
 
     def test_addequals(self):
         jlist = makeJavaList()
@@ -100,6 +98,8 @@ class TestLists(unittest.TestCase):
         jlist += toAdd
         pylist += toAdd
         self.assertSequenceEqual(jlist, pylist)
+        with self.assertRaises(TypeError):
+            x += None
 
     def test_multiply(self):
         jlist = makeJavaList()

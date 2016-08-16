@@ -42,10 +42,12 @@ python -B or python -E.  For more information, see the javadoc on PyConfig
 and/or run python --help from a command line.  *Contributed by Jeff Stein.*
 
 
-Improved Java memory efficiency
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Jep now manages local references more efficiently, freeing up Java heap
+Improved efficiency
+~~~~~~~~~~~~~~~~~~~
+* Jep now manages local references more efficiently, freeing up Java heap
 memory earlier for long running Python code.
+* Jep is more efficient when transforming Python ndarrays to/from Java
+NDArrays.
 
 
 Unsigned NDArray support
@@ -54,7 +56,23 @@ Jep now supports unsigned Python ndarrays transforming to/from unsigned
 Java NDarrays.  *Contributed by Tim Verbelen.*
 
 
-Other changes
-~~~~~~~~~~~~~
-* Jep is more efficient when transforming Python ndarrays to/from Java NDArrays.
+Compatibility notes
+===================
+
+Autoboxing primitives
+~~~~~~~~~~~~~~~~~~~~~
+Java boxed types such as Byte, Character, Short, Integer, Long, Float, and
+Double are now autoboxed to Python primitives in the interpreter.  Therefore,
+as stated in an example above, calling a Java method from Python that returns
+a java.langInteger will now autobox the Integer to a Python int.  Calling
+.intValue() on that Python int will fail as there is no intValue() attr on the
+primitive.  In this example, there is no longer a need to call .intValue() as
+the type has already been converted.  This applies to all Java boxed types.
+
+
+PyJList += operator
+~~~~~~~~~~~~~~~~~~~
+The PyJList += operator no longer supports adding a single value/object
+to the list.  This makes PyJList behave more like a Python list, where
+in *list += obj*, obj must be iterable.
 
