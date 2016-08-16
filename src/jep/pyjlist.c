@@ -34,7 +34,6 @@ jmethodID listAddAll       = 0;
 jmethodID listGet          = 0;
 jmethodID listSubList      = 0;
 jmethodID listSet          = 0;
-jmethodID listAdd          = 0;
 jmethodID listClear        = 0;
 jmethodID listRemove       = 0;
 
@@ -71,7 +70,7 @@ PyObject* pyjlist_new_copy(PyObject *toCopy)
 
 
     if (!pyjlist_check(toCopy)) {
-        PyErr_Format(PyExc_RuntimeError, "pyjlist_new_copy() must receive a pyjlist");
+        PyErr_Format(PyExc_RuntimeError, "pyjlist_new_copy() must receive a PyJList");
         return NULL;
     }
 
@@ -304,7 +303,7 @@ static int pyjlist_setslice(PyObject *o, Py_ssize_t i1, Py_ssize_t i2,
 
     if (!PySequence_Check(v)) {
         PyErr_Format(PyExc_TypeError,
-                     "pyjlist can only slice assign a sequence");
+                     "PyJList can only slice assign a sequence");
         return -1;
     }
 
@@ -330,7 +329,7 @@ static int pyjlist_setslice(PyObject *o, Py_ssize_t i1, Py_ssize_t i2,
          * list_ass_slice().
          */
         PyErr_Format(PyExc_IndexError,
-                     "pyjlist only supports assigning a sequence of the same size as the slice, slice = [%i:%i], value size=%i",
+                     "PyJList only supports assigning a sequence of the same size as the slice, slice = [%i:%i], value size=%i",
                      (int) i1, (int) i2, (int) vSize);
         return -1;
     }
@@ -372,12 +371,21 @@ static PyObject* pyjlist_inplace_add(PyObject *o1, PyObject *o2)
         return NULL;
     }
 
-    value = PyObject_As_jobject(env, o2, JOBJECT_TYPE);
+    /*
+     * TODO: To match Python behavior of += operator, we should really be
+     * using JITERABLE_TYPE and ensuring its an instance of Iterable, not
+     * Collection.
+     */
+    value = PyObject_As_jobject(env, o2, JCOLLECTION_TYPE);
     if (!value && PyErr_Occurred()) {
         return NULL;
     }
 
-    if ((*env)->IsInstanceOf(env, value, JCOLLECTION_TYPE)) {
+    if(!value) {
+       PyErr_Format(PyExc_TypeError, "Expected java.util.Collection but received null.");
+       return NULL;
+    }
+
         /*
          * it's a Collection so we need to simulate a python + and combine the
          * two collections
@@ -392,18 +400,6 @@ static PyObject* pyjlist_inplace_add(PyObject *o1, PyObject *o2)
         if (process_java_exception(env)) {
             goto FINALLY;
         }
-    } else {
-        // not a collection, add it as a single object
-        if (!JNI_METHOD(listAdd, env, JLIST_TYPE, "add", "(Ljava/lang/Object;)Z")) {
-            process_java_exception(env);
-            goto FINALLY;
-        }
-
-        (*env)->CallBooleanMethod(env, self->object, listAdd, value);
-        if (process_java_exception(env)) {
-            goto FINALLY;
-        }
-    }
 
     result = o1;
     Py_INCREF(o1);

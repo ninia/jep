@@ -47,8 +47,8 @@ static jmethodID arraylistAdd          = 0;
 static jmethodID unmodifiableList      = 0;
 
 /*
- * When there is no way to convert a pyobject of a specific expected java type
- * then a python TypeError is raised. This function is used to make a pretty
+ * When there is no way to convert a PyObject of a specific expected Java type
+ * then a Python TypeError is raised. This function is used to make a pretty
  * error message.
  */
 static void raiseTypeError(JNIEnv *env, PyObject *pyobject, jclass expectedType)
@@ -95,7 +95,7 @@ jbyte PyObject_As_jbyte(PyObject *pyobject)
     }
     i = PyLong_AsLong(pyindex);
     Py_DECREF(pyindex);
-    /* No need to check for error, just propogate the -1, */
+    /* No need to check for error, just propagate the -1, */
     if (i < JBYTE_MIN || i > JBYTE_MAX) {
         PyErr_Format(PyExc_OverflowError, "%ld is outside the valid range "
                      "of a Java byte.", i);
@@ -114,7 +114,7 @@ jshort PyObject_As_jshort(PyObject *pyobject)
     }
     i = PyLong_AsLong(pyindex);
     Py_DECREF(pyindex);
-    /* No need to check for error, just propogate the -1. */
+    /* No need to check for error, just propagate the -1. */
     if (i < JSHORT_MIN || i > JSHORT_MAX) {
         PyErr_Format(PyExc_OverflowError, "%ld is outside the valid range "
                      "of a Java short.", i);
@@ -133,7 +133,7 @@ jint PyObject_As_jint(PyObject *pyobject)
     }
     i = PyLong_AsLong(pyindex);
     Py_DECREF(pyindex);
-    /* No need to check for error, just propogate the -1. */
+    /* No need to check for error, just propagate the -1. */
     if (i < JINT_MIN || i > JINT_MAX) {
         PyErr_Format(PyExc_OverflowError, "%ld is outside the valid range "
                      "of a Java int.", i);
@@ -152,10 +152,10 @@ jlong PyObject_As_jlong(PyObject *pyobject)
     }
     i = PyLong_AsLongLong(pyindex);
     Py_DECREF(pyindex);
-    /* No need to check for error, just propogate the -1. */
+    /* No need to check for error, just propagate the -1. */
     if (i < JLONG_MIN || i > JLONG_MAX) {
         PyErr_Format(PyExc_OverflowError, "%lld is outside the valid range "
-                     "of a Java short.", i);
+                     "of a Java long.", i);
         return -1;
     }
     return (jlong) i;
