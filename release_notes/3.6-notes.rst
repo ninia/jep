@@ -29,12 +29,8 @@ versions). Also Java methods which return boxed types will now return the
 Python equivalent instead. This autoboxing is not limited to just methods, the
 same types of conversions will occur for constructors, arrays, and fields. The
 new behavior is intended to make Jep imitate the autoboxing performed by the
-Java compiler. This change might break Python written for older versions of Jep
-if it is calling methods on the boxed types that are no longer returned from
-Java methods. For example, calling a Java method from Python that returns an
-Integer and then calling intValue() to convert it to a primitive int will no
-longer work. In this case the Integer is automatically converted to an int so
-the call to intValue() is no longer necessary and can simply be removed.
+Java compiler. This change might break Python code written for older versions
+of Jep, please see the Compatibility notes below.
 
 
 Python initialization variables
@@ -63,13 +59,14 @@ Compatibility notes
 
 Autoboxing primitives
 ~~~~~~~~~~~~~~~~~~~~~
-Java boxed types such as Byte, Character, Short, Integer, Long, Float, and
-Double are now autoboxed to Python primitives in the interpreter.  As stated
-in an example above, calling a Java method from Python that returns a
-java.lang.Integer will now autobox the Integer to a Python int.  Calling
-.intValue() on that Python int will fail as there is no intValue() attr on the
-primitive.  In this example, there is no longer a need to call .intValue() as
-the type has already been converted.  This applies to all Java boxed types.
+Java boxed types such as Byte, Boolean Character, Short, Integer, Long, Float,
+and Double are now autoboxed to Python primitives in the interpreter as stated
+above.  This may break compatibility with applications using previous versions
+of Jep.  For example, calling a Java method from Python that returns an
+Integer and then calling intValue() to convert it to a primitive int will no
+longer work.  In this case the Integer is automatically converted to an int so
+the call to intValue() is no longer necessary and can simply be removed.  This
+applies to all Java boxed types.
 
 
 PyJList += operator
