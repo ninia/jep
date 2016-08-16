@@ -4,9 +4,13 @@ This release emphasized consistency and new features.  It is compatible
 with Python 2.6, 2.7, 3.2, 3.3, 3.4, and 3.5.
 
 
-FreeBSD support
-~~~~~~~~~~~~~~~
-Jep can now be built on FreeBSD.
+Faster, better build
+~~~~~~~~~~~~~~~~~~~~
+The build command will now only rebuild the Java jars if it detects changes.
+Furthermore, in previous versions of Jep, a developer had to run
+*python setup.py install* before running *python setup.py test*.  Jep now
+runs the unit tests from the libraries in the build directory, enabling
+testing without installing.  Jep can also now be built on FreeBSD.
 
 
 Improved method choosing
@@ -45,7 +49,7 @@ and/or run python --help from a command line.  *Contributed by Jeff Stein.*
 Improved efficiency
 ~~~~~~~~~~~~~~~~~~~
 * Jep now manages local references more efficiently, freeing up Java heap memory earlier for long running Python code.
-* Jep is more efficient when transforming Python ndarrays to/from Java NDArrays.
+* Jep is now more efficient when transforming Python ndarrays to/from Java NDArrays.
 
 
 Unsigned NDArray support
@@ -60,9 +64,9 @@ Compatibility notes
 Autoboxing primitives
 ~~~~~~~~~~~~~~~~~~~~~
 Java boxed types such as Byte, Character, Short, Integer, Long, Float, and
-Double are now autoboxed to Python primitives in the interpreter.  Therefore,
-as stated in an example above, calling a Java method from Python that returns
-a java.langInteger will now autobox the Integer to a Python int.  Calling
+Double are now autoboxed to Python primitives in the interpreter.  As stated
+in an example above, calling a Java method from Python that returns a
+java.lang.Integer will now autobox the Integer to a Python int.  Calling
 .intValue() on that Python int will fail as there is no intValue() attr on the
 primitive.  In this example, there is no longer a need to call .intValue() as
 the type has already been converted.  This applies to all Java boxed types.
