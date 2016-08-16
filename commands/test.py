@@ -7,6 +7,7 @@ from commands.util import is_windows
 from commands.link_util import link_native_lib
 from commands.python import get_libpython
 import os
+import sys
 
 class test(Command):
     description = "test build"
@@ -44,6 +45,12 @@ class test(Command):
             lib_python = get_libpython()            
             if lib_python:
                 environment['LD_PRELOAD'] = lib_python
+       
+        # if multiple versions of python are installed, this helps ensure the right
+        # version is used 
+        executable = sys.executable
+        if executable:
+            environment['PATH'] = os.path.dirname(executable) + os.pathsep + os.environ['PATH'] 
 
         # find the jep library and makes sure it's named correctly
         build_ext = self.get_finalized_command('build_ext')
