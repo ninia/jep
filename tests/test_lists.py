@@ -99,7 +99,7 @@ class TestLists(unittest.TestCase):
         pylist += toAdd
         self.assertSequenceEqual(jlist, pylist)
         with self.assertRaises(TypeError):
-            x += None
+            jlist += None
 
     def test_multiply(self):
         jlist = makeJavaList()
