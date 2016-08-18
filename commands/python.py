@@ -1,6 +1,9 @@
 from distutils import sysconfig
-from commands.util import is_osx, is_windows, is_bsd
+from commands.util import is_osx
+from commands.util import is_windows
+from commands.util import is_bsd
 import os
+
 
 def get_python_libs():
     """
@@ -17,16 +20,19 @@ def get_python_libs():
         libs.append('dl')
     return libs
 
+
 def get_python_linker_args():
     if is_windows():
         return []
     return ['-L{0}'.format(sysconfig.get_config_var('LIBDIR'))]
+
 
 def get_python_lib_dir():
     if is_windows():
         return os.path.join(os.environ.get('PYTHONHOME'), 'DLLs')
 
     return sysconfig.get_config_var('LIBDIR')
+
 
 def get_libpython():
     """
@@ -44,4 +50,3 @@ def get_libpython():
                                   sysconfig.get_config_var('LDLIBRARY'))
         if os.path.exists(lib_python):
             return lib_python
-

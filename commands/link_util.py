@@ -15,7 +15,7 @@ def link_native_lib(output_dir, jep_lib_path):
     """
     Links or moves the native jep library (jep.so, jep.dll) to where it
     can be found by Java.
-    
+
     Args:
             output_dir: the directory the linked/moved file should be in
                         should match the value passed as -Djava.library.path
@@ -39,7 +39,7 @@ def link_native_lib(output_dir, jep_lib_path):
         spawn(['ln',
                '-sf',
                '{0}'.format(jep_lib),
-               '{0}'.format(os.path.join(output_dir, 'libjep.jnilib')),])
+               '{0}'.format(os.path.join(output_dir, 'libjep.jnilib')), ])
 
     else:
         # Otherwise, distutils outputs 'jep.so' which needs to be linked

@@ -22,6 +22,7 @@ def is_osx():
 def is_windows():
     return 'win' in get_platform()
 
+
 def is_bsd():
     return 'bsd' in get_platform()
 
@@ -37,6 +38,7 @@ class CommandError(CommandFailed):
     """
     The command returned an exit code
     """
+
     def __init__(self, message, result):
         self.result = result
         super(CommandError, self).__init__(message)
@@ -81,7 +83,8 @@ def shell(command, capture=True):
 
     try:
         cmd_arg = command if is_windows() else [command]
-        p = subprocess.Popen(cmd_arg, shell=True, stdout=out_stream, stderr=err_stream)
+        p = subprocess.Popen(cmd_arg, shell=True,
+                             stdout=out_stream, stderr=err_stream)
         stdout, stderr = p.communicate()
     except Exception:
         e = CommandFailed('command failed', sys.exc_info()[1])
@@ -96,7 +99,8 @@ def shell(command, capture=True):
     result = CommandResult(out, err, p.returncode, failed)
 
     if result.failed:
-        msg = "Encountered an error (return code %s) while executing '%s'" % (p.returncode, command)
+        msg = "Encountered an error (return code %s) while executing '%s'" % (
+            p.returncode, command)
         raise CommandError(message=msg, result=result)
 
     return result
