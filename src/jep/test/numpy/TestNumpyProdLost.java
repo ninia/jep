@@ -5,7 +5,7 @@ import jep.Jep;
 /**
  * Tests closing a sub-interpreter with numpy and then trying to use a new
  * sub-interpreter with numpy. Illustrates a problem where the reference to the
- * any() method is lost.
+ * prod() method is lost.
  * 
  * This does NOT make use of the shared modules feature.
  * 
@@ -13,25 +13,27 @@ import jep.Jep;
  * 
  * @author Ben Steffensmeier
  */
-public class TestNumpyAnyLost {
+public class TestNumpyProdLost {
 
     public static void main(String[] args) {
         Jep jep = null;
         try {
             jep = new Jep(false, ".");
             jep.eval("import numpy");
-            jep.eval("numpy.ndarray([1]).any()");
+            jep.eval("numpy.ndarray([1]).prod()");
             jep.close();
 
             jep = new Jep(false, ".");
             jep.eval("import numpy");
 
             // this line will fail and throw an exception
-            jep.eval("numpy.ndarray([1]).any()");
+            jep.eval("numpy.ndarray([1]).prod()");
             jep.close();
         } catch (Throwable e) {
-            // we expected a failure, verify it
-            assert e.getMessage().contains("'NoneType' object is not callable");
+            /*
+             * we expected a failure, usually it is 'NoneType' object is not
+             * callable
+             */
             jep.close();
             System.exit(0);
         } finally {
@@ -39,7 +41,7 @@ public class TestNumpyAnyLost {
                 jep.close();
             }
         }
-        System.err.println("numpy mysteriously worked");
+        System.err.println("numpy mysteriously worked with sub-interpreters");
         System.exit(1);
     }
 

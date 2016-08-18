@@ -12,7 +12,6 @@ import jep.JepException;
  * Created: October 2015
  * 
  * @author Ben Steffensmeier
- * @version $Id$
  */
 public class TestNumpyArrayToString {
 
@@ -20,7 +19,8 @@ public class TestNumpyArrayToString {
         Jep jep0 = null;
 
         try {
-            jep0 = new Jep(new JepConfig().addSharedModule("numpy"));
+            jep0 = new Jep(new JepConfig().addIncludePaths(".")
+                    .addSharedModule("numpy"));
             jep0.eval("import numpy");
 
             Thread t = new Thread() {
@@ -28,10 +28,13 @@ public class TestNumpyArrayToString {
                 public void run() {
                     Jep jep1 = null;
                     try {
-                        jep1 = new Jep(new JepConfig().addSharedModule("numpy"));
+                        jep1 = new Jep(new JepConfig().addIncludePaths(".")
+                                .addSharedModule("numpy"));
                         jep1.eval("import numpy");
                     } catch (JepException e) {
                         e.printStackTrace();
+                        jep1.close();
+                        System.exit(1);
                     } finally {
                         if (jep1 != null) {
                             jep1.close();
@@ -44,14 +47,17 @@ public class TestNumpyArrayToString {
             // wait for the other thread to finish and close
             t.join();
 
-            // this line will fail and throw an exception
+            // this line no longer fails due to the usage of shared modules
             jep0.eval("str(numpy.ndarray([1]))");
         } catch (JepException e) {
             e.printStackTrace();
+            jep0.close();
+            System.exit(1);
         } finally {
             if (jep0 != null) {
                 jep0.close();
             }
         }
+        System.exit(0);
     }
 }

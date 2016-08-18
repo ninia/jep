@@ -8,15 +8,20 @@ class TestSharedModules(unittest.TestCase):
         pass
 
     @unittest.skipIf(sys.platform.startswith("win"), "subprocess complications on Windows")
-    def test_numpy_any_fails(self):
-        jep_pipe(build_java_process_cmd('jep.test.numpy.TestNumpyAnyLost'))
+    def test_numpy_prod_fails(self):
+        jep_pipe(build_java_process_cmd('jep.test.numpy.TestNumpyProdLost'))
 
 
     @unittest.skipIf(sys.platform.startswith("win"), "subprocess complications on Windows")
-    def test_numpy_any_ordering(self):
-        jep_pipe(build_java_process_cmd('jep.test.numpy.TestNumpyAnyOrdering'))
+    def test_numpy_prod_ordering(self):
+        jep_pipe(build_java_process_cmd('jep.test.numpy.TestNumpyProdOrdering'))
 
 
     @unittest.skipIf(sys.platform.startswith("win"), "subprocess complications on Windows")
-    def test_numpy_any_succeeds(self):
-        jep_pipe(build_java_process_cmd('jep.test.numpy.TestNumpyAnyShared'))
+    def test_numpy_prod_succeeds(self):
+        jep_pipe(build_java_process_cmd('jep.test.numpy.TestNumpyProdShared'))
+
+
+    @unittest.skipIf(sys.platform.startswith("win"), "subprocess complications on Windows")
+    def test_numpy_array_to_string(self):
+        jep_pipe(build_java_process_cmd('jep.test.numpy.TestNumpyArrayToString'))

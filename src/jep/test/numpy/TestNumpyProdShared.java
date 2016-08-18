@@ -13,7 +13,7 @@ import jep.JepConfig;
  * 
  * @author Nate Jensen
  */
-public class TestNumpyAnyShared {
+public class TestNumpyProdShared {
 
     private static final int N_JEPS = 1;
 
@@ -24,7 +24,7 @@ public class TestNumpyAnyShared {
                     .addSharedModule("numpy");
             jep = new Jep(config);
             jep.eval("import numpy");
-            jep.eval("numpy.ndarray([1]).any()");
+            jep.eval("numpy.ndarray([1]).prod()");
             jep.close();
 
             for (int i = 0; i < N_JEPS; i++) {
@@ -35,7 +35,7 @@ public class TestNumpyAnyShared {
                  * this line no longer fails because numpy was shared the first
                  * time
                  */
-                jep.eval("numpy.ndarray([1]).any()");
+                jep.eval("numpy.ndarray([1]).prod()");
                 jep.close();
             }
         } catch (Throwable e) {

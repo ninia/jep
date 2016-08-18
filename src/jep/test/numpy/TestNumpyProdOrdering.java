@@ -6,7 +6,7 @@ import jep.JepConfig;
 /**
  * Tests closing a sub-interpreter with numpy and then trying to use a new
  * sub-interpreter with numpy. Illustrates a problem where the reference to the
- * any() method is lost, even if shared modules are used.
+ * prod() method is lost, even if shared modules are used.
  * 
  * The shared modules feature is used AFTER numpy has already lost some
  * references, hence the problem.
@@ -15,14 +15,14 @@ import jep.JepConfig;
  * 
  * @author Nate Jensen
  */
-public class TestNumpyAnyOrdering {
+public class TestNumpyProdOrdering {
 
     public static void main(String[] args) {
         Jep jep = null;
         try {
             jep = new Jep(false, ".");
             jep.eval("import numpy");
-            jep.eval("numpy.ndarray([1]).any()");
+            jep.eval("numpy.ndarray([1]).prod()");
             jep.close();
 
             JepConfig config = new JepConfig().addIncludePaths(".")
@@ -34,17 +34,21 @@ public class TestNumpyAnyOrdering {
              * this line fails because we already closed a Jep with numpy before
              * we made numpy a shared module
              */
-            jep.eval("numpy.ndarray([1]).any()");
+            jep.eval("numpy.ndarray([1]).prod()");
             jep.close();
         } catch (Throwable e) {
-            e.printStackTrace();
+            /*
+             * we expected a failure, usually it is 'NoneType' object is not
+             * callable
+             */
             jep.close();
-            System.exit(1);
+            System.exit(0);
         } finally {
             if (jep != null) {
                 jep.close();
             }
         }
-        System.exit(0);
+        System.err.println("numpy mysteriously worked with sub-interpreters");
+        System.exit(1);
     }
 }
