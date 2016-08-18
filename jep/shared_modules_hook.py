@@ -8,7 +8,7 @@
 # methods in static variables in C. Many of these variables are set up during
 # during the initial numpy import. The most obvious problem with this is that
 # there can only be one cached version of the method and there can be multiple
-# instances of the numpy module, one in each sub-interpreter. This means 
+# instances of the numpy module, one in each sub-interpreter. This means
 # invoking methods from numpy in one sub-interpreter might actually be using
 # methods defined in another sub-interpreter. To make things even more
 # interesting, some methods are not cached during the intitial import but are
@@ -22,10 +22,10 @@
 # cached in static variables in C is disposed. The methods themselves are not
 # affected, since the refcount reflects that they are still in use but almost
 # all of the cached methods are part of a module and they will use variables
-# defined at the module level (such as import statements at the top of the 
+# defined at the module level (such as import statements at the top of the
 # file). When a sub-interpreter is closed Python cleans up modules by setting
 # all the module variables to null so when the cached method attempts to use
-# module level variables then errors will occur. For example if the cached 
+# module level variables then errors will occur. For example if the cached
 # method calls another method defined in the module it will result in the
 # infamous 'NoneType is not callable'. To solve this problem, a variety of
 # solutions were considered, each with their own strengths and weaknesses.
@@ -73,7 +73,9 @@
 
 import sys
 
+
 class JepSharedModuleImporter(object):
+
     def __init__(self, moduleList, sharedImporter):
         self.moduleList = moduleList
         self.sharedImporter = sharedImporter
@@ -83,8 +85,9 @@ class JepSharedModuleImporter(object):
             # https://docs.python.org/2/library/threading.html#threaded-imports
             from _jep import topInterpreterModules
             for module in moduleList:
-               if module not in topInterpreterModules:
-                   self.sharedImporter.sharedImport(module)
+                if module not in topInterpreterModules:
+                    self.sharedImporter.sharedImport(module)
+
     def find_module(self, fullname, path=None):
         if fullname in self.moduleList:
             return self
@@ -111,11 +114,13 @@ class JepSharedModuleImporter(object):
                 if key == moduleName or key.startswith(moduleName + "."):
                     del sys.modules[key]
 
+
 def setupImporter(moduleList, sharedImporter):
     for importer in sys.meta_path:
         if isinstance(importer, JepSharedModuleImporter):
             return
     sys.meta_path.append(JepSharedModuleImporter(moduleList, sharedImporter))
+
 
 def teardownImporter():
     for importer in sys.meta_path:

@@ -22,7 +22,8 @@ class module(ModuleType):
             subpkgs = self.__classEnquirer__.getSubPackages(self.__name__)
             if subpkgs and name in subpkgs:
                 fullname = self.__name__ + '.' + name
-                mod = makeModule(fullname, self.__loader__, self.__classEnquirer__)
+                mod = makeModule(fullname, self.__loader__,
+                                 self.__classEnquirer__)
                 return mod
             elif name == '__all__':
                 return self.__dir__()
@@ -53,12 +54,13 @@ def makeModule(fullname, loader, classEnquirer):
         '__file__': '<java>',
         '__package__': None,
         '__classEnquirer__': classEnquirer,
-        })
+    })
     sys.modules[fullname] = mod
     return mod
 
 
 class JepJavaImporter(object):
+
     def __init__(self, classEnquirer=None):
         if classEnquirer:
             self.classEnquirer = classEnquirer
