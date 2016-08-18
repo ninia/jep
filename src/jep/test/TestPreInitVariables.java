@@ -1,7 +1,6 @@
 package jep.test;
 
 import jep.Jep;
-import jep.JepException;
 import jep.PyConfig;
 
 /**
@@ -16,7 +15,7 @@ import jep.PyConfig;
  * explicitly trust sys.flags, e.g. verify that when setting
  * Py_DontWriteBytecodeFlag that a .pyc or .pyo is not actually written out.
  * 
- * @author [ndjensen at gmail.com] Nate Jensen
+ * @author Nate Jensen
  */
 public class TestPreInitVariables {
 
@@ -35,15 +34,23 @@ public class TestPreInitVariables {
         try {
             Jep.setInitParams(pyConfig);
             jep = new Jep(false, ".");
-            jep.runScript("tests/subprocess/py_preinit.py");
-        } catch (JepException e) {
+            jep.eval("import sys");
+            assert 1 == (Integer) jep.getValue("sys.flags.ignore_environment");
+            assert 0 == (Integer) jep.getValue("sys.flags.no_site");
+            assert 1 == (Integer) jep.getValue("sys.flags.no_user_site");
+            assert 0 == (Integer) jep.getValue("sys.flags.verbose");
+            assert 1 == (Integer) jep.getValue("sys.flags.optimize");
+            assert 1 == (Integer) jep.getValue("sys.flags.dont_write_bytecode");
+            assert 1 == (Integer) jep.getValue("sys.flags.hash_randomization");
+        } catch (Throwable e) {
             e.printStackTrace();
+            System.exit(1);
         } finally {
             if (jep != null) {
                 jep.close();
             }
         }
-
+        System.exit(0);
     }
 
 }

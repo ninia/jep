@@ -9,9 +9,9 @@ import jep.NDArray;
  * are working correctly.
  * 
  * 
- * Created: Wed Apr 08 2015
+ * Created: April 2015
  * 
- * @author [ndjensen at gmail.com] Nate Jensen
+ * @author Nate Jensen
  */
 public class TestNumpy {
 
@@ -32,15 +32,15 @@ public class TestNumpy {
         jep.set("zarray", zarray);
         String z_dtype = (String) jep.getValue("zarray.dtype");
         if (!"bool".equals(z_dtype)) {
-            throw new RuntimeException("boolean ndarray set failed, dtype = "
+            throw new AssertionError("boolean ndarray set failed, dtype = "
                     + z_dtype);
         }
         NDArray<?> retZ = (NDArray<?>) jep.getValue("zarray");
         if (!zarray.equals(retZ)) {
-            throw new RuntimeException("boolean[] before != boolean[] after");
+            throw new AssertionError("boolean[] before != boolean[] after");
         }
         if (zarray.hashCode() != retZ.hashCode()) {
-            throw new RuntimeException(
+            throw new AssertionError(
                     "boolean[].hashCode() before != boolean[].hasCode() after");
         }
 
@@ -50,15 +50,15 @@ public class TestNumpy {
         jep.set("barray", barray);
         String b_dtype = (String) jep.getValue("barray.dtype");
         if (!"int8".equals(b_dtype)) {
-            throw new RuntimeException("byte ndarray set failed, dtype = "
+            throw new AssertionError("byte ndarray set failed, dtype = "
                     + b_dtype);
         }
         NDArray<?> retB = (NDArray<?>) jep.getValue("barray");
         if (!barray.equals(retB)) {
-            throw new RuntimeException("byte[] before != byte[] after");
+            throw new AssertionError("byte[] before != byte[] after");
         }
         if (barray.hashCode() != retB.hashCode()) {
-            throw new RuntimeException(
+            throw new AssertionError(
                     "byte[].hashCode() before != byte[].hasCode() after");
         }
 
@@ -68,15 +68,15 @@ public class TestNumpy {
         jep.set("sarray", sarray);
         String s_dtype = (String) jep.getValue("sarray.dtype");
         if (!"int16".equals(s_dtype)) {
-            throw new RuntimeException("short ndarray set failed, dtype = "
+            throw new AssertionError("short ndarray set failed, dtype = "
                     + s_dtype);
         }
         NDArray<?> retS = (NDArray<?>) jep.getValue("sarray");
         if (!sarray.equals(retS)) {
-            throw new RuntimeException("short[] before != short[] after");
+            throw new AssertionError("short[] before != short[] after");
         }
         if (sarray.hashCode() != retS.hashCode()) {
-            throw new RuntimeException(
+            throw new AssertionError(
                     "short[].hashCode() before != short[].hasCode() after");
         }
 
@@ -86,15 +86,15 @@ public class TestNumpy {
         jep.set("iarray", iarray);
         String i_dtype = (String) jep.getValue("iarray.dtype");
         if (!"int32".equals(i_dtype)) {
-            throw new RuntimeException("int ndarray set failed, dtype = "
+            throw new AssertionError("int ndarray set failed, dtype = "
                     + i_dtype);
         }
         NDArray<?> retI = (NDArray<?>) jep.getValue("iarray");
         if (!iarray.equals(retI)) {
-            throw new RuntimeException("int[] before != int[] after");
+            throw new AssertionError("int[] before != int[] after");
         }
         if (iarray.hashCode() != retI.hashCode()) {
-            throw new RuntimeException(
+            throw new AssertionError(
                     "int[].hashCode() before != int[].hasCode() after");
         }
 
@@ -104,15 +104,15 @@ public class TestNumpy {
         jep.set("larray", larray);
         String l_dtype = (String) jep.getValue("larray.dtype");
         if (!"int64".equals(l_dtype)) {
-            throw new RuntimeException("long ndarray set failed, dtype = "
+            throw new AssertionError("long ndarray set failed, dtype = "
                     + l_dtype);
         }
         NDArray<?> retL = (NDArray<?>) jep.getValue("larray");
         if (!larray.equals(retL)) {
-            throw new RuntimeException("long[] before != long[] after");
+            throw new AssertionError("long[] before != long[] after");
         }
         if (larray.hashCode() != retL.hashCode()) {
-            throw new RuntimeException(
+            throw new AssertionError(
                     "long[].hashCode() before != long[].hasCode() after");
         }
 
@@ -122,15 +122,15 @@ public class TestNumpy {
         jep.set("farray", farray);
         String f_dtype = (String) jep.getValue("farray.dtype");
         if (!"float32".equals(f_dtype)) {
-            throw new RuntimeException("float ndarray set failed, dtype = "
+            throw new AssertionError("float ndarray set failed, dtype = "
                     + f_dtype);
         }
         NDArray<?> retF = (NDArray<?>) jep.getValue("farray");
         if (!farray.equals(retF)) {
-            throw new RuntimeException("float[] before != float[] after");
+            throw new AssertionError("float[] before != float[] after");
         }
         if (farray.hashCode() != retF.hashCode()) {
-            throw new RuntimeException(
+            throw new AssertionError(
                     "float[].hashCode() before != float[].hasCode() after");
         }
 
@@ -140,19 +140,19 @@ public class TestNumpy {
         jep.set("darray", darray);
         String d_dtype = (String) jep.getValue("darray.dtype");
         if (!"float64".equals(d_dtype)) {
-            throw new RuntimeException("double ndarray set failed, dtype = "
+            throw new AssertionError("double ndarray set failed, dtype = "
                     + d_dtype);
         }
         NDArray<?> retD = (NDArray<?>) jep.getValue("darray");
         if (!darray.equals(retD)) {
-            throw new RuntimeException("double[] before != double[] after");
+            throw new AssertionError("double[] before != double[] after");
         }
         if (darray.hashCode() != retD.hashCode()) {
-            throw new RuntimeException(
+            throw new AssertionError(
                     "double[].hashCode() before != double[].hasCode() after");
         }
 
-        System.out.println("NDArray get/set checked out OK");
+        // System.out.println("NDArray get/set checked out OK");
     }
 
     /**
@@ -258,20 +258,20 @@ public class TestNumpy {
         try {
             NDArray<float[][]> ndarray = new NDArray<float[][]>(f, dims);
             ndarray.getDimensions();
-            throw new RuntimeException(
-                    "NDArray should have failed instantiation");
+            throw new AssertionError("NDArray should have failed instantiation");
         } catch (IllegalArgumentException e) {
-            System.out.println("NDArray blocked bad type args");
+            assert e.getLocalizedMessage() != null;
+            // System.out.println("NDArray blocked bad type args");
         }
 
         float[] d = new float[200];
         try {
             NDArray<float[]> ndarray = new NDArray<float[]>(d, dims);
             ndarray.getDimensions();
-            throw new RuntimeException(
-                    "NDArray should have failed instantiation");
+            throw new AssertionError("NDArray should have failed instantiation");
         } catch (IllegalArgumentException e) {
-            System.out.println("NDArray blocked bad dimensions args");
+            assert e.getLocalizedMessage() != null;
+            // System.out.println("NDArray blocked bad dimensions args");
         }
     }
 
@@ -283,13 +283,15 @@ public class TestNumpy {
             jep = new Jep(false, ".");
             test.testNDArraySafety();
             test.testSetAndGet(jep);
-        } catch (JepException e) {
+        } catch (Throwable e) {
             e.printStackTrace();
+            System.exit(1);
         } finally {
             if (jep != null) {
                 jep.close();
             }
         }
+        System.exit(0);
     }
 
 }

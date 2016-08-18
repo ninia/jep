@@ -1,4 +1,6 @@
+from __future__ import print_function
 import subprocess
+from subprocess import PIPE
 from contextlib import contextmanager
 
 @contextmanager
@@ -26,12 +28,11 @@ def jep_pipe(argv):
     Returns:
             the stdout of the process
     """
+    p = subprocess.Popen(argv, stdout=PIPE, stderr=PIPE)
+    stdout, stderr = p.communicate()
+    if p.returncode != 0:        
+        assert False, stderr
 
-    try:
-        p = subprocess.Popen(argv, stdout=subprocess.PIPE)
-        yield(line.decode('utf-8') for line in p.stdout)
-    finally:
-        p.kill()
 
 
 def build_java_process_cmd(javaTestName):
@@ -55,7 +56,7 @@ def build_java_process_cmd(javaTestName):
     lib_path = '-Djava.library.path='
     lib_path += System.getProperty("java.library.path")
     
-    return ['java', '-cp', cp, lib_path, javaTestName]
+    return ['java', '-ea', '-cp', cp, lib_path, javaTestName]
 
 
 def build_python_process_cmd(pythonTestName):
