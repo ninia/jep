@@ -171,6 +171,7 @@ static PyObject* initjep(void)
         PyModule_AddIntConstant(modjep, "JCHAR_ID", JCHAR_ID);
         PyModule_AddIntConstant(modjep, "JBYTE_ID", JBYTE_ID);
         PyModule_AddIntConstant(modjep, "JEP_NUMPY_ENABLED", JEP_NUMPY_ENABLED);
+        Py_INCREF(mainThreadModules);
         PyModule_AddObject(modjep, "topInterpreterModules", mainThreadModules);
     }
 
