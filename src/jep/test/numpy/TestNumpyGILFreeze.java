@@ -15,10 +15,9 @@ import jep.JepException;
  * at the same time.
  * 
  * 
- * Created: Thu Apr 09 2015
+ * Created: April 2015
  * 
- * @author [ndjensen at gmail.com] Nate Jensen
- * @version $Id$
+ * @author Nate Jensen
  */
 public class TestNumpyGILFreeze {
 

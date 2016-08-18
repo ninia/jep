@@ -8,7 +8,6 @@ import jep.NDArray;
  * TestNumpy.java. Runs a variety of simple tests to verify numpy interactions
  * are working correctly.
  * 
- * 
  * Created: April 2015
  * 
  * @author Nate Jensen
