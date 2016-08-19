@@ -10,6 +10,10 @@ class TestSharedModules(unittest.TestCase):
         pass
 
     @unittest.skipIf(sys.platform.startswith("win"), "subprocess complications on Windows")
+    def test_shared_modules(self):
+        jep_pipe(build_java_process_cmd('jep.test.TestSharedModules'))
+
+    @unittest.skipIf(sys.platform.startswith("win"), "subprocess complications on Windows")
     def test_numpy_prod_fails(self):
         jep_pipe(build_java_process_cmd('jep.test.numpy.TestNumpyProdLost'))
 
