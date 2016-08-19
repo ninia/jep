@@ -30,9 +30,11 @@ def jep_pipe(argv):
     """
     p = subprocess.Popen(argv, stdout=PIPE, stderr=PIPE)
     stdout, stderr = p.communicate()
-    if p.returncode != 0:        
-        assert False, stderr
-
+    if p.returncode != 0:
+        if stderr:
+            assert False, stderr
+        else:
+            assert False, stdout
 
 
 def build_java_process_cmd(javaTestName):
