@@ -355,7 +355,12 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller)
 
     PyEval_AcquireThread(mainThreadState);
 
-    jepThread = PyMem_Malloc(sizeof(JepThread));
+    /* 
+     * Do not use PyMem_Malloc because PyGILState_Check() returns false since
+     * the mainThreadState was created on a different thread. When python is
+     * compiled with debug it checks the state and fails.
+     */
+    jepThread = malloc(sizeof(JepThread));
     if (!jepThread) {
         THROW_JEP(env, "Out of memory.");
         PyEval_ReleaseThread(mainThreadState);
@@ -451,7 +456,7 @@ void pyembed_thread_close(JNIEnv *env, intptr_t _jepThread)
 
     Py_EndInterpreter(jepThread->tstate);
 
-    PyMem_Free(jepThread);
+    free(jepThread);
     PyEval_ReleaseLock();
 }
 

@@ -520,9 +520,11 @@ jvalue PyObject_As_jvalue(JNIEnv *env, PyObject *pyobject, jclass expectedType)
         result.s = PyObject_As_jshort(pyobject);
     } else if ((*env)->IsSameObject(env, expectedType, JVOID_TYPE)) {
         PyErr_SetString(PyExc_TypeError, "Cannot convert any PyObject to Void");
+        result.l = NULL;
     } else {
         /* This is theoretically impossible */
         PyErr_SetString(PyExc_TypeError, "Unrecognized java type.");
+        result.l = NULL;
     }
     return result;
 }
