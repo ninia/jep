@@ -87,4 +87,4 @@ def setupImporter(classEnquirer):
             alreadySetup = True
             break
     if not alreadySetup:
-        sys.meta_path.append(JepJavaImporter(classEnquirer))
+        sys.meta_path.insert(0,JepJavaImporter(classEnquirer))

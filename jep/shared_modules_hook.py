@@ -119,7 +119,7 @@ def setupImporter(moduleList, sharedImporter):
     for importer in sys.meta_path:
         if isinstance(importer, JepSharedModuleImporter):
             return
-    sys.meta_path.append(JepSharedModuleImporter(moduleList, sharedImporter))
+    sys.meta_path.insert(0,JepSharedModuleImporter(moduleList, sharedImporter))
 
 
 def teardownImporter():
