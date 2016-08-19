@@ -37,13 +37,13 @@ public class TestGetCollectionBoxing {
         jep.eval("x = [0, 1, 2, 'three', 4, 5.0, 6]");
         List<?> x = (List<?>) jep.getValue("x");
         assert x.size() == 7;
-        assert x.get(0).equals(0);
-        assert x.get(1).equals(1);
-        assert x.get(2).equals(2);
+        assert ((Number) x.get(0)).intValue() == 0;
+        assert ((Number) x.get(1)).intValue() == 1;
+        assert ((Number) x.get(2)).longValue() == 2L;
         assert x.get(3).equals("three");
-        assert x.get(4).equals(4);
-        assert x.get(5).equals(5.0);
-        assert x.get(6).equals(6);
+        assert ((Number) x.get(4)).intValue() == 4;
+        assert ((Number) x.get(5)).doubleValue() == 5.0;
+        assert ((Number) x.get(6)).longValue() == 6L;
         jep.eval("del x");
     }
 
@@ -73,10 +73,10 @@ public class TestGetCollectionBoxing {
         assert x.get("b").equals("cdef");
         List<Integer> y = (List<Integer>) x.get("c");
         assert y.size() == 4;
-        assert (y.get(0)) == 1;
-        assert (y.get(1)) == 2;
-        assert (y.get(2)) == 3;
-        assert (y.get(3)) == 4;
+        assert ((Number) y.get(0)).intValue() == 1;
+        assert ((Number) y.get(1)).longValue() == 2L;
+        assert ((Number) y.get(2)).longValue() == 3L;
+        assert ((Number) y.get(3)).longValue()  == 4L;
         assert (x.get("d") == null);
         assert (x.get(null).equals("e"));
         jep.eval("del x");

@@ -35,13 +35,13 @@ public class TestPreInitVariables {
             Jep.setInitParams(pyConfig);
             jep = new Jep(false, ".");
             jep.eval("import sys");
-            assert 1 == (Integer) jep.getValue("sys.flags.ignore_environment");
-            assert 0 == (Integer) jep.getValue("sys.flags.no_site");
-            assert 1 == (Integer) jep.getValue("sys.flags.no_user_site");
-            assert 0 == (Integer) jep.getValue("sys.flags.verbose");
-            assert 1 == (Integer) jep.getValue("sys.flags.optimize");
-            assert 1 == (Integer) jep.getValue("sys.flags.dont_write_bytecode");
-            assert 1 == (Integer) jep.getValue("sys.flags.hash_randomization");
+            assert 1 == ((Number) jep.getValue("sys.flags.ignore_environment")).intValue();
+            assert 0 == ((Number) jep.getValue("sys.flags.no_site")).intValue();
+            assert 1 == ((Number) jep.getValue("sys.flags.no_user_site")).intValue();
+            assert 0 == ((Number) jep.getValue("sys.flags.verbose")).intValue();
+            assert 1 == ((Number) jep.getValue("sys.flags.optimize")).intValue();
+            assert 1 == ((Number) jep.getValue("sys.flags.dont_write_bytecode")).intValue();
+            assert 1 == ((Number) jep.getValue("sys.flags.hash_randomization")).intValue();
         } catch (Throwable e) {
             e.printStackTrace();
             System.exit(1);
