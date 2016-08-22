@@ -7,7 +7,12 @@ import jep.Jep;
  * sub-interpreter with numpy. Illustrates a problem where the reference to the
  * prod() method is lost.
  * 
+ * In Python 2 this test results in a 'NoneType' is not callable error.
+ * 
+ * In Python 3 this test results in a JVM crash.
+ * 
  * This does NOT make use of the shared modules feature.
+ * 
  * 
  * Created: October 2015
  * 

@@ -1,5 +1,5 @@
 import unittest
-
+import sys
 import jep
 
 @unittest.skipIf(not jep.JEP_NUMPY_ENABLED, 'Jep library built without numpy support')
@@ -9,6 +9,7 @@ class TestNumpy(unittest.TestCase):
         self.test = TestClass()
         self.printout = False
     
+    @unittest.skipIf(sys.platform.startswith("win"), "subprocess complications on Windows")
     def testSetGet(self):
         """
         Tests using Jep.set(String, Object) for java NDArrays

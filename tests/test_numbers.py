@@ -146,12 +146,3 @@ class TestNumbers(unittest.TestCase):
         self.assertFalse(jfive != pfive)
         self.assertFalse(ptwosix != jtwosix)
         self.assertFalse(jtwosix != ptwosix)
-
-#     @unittest.skipIf(sys.version_info.major < 3,
-#                      "Python 2 will try to compare underorderable types")
-#     def test_compare_raises(self): 
-#         # check raises not implemented
-#         with self.assertRaises(TypeError):
-#             jfive < "6"
-#         with self.assertRaises(TypeError):
-#             jtwosix == "2.6"

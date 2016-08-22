@@ -5,9 +5,8 @@ import jep.JepConfig;
 
 /**
  * Tests closing a sub-interpreter with numpy shared and then trying to use a
- * new sub-interpreter with numpy. Illustrates that since the FIRST
- * sub-interpreter to use numpy is using it as a shared module, then numpy is no
- * longer losing references to methods.
+ * new sub-interpreter with numpy. Illustrates that since each import of numpy
+ * is a shared module, then numpy is no longer losing references to methods.
  * 
  * Created: August 2016
  * 
@@ -28,7 +27,7 @@ public class TestNumpyProdShared {
             jep.close();
 
             for (int i = 0; i < N_JEPS; i++) {
-                jep = new Jep(false, ".");
+                jep = new Jep(config);
                 jep.eval("import numpy");
 
                 /*
