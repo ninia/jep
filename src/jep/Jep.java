@@ -379,14 +379,6 @@ public final class Jep implements Closeable {
         }
 
         eval("import jep");
-        ClassEnquirer ce = config.classEnquirer;
-        if (ce == null) {
-            ce = ClassList.getInstance();
-        }
-        set("classlist", ce);
-        eval("jep.java_import_hook.setupImporter(classlist)");
-        eval("del classlist");
-        eval(null); // flush
         if(config.sharedModules != null && !config.sharedModules.isEmpty()){
             set("sharedModules", config.sharedModules);
             set("sharedImporter", topInterpreter);
@@ -395,6 +387,14 @@ public final class Jep implements Closeable {
             eval("del sharedImporter");
             eval(null); // flush
         }
+        ClassEnquirer ce = config.classEnquirer;
+        if (ce == null) {
+            ce = ClassList.getInstance();
+        }
+        set("classlist", ce);
+        eval("jep.java_import_hook.setupImporter(classlist)");
+        eval("del classlist");
+        eval(null); // flush
 
         if (config.redirectOutputStreams) {
             eval("from jep import redirect_streams");
