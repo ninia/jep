@@ -213,19 +213,19 @@ jstring PyObject_As_jstring(JNIEnv *env, PyObject *pyobject)
     return pystring_as_jstring(env, pystring);
 }
 
-	static jobject pybool_as_jobject(JNIEnv *env, PyObject *pyobject,
-					 jclass expectedType)
-	{
-	    if ((*env)->IsAssignableFrom(env, JBOOL_OBJ_TYPE, expectedType)) {
-		jboolean z = PyObject_As_jboolean(pyobject);
-		if (PyErr_Occurred()) {
-		    return NULL;
-		}
-		return JBox_Boolean(env, z);
-	    }
-	    raiseTypeError(env, pyobject, expectedType);
-	    return NULL;
-	}
+static jobject pybool_as_jobject(JNIEnv *env, PyObject *pyobject,
+                                 jclass expectedType)
+{
+    if ((*env)->IsAssignableFrom(env, JBOOL_OBJ_TYPE, expectedType)) {
+        jboolean z = PyObject_As_jboolean(pyobject);
+        if (PyErr_Occurred()) {
+            return NULL;
+        }
+        return JBox_Boolean(env, z);
+    }
+    raiseTypeError(env, pyobject, expectedType);
+    return NULL;
+}
 
 static jobject pystring_as_jobject(JNIEnv *env, PyObject *pyobject,
                                    jclass expectedType)
