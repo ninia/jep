@@ -279,6 +279,7 @@ PyObject* pyjfield_get(PyJFieldObject *self)
         }
 
         result = pyjobject_new_class(env, obj);
+        (*env)->DeleteLocalRef(env, obj);
         break;
     }
 
@@ -303,6 +304,7 @@ PyObject* pyjfield_get(PyJFieldObject *self)
         }
 
         result = convert_jobject_pyobject(env, obj);
+        (*env)->DeleteLocalRef(env, obj);
         break;
     }
 
@@ -516,6 +518,7 @@ int pyjfield_set(PyJFieldObject *self, PyObject *value)
             (*env)->SetObjectField(env, self->pyjobject->object,
                                    self->fieldId, obj);
         }
+        (*env)->DeleteLocalRef(env, obj);
         return 0;
     }
     case JINT_ID: {

@@ -72,6 +72,7 @@ static void raiseTypeError(JNIEnv *env, PyObject *pyobject, jclass expectedType)
     PyErr_Format(PyExc_TypeError, "Expected %s but received a %s.", expTypeName,
                  actTypeName);
     (*env)->ReleaseStringUTFChars(env, expTypeJavaName, expTypeName);
+    (*env)->DeleteLocalRef(env, expTypeJavaName);
 }
 
 
@@ -212,19 +213,19 @@ jstring PyObject_As_jstring(JNIEnv *env, PyObject *pyobject)
     return pystring_as_jstring(env, pystring);
 }
 
-static jobject pybool_as_jobject(JNIEnv *env, PyObject *pyobject,
-                                 jclass expectedType)
-{
-    if ((*env)->IsAssignableFrom(env, JBOOL_OBJ_TYPE, expectedType)) {
-        jboolean z = PyObject_As_jboolean(pyobject);
-        if (PyErr_Occurred()) {
-            return NULL;
-        }
-        return JBox_Boolean(env, z);
-    }
-    raiseTypeError(env, pyobject, expectedType);
-    return NULL;
-}
+	static jobject pybool_as_jobject(JNIEnv *env, PyObject *pyobject,
+					 jclass expectedType)
+	{
+	    if ((*env)->IsAssignableFrom(env, JBOOL_OBJ_TYPE, expectedType)) {
+		jboolean z = PyObject_As_jboolean(pyobject);
+		if (PyErr_Occurred()) {
+		    return NULL;
+		}
+		return JBox_Boolean(env, z);
+	    }
+	    raiseTypeError(env, pyobject, expectedType);
+	    return NULL;
+	}
 
 static jobject pystring_as_jobject(JNIEnv *env, PyObject *pyobject,
                                    jclass expectedType)
@@ -480,7 +481,7 @@ jobject PyObject_As_jobject(JNIEnv *env, PyObject *pyobject,
         PyJArrayObject *pyjarray = (PyJArrayObject *) pyobject;
         if ((*env)->IsAssignableFrom(env, pyjarray->clazz, expectedType)) {
             pyjarray_release_pinned(pyjarray, JNI_COMMIT);
-            return pyjarray->object;
+            return (*env)->NewLocalRef(env, pyjarray->object);
         }
     } else if (PyList_Check(pyobject) || PyTuple_Check(pyobject)) {
         return pyfastsequence_as_jobject(env, pyobject, expectedType);
