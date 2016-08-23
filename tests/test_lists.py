@@ -6,11 +6,13 @@ from java.util import ArrayList
 
 COUNT = 17
 
+
 def makeJavaList():
     jlist = ArrayList()
     for i in range(COUNT):
         jlist.add(i)
     return jlist
+
 
 def makePythonList():
     pylist = []
@@ -20,6 +22,7 @@ def makePythonList():
 
 
 class TestLists(unittest.TestCase):
+
     def setUp(self):
         self.test = Test()
 
@@ -86,7 +89,7 @@ class TestLists(unittest.TestCase):
         jlist = makeJavaList()
         x = jlist + [1, 2, 3]
         self.assertIn('jep.PyJList', str(type(x)))
-        self.assertEqual(len(x), COUNT + 3)        
+        self.assertEqual(len(x), COUNT + 3)
 
     def test_addequals(self):
         jlist = makeJavaList()
@@ -118,9 +121,9 @@ class TestLists(unittest.TestCase):
         jlist = makeJavaList()
         pylist = makePythonList()
         with self.assertRaises(IndexError):
-            del jlist[COUNT+5]
+            del jlist[COUNT + 5]
         with self.assertRaises(IndexError):
-            del pylist[COUNT+5]
+            del pylist[COUNT + 5]
 
         del jlist[0]
         del pylist[0]
@@ -131,11 +134,11 @@ class TestLists(unittest.TestCase):
         self.assertSequenceEqual(jlist, pylist)
 
     def test_getstringbyindex(self):
-        jlist = ArrayList();
+        jlist = ArrayList()
         jlist.add("string")
         self.assertEqual(jlist[0], "string")
 
     def test_getstringbyiterator(self):
-        jlist = ArrayList();
+        jlist = ArrayList()
         jlist.add("string")
         self.assertEqual(next(iter(jlist)), "string")

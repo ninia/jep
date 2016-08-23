@@ -2,11 +2,14 @@ import unittest
 
 from java.util import HashMap
 
+
 def makeJavaMap():
     return makeDict(HashMap())
 
+
 def makePythonDict():
     return makeDict({})
+
 
 def makeDict(obj):
     obj["a"] = 1
@@ -14,7 +17,7 @@ def makeDict(obj):
     obj["c"] = "XYZ"
     obj["a"] = -1
     return obj
-    
+
 
 class TestMaps(unittest.TestCase):
 
@@ -43,12 +46,12 @@ class TestMaps(unittest.TestCase):
         pymap = makePythonDict()
         del jmap['a']
         del pymap['a']
-        
+
         with self.assertRaises(KeyError):
             del jmap['a']
         with self.assertRaises(KeyError):
             del pymap['a']
-                
+
         pydict = {}
         for i in jmap:
             pydict[i] = jmap[i]

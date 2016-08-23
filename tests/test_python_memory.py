@@ -16,8 +16,9 @@
 import unittest
 import sys
 
+
 @unittest.skipIf(not hasattr(sys, "gettotalrefcount"),
-                             "Python must be compiled --with-pydebug.")
+                 "Python must be compiled --with-pydebug.")
 class TestPythonRefCounts(unittest.TestCase):
 
     def setUp(self):
@@ -77,7 +78,7 @@ class TestPythonRefCounts(unittest.TestCase):
         from jep import jarray
         from java.lang import Object
         refcount1 = sys.gettotalrefcount()
-        result = jarray(1,Object)
+        result = jarray(1, Object)
         del result
         refcount2 = sys.gettotalrefcount()
         self.assertEquals(refcount1, refcount2 - 1)
@@ -85,7 +86,7 @@ class TestPythonRefCounts(unittest.TestCase):
     def test_array_assignment(self):
         from jep import jarray
         from java.lang import Object
-        arr = jarray(1,Object)
+        arr = jarray(1, Object)
         refcount1 = sys.gettotalrefcount()
         arr[0] = self.obj
         refcount2 = sys.gettotalrefcount()
@@ -94,7 +95,7 @@ class TestPythonRefCounts(unittest.TestCase):
     def test_array_access(self):
         from jep import jarray
         from java.lang import Object
-        arr = jarray(1,Object)
+        arr = jarray(1, Object)
         arr[0] = self.obj
         refcount1 = sys.gettotalrefcount()
         result = arr[0]

@@ -28,16 +28,16 @@ class TestArray(unittest.TestCase):
         ar = jarray(20, JINT_ID, 0)
         py_ar = list(range(20))
         for i in py_ar:
-            ar[i] = i;
+            ar[i] = i
         self.assertEqual(py_ar[0:2], list(ar[0:2]))
         self.assertEqual(py_ar[1:-1], list(ar[1:-1]))
 
     def test_slice_with_step_not_1_throws_exception(self):
         ar = jarray(10, JINT_ID, 0)
         with self.assertRaises(TypeError):
-                ar[::-1]
+            ar[::-1]
         with self.assertRaises(TypeError):
-                ar[::2]
+            ar[::2]
 
     def test_slice_out_of_bounds_handled_cleanly(self):
         ar = jarray(10, JINT_ID, 0)
@@ -77,6 +77,6 @@ class TestArray(unittest.TestCase):
     def test_iter(self):
         ar = jarray(20, JINT_ID, 0)
         for i in range(20):
-            ar[i] = i;
+            ar[i] = i
         for array_item, i in enumerate(ar):
             self.assertEqual(array_item, i)

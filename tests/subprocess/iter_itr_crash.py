@@ -8,5 +8,5 @@ from java.util import ArrayList
 itr = ArrayList().iterator()
 iter(itr)
 ArrayList()
-itr2 = iter(itr) # this line could crash before fix
+itr2 = iter(itr)  # this line could crash before fix
 sys.exit(0)

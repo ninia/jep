@@ -8,9 +8,10 @@ Test = findClass('jep.test.Test')
 
 
 class TestImport(unittest.TestCase):
+
     def setUp(self):
         self.test = Test()
-    
+
     def test_java_sql(self):
         from java.sql import DriverManager
 
@@ -22,7 +23,7 @@ class TestImport(unittest.TestCase):
 
     def test_restricted_classloader(self):
         # should use the supplied classloader for hooks
-        self.test.testRestrictedClassLoader()        
+        self.test.testRestrictedClassLoader()
 
     def test_without_restricted_classloader(self):
         from java.io import File
@@ -37,6 +38,6 @@ class TestImport(unittest.TestCase):
 
         from java.lang import System
         System.out.print('')  # should still work
-    
+
     def test_conflicting_package(self):
         from io import DEFAULT_BUFFER_SIZE

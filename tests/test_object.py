@@ -1,6 +1,7 @@
 import unittest
 from java.lang import Object
 
+
 class TestObject(unittest.TestCase):
 
     def test_hash(self):

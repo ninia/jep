@@ -3,6 +3,7 @@ import sys
 
 from java.lang import Integer, Long, Double
 
+
 class TestNumbers(unittest.TestCase):
 
     def get_values(self):
@@ -17,7 +18,7 @@ class TestNumbers(unittest.TestCase):
     def test_add(self):
         i, pi, j, pj, d, pd = self.get_values()
         self.assertEqual(i + i, pi + pi)
-        self.assertEqual(i + 3, pi + 3)        
+        self.assertEqual(i + 3, pi + 3)
         self.assertEqual(j + j, pj + pj)
         self.assertEqual(j + 301, pj + 301)
         self.assertEqual(d + d, pd + pd)
@@ -26,7 +27,7 @@ class TestNumbers(unittest.TestCase):
     def test_subtract(self):
         i, pi, j, pj, d, pd = self.get_values()
         self.assertEqual(i - i, pi - pi)
-        self.assertEqual(i - 3, pi - 3)        
+        self.assertEqual(i - 3, pi - 3)
         self.assertEqual(j - j, pj - pj)
         self.assertEqual(j - 301, pj - 301)
         self.assertEqual(d - d, pd - pd)
@@ -35,7 +36,7 @@ class TestNumbers(unittest.TestCase):
     def test_multiply(self):
         i, pi, j, pj, d, pd = self.get_values()
         self.assertEqual(i * i, pi * pi)
-        self.assertEqual(i * 3, pi * 3)        
+        self.assertEqual(i * 3, pi * 3)
         self.assertEqual(j * j, pj * pj)
         self.assertEqual(j * 301, pj * 301)
         self.assertEqual(d * d, pd * pd)
@@ -44,7 +45,7 @@ class TestNumbers(unittest.TestCase):
     def test_divide(self):
         i, pi, j, pj, d, pd = self.get_values()
         self.assertEqual(i / i, pi / pi)
-        self.assertEqual(i / 3, pi / 3)        
+        self.assertEqual(i / 3, pi / 3)
         self.assertEqual(j / j, pj / pj)
         self.assertEqual(j / 301, pj / 301)
         self.assertEqual(d / d, pd / pd)
@@ -53,16 +54,16 @@ class TestNumbers(unittest.TestCase):
     def test_remainder(self):
         i, pi, j, pj, d, pd = self.get_values()
         self.assertEqual(i % i, pi % pi)
-        self.assertEqual(i % 3, pi % 3)        
+        self.assertEqual(i % 3, pi % 3)
         self.assertEqual(j % j, pj % pj)
         self.assertEqual(j % 301, pj % 301)
         self.assertEqual(d % d, pd % pd)
-        self.assertEqual(d % 4.53, pd % 4.53)        
+        self.assertEqual(d % 4.53, pd % 4.53)
 
     def test_divmod(self):
         i, pi, j, pj, d, pd = self.get_values()
         self.assertEqual(divmod(i, i), divmod(pi, pi))
-        self.assertEqual(divmod(i, 3), divmod(pi, 3))        
+        self.assertEqual(divmod(i, 3), divmod(pi, 3))
         self.assertEqual(divmod(j, j), divmod(pj, pj))
         self.assertEqual(divmod(j, 301), divmod(pj, 301))
         self.assertEqual(divmod(d, d), divmod(pd, pd))
@@ -71,7 +72,7 @@ class TestNumbers(unittest.TestCase):
     def test_pow(self):
         i, pi, j, pj, d, pd = self.get_values()
         self.assertEqual(pow(i, i), pow(pi, pi))
-        self.assertEqual(pow(i, 3), pow(pi, 3))        
+        self.assertEqual(pow(i, 3), pow(pi, 3))
         self.assertEqual(pow(j, j), pow(pj, pj))
         self.assertEqual(pow(j, 301), pow(pj, 301))
         self.assertEqual(pow(d, d), pow(pd, pd))
@@ -80,30 +81,30 @@ class TestNumbers(unittest.TestCase):
         k = Integer(2)
         pk = k.intValue()
         self.assertEqual(pow(i, 3, k), pow(pi, 3, pk))
-        self.assertEqual(pow(j, 301, k), pow(pj, 301, pk))        
+        self.assertEqual(pow(j, 301, k), pow(pj, 301, pk))
 
     def test_negative(self):
         i, pi, j, pj, d, pd = self.get_values()
-        self.assertEqual(-i, -pi)            
-        self.assertEqual(-j, -pj)        
+        self.assertEqual(-i, -pi)
+        self.assertEqual(-j, -pj)
         self.assertEqual(-d, -pd)
 
     def test_positive(self):
         i, pi, j, pj, d, pd = self.get_values()
-        self.assertEqual(+i, +pi)            
-        self.assertEqual(+j, +pj)        
+        self.assertEqual(+i, +pi)
+        self.assertEqual(+j, +pj)
         self.assertEqual(+d, +pd)
 
     def test_absolute(self):
         i, pi, j, pj, d, pd = self.get_values()
-        self.assertEqual(abs(i), abs(pi))            
-        self.assertEqual(abs(j), abs(pj))        
+        self.assertEqual(abs(i), abs(pi))
+        self.assertEqual(abs(j), abs(pj))
         self.assertEqual(abs(d), abs(pd))
 
     def test_nonzero(self):
         i, pi, j, pj, d, pd = self.get_values()
-        self.assertEqual(bool(i), bool(pi))            
-        self.assertEqual(bool(j), bool(pj))        
+        self.assertEqual(bool(i), bool(pi))
+        self.assertEqual(bool(j), bool(pj))
         self.assertEqual(bool(d), bool(pd))
         self.assertFalse(bool(Integer(0)))
         self.assertFalse(bool(Long(0)))

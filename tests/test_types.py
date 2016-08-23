@@ -8,7 +8,9 @@ TestFieldTypes = jep.findClass('jep.test.types.TestFieldTypes')
 TestStaticFieldTypes = jep.findClass('jep.test.types.TestStaticFieldTypes')
 from java.lang import Object, Integer, Class
 
+
 class TestTypes(unittest.TestCase):
+
     def setUp(self):
         self.methods = TestMethodTypes()
         self.staticMethods = TestStaticMethodTypes
@@ -16,7 +18,7 @@ class TestTypes(unittest.TestCase):
         self.staticFields = TestStaticFieldTypes
 
     def test_boolean(self):
-        for b in (True,False):
+        for b in (True, False):
             self.assertEqual(b, self.methods.primitiveBoolean(b))
             self.assertEqual(b, self.methods.objectBoolean(b))
             self.assertEqual(b, self.methods.object(b))
@@ -38,9 +40,10 @@ class TestTypes(unittest.TestCase):
             self.fields.verify()
             self.staticFields.verify()
 
-    # Python will coerce anything to a bool so anything is legal as a primitive boolean
+    # Python will coerce anything to a bool so anything is legal as a
+    # primitive boolean
     def test_primitive_boolean_coercion(self):
-        for b in (0, 1, 0.0, 0.1, "", "string", [], ["item"], {}, {"key":"value"}):
+        for b in (0, 1, 0.0, 0.1, "", "string", [], ["item"], {}, {"key": "value"}):
             self.assertEqual(bool(b), self.methods.primitiveBoolean(b))
             self.assertEqual(bool(b), self.staticMethods.primitiveBoolean(b))
             self.fields.primitiveBoolean = b
@@ -51,7 +54,7 @@ class TestTypes(unittest.TestCase):
             self.staticFields.verify()
 
     def test_object_boolean_coercion(self):
-        for b in (0, 1, 0.0, 0.1, "", "string", [], ["item"], {}, {"key":"value"}):
+        for b in (0, 1, 0.0, 0.1, "", "string", [], ["item"], {}, {"key": "value"}):
             with self.assertRaises(TypeError):
                 self.methods.objectBoolean(b)
             with self.assertRaises(TypeError):
@@ -415,7 +418,8 @@ class TestTypes(unittest.TestCase):
                 self.staticFields.objectFloat = f
 
     def test_long(self):
-        longs = [-9223372036854775808, -2147483648, -32768, -128, -1, 0, 1, 127, 32767, 2147483647, 9223372036854775807]
+        longs = [-9223372036854775808, -2147483648, -32768, -128, -
+                 1, 0, 1, 127, 32767, 2147483647, 9223372036854775807]
         if sys.version_info.major == 2:
             for l in tuple(longs):
                 longs.append(long(l))
@@ -588,7 +592,7 @@ class TestTypes(unittest.TestCase):
                 self.staticFields.objectDouble = d
 
     def test_string(self):
-        for s in ('','s','string'):
+        for s in ('', 's', 'string'):
             self.assertEqual(s, self.methods.objectString(s))
             self.assertEqual(s, self.methods.object(s))
             self.assertEqual(s, self.staticMethods.objectString(s))

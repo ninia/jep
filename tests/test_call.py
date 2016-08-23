@@ -6,7 +6,9 @@ Boolean = jep.findClass('java.lang.Boolean')
 StringBuilder = jep.findClass('java.lang.StringBuilder')
 ArrayList = jep.findClass('java.util.ArrayList')
 
+
 class TestTypes(unittest.TestCase):
+
     def setUp(self):
         self.test = Test()
 
@@ -71,7 +73,7 @@ class TestTypes(unittest.TestCase):
             l = [l]
         result = self.test.testObjectPassThrough(l)
         for i in range(50):
-            result = result[0];
+            result = result[0]
         self.assertEquals(self.test, result[0])
 
     def test_overload(self):
