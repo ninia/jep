@@ -34,6 +34,7 @@ class test(Command):
         classpath = os.path.join(self.java_build, 'jep-' + version + '.jar')
         classpath += os.pathsep + os.path.join(self.java_build, 'jep.test-' + version + '.jar')
         classpath += os.pathsep + 'tests/lib/sqlitejdbc-v056.jar'
+        classpath += os.pathsep + 'tests/lib/fakenetty.jar'
 
         # setup environment variables
         environment = {}
@@ -50,7 +51,7 @@ class test(Command):
         # version is used
         executable = sys.executable
         if executable:
-            environment['PATH'] = os.path.dirname(executable) + os.pathsep + os.environ['PATH'] 
+            environment['PATH'] = os.path.dirname(executable) + os.pathsep + os.environ['PATH']
 
         # find the jep library and makes sure it's named correctly
         build_ext = self.get_finalized_command('build_ext')

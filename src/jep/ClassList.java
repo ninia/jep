@@ -35,7 +35,6 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -275,37 +274,23 @@ public class ClassList implements ClassEnquirer {
         }
     }
 
-    private String[] _get(String p) {
-        List<String> el = packageToClassMap.get(p);
-        if (el == null) {
-
-            // before we error out, find out if it really is a
-            // package. maybe it just doesn't have any classes in it.
-
-            Set<String> keys = packageToClassMap.keySet();
-            for (String key : keys) {
-                if (key.startsWith(p))
-                    return new String[0];
-            }
-
-            return null;
-        }
-
-        String[] ret = new String[el.size()];
-        el.toArray(ret);
-        return ret;
-    }
-
     /**
      * get classnames in package
      * 
-     * @param p
+     * @param pkg
      *            a <code>String</code> value
      * @return <code>String[]</code> array of class names
      */
     @Override
-    public String[] getClassNames(String p) {
-        return _get(p);
+    public String[] getClassNames(String pkg) {
+        List<String> classes = packageToClassMap.get(pkg);
+        if (classes == null) {
+            return new String[0];
+        }
+
+        String[] ret = new String[classes.size()];
+        classes.toArray(ret);
+        return ret;
     }
 
     @Override
@@ -327,7 +312,8 @@ public class ClassList implements ClassEnquirer {
      */
     @Override
     public boolean isJavaPackage(String s) {
-        return (_get(s) != null);
+        return (packageToClassMap.containsKey(s))
+                || (packageToSubPackageMap.containsKey(s));
     }
 
     /**

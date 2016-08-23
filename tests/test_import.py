@@ -37,3 +37,6 @@ class TestImport(unittest.TestCase):
 
         from java.lang import System
         System.out.print('')  # should still work
+    
+    def test_conflicting_package(self):
+        from io import DEFAULT_BUFFER_SIZE
