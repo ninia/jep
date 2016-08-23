@@ -24,7 +24,7 @@ Improved primitive and boxed type conversions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Python "primitives" such as ints, floats, and booleans can now be passed
 directly to Java methods which expect Java boxed types such as Long, Short,
-Byte, Double, or Character (Integer and Double were already supported in older
+Byte, Float, or Character (Integer and Double were already supported in older
 versions). Also Java methods which return boxed types will now return the
 Python equivalent instead. This autoboxing is not limited to just methods, the
 same types of conversions will occur for constructors, arrays, and fields. The

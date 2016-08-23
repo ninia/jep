@@ -257,7 +257,6 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
     }
     pyjob->javaClassName = pyClassName;
     Py_DECREF(pyAttrName);
-    (*env)->DeleteLocalRef(env, className);
     // then, get methodid for getMethods()
     if (!JNI_METHOD(classGetMethods, env, JCLASS_TYPE, "getMethods",
                     "()[Ljava/lang/reflect/Method;")) {
