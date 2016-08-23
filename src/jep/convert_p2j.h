@@ -40,7 +40,7 @@
 
 PyAPI_FUNC(jboolean) PyObject_As_jboolean(PyObject*);
 
-/* 
+/*
  * These four methods use the PyNumber_Index protocol from PEP 357 to convert
  * the input argument into a python int or long and then perform range checking
  * and conversion to the appropriate java type.
@@ -55,7 +55,7 @@ PyAPI_FUNC(jshort)   PyObject_As_jshort(PyObject*);
 PyAPI_FUNC(jint)     PyObject_As_jint(PyObject*);
 PyAPI_FUNC(jlong)    PyObject_As_jlong(PyObject*);
 
-/* 
+/*
  * These two methods have behavior matching PyFloat_AsDouble.
  *
  * The parameter should be a PyFloat or another numeric type that can be cast to
@@ -85,11 +85,11 @@ PyAPI_FUNC(jstring)  PyObject_As_jstring(JNIEnv*, PyObject*);
  * PyObject* is None so use PyErr_Occurred() to check for errors if NULL
  * is returned.
  */
-PyAPI_FUNC(jobject)  PyObject_As_jobject(JNIEnv*, PyObject*, jclass); 
+PyAPI_FUNC(jobject)  PyObject_As_jobject(JNIEnv*, PyObject*, jclass);
 
 /*
  * Use PyErr_Occurred() after this to check for errors
  */
-PyAPI_FUNC(jvalue)   PyObject_As_jvalue(JNIEnv*, PyObject*, jclass); 
+PyAPI_FUNC(jvalue)   PyObject_As_jvalue(JNIEnv*, PyObject*, jclass);
 
 #endif // ifndef _Included_convert_py2j

@@ -381,25 +381,26 @@ static PyObject* pyjlist_inplace_add(PyObject *o1, PyObject *o2)
         return NULL;
     }
 
-    if(!value) {
-       PyErr_Format(PyExc_TypeError, "Expected java.util.Collection but received null.");
-       return NULL;
+    if (!value) {
+        PyErr_Format(PyExc_TypeError,
+                     "Expected java.util.Collection but received null.");
+        return NULL;
     }
 
-        /*
-         * it's a Collection so we need to simulate a python + and combine the
-         * two collections
-         */
-        if (!JNI_METHOD(listAddAll, env, JLIST_TYPE, "addAll",
-                        "(Ljava/util/Collection;)Z")) {
-            process_java_exception(env);
-            goto FINALLY;
-        }
+    /*
+     * it's a Collection so we need to simulate a python + and combine the
+     * two collections
+     */
+    if (!JNI_METHOD(listAddAll, env, JLIST_TYPE, "addAll",
+                    "(Ljava/util/Collection;)Z")) {
+        process_java_exception(env);
+        goto FINALLY;
+    }
 
-        (*env)->CallBooleanMethod(env, self->object, listAddAll, value);
-        if (process_java_exception(env)) {
-            goto FINALLY;
-        }
+    (*env)->CallBooleanMethod(env, self->object, listAddAll, value);
+    if (process_java_exception(env)) {
+        goto FINALLY;
+    }
 
     result = o1;
     Py_INCREF(o1);

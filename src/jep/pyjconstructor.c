@@ -98,7 +98,7 @@ static int pyjconstructor_init(JNIEnv *env, PyJMethodObject *self)
     if (constructorGetParamTypes == 0) {
         jclass initClass = (*env)->GetObjectClass(env, self->rmethod);
         constructorGetParamTypes = (*env)->GetMethodID(env, initClass,
-                                  "getParameterTypes", "()[Ljava/lang/Class;");
+                                   "getParameterTypes", "()[Ljava/lang/Class;");
         if (!constructorGetParamTypes) {
             process_java_exception(env);
             goto EXIT_ERROR;

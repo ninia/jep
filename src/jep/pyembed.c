@@ -233,9 +233,9 @@ void pyembed_startup(void)
     Py_Initialize();
     PyEval_InitThreads();
 
-    /* 
+    /*
      * Save a global reference to the sys.modules form the main thread to
-     * support shared modules 
+     * support shared modules
      */
     sysModule = PyImport_ImportModule("sys");
     mainThreadModules = PyObject_GetAttrString(sysModule, "modules");
@@ -355,7 +355,7 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller)
 
     PyEval_AcquireThread(mainThreadState);
 
-    /* 
+    /*
      * Do not use PyMem_Malloc because PyGILState_Check() returns false since
      * the mainThreadState was created on a different thread. When python is
      * compiled with debug it checks the state and fails.

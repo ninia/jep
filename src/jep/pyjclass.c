@@ -85,7 +85,8 @@ static PyObject* pyjclass_add_inner_class(JNIEnv *env, PyJObject *topClz,
         return NULL;
     }
     if (modifierIsPublic == 0) {
-        modifierIsPublic = (*env)->GetStaticMethodID(env, JMODIFIER_TYPE, "isPublic", "(I)Z");
+        modifierIsPublic = (*env)->GetStaticMethodID(env, JMODIFIER_TYPE, "isPublic",
+                           "(I)Z");
         if (!modifierIsPublic) {
             process_java_exception(env);
             return NULL;
