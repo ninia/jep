@@ -25,7 +25,7 @@ public class TestGetByteArray {
      */
     public static void main(String[] args) throws Exception {
         try {
-        testGetByteArray();
+            testGetByteArray();
         } catch (Throwable t) {
             t.printStackTrace();
             System.exit(1);

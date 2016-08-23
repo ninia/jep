@@ -1,6 +1,7 @@
 package jep.python;
 
-import jep.*;
+import jep.Jep;
+import jep.JepException;
 
 
 /**
@@ -35,7 +36,6 @@ import jep.*;
  * </pre>
  *
  * @author [mrjohnson0 at sourceforge.net] Mike Johnson
- * @version $Id: $
  */
 public class PyClass extends PyObject {
 

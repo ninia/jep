@@ -47,7 +47,6 @@ import java.util.jar.JarFile;
  * command line <code>jep</code> script.
  * 
  * @author [mrjohnson0 at sourceforge.net] Mike Johnson
- * @version $Id$
  */
 public class ClassList implements ClassEnquirer {
 

@@ -30,7 +30,6 @@ import java.io.File;
  * Executes a Python script in a Jep sub-interpreter.
  * 
  * @author [mrjohnson0 at sourceforge.net] Mike Johnson
- * @version $Id$
  */
 public class Run {
     private static boolean interactive = false;
@@ -53,10 +52,10 @@ public class Run {
             jep = new Jep(false, ".");
 
             // Windows file system compatibility
-            if(scriptArgv.contains("\\")) {
+            if (scriptArgv.contains("\\")) {
                 scriptArgv = scriptArgv.replace("\\", "\\\\");
             }
-            if(scriptArgv.contains(":")) {
+            if (scriptArgv.contains(":")) {
                 scriptArgv = scriptArgv.replace(":", "\\:");
             }
 

@@ -47,7 +47,6 @@ import java.util.Arrays;
  * 
  * 
  * @author [ndjensen at gmail.com] Nate Jensen
- * @version $Id$
  */
 public class NDArray<T extends Object> {
 
@@ -55,7 +54,7 @@ public class NDArray<T extends Object> {
 
     protected final int[] dimensions;
 
-     protected final boolean unsigned;
+    protected final boolean unsigned;
 
     /**
      * Constructor for a Java NDArray. Presumes the data is one dimensional.
@@ -71,8 +70,8 @@ public class NDArray<T extends Object> {
      * Constructor for a Java NDArray. Presumes the data is one dimensional.
      * 
      * @param data
-     *            a one-dimensional primitive array such as float[], int[]     
-     * @param unsigend 
+     *            a one-dimensional primitive array such as float[], int[]
+     * @param unsigned
      *            whether the data is to be interpreted as unsigned
      */
     public NDArray(T data, boolean unsigned) {
@@ -89,7 +88,7 @@ public class NDArray<T extends Object> {
      *            numpy.ndarray dimensions in C-contiguous order)
      */
     public NDArray(T data, int... dimensions) {
-	this(data, false, dimensions);
+        this(data, false, dimensions);
     }
 
     /**
@@ -97,7 +96,7 @@ public class NDArray<T extends Object> {
      * 
      * @param data
      *            a one-dimensional primitive array such as float[], int[]
-     * @param unsigend 
+     * @param unsigned
      *            whether the data is to be interpreted as unsigned
      * @param dimensions
      *            the conceptual dimensions of the data (corresponds to the
@@ -114,12 +113,11 @@ public class NDArray<T extends Object> {
             throw new IllegalArgumentException(
                     "NDArray only supports primitive arrays, received "
                             + data.getClass().getName());
-        }else if(data instanceof char[]){
+        } else if (data instanceof char[]) {
             throw new IllegalArgumentException(
                     "NDArray only supports numeric primitives, not char[]");
 
         }
-
 
         int dataLength = Array.getLength(data);
         if (dimensions == null) {
@@ -157,15 +155,15 @@ public class NDArray<T extends Object> {
         // passed the safety checks
         this.data = data;
         this.dimensions = dimensions;
-	this.unsigned = unsigned;
+        this.unsigned = unsigned;
     }
 
     public int[] getDimensions() {
         return dimensions;
     }
 
-    public boolean isUnsigned(){
-	return unsigned;
+    public boolean isUnsigned() {
+        return unsigned;
     }
 
     public T getData() {
@@ -185,10 +183,10 @@ public class NDArray<T extends Object> {
         }
 
         NDArray<?> other = (NDArray<?>) obj;
-	// unsigned should be same	 
-	if(this.unsigned != other.unsigned){
-	    return false;
-	}
+        // unsigned should be same
+        if (this.unsigned != other.unsigned) {
+            return false;
+        }
 
         /*
          * compare dimensions first cause that's most likely a shorter array to
@@ -260,7 +258,8 @@ public class NDArray<T extends Object> {
             }
 
         }
-        result = prime * result + Arrays.hashCode(dimensions) + (unsigned ? 1 : 0);
+        result = prime * result + Arrays.hashCode(dimensions)
+                + (unsigned ? 1 : 0);
         return result;
     }
 

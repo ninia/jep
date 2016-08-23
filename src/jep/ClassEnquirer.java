@@ -32,7 +32,6 @@ package jep;
  * Python importer or the Java <code>ClassLoader</codE>.
  * 
  * @author [ndjensen at gmail.com] Nate Jensen
- * @version $Id$
  */
 public interface ClassEnquirer {
 

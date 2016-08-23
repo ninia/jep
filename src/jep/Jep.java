@@ -53,7 +53,6 @@ import jep.python.PyObject;
  * </p>
  * 
  * @author [mrjohnson0 at sourceforge.net] Mike Johnson
- * @version $Id$
  */
 public final class Jep implements Closeable {
 
@@ -104,8 +103,11 @@ public final class Jep implements Closeable {
      */
     private static class TopInterpreter implements Closeable {
         Thread thread;
+
         BlockingQueue<String> importQueue = new SynchronousQueue<String>();
+
         BlockingQueue<Object> importResults = new SynchronousQueue<Object>();
+
         Throwable error;
 
         /**
@@ -139,12 +141,12 @@ public final class Jep implements Closeable {
                      * issues.
                      */
                     try {
-                        while(true){
+                        while (true) {
                             String nextImport = importQueue.take();
                             Object result = nextImport;
-                            try{
+                            try {
                                 Jep.sharedImport(nextImport);
-                            } catch(JepException e){
+                            } catch (JepException e) {
                                 result = e;
                             }
                             importResults.put(result);
@@ -178,21 +180,23 @@ public final class Jep implements Closeable {
             thread.interrupt();
         }
 
-        /*
+        /**
          * Import a module into the top interpreter on the correct thread for
          * that interpreter. This is called from the python shared modules
          * import hook to create a module needed by a jep interpreter.
-         *
-         * @param module the name of the module to import
+         * 
+         * @param module
+         *            the name of the module to import
          */
-        public void sharedImport(String module) throws JepException{
-            try{
+        public void sharedImport(String module) throws JepException {
+            try {
                 importQueue.put(module);
                 Object result = importResults.take();
-                if(result instanceof JepException){
-                    throw new JepException(((JepException) result).getLocalizedMessage());
+                if (result instanceof JepException) {
+                    throw new JepException(
+                            ((JepException) result).getLocalizedMessage());
                 }
-            }catch(InterruptedException e){
+            } catch (InterruptedException e) {
                 throw new JepException(e);
             }
         }
@@ -386,7 +390,7 @@ public final class Jep implements Closeable {
         }
 
         eval("import jep");
-        if(config.sharedModules != null && !config.sharedModules.isEmpty()){
+        if (config.sharedModules != null && !config.sharedModules.isEmpty()) {
             set("sharedModules", config.sharedModules);
             set("sharedImporter", topInterpreter);
             eval("jep.shared_modules_hook.setupImporter(sharedModules,sharedImporter)");
@@ -1162,11 +1166,11 @@ public final class Jep implements Closeable {
         // close all the PyObjects we created
         for (int i = 0; i < this.pythonObjects.size(); i++)
             pythonObjects.get(i).close();
-        
-        try{
+
+        try {
             eval(this.tstate, "import jep");
             eval(this.tstate, "jep.shared_modules_hook.teardownImporter()");
-        }catch(JepException e){
+        } catch (JepException e) {
             throw new RuntimeException(e);
         }
 

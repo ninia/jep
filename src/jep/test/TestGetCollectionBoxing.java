@@ -76,7 +76,7 @@ public class TestGetCollectionBoxing {
         assert ((Number) y.get(0)).intValue() == 1;
         assert ((Number) y.get(1)).longValue() == 2L;
         assert ((Number) y.get(2)).longValue() == 3L;
-        assert ((Number) y.get(3)).longValue()  == 4L;
+        assert ((Number) y.get(3)).longValue() == 4L;
         assert (x.get("d") == null);
         assert (x.get(null).equals("e"));
         jep.eval("del x");
