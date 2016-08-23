@@ -178,6 +178,13 @@ public final class Jep implements Closeable {
             thread.interrupt();
         }
 
+        /*
+         * Import a module into the top interpreter on the correct thread for
+         * that interpreter. This is called from the python shared modules
+         * import hook to create a module needed by a jep interpreter.
+         *
+         * @param module the name of the module to import
+         */
         public void sharedImport(String module) throws JepException{
             try{
                 importQueue.put(module);
