@@ -42,6 +42,21 @@ python -B or python -E.  For more information, see the javadoc on PyConfig
 and/or run python --help from a command line.  *Contributed by Jeff Stein.*
 
 
+Python shared modules (beta)
+~~~~~~~~~~~~~~~~~~~~~
+Jep now includes support for sharing a module between Jep instances (sub-interpreters).
+This is enabled by specifying a set of modules that should be shared in the
+JepConfig. Shared modules are created on a private internal interpreter using
+the default path and any Jep instance that is configured to share a specific
+module will receive the same module when it is imported from Python. This
+feature was developed primarily to support CPython extensions that are not
+consistent when used with Python sub-interpreters. It is now safe to close a
+Jep instance that is using numpy as long as numpy is included in the shared
+modules for every Jep instance using numpy. This feature is still considered to
+be in beta, it works very well in isolated testing but needs more real world
+testing in a variety of environments to ensure it works consistently. It is
+possible that the API for using shared modules may change in future releases.
+
 Improved efficiency
 ~~~~~~~~~~~~~~~~~~~
 * Jep now manages local references more efficiently, freeing up Java heap memory earlier for long running Python code.
