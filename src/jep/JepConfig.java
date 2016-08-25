@@ -161,7 +161,7 @@ public class JepConfig {
     /**
      * Add a module name to the set of modules
      * 
-     * @param sharedModules
+     * @param sharedModule
      *            a set of module names that should be shared
      * @return a reference to this JepConfig
      * @see #setSharedModules(Set)
