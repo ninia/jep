@@ -33,9 +33,10 @@
 #define JSHORT_MAX  32767
 #define JSHORT_MIN -32768
 #define JINT_MAX    2147483647
+/* Some compilers overflow parsing -2147483648 so derive it from JINT_MAX. */
 #define JINT_MIN    (-1 * JINT_MAX - 1)
 #define JLONG_MAX   9223372036854775807
-/* This evaluates to -9223372036854775808, but compilers prefer this format */
+/* Some compilers overflow parsing -9223372036854775808, so derive it from JLONG_MAX. */
 #define JLONG_MIN   (-1 * JLONG_MAX - 1)
 
 #define JCHAR_MAX   0xFFFF
