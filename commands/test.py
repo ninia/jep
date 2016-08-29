@@ -47,6 +47,10 @@ class test(Command):
             if lib_python:
                 environment['LD_PRELOAD'] = lib_python
 
+        # http://bugs.python.org/issue20614
+        if is_windows():
+            environment['SYSTEMROOT'] = os.environ['SYSTEMROOT']
+
         # if multiple versions of python are installed, this helps ensure the right
         # version is used
         executable = sys.executable
