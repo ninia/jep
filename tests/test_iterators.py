@@ -1,10 +1,15 @@
 import unittest
 import sys
+import tests.jep_pipe
+from tests.jep_pipe import jep_pipe
+from tests.jep_pipe import build_python_process_cmd
+
 
 class TestIterators(unittest.TestCase):
+
     def setUp(self):
         pass
-    
+
     def test_iteration(self):
         from java.util import ArrayList
         x = ArrayList()
@@ -17,6 +22,5 @@ class TestIterators(unittest.TestCase):
 
     @unittest.skipIf(sys.platform.startswith("win"), "subprocess complications on Windows")
     def test_iter_itr_crash(self):
-        from .jep_pipe import jep_pipe
-        with jep_pipe(['jep', 'tests/iter_itr_crash.py']) as p:
-            self.assertEqual(next(p), 'success: no crash\n')
+        jep_pipe(build_python_process_cmd(
+            'tests/subprocess/iter_itr_crash.py'))

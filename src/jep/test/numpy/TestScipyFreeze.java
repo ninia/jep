@@ -12,10 +12,9 @@ import jep.JepException;
  * at the same time.
  * 
  * 
- * Created: Tue Jul 14 2015
+ * Created: July 2015
  * 
- * @author [ndjensen at gmail.com] Nate Jensen
- * @version $Id$
+ * @author Nate Jensen
  */
 public class TestScipyFreeze {
 

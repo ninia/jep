@@ -25,6 +25,8 @@
 package jep;
 
 import java.io.File;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * <p>
@@ -35,7 +37,6 @@ import java.io.File;
  * </p>
  * 
  * @author [ndjensen at gmail.com] Nate Jensen
- * @version $Id$
  */
 public class JepConfig {
 
@@ -49,11 +50,14 @@ public class JepConfig {
 
     protected boolean redirectOutputStreams = false;
 
+    protected Set<String> sharedModules = null;
+
     /**
      * Sets whether <code>Jep.eval(String)</code> should support the slower
      * behavior of potentially waiting for multiple statements
      * 
-     * @param interactive whether the Jep instance should be interactive
+     * @param interactive
+     *            whether the Jep instance should be interactive
      * @return a reference to this JepConfig
      */
     public JepConfig setInteractive(boolean interactive) {
@@ -65,7 +69,8 @@ public class JepConfig {
      * Sets a path of directories separated by File.pathSeparator that will be
      * appended to the sub-intepreter's <code>sys.path</code>
      * 
-     * @param includePath directory or directories to include on sys.path
+     * @param includePath
+     *            directory or directories to include on sys.path
      * @return a reference to this JepConfig
      */
     public JepConfig setIncludePath(String includePath) {
@@ -80,7 +85,8 @@ public class JepConfig {
      * Adds a path of directories separated by File.pathSeparator that will be
      * appended to the sub-intepreter's <code>sys.path</code>
      * 
-     * @param includePaths directories to include on sys.path
+     * @param includePaths
+     *            directories to include on sys.path
      * @return a reference to this JepConfig
      */
     public JepConfig addIncludePaths(String... includePaths) {
@@ -99,7 +105,8 @@ public class JepConfig {
     /**
      * Sets the ClassLoader to use when importing Java classes from Python
      * 
-     * @param classLoader the initial ClassLoader for the Jep instance
+     * @param classLoader
+     *            the initial ClassLoader for the Jep instance
      * @return a reference to this JepConfig
      */
     public JepConfig setClassLoader(ClassLoader classLoader) {
@@ -111,7 +118,8 @@ public class JepConfig {
      * Sets a ClassEnquirer to determine which imports are Python vs Java, or
      * null for the default {@link ClassList}
      * 
-     * @param classEnquirer the ClassEnquirer for the Jep instance
+     * @param classEnquirer
+     *            the ClassEnquirer for the Jep instance
      * @return a reference to this JepConfig
      */
     public JepConfig setClassEnquirer(ClassEnquirer classEnquirer) {
@@ -123,7 +131,8 @@ public class JepConfig {
      * Sets whether to redirect the Python sys.stdout and sys.stderr streams to
      * the Java System.out and System.err streams
      * 
-     * @param redirectOutputStreams whether to redirect Python streams to Java
+     * @param redirectOutputStreams
+     *            whether to redirect Python streams to Java
      * @return a reference to this JepConfig
      */
     public JepConfig setRedirectOutputStreams(boolean redirectOutputStreams) {
@@ -131,4 +140,37 @@ public class JepConfig {
         return this;
     }
 
+    /**
+     * Sets the names of modules which should be shared with other Jep
+     * sub-interpreters. This can make it possible to use modules which are not
+     * designed for use from Python sub-interpreters. This should not be
+     * necessary for any module written in Python but is intended for extensions
+     * that use the c-api. For a complete discussion of the types of problems
+     * that can require shared modules see the documentation on
+     * shared_modules_hook.py.
+     * 
+     * @param sharedModules
+     *            a set of module names that should be shared
+     * @return a reference to this JepConfig
+     */
+    public JepConfig setSharedModules(Set<String> sharedModules) {
+        this.sharedModules = sharedModules;
+        return this;
+    }
+
+    /**
+     * Add a module name to the set of modules
+     * 
+     * @param sharedModule
+     *            a set of module names that should be shared
+     * @return a reference to this JepConfig
+     * @see #setSharedModules(Set)
+     */
+    public JepConfig addSharedModule(String sharedModule) {
+        if (sharedModules == null) {
+            sharedModules = new HashSet<String>();
+        }
+        sharedModules.add(sharedModule);
+        return this;
+    }
 }

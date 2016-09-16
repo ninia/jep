@@ -10,5 +10,3 @@ class jep_build(build):
         ('build_javah', None),
         ('build_jar', None),
     ] + build.sub_commands
-
-

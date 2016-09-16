@@ -4,6 +4,6 @@ Jep 2.4 Release Notes
 Packed Python strings
 ~~~~~~~~~~~~~~~~~~~~~
 Jep now has methods for transforming a packed Python string to a Java float[]
-or byte[].
+or byte[].  *Contributed by Jon Wright.*
 
 https://docs.python.org/2/library/struct.html

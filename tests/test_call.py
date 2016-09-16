@@ -2,34 +2,19 @@ import unittest
 
 import jep
 Test = jep.findClass('jep.test.Test')
-Boolean =  jep.findClass('java.lang.Boolean')
+Boolean = jep.findClass('java.lang.Boolean')
+StringBuilder = jep.findClass('java.lang.StringBuilder')
+ArrayList = jep.findClass('java.util.ArrayList')
+
 
 class TestTypes(unittest.TestCase):
+
     def setUp(self):
         self.test = Test()
-
-    def test_string(self):
-        self.assertEqual("toString(). Thanks for calling Java(tm).", self.test.toString())
 
     def test_enum(self):
         testEnum = self.test.getEnum()
         self.assertEqual(0, testEnum.ordinal())
-
-    def test_long(self):
-        self.assertEqual(9223372036854775807, self.test.getClassLong().longValue())
-
-    def test_double(self):
-        self.assertEqual(4.9E-324, self.test.getClassDouble().doubleValue())
-
-    def test_float(self):
-        self.assertAlmostEqual(3.4028234663852886e+38, self.test.getClassFloat().floatValue())
-
-    def test_intobj(self):
-        self.assertEqual(-2147483648, self.test.getInteger().intValue())
-
-    def test_getobj(self):
-        obj = self.test.getObject()
-        self.assertEqual("list 0", str(obj.get(0)))
 
     def test_getstring_array(self):
         obj = self.test.getStringArray()
@@ -74,8 +59,33 @@ class TestTypes(unittest.TestCase):
         self.assertEqual(String, String)
         self.assertNotEqual(String, Integer)
 
-    def test_boxing(self):
-        self.assertTrue(Boolean.TRUE.equals(True))
-        self.assertFalse(Boolean.TRUE.equals(1))
-        self.assertFalse(Boolean.TRUE.equals(1.5))
+    def test_20args(self):
+        args = list()
+        for x in range(20):
+            args.append(Test())
+        result = Test.test20Args(*args)
+        self.assertEqual(args, list(result))
 
+    def test_deepList(self):
+        # Make sure type conversion works when a list contains a list...
+        l = [self.test]
+        for i in range(50):
+            l = [l]
+        result = self.test.testObjectPassThrough(l)
+        for i in range(50):
+            result = result[0]
+        self.assertEquals(self.test, result[0])
+
+    def test_overload(self):
+        builder = StringBuilder()
+        builder.append(1)
+        self.assertTrue(builder.toString() == "1")
+        builder = StringBuilder()
+        builder.append(StringBuilder)
+        self.assertTrue(builder.toString() == "class java.lang.StringBuilder")
+        list = ArrayList()
+        list.add("One")
+        list.add("Two")
+        list.add("Three")
+        list.remove(1)
+        self.assertEqual(list.size(), 2)

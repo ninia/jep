@@ -2,9 +2,6 @@ package jep.test;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
 import java.util.Random;
 
 import jep.Jep;
@@ -14,10 +11,9 @@ import jep.Jep;
  * correctly.
  * 
  * 
- * Created: Tue Jul 14 2015
+ * Created: July 2015
  * 
- * @author [ndjensen at gmail.com] Nate Jensen
- * @version $Id$
+ * @author Nate Jensen
  */
 public class TestGetByteArray {
 
@@ -28,8 +24,13 @@ public class TestGetByteArray {
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
-        testGetByteArray();
-        testGetFloatArray();
+        try {
+            testGetByteArray();
+        } catch (Throwable t) {
+            t.printStackTrace();
+            System.exit(1);
+        }
+        System.exit(0);
     }
 
     public static void testGetByteArray() throws Exception {
@@ -49,7 +50,7 @@ public class TestGetByteArray {
         Jep jep = null;
         byte[] b2 = null;
         try {
-            jep = new Jep(false);
+            jep = new Jep(false, ".");
             jep.eval("f = open('" + output.getAbsolutePath() + "', 'rb')");
             jep.eval("x = f.read()");
             jep.eval("f.close()");
@@ -72,28 +73,6 @@ public class TestGetByteArray {
         for (int i = 0; i < b.length; i++) {
             if (b[i] != b2[i]) {
                 throw new AssertionError("values at index " + i + " differ");
-            }
-        }
-
-        System.out.println("byte[] properly retrieved from Jep");
-    }
-
-    public static void testGetFloatArray() throws Exception {
-        File output = File.createTempFile("testFloatArrayGet", ".bin");
-        byte[] b = new byte[SIZE * 4];
-        FloatBuffer fb = ByteBuffer.wrap(b).order(ByteOrder.nativeOrder())
-                .asFloatBuffer();
-        Random r = new Random();
-        for (int i = 0; i < SIZE; i++) {
-            fb.put(r.nextFloat());
-        }
-        FileOutputStream fos = null;
-        try {
-            fos = new FileOutputStream(output);
-            fos.write(b);
-        } finally {
-            if (fos != null) {
-                fos.close();
             }
         }
     }

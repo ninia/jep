@@ -138,6 +138,7 @@ def connect(url, user=None, password=None, timeout=0):
 
 
 class JDBCConnection(object):
+
     def __init__(self, conn):
         super(JDBCConnection, self).__init__()
         self.conn = conn
@@ -165,6 +166,7 @@ class JDBCConnection(object):
 
 
 class JDBCCursor(object):
+
     def __init__(self, jconn):
         super(JDBCCursor, self).__init__()
         self.connection = jconn

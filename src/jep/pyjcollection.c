@@ -67,11 +67,9 @@ static Py_ssize_t pyjcollection_len(PyObject* self)
     PyJObject    *pyjob = (PyJObject*) self;
     JNIEnv       *env   = pyembed_get_env();
 
-    if (collectionSize == 0) {
-        collectionSize = (*env)->GetMethodID(env, JCOLLECTION_TYPE, "size", "()I");
-        if (process_java_exception(env) || !collectionSize) {
-            return -1;
-        }
+    if (!JNI_METHOD(collectionSize, env, JCOLLECTION_TYPE, "size", "()I")) {
+        process_java_exception(env);
+        return -1;
     }
 
     len = (*env)->CallIntMethod(env, pyjob->object, collectionSize);
@@ -88,49 +86,41 @@ static Py_ssize_t pyjcollection_len(PyObject* self)
  */
 static int pyjcollection_contains(PyObject *o, PyObject *v)
 {
-    jboolean      result   = JNI_FALSE;
+    int           result   = -1;
+    jboolean      jresult  = JNI_FALSE;
     PyJObject    *obj      = (PyJObject*) o;
     JNIEnv       *env      = pyembed_get_env();
     jobject       value    = NULL;
 
-    if (v == Py_None) {
-        value = NULL;
-    } else {
-        value = pyembed_box_py(env, v);
-        if (process_java_exception(env)) {
-            return -1;
-        } else if (!value) {
-            /*
-             * with the way pyembed_box_py is currently implemented, shouldn't
-             * be able to get here
-             */
-            PyObject *pystring = PyObject_Str((PyObject*) Py_TYPE(v));
-            PyErr_Format(PyExc_TypeError,
-                         "__contains__ received an incompatible type: %s",
-                         PyString_AsString(pystring));
-            Py_XDECREF(pystring);
-            return -1;
-        }
-    }
-
-    if (collectionContains == 0) {
-        collectionContains = (*env)->GetMethodID(env, JCOLLECTION_TYPE, "contains",
-                             "(Ljava/lang/Object;)Z");
-        if (process_java_exception(env) || !collectionContains) {
-            return -1;
-        }
-    }
-
-    result = (*env)->CallBooleanMethod(env, obj->object, collectionContains, value);
-    if (process_java_exception(env)) {
+    if (!JNI_METHOD(collectionContains, env, JCOLLECTION_TYPE, "contains",
+                    "(Ljava/lang/Object;)Z")) {
+        process_java_exception(env);
         return -1;
     }
 
-    if (result) {
-        return 1;
-    } else {
-        return 0;
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
+        process_java_exception(env);
+        return -1;
     }
+    value = PyObject_As_jobject(env, v, JOBJECT_TYPE);
+    if (!value && PyErr_Occurred()) {
+        goto FINALLY;
+    }
+
+    jresult = (*env)->CallBooleanMethod(env, obj->object, collectionContains,
+                                        value);
+    if (process_java_exception(env)) {
+        goto FINALLY;
+    }
+
+    if (jresult == JNI_TRUE) {
+        result = 1;
+    } else {
+        result = 0;
+    }
+FINALLY:
+    (*env)->PopLocalFrame(env, NULL);
+    return result;
 }
 
 

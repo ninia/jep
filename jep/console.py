@@ -45,13 +45,13 @@ except OSError as e:
         print("Windows error importing readline: " + str(e))
         print("Please try using the latest pyreadline from https://github.com/pyreadline/pyreadline")
     else:
-        print("Error importing readline: " + str(e))        
+        print("Error importing readline: " + str(e))
 
 if has_readline:
     try:
         history_file = os.path.join(os.path.expanduser('~'), '.jep')
         if not os.path.exists(history_file):
-           readline.write_history_file(history_file)
+            readline.write_history_file(history_file)
         else:
             readline.read_history_file(history_file)
     except IOError as err:
@@ -70,7 +70,17 @@ def prompt(jep):
             try:
                 ran = jep.eval(line)
             except Exception as err:
-                traceback.print_exc()
+                printedErr = False
+                try:
+                    if len(err.args):
+                        if 'printStackTrace' in dir(err.args[0]):
+                            err.args[0].printStackTrace()
+                            printedErr = True
+                except Exception as exc:
+                    print("Error printing stacktrace:", str(exc))
+                finally:
+                    if not printedErr:
+                        print(str(err))
 
             try:
                 if ran:

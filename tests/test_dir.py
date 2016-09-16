@@ -2,6 +2,7 @@ import unittest
 
 
 class TestDir(unittest.TestCase):
+
     def setUp(self):
         # need to clear out these modules to be safe, because certain versions
         # of the import hook may eagerly import extra packages or classes and
@@ -11,7 +12,7 @@ class TestDir(unittest.TestCase):
         for n in toRemove:
             if n in sys.modules:
                 sys.modules.pop(n)
-    
+
     def test_dir_arraylist(self):
         from java.util import ArrayList
         x = ArrayList()
@@ -41,50 +42,50 @@ class TestDir(unittest.TestCase):
 
     def test_dir_package(self):
         javaUtil = [
-                    "Collection",
-                    "Comparator",
-                    "Iterator",
-                    "List",
-                    "Map",
-                    "Set",
-                    "Queue",
-                    "ArrayList",
-                    "Arrays",
-                    "Calendar",
-                    "Collections",
-                    "Date",
-                    "HashMap",
-                    "HashSet",
-                    "LinkedList",
-                    "Properties",
-                    "ConcurrentModificationException",
-                   ]
+            "Collection",
+            "Comparator",
+            "Iterator",
+            "List",
+            "Map",
+            "Set",
+            "Queue",
+            "ArrayList",
+            "Arrays",
+            "Calendar",
+            "Collections",
+            "Date",
+            "HashMap",
+            "HashSet",
+            "LinkedList",
+            "Properties",
+            "ConcurrentModificationException",
+        ]
 
         javaLang = [
-                    "Cloneable",
-                    "Comparable",
-                    "Iterable",
-                    "Runnable",
-                    "Boolean",
-                    "Byte",
-                    "Class",
-                    "Double",
-                    "Float",
-                    "Integer",
-                    "Long",
-                    "Math",
-                    "Number",
-                    "Object",
-                    "Short",
-                    "String",
-                    "StringBuilder",
-                    "Thread",
-                    "Throwable",
-                    "Void",
-                    "IllegalArgumentException",
-                    "NullPointerException",
-                    "RuntimeException",
-                   ]
+            "Cloneable",
+            "Comparable",
+            "Iterable",
+            "Runnable",
+            "Boolean",
+            "Byte",
+            "Class",
+            "Double",
+            "Float",
+            "Integer",
+            "Long",
+            "Math",
+            "Number",
+            "Object",
+            "Short",
+            "String",
+            "StringBuilder",
+            "Thread",
+            "Throwable",
+            "Void",
+            "IllegalArgumentException",
+            "NullPointerException",
+            "RuntimeException",
+        ]
 
         import java.util
         javaUtilDir = dir(java.util)

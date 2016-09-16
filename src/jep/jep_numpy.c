@@ -52,13 +52,13 @@ static int numpyInitialized = 0;
 
 /* internal method */
 static PyObject* convert_jprimitivearray_pyndarray(JNIEnv*, jobject, int,
-        npy_intp*);
+        npy_intp*, int);
 
 /* cache jmethodIDs for performance */
 jmethodID ndarrayInit    = NULL;
 jmethodID ndarrayGetDims = NULL;
 jmethodID ndarrayGetData = NULL;
-
+jmethodID ndarrayIsUnsigned = NULL;
 
 
 /*
@@ -118,8 +118,7 @@ int jndarray_check(JNIEnv *env, jobject obj)
  *
  * @param env          the JNI environment
  * @param param        the ndarray to convert
- * @param desiredType  the desired type of the resulting primitive array, or
- *                          NULL if it should determine type based on the dtype
+ * @param desiredType  the desired type of the resulting primitive array
  *
  * @return a Java primitive array, or NULL if there were errors
  */
@@ -141,48 +140,21 @@ jarray convert_pyndarray_jprimitivearray(JNIEnv* env,
     sz = (jsize) PyArray_Size(param);
     paType = PyArray_TYPE((PyArrayObject *) param);
 
-    if (desiredType == NULL) {
-        if (paType == NPY_BOOL) {
-            desiredType = JBOOLEAN_ARRAY_TYPE;
-        } else if (paType == NPY_BYTE) {
-            desiredType = JBYTE_ARRAY_TYPE;
-        } else if (paType == NPY_INT16) {
-            desiredType = JSHORT_ARRAY_TYPE;
-        } else if (paType == NPY_INT32) {
-            desiredType = JINT_ARRAY_TYPE;
-        } else if (paType == NPY_INT64) {
-            desiredType = JLONG_ARRAY_TYPE;
-        } else if (paType == NPY_FLOAT32) {
-            desiredType = JFLOAT_ARRAY_TYPE;
-        } else if (paType == NPY_FLOAT64) {
-            desiredType = JDOUBLE_ARRAY_TYPE;
-        } else {
-            PyErr_Format(PyExc_TypeError,
-                         "Unable to determine corresponding Java type for ndarray");
-            return NULL;
-        }
-    }
-
-    /*
-     * TODO we could speed this up if we could skip the copy, but the copy makes
-     * it safer by enforcing the correct length in bytes for the type
-     */
-
-    copy = (PyArrayObject *) PyArray_CopyFromObject(param, paType, 0, 0);
+    copy = PyArray_GETCONTIGUOUS((PyArrayObject*) param);
     if ((*env)->IsSameObject(env, desiredType, JBOOLEAN_ARRAY_TYPE)
             && (paType == NPY_BOOL)) {
         arr = (*env)->NewBooleanArray(env, sz);
     } else if ((*env)->IsSameObject(env, desiredType, JBYTE_ARRAY_TYPE)
-               && (paType == NPY_BYTE)) {
+               && (paType == NPY_BYTE || paType == NPY_UBYTE)) {
         arr = (*env)->NewByteArray(env, sz);
     } else if ((*env)->IsSameObject(env, desiredType, JSHORT_ARRAY_TYPE)
-               && (paType == NPY_INT16)) {
+               && (paType == NPY_INT16 || paType == NPY_UINT16)) {
         arr = (*env)->NewShortArray(env, sz);
     } else if ((*env)->IsSameObject(env, desiredType, JINT_ARRAY_TYPE)
-               && (paType == NPY_INT32)) {
+               && (paType == NPY_INT32 || paType == NPY_UINT32)) {
         arr = (*env)->NewIntArray(env, sz);
     } else if ((*env)->IsSameObject(env, desiredType, JLONG_ARRAY_TYPE)
-               && (paType == NPY_INT64)) {
+               && (paType == NPY_INT64 || paType == NPY_UINT64)) {
         arr = (*env)->NewLongArray(env, sz);
     } else if ((*env)->IsSameObject(env, desiredType, JFLOAT_ARRAY_TYPE)
                && (paType == NPY_FLOAT32)) {
@@ -210,14 +182,14 @@ jarray convert_pyndarray_jprimitivearray(JNIEnv* env,
     if (paType == NPY_BOOL) {
         (*env)->SetBooleanArrayRegion(env, arr, 0, sz,
                                       (const jboolean *) PyArray_DATA(copy));
-    } else if (paType == NPY_BYTE) {
+    } else if (paType == NPY_BYTE || paType == NPY_UBYTE) {
         (*env)->SetByteArrayRegion(env, arr, 0, sz, (const jbyte *) PyArray_DATA(copy));
-    } else if (paType == NPY_INT16) {
+    } else if (paType == NPY_INT16 || paType == NPY_UINT16) {
         (*env)->SetShortArrayRegion(env, arr, 0, sz,
                                     (const jshort *) PyArray_DATA(copy));
-    } else if (paType == NPY_INT32) {
+    } else if (paType == NPY_INT32 || paType == NPY_UINT32) {
         (*env)->SetIntArrayRegion(env, arr, 0, sz, (const jint *) PyArray_DATA(copy));
-    } else if (paType == NPY_INT64) {
+    } else if (paType == NPY_INT64 || paType == NPY_UINT64) {
         (*env)->SetLongArrayRegion(env, arr, 0, sz, (const jlong *) PyArray_DATA(copy));
     } else if (paType == NPY_FLOAT32) {
         (*env)->SetFloatArrayRegion(env, arr, 0, sz,
@@ -254,18 +226,17 @@ jobject convert_pyndarray_jndarray(JNIEnv *env, PyObject *pyobj)
     jobject        primitive = NULL;
     jobject        result    = NULL;
     PyArrayObject *pyarray   = (PyArrayObject*) pyobj;
+    enum NPY_TYPES paType    = 0;
+    jclass         desiredType = NULL;
     int            ndims     = 0;
     int            i;
+    jboolean       usigned   = 0;
 
     init_numpy();
-    if (ndarrayInit == 0) {
-        ndarrayInit = (*env)->GetMethodID(env,
-                                          JEP_NDARRAY_TYPE,
-                                          "<init>",
-                                          "(Ljava/lang/Object;[I)V");
-        if (process_java_exception(env) || !ndarrayInit) {
-            return NULL;
-        }
+    if (!JNI_METHOD(ndarrayInit, env, JEP_NDARRAY_TYPE, "<init>",
+                    "(Ljava/lang/Object;Z[I)V")) {
+        process_java_exception(env);
+        return NULL;
     }
 
     // setup the int[] constructor arg
@@ -288,14 +259,47 @@ jobject convert_pyndarray_jndarray(JNIEnv *env, PyObject *pyobj)
         return NULL;
     }
 
+    paType = PyArray_TYPE(pyarray);
+    if (paType == NPY_BOOL) {
+        desiredType = JBOOLEAN_ARRAY_TYPE;
+    } else if (paType == NPY_BYTE) {
+        desiredType = JBYTE_ARRAY_TYPE;
+    } else if (paType == NPY_UBYTE) {
+        desiredType = JBYTE_ARRAY_TYPE;
+        usigned = 1;
+    } else if (paType == NPY_INT16) {
+        desiredType = JSHORT_ARRAY_TYPE;
+    } else if (paType == NPY_UINT16) {
+        desiredType = JSHORT_ARRAY_TYPE;
+        usigned = 1;
+    } else if (paType == NPY_INT32) {
+        desiredType = JINT_ARRAY_TYPE;
+    } else if (paType == NPY_INT32) {
+        desiredType = JINT_ARRAY_TYPE;
+        usigned = 1;
+    } else if (paType == NPY_INT64) {
+        desiredType = JLONG_ARRAY_TYPE;
+    } else if (paType == NPY_UINT64) {
+        desiredType = JLONG_ARRAY_TYPE;
+        usigned = 1;
+    } else if (paType == NPY_FLOAT32) {
+        desiredType = JFLOAT_ARRAY_TYPE;
+    } else if (paType == NPY_FLOAT64) {
+        desiredType = JDOUBLE_ARRAY_TYPE;
+    } else {
+        PyErr_Format(PyExc_TypeError,
+                     "Unable to determine corresponding Java type for ndarray: %d", paType);
+        return NULL;
+    }
+
     // setup the primitive array arg
-    primitive = convert_pyndarray_jprimitivearray(env, pyobj, NULL);
+    primitive = convert_pyndarray_jprimitivearray(env, pyobj, desiredType);
     if (!primitive) {
         return NULL;
     }
 
     result = (*env)->NewObject(env, JEP_NDARRAY_TYPE, ndarrayInit, primitive,
-                               jdimObj);
+                               usigned, jdimObj);
     if (process_java_exception(env) || !result) {
         return NULL;
     }
@@ -316,7 +320,8 @@ jobject convert_pyndarray_jndarray(JNIEnv *env, PyObject *pyobj)
 PyObject* convert_jprimitivearray_pyndarray(JNIEnv *env,
         jobject jo,
         int ndims,
-        npy_intp *dims)
+        npy_intp *dims,
+        int usigned)
 {
     PyObject *pyob = NULL;
     int i           = 0;
@@ -327,47 +332,33 @@ PyObject* convert_jprimitivearray_pyndarray(JNIEnv *env,
     }
 
     if ((*env)->IsInstanceOf(env, jo, JBOOLEAN_ARRAY_TYPE)) {
-        jboolean *dataBool = NULL;
         pyob = PyArray_SimpleNew(ndims, dims, NPY_BOOL);
-        dataBool = (*env)->GetBooleanArrayElements(env, jo, 0);
-        memcpy(PyArray_DATA((PyArrayObject *) pyob), dataBool, dimsize * 1);
-        (*env)->ReleaseBooleanArrayElements(env, jo, dataBool, JNI_ABORT);
+        (*env)->GetBooleanArrayRegion(env, jo, 0, (jsize) dimsize,
+                                      PyArray_DATA((PyArrayObject *) pyob));
     } else if ((*env)->IsInstanceOf(env, jo, JBYTE_ARRAY_TYPE)) {
-        jbyte *dataByte = NULL;
-        pyob = PyArray_SimpleNew(ndims, dims, NPY_BYTE);
-        dataByte = (*env)->GetByteArrayElements(env, jo, 0);
-        memcpy(PyArray_DATA((PyArrayObject *) pyob), dataByte, dimsize * 1);
-        (*env)->ReleaseByteArrayElements(env, jo, dataByte, JNI_ABORT);
+        pyob = PyArray_SimpleNew(ndims, dims,  usigned ? NPY_UBYTE : NPY_BYTE);
+        (*env)->GetByteArrayRegion(env, jo, 0, (jsize) dimsize,
+                                   PyArray_DATA((PyArrayObject *) pyob));
     } else if ((*env)->IsInstanceOf(env, jo, JSHORT_ARRAY_TYPE)) {
-        jshort *dataShort = NULL;
-        pyob = PyArray_SimpleNew(ndims, dims, NPY_INT16);
-        dataShort = (*env)->GetShortArrayElements(env, jo, 0);
-        memcpy(PyArray_DATA((PyArrayObject *) pyob), dataShort, dimsize * 2);
-        (*env)->ReleaseShortArrayElements(env, jo, dataShort, JNI_ABORT);
+        pyob = PyArray_SimpleNew(ndims, dims, usigned ? NPY_UINT16 : NPY_INT16);
+        (*env)->GetShortArrayRegion(env, jo, 0, (jsize) dimsize,
+                                    PyArray_DATA((PyArrayObject *) pyob));
     } else if ((*env)->IsInstanceOf(env, jo, JINT_ARRAY_TYPE)) {
-        jint *dataInt = NULL;
-        pyob = PyArray_SimpleNew(ndims, dims, NPY_INT32);
-        dataInt = (*env)->GetIntArrayElements(env, jo, 0);
-        memcpy(PyArray_DATA((PyArrayObject *) pyob), dataInt, dimsize * 4);
-        (*env)->ReleaseIntArrayElements(env, jo, dataInt, JNI_ABORT);
+        pyob = PyArray_SimpleNew(ndims, dims, usigned ? NPY_UINT32 : NPY_INT32);
+        (*env)->GetIntArrayRegion(env, jo, 0, (jsize) dimsize,
+                                  PyArray_DATA((PyArrayObject *) pyob));
     } else if ((*env)->IsInstanceOf(env, jo, JLONG_ARRAY_TYPE)) {
-        jlong *dataLong = NULL;
-        pyob = PyArray_SimpleNew(ndims, dims, NPY_INT64);
-        dataLong = (*env)->GetLongArrayElements(env, jo, 0);
-        memcpy(PyArray_DATA((PyArrayObject *) pyob), dataLong, dimsize * 8);
-        (*env)->ReleaseLongArrayElements(env, jo, dataLong, JNI_ABORT);
+        pyob = PyArray_SimpleNew(ndims, dims, usigned ? NPY_UINT64 : NPY_INT64);
+        (*env)->GetLongArrayRegion(env, jo, 0, (jsize) dimsize,
+                                   PyArray_DATA((PyArrayObject *) pyob));
     } else if ((*env)->IsInstanceOf(env, jo, JFLOAT_ARRAY_TYPE)) {
-        jfloat *dataFloat = NULL;
         pyob = PyArray_SimpleNew(ndims, dims, NPY_FLOAT32);
-        dataFloat = (*env)->GetFloatArrayElements(env, jo, 0);
-        memcpy(PyArray_DATA((PyArrayObject *) pyob), dataFloat, dimsize * 4);
-        (*env)->ReleaseFloatArrayElements(env, jo, dataFloat, JNI_ABORT);
+        (*env)->GetFloatArrayRegion(env, jo, 0, (jsize) dimsize,
+                                    PyArray_DATA((PyArrayObject *) pyob));
     } else if ((*env)->IsInstanceOf(env, jo, JDOUBLE_ARRAY_TYPE)) {
-        jdouble *dataDouble = NULL;
         pyob = PyArray_SimpleNew(ndims, dims, NPY_FLOAT64);
-        dataDouble = (*env)->GetDoubleArrayElements(env, jo, 0);
-        memcpy(PyArray_DATA((PyArrayObject *) pyob), dataDouble, dimsize * 8);
-        (*env)->ReleaseDoubleArrayElements(env, jo, dataDouble, JNI_ABORT);
+        (*env)->GetDoubleArrayRegion(env, jo, 0, (jsize) dimsize,
+                                     PyArray_DATA((PyArrayObject *) pyob));
     }
 
     return pyob;
@@ -389,23 +380,32 @@ PyObject* convert_jndarray_pyndarray(JNIEnv *env, jobject obj)
     jobject    data    = NULL;
     PyObject  *result  = NULL;
     jsize      ndims   = 0;
+    jboolean   usigned = 0;
     int        i;
 
     init_numpy();
-    if (ndarrayGetDims == 0) {
-        ndarrayGetDims = (*env)->GetMethodID(env, JEP_NDARRAY_TYPE, "getDimensions",
-                                             "()[I");
-        if (process_java_exception(env) || !ndarrayGetDims) {
-            return NULL;
-        }
+
+    if (!JNI_METHOD(ndarrayGetDims, env, JEP_NDARRAY_TYPE, "getDimensions",
+                    "()[I")) {
+        process_java_exception(env);
+        return NULL;
     }
 
-    if (ndarrayGetData == 0) {
-        ndarrayGetData = (*env)->GetMethodID(env, JEP_NDARRAY_TYPE, "getData",
-                                             "()Ljava/lang/Object;");
-        if (process_java_exception(env) || !ndarrayGetData) {
-            return NULL;
-        }
+    if (!JNI_METHOD(ndarrayGetData, env, JEP_NDARRAY_TYPE, "getData",
+                    "()Ljava/lang/Object;")) {
+        process_java_exception(env);
+        return NULL;
+    }
+
+    if (!JNI_METHOD(ndarrayIsUnsigned, env, JEP_NDARRAY_TYPE, "isUnsigned",
+                    "()Z")) {
+        process_java_exception(env);
+        return NULL;
+    }
+
+    usigned = (*env)->CallBooleanMethod(env, obj, ndarrayIsUnsigned);
+    if (process_java_exception(env)) {
+        return NULL;
     }
 
     // set up the dimensions for conversion
@@ -438,7 +438,7 @@ PyObject* convert_jndarray_pyndarray(JNIEnv *env, jobject obj)
         return NULL;
     }
 
-    result = convert_jprimitivearray_pyndarray(env, data, ndims, dims);
+    result = convert_jprimitivearray_pyndarray(env, data, ndims, dims, usigned);
     if (!result) {
         process_java_exception(env);
     }

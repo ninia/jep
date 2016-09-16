@@ -34,16 +34,14 @@
 
 PyAPI_DATA(PyTypeObject) PyJField_Type;
 
-// i needed an object to store methods in. this is a callable
-// object and instances of these are dynamically added to a PyJobject
-// using setattr.
-
+/* Represents a java field on a java object and allows getting and setting values */
 typedef struct {
     PyObject_HEAD
     jfieldID          fieldId;             /* Resolved fieldid */
     jobject           rfield;              /* reflect/Field object */
     PyJObject        *pyjobject;           /* parent, should point to
                                               PyJObject_Object */
+    jclass            fieldType;           /* field's type */
     int               fieldTypeId;         /* field's typeid */
     PyObject         *pyFieldName;         /* python name... :-) */
     int               isStatic;            /* -1 if not known,

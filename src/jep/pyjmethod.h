@@ -33,12 +33,14 @@
 #define _Included_pyjmethod
 
 
-PyAPI_DATA(PyTypeObject) PyJmethod_Type;
+PyAPI_DATA(PyTypeObject) PyJMethod_Type;
 
-// i needed an object to store methods in. this is a callable
-// object and instances of these are dynamically added to a PyJobject
-// using setattr.
-
+/*
+ * A callable python object which wraps a java method and is dynamically added
+ * to a PyJObject using setattr. Most of the fields in this object are lazy
+ * loaded and care should be taken to ensure they are populated before accessing
+ * them. The only fields that are not lazily loaded are rmethod and pyMethodName.
+ */
 typedef struct {
     PyObject_HEAD
     jmethodID         methodId;            /* resolved methodid */
@@ -50,26 +52,27 @@ typedef struct {
     int               isStatic;            /* if method is static */
 } PyJMethodObject;
 
-PyJMethodObject* pyjmethod_new(JNIEnv*,
-                               jobject,
-                               PyJObject*);
-PyJMethodObject* pyjmethod_new_static(JNIEnv*, jobject, PyJObject*);
-int pyjmethod_init(JNIEnv*, PyJMethodObject*);
+/* Create a new PyJMethod from a java.lang.reflect.Method*/
+PyAPI_FUNC(PyJMethodObject*) PyJMethod_New(JNIEnv*, jobject);
 
-int pyjmethod_check(PyObject *obj);
+/* Check if the arg is a PyJMethodObject */
+PyAPI_FUNC(int) PyJMethod_Check(PyObject *obj);
 
 /*
- * Test if a method has a specified name and number of parameters.
+ * Get the number of parameters the method is expecting. If the method has not
+ * been initialized yet this will trigger initialization.
  */
-int pyjmethod_check_simple_compat(PyJMethodObject*, JNIEnv*, PyObject*,
-                                  Py_ssize_t);
+PyAPI_FUNC(int) PyJMethod_GetParameterCount(PyJMethodObject*, JNIEnv*);
 
 /*
- * Check if a method is compatible with the types of a tuple of arguments. It is
- * not safe to call this method if pyjmethod_check_simple_compat does not return
- * true. This method does not need to be called before using call_internal, it
- * is only necessary for resolving method overloading.
+ * Check if a method is compatible with the types of a tuple of arguments.
+ * This will return a 0 if the arguments are not valid for this method and a
+ * positive integer if the arguments are valid. Larger numbers indicate a better
+ * match between the arguments and the expected parameter types. This function
+ * uses pyarg_matches_jtype to determine how well arguments match. This function
+ * does not need to be called before using calling this method, it is only
+ * necessary for resolving method overloading.
  */
-int pyjmethod_check_complex_compat(PyJMethodObject*, JNIEnv*, PyObject*);
+PyAPI_FUNC(int) PyJMethod_CheckArguments(PyJMethodObject*, JNIEnv*, PyObject*);
 
 #endif // ndef pyjmethod

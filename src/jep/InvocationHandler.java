@@ -32,7 +32,6 @@ import jep.python.PyObject;
  * Handle Proxy method calls.
  * 
  * @author [mrjohnson0 at sourceforge.net] Mike Johnson
- * @version $Id: $
  */
 public class InvocationHandler implements java.lang.reflect.InvocationHandler {
 
@@ -44,7 +43,7 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
 
     /**
      * Creates a new <code>InvocationHandler</code> instance.
-     *
+     * 
      * @param tstate
      *            the thread state id
      * @param ltarget

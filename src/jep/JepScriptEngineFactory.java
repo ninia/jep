@@ -36,7 +36,6 @@ import javax.script.ScriptException;
  * Implements {@link javax.script.ScriptEngineFactory}
  * 
  * @author [mrjohnson0 at sourceforge.net] Mike Johnson
- * @version $Id$
  */
 public class JepScriptEngineFactory implements ScriptEngineFactory {
 

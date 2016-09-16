@@ -1,6 +1,7 @@
 """
 Fork of distutils' build_scripts command to handle creating
-shell scripts with proper path info in the python prefix.
+jep shell script and/or jep.bat script with proper setup to ensure
+the jep interpreter can be run from the command line.
 """
 
 import os
@@ -10,7 +11,9 @@ from distutils.dep_util import newer
 from distutils.util import convert_path
 from distutils import log
 from distutils import sysconfig
-from commands.util import is_osx, is_windows
+from commands.util import is_osx
+from commands.util import is_windows
+from commands.python import get_libpython
 
 
 class build_scripts(Command):
@@ -68,28 +71,20 @@ class build_scripts(Command):
 
         if not is_osx() and not is_windows():
             context['ld_library_path'] = 'LD_LIBRARY_PATH="' + \
-                                           sysconfig.get_config_var('LIBDIR') + \
-                                           ':{0}"; export LD_LIBRARY_PATH'.format(
-                                           install.install_lib)
-            
+                sysconfig.get_config_var('LIBDIR') + \
+                ':{0}"; export LD_LIBRARY_PATH'.format(
+                install.install_lib)
+
             # set the LD_PRELOAD environment variable if we can locate the
             # libpython<version>.so library.
-            lib_python = os.path.join(sysconfig.get_config_var('LIBDIR'),
-                                      sysconfig.get_config_var('LDLIBRARY'))
-            if os.path.exists(lib_python):
-                context['ld_preload'] = 'LD_PRELOAD="{0}"; export LD_PRELOAD'.format(lib_python)
-
-            else:
-                # x64 systems will tend to also have a MULTIARCH folder
-                lib_python = os.path.join(sysconfig.get_config_var('LIBDIR'),
-                                          sysconfig.get_config_var('MULTIARCH'),
-                                          sysconfig.get_config_var('LDLIBRARY'))
-                if os.path.exists(lib_python):
-                    context['ld_preload'] = 'LD_PRELOAD="{0}"; export LD_PRELOAD'.format(lib_python)
+            lib_python = get_libpython()
+            if lib_python:
+                context['ld_preload'] = 'LD_PRELOAD="{0}"; export LD_PRELOAD'.format(
+                    lib_python)
 
         for script in self.scripts:
             if is_windows():
-                script='{0}.bat'.format(script)
+                script = '{0}.bat'.format(script)
             script = convert_path(script)
             outfile = os.path.join(self.build_dir, os.path.basename(script))
             outfiles.append(outfile)

@@ -71,11 +71,9 @@ static Py_ssize_t pyjmap_len(PyObject *self)
     PyJObject    *pyjob = (PyJObject*) self;
     JNIEnv       *env   = pyembed_get_env();
 
-    if (mapSize == 0) {
-        mapSize = (*env)->GetMethodID(env, JMAP_TYPE, "size", "()I");
-        if (process_java_exception(env) || !mapSize) {
-            return -1;
-        }
+    if (!JNI_METHOD(mapSize, env, JMAP_TYPE, "size", "()I")) {
+        process_java_exception(env);
+        return -1;
     }
 
     len = (*env)->CallIntMethod(env, pyjob->object, mapSize);
@@ -92,49 +90,41 @@ static Py_ssize_t pyjmap_len(PyObject *self)
  */
 static int pyjmap_contains_key(PyObject *self, PyObject *key)
 {
-    jboolean      result      = JNI_FALSE;
+    jboolean     jresult      = JNI_FALSE;
     PyJObject    *obj         = (PyJObject*) self;
     JNIEnv       *env         = pyembed_get_env();
     jobject       jkey        = NULL;
+    int           result   = -1;
 
-    if (key == Py_None) {
-        jkey = NULL;
-    } else {
-        jkey = pyembed_box_py(env, key);
-        if (process_java_exception(env)) {
-            return -1;
-        } else if (!jkey) {
-            /*
-             * with the way pyembed_box_py is currently implemented, shouldn't
-             * be able to get here
-             */
-            PyObject *pystring = PyObject_Str((PyObject*) Py_TYPE(key));
-            PyErr_Format(PyExc_TypeError,
-                         "__contains__ received an incompatible type: %s",
-                         PyString_AsString(pystring));
-            Py_XDECREF(pystring);
-            return -1;
-        }
-    }
-
-    if (mapContainsKey == 0) {
-        mapContainsKey = (*env)->GetMethodID(env, JMAP_TYPE, "containsKey",
-                                             "(Ljava/lang/Object;)Z");
-        if (process_java_exception(env) || !mapContainsKey) {
-            return -1;
-        }
-    }
-
-    result = (*env)->CallBooleanMethod(env, obj->object, mapContainsKey, jkey);
-    if (process_java_exception(env)) {
+    if (!JNI_METHOD(mapContainsKey, env, JMAP_TYPE, "containsKey",
+                    "(Ljava/lang/Object;)Z")) {
+        process_java_exception(env);
         return -1;
     }
 
-    if (result) {
-        return 1;
-    } else {
-        return 0;
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
+        process_java_exception(env);
+        return -1;
     }
+    jkey = PyObject_As_jobject(env, key, JOBJECT_TYPE);
+    if (!jkey && PyErr_Occurred()) {
+        goto FINALLY;
+    }
+
+    jresult = (*env)->CallBooleanMethod(env, obj->object, mapContainsKey, jkey);
+    if (process_java_exception(env)) {
+        goto FINALLY;
+    }
+
+
+    if (jresult) {
+        result = 1;
+    } else {
+        result = 0;
+    }
+FINALLY:
+    (*env)->PopLocalFrame(env, NULL);
+    return result;
 }
 
 
@@ -144,36 +134,29 @@ static int pyjmap_contains_key(PyObject *self, PyObject *key)
  */
 static PyObject* pyjmap_getitem(PyObject *o, PyObject *key)
 {
-    jobject       jkey = NULL;
-    jobject       val  = NULL;
-    PyJObject    *obj  = (PyJObject*) o;
-    JNIEnv       *env  = pyembed_get_env();
+    jobject       jkey   = NULL;
+    jobject       val    = NULL;
+    PyJObject    *obj    = (PyJObject*) o;
+    JNIEnv       *env    = pyembed_get_env();
+    PyObject     *result = NULL;
 
-    if (mapGet == 0) {
-        mapGet = (*env)->GetMethodID(env, JMAP_TYPE, "get",
-                                     "(Ljava/lang/Object;)Ljava/lang/Object;");
-        if (process_java_exception(env) || !mapGet) {
-            return NULL;
-        }
+    if (!JNI_METHOD(mapGet, env, JMAP_TYPE, "get",
+                    "(Ljava/lang/Object;)Ljava/lang/Object;")) {
+        process_java_exception(env);
+        return NULL;
     }
-
-    if (pyjobject_check(key)) {
-        jkey = ((PyJObject*) key)->object;
-    } else {
-        /*
-         * convert_pyarg_jvalue will leave jkey as NULL and set PyExc_TypeError
-         * if we can't handle the key type, which matches python's guidelines
-         */
-        jvalue jvkey = convert_pyarg_jvalue(env, key, JOBJECT_TYPE, JOBJECT_ID, 1);
-        jkey = jvkey.l;
-        if (process_java_exception(env) || !jkey) {
-            return NULL;
-        }
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
+        process_java_exception(env);
+        return NULL;
+    }
+    jkey = PyObject_As_jobject(env, key, JOBJECT_TYPE);
+    if (!jkey && PyErr_Occurred()) {
+        goto FINALLY;
     }
 
     val = (*env)->CallObjectMethod(env, obj->object, mapGet, jkey);
     if (process_java_exception(env)) {
-        return NULL;
+        goto FINALLY;
     }
 
     if (!val) {
@@ -187,11 +170,14 @@ static PyObject* pyjmap_getitem(PyObject *o, PyObject *key)
                          "KeyError: %s",
                          PyString_AsString(pystr));
             Py_XDECREF(pystr);
-            return NULL;
+            goto FINALLY;
         }
     }
 
-    return convert_jobject_pyobject(env, val);
+    result = convert_jobject_pyobject(env, val);
+FINALLY:
+    (*env)->PopLocalFrame(env, NULL);
+    return result;
 }
 
 /*
@@ -204,6 +190,12 @@ static int pyjmap_setitem(PyObject *o, PyObject *key, PyObject *v)
     jobject       value    = NULL;
     PyJObject    *obj      = (PyJObject*) o;
     JNIEnv       *env      = pyembed_get_env();
+    int           result   = -1;
+
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
+        process_java_exception(env);
+        return -1;
+    }
 
     if (v == NULL) {
         // this is a del PyJMap[key] statement
@@ -213,79 +205,49 @@ static int pyjmap_setitem(PyObject *o, PyObject *key, PyObject *v)
                          "KeyError: %s",
                          PyString_AsString(pystr));
             Py_XDECREF(pystr);
-            return -1;
+            goto FINALLY;
         }
 
-        if (mapRemove == 0) {
-            mapRemove = (*env)->GetMethodID(env, JMAP_TYPE, "remove",
-                                            "(Ljava/lang/Object;)Ljava/lang/Object;");
-            if (process_java_exception(env) || !mapRemove) {
-                return -1;
-            }
+        jkey = PyObject_As_jobject(env, key, JOBJECT_TYPE);
+        if (!jkey && PyErr_Occurred()) {
+            goto FINALLY;
         }
 
-        if (pyjobject_check(key)) {
-            jkey = ((PyJObject*) key)->object;
-        } else {
-            jvalue jvkey = convert_pyarg_jvalue(env, key, JOBJECT_TYPE, JOBJECT_ID, 1);
-            jkey = jvkey.l;
-            if (process_java_exception(env) || !jkey) {
-                return -1;
-            }
+        if (!JNI_METHOD(mapRemove, env, JMAP_TYPE, "remove",
+                        "(Ljava/lang/Object;)Ljava/lang/Object;")) {
+            process_java_exception(env);
+            goto FINALLY;
         }
-
         (*env)->CallObjectMethod(env, obj->object, mapRemove, jkey);
         if (process_java_exception(env)) {
+            goto FINALLY;
+        }
+    } else {
+        value = PyObject_As_jobject(env, v, JOBJECT_TYPE);
+        if (!value && PyErr_Occurred()) {
+            goto FINALLY;
+        }
+
+        jkey = PyObject_As_jobject(env, key, JOBJECT_TYPE);
+        if (!jkey && PyErr_Occurred()) {
             return -1;
         }
 
-        // have to return 0 on success even though it's not documented
-        return 0;
-    } else if (v == Py_None) {
-        value = NULL;
-    } else {
-        value = pyembed_box_py(env, v);
+        if (!JNI_METHOD(mapPut, env, JMAP_TYPE, "put",
+                        "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;")) {
+            process_java_exception(env);
+            goto FINALLY;
+        }
+        (*env)->CallObjectMethod(env, obj->object, mapPut, jkey, value);
         if (process_java_exception(env)) {
-            return -1;
-        } else if (!value) {
-            /*
-             * with the way pyembed_box_py is currently implemented, shouldn't
-             * be able to get here
-             */
-            PyObject *pystring = PyObject_Str((PyObject*) Py_TYPE(v));
-            PyErr_Format(PyExc_TypeError,
-                         "__setitem__ received an incompatible type: %s",
-                         PyString_AsString(pystring));
-            Py_XDECREF(pystring);
-            return -1;
+            goto FINALLY;
         }
     }
-
-    if (pyjobject_check(key)) {
-        jkey = ((PyJObject*) key)->object;
-    } else {
-        jvalue jvkey = convert_pyarg_jvalue(env, key, JOBJECT_TYPE, JOBJECT_ID, 1);
-        jkey = jvkey.l;
-        if (process_java_exception(env) || !jkey) {
-            return -1;
-        }
-    }
-
-    if (mapPut == 0) {
-        mapPut = (*env)->GetMethodID(env, JMAP_TYPE, "put",
-                                     "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-        if (process_java_exception(env) || !mapPut) {
-            return -1;
-        }
-    }
-
-    (*env)->CallObjectMethod(env, obj->object, mapPut, jkey, value);
-    if (process_java_exception(env)) {
-        return -1;
-    }
-
     // have to return 0 on success even though it's not documented
-    return 0;
+    result = 0;
+FINALLY:
+    (*env)->PopLocalFrame(env, NULL);
+    return result;
 }
 
 
@@ -298,34 +260,38 @@ PyObject* pyjmap_getiter(PyObject* obj)
     jobject       set      = NULL;
     jobject       iter     = NULL;
     PyJObject    *pyjob    = (PyJObject*) obj;
+    PyObject     *result   = NULL;
     JNIEnv       *env      = pyembed_get_env();
 
-    if (mapKeySet == 0) {
-        mapKeySet = (*env)->GetMethodID(env, JMAP_TYPE, "keySet", "()Ljava/util/Set;");
-        if (process_java_exception(env) || !mapKeySet) {
-            return NULL;
-        }
+    if (!JNI_METHOD(mapKeySet, env, JMAP_TYPE, "keySet", "()Ljava/util/Set;")) {
+        process_java_exception(env);
+        return NULL;
     }
-
-    set = (*env)->CallObjectMethod(env, pyjob->object, mapKeySet);
-    if (process_java_exception(env) || !set) {
+    if (!JNI_METHOD(mapKeyItr, env, JCOLLECTION_TYPE, "iterator",
+                    "()Ljava/util/Iterator;")) {
+        process_java_exception(env);
         return NULL;
     }
 
-    if (mapKeyItr == 0) {
-        mapKeyItr = (*env)->GetMethodID(env, JCOLLECTION_TYPE, "iterator",
-                                        "()Ljava/util/Iterator;");
-        if (process_java_exception(env) || !mapKeyItr) {
-            return NULL;
-        }
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
+        process_java_exception(env);
+        return NULL;
     }
+    set = (*env)->CallObjectMethod(env, pyjob->object, mapKeySet);
+    if (process_java_exception(env) || !set) {
+        goto FINALLY;
+    }
+
 
     iter = (*env)->CallObjectMethod(env, set, mapKeyItr);
     if (process_java_exception(env) || !iter) {
-        return NULL;
+        goto FINALLY;
     }
 
-    return pyjobject_new(env, iter);
+    result = pyjobject_new(env, iter);
+FINALLY:
+    (*env)->PopLocalFrame(env, NULL);
+    return result;
 }
 
 

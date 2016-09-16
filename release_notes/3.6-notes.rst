@@ -1,0 +1,92 @@
+Jep 3.6 Release Notes
+*********************
+This release emphasized consistency and new features.  It is compatible
+with Python 2.6, 2.7, 3.2, 3.3, 3.4, and 3.5.
+
+
+Faster, better build
+~~~~~~~~~~~~~~~~~~~~
+The build command will now only rebuild the Java jars if it detects changes.
+Furthermore, in previous versions of Jep, a developer had to run
+*python setup.py install* before running *python setup.py test*.  Jep now
+runs the unit tests from the libraries in the build directory, enabling
+testing without installing.  Jep can also now be built on FreeBSD.
+
+
+Improved method choosing
+~~~~~~~~~~~~~~~~~~~~~~~~
+Jep now has improved method choosing when Python tries to call a Java
+method that is overloaded.  Methods and Constructors will be chosen based
+off of how closely the Python inputs match the Java argument types.
+
+
+Improved primitive and boxed type conversions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Python "primitives" such as ints, floats, and booleans can now be passed
+directly to Java methods which expect Java boxed types such as Long, Short,
+Byte, Float, or Character (Integer and Double were already supported in older
+versions). Also Java methods which return boxed types will now return the
+Python equivalent instead. This autoboxing is not limited to just methods, the
+same types of conversions will occur for constructors, arrays, and fields. The
+new behavior is intended to make Jep imitate the autoboxing performed by the
+Java compiler. This change might break Python code written for older versions
+of Jep, please see the Compatibility notes below.
+
+
+Python initialization variables
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Jep now supports configuring global Python interpreter variables before
+the Python interpreter has been initialized.  These global variables
+correspond roughly to the Python command line arguments such as
+python -B or python -E.  For more information, see the javadoc on PyConfig
+and/or run python --help from a command line.  *Contributed by Jeff Stein.*
+
+
+Python shared modules (beta)
+~~~~~~~~~~~~~~~~~~~~~
+Jep now includes support for sharing a module between Jep instances (sub-interpreters).
+This is enabled by specifying a set of modules that should be shared in the
+JepConfig. Shared modules are created on a private internal interpreter using
+the default path and any Jep instance that is configured to share a specific
+module will receive the same module when it is imported from Python. This
+feature was developed primarily to support CPython extensions that are not
+consistent when used with Python sub-interpreters. It is now safe to close a
+Jep instance that is using numpy as long as numpy is included in the shared
+modules for every Jep instance using numpy. This feature is still considered to
+be in beta, it works very well in isolated testing but needs more real world
+testing in a variety of environments to ensure it works consistently. It is
+possible that the API for using shared modules may change in future releases.
+
+Improved efficiency
+~~~~~~~~~~~~~~~~~~~
+* Jep now manages local references more efficiently, freeing up Java heap memory earlier for long running Python code.
+* Jep is now more efficient when transforming Python ndarrays to/from Java NDArrays.
+
+
+Unsigned NDArray support
+~~~~~~~~~~~~~~~~~~~~~~~~
+Jep now supports unsigned Python ndarrays transforming to/from unsigned
+Java NDarrays.  *Contributed by Tim Verbelen.*
+
+
+Compatibility notes
+*******************
+
+Autoboxing primitives
+~~~~~~~~~~~~~~~~~~~~~
+Java boxed types such as Byte, Boolean Character, Short, Integer, Long, Float,
+and Double are now autoboxed to Python primitives in the interpreter as stated
+above.  This may break compatibility with applications using previous versions
+of Jep.  For example, calling a Java method from Python that returns an
+Integer and then calling intValue() to convert it to a primitive int will no
+longer work.  In this case the Integer is automatically converted to an int so
+the call to intValue() is no longer necessary and can simply be removed.  This
+applies to all Java boxed types.
+
+
+PyJList += operator
+~~~~~~~~~~~~~~~~~~~
+The PyJList += operator no longer supports adding a single value/object
+to the list.  This makes PyJList behave more like a Python list, where
+in *list += obj*, obj must be iterable.
+

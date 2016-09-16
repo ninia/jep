@@ -41,9 +41,11 @@ PyAPI_DATA(PyTypeObject) PyJClass_Type;
 
 typedef struct {
     PyJObject  obj;            /* magic inheritance */
-    jobjectArray      initArray;      /* constructor array */
-    int               initLen;        /* length of initArray */
-    int              *numArgsPerInit; /* pointer to init arg count */
+    /*
+     * A python callable, either a PyJConstructor or PyJMultiMethod with many
+     * PyJConstructors
+     */
+    PyObject  *constructor;
 } PyJClassObject;
 
 int pyjclass_init(JNIEnv*, PyObject*);

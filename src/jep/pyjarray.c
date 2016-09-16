@@ -56,9 +56,6 @@ PyObject* pyjarray_new(JNIEnv *env, jobjectArray obj)
     }
 
     clazz = (*env)->GetObjectClass(env, obj);
-    if (process_java_exception(env) || !clazz) {
-        return NULL;
-    }
 
     pyarray                 = PyObject_NEW(PyJArrayObject, &PyJArray_Type);
     pyarray->object         = (*env)->NewGlobalRef(env, obj);
@@ -67,6 +64,8 @@ PyObject* pyjarray_new(JNIEnv *env, jobjectArray obj)
     pyarray->componentClass = NULL;
     pyarray->length         = -1;
     pyarray->pinnedArray    = NULL;
+
+    (*env)->DeleteLocalRef(env, clazz);
 
     if (pyjarray_init(env, pyarray, 0, NULL)) {
         return (PyObject *) pyarray;
@@ -195,9 +194,6 @@ PyObject* pyjarray_new_v(PyObject *isnull, PyObject *args)
     }
 
     clazz = (*env)->GetObjectClass(env, arrayObj);
-    if (process_java_exception(env) || !clazz) {
-        return NULL;
-    }
 
     pyarray                 = PyObject_NEW(PyJArrayObject, &PyJArray_Type);
     pyarray->object         = (*env)->NewGlobalRef(env, arrayObj);
@@ -234,31 +230,10 @@ static int pyjarray_init(JNIEnv *env,
     // ------------------------------ first, get the array's type
 
     if (pyarray->componentType < 0) { // may already know that
-        if (objectComponentType == 0) {
-            jmethodID getClass;
-            jobject   langClass = NULL;
-
-            getClass = (*env)->GetMethodID(env,
-                                           pyarray->clazz,
-                                           "getClass",
-                                           "()Ljava/lang/Class;");
-            if (process_java_exception(env) || !getClass) {
-                goto EXIT_ERROR;
-            }
-
-            langClass = (*env)->CallObjectMethod(env, pyarray->clazz, getClass);
-            if (process_java_exception(env) || !langClass) {
-                goto EXIT_ERROR;
-            }
-
-            objectComponentType = (*env)->GetMethodID(env,
-                                  langClass,
-                                  "getComponentType",
-                                  "()Ljava/lang/Class;");
-            if (process_java_exception(env) || !objectComponentType) {
-                (*env)->DeleteLocalRef(env, langClass);
-                goto EXIT_ERROR;
-            }
+        if (!JNI_METHOD(objectComponentType, env, JCLASS_TYPE, "getComponentType",
+                        "()Ljava/lang/Class;")) {
+            process_java_exception(env);
+            goto EXIT_ERROR;
         }
 
         compType = (*env)->CallObjectMethod(env,
@@ -312,7 +287,6 @@ static int pyjarray_init(JNIEnv *env,
             long  v = 0;
             char  *val;
             jchar *ar = (jchar *) pyarray->pinnedArray;
-
             if (!value || !PyString_Check(value)) {
                 if (value && PyInt_Check(value)) {
                     v = (long) PyInt_AS_LONG(value);
@@ -677,6 +651,7 @@ static int pyjarray_setitem(PyJArrayObject *self,
                                       self->object,
                                       pos,
                                       jstr);
+        (*env)->DeleteLocalRef(env, jstr);
         if (process_java_exception(env)) {
             return -1;
         }
@@ -916,7 +891,8 @@ static PyObject* pyjarray_item(PyJArrayObject *self, Py_ssize_t pos)
         if (process_java_exception(env))
             ;
         else if (obj != NULL) {
-            ret = (PyObject *) pyjobject_new(env, obj);
+            ret = convert_jobject_pyobject(env, obj);
+            (*env)->DeleteLocalRef(env, obj);
         } else {
             // null is okay
             Py_INCREF(Py_None);
@@ -1783,13 +1759,6 @@ static void pyjarrayiter_dealloc(PyJArrayIterObject *it)
     PyObject_Del(it);
 }
 
-/* the iterator's __iter()__ */
-PyObject* pyjarray_iter_self(PyObject *self)
-{
-    Py_INCREF(self);
-    return self;
-}
-
 static PyObject *pyjarrayiter_next(PyJArrayIterObject *it)
 {
     PyJArrayObject *seq;
@@ -1862,7 +1831,7 @@ PyTypeObject PyJArrayIter_Type = {
     0,                                        /* tp_clear */
     0,                                        /* tp_richcompare */
     0,                                        /* tp_weaklistoffset */
-    pyjarray_iter_self,                       /* tp_iter */
+    PyObject_SelfIter,                        /* tp_iter */
     (iternextfunc) pyjarrayiter_next,         /* tp_iternext */
     0,                                        /* tp_methods */
     0,                                        /* tp_members */

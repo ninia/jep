@@ -36,7 +36,6 @@ import jep.JepException;
  * </pre>
  *
  * @author [mrjohnson0 at sourceforge.net] Mike Johnson
- * @version $Id$
  */
 public class PyObject {
     /**
@@ -208,7 +207,7 @@ public class PyObject {
      */
     public void set(String name, short v) throws JepException {
         isValid();
-        set(this.tstate, this.obj, name, (int) v);
+        set(this.tstate, this.obj, name, v);
     }
     
     private native void set(long tstate, long module, String name, int v)
@@ -250,7 +249,7 @@ public class PyObject {
      */
     public void set(String name, byte b) throws JepException {
         isValid();
-        set(this.tstate, this.obj, name, (int) b);
+        set(this.tstate, this.obj, name, b);
     }
 
     

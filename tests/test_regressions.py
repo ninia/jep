@@ -3,6 +3,7 @@ import unittest
 
 
 class TestRegressions(unittest.TestCase):
+
     def test_out(self):
         from java.lang import System
         System.out.print("")
@@ -14,4 +15,3 @@ class TestRegressions(unittest.TestCase):
             Integer.byteValue()
         except:
             pass
-        

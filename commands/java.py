@@ -1,13 +1,23 @@
 from __future__ import print_function
 
+from distutils import log
 from distutils.cmd import Command
 from distutils.spawn import spawn
+from distutils.dep_util import newer_group
+
 import shutil
 import os
 import fnmatch
 import traceback
 import sys
-from commands.util import configure_error, is_osx, shell, CommandFailed, warning, is_windows
+
+from commands.util import configure_error
+from commands.util import is_osx
+from commands.util import shell
+from commands.util import CommandFailed
+from commands.util import warning
+from commands.util import is_windows
+
 
 _java_home = None
 # MAC_JAVA_HOME is for the Apple JDK and is consistent in its install directory.
@@ -24,7 +34,7 @@ def get_java_home():
         # newer macs have an executable to help us
         try:
             result = shell('/usr/libexec/java_home')
-            _java_home = result.stdout.decode("utf-8")
+            _java_home = result.stdout.decode('utf-8')
             return _java_home
         except CommandFailed:
             traceback.print_exc()
@@ -46,9 +56,11 @@ def get_java_home():
             _java_home = env_home
             return env_home
         else:
-            configure_error("Path " + env_home + " indicated by JAVA_HOME does not exist.")
+            configure_error('Path ' + env_home +
+                            ' indicated by JAVA_HOME does not exist.')
 
-    configure_error("Please set the environment variable JAVA_HOME to a path containing the JDK.")
+    configure_error(
+        'Please set the environment variable JAVA_HOME to a path containing the JDK.')
 
 
 def is_apple_jdk():
@@ -69,15 +81,15 @@ def get_java_include():
         inc_name = 'Headers'
     inc = os.path.join(get_java_home(), inc_name)
     if not os.path.exists(inc):
-        configure_error("Include folder should be at '{0}' but doesn't exist. " \
+        configure_error("Include folder should be at '{0}' but doesn't exist. "
                         "Please check you've installed the JDK properly.".format(inc))
     jni = os.path.join(inc, "jni.h")
     if not os.path.exists(jni):
-        configure_error("jni.h should be in '{0}' but doesn't exist. " \
+        configure_error("jni.h should be in '{0}' but doesn't exist. "
                         "Please check you've installed the JDK properly.".format(jni))
 
     paths = [inc]
-    
+
     # Include platform specific headers if found
     include_linux = os.path.join(inc, 'linux')
     if os.path.exists(include_linux):
@@ -103,7 +115,7 @@ def get_java_lib():
         lib_name = 'Libraries'
     lib = os.path.join(get_java_home(), lib_name)
     if not os.path.exists(lib):
-        configure_error("Lib folder should be at '{0}' but doesn't exist. " \
+        configure_error("Lib folder should be at '{0}' but doesn't exist. "
                         "Please check you've installed the JDK properly.".format(lib))
     return lib
 
@@ -124,10 +136,12 @@ def get_java_lib_folders():
         for root, dirnames, filenames in os.walk(jre):
             if is_windows():
                 for filename in fnmatch.filter(filenames, '*jvm.lib'):
-                    folders.append(os.path.join(root, os.path.dirname(filename)))
+                    folders.append(os.path.join(
+                        root, os.path.dirname(filename)))
             else:
                 for filename in fnmatch.filter(filenames, '*jvm.so'):
-                    folders.append(os.path.join(root, os.path.dirname(filename)))
+                    folders.append(os.path.join(
+                        root, os.path.dirname(filename)))
 
         return list(set(folders))
     return []
@@ -137,6 +151,35 @@ def get_java_linker_args():
     if is_apple_jdk():
         return ['-framework JavaVM']
     return []
+
+
+def get_output_jar_paths(version):
+    """
+    Gets the list of output jars, which includes the primary
+    jep-${version}.jar, the test jar, and the src jars.
+    """
+    return [
+        'build/java/jep.src-{0}.jar'.format(version),
+        'build/java/jep-{0}.jar'.format(version),
+        'build/java/jep.test.src-{0}.jar'.format(version),
+        'build/java/jep.test-{0}.jar'.format(version)
+    ]
+
+
+def skip_java_build(command):
+    """
+    Checks if the .java files in the src directory are newer than
+    the build directory's .jar files.  If so, returns True that
+    the java build can be skipped, otherwise returns False.
+    """
+    version = command.distribution.metadata.get_version()
+    jar_newer = False
+    for outjar in get_output_jar_paths(version):
+        jar_newer |= newer_group(
+            command.distribution.java_files, outjar, 'newer')
+    if not jar_newer:
+        return True
+    return False
 
 
 class setup_java(Command):
@@ -151,17 +194,22 @@ class setup_java(Command):
         pass
 
     def run(self):
+        if skip_java_build(self):
+            log.debug('skipping Java build (up-to-date)')
+            return
         warning('Using JAVA_HOME:', get_java_home())
 
         if is_osx():
             target = os.environ.get('MACOSX_DEPLOYMENT_TARGET')
 
             if target:
-                warning('INFO: the MACOSX_DEPLOYMENT_TARGET environment variable is set:', target)
+                warning(
+                    'INFO: the MACOSX_DEPLOYMENT_TARGET environment variable is set:', target)
 
                 result = shell('sw_vers -productVersion')
                 if target.split('.')[:2] != result.stdout.split('.')[:2]:
-                    warning('This target appears to be incorrect for the system version:', result.stdout)
+                    warning(
+                        'This target appears to be incorrect for the system version:', result.stdout)
 
     def finalize_options(self):
         pass
@@ -170,9 +218,10 @@ class setup_java(Command):
 class build_java(Command):
     outdir = None
     testoutdir = None
-    
+
     user_options = [
-        ('javac=', None, 'use javac (default: {0}/bin/javac)'.format(get_java_home())),
+        ('javac=', None,
+         'use javac (default: {0}/bin/javac)'.format(get_java_home())),
     ]
 
     def initialize_options(self):
@@ -202,8 +251,11 @@ class build_java(Command):
         self.copySrc('jep.test', tests)
 
     def run(self):
-        self.build(self.java_files)
-    
+        if not skip_java_build(self):
+            self.build(self.java_files)
+        else:
+            log.debug('skipping building .class files (up to date)')
+
     def copySrc(self, app, files):
         for src in files:
             dest = os.path.join(build_java.outdir, '{0}.{1}'.format(app, src))
@@ -212,11 +264,13 @@ class build_java(Command):
                 os.makedirs(os.path.dirname(dest))
             shutil.copy(src, dest)
 
+
 class build_jar(Command):
     outdir = None
 
     user_options = [
-        ('jar=', None, 'use javac (default: {0}/bin/jar)'.format(get_java_home())),
+        ('jar=', None,
+         'use javac (default: {0}/bin/jar)'.format(get_java_home())),
     ]
 
     def initialize_options(self):
@@ -251,14 +305,18 @@ class build_jar(Command):
         spawn([self.jar, '-cfe', 'build/java/jep.test-{0}.jar'.format(self.version), 'test.jep.Test', '-C', 'build/java/test/', 'jep'])
 
     def run(self):
-        self.build()
+        if not skip_java_build(self):
+            self.build()
+        else:
+            log.debug('skipping packing jar files (up to date)')
 
 
 class build_javah(Command):
     outdir = None
 
     user_options = [
-        ('javah=', None, 'use javah (default: {0}/bin/javah)'.format(get_java_home())),
+        ('javah=', None,
+         'use javah (default: {0}/bin/javah)'.format(get_java_home())),
     ]
 
     def initialize_options(self):
@@ -279,5 +337,8 @@ class build_javah(Command):
         spawn([self.javah, '-classpath', build_java.outdir, '-o', os.path.join(build_javah.outdir, header), jclass])
 
     def run(self):
-        for jclass, header in self.javah_files:
-            self.build(jclass, header)
+        if not skip_java_build(self):
+            for jclass, header in self.javah_files:
+                self.build(jclass, header)
+        else:
+            log.debug('skipping generating .h files (up to date')

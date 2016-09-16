@@ -51,6 +51,7 @@ jclass JCLASS_TYPE   = NULL;
 // cached types for primitive arrays
 jclass JBOOLEAN_ARRAY_TYPE = NULL;
 jclass JBYTE_ARRAY_TYPE    = NULL;
+jclass JCHAR_ARRAY_TYPE   = NULL;
 jclass JSHORT_ARRAY_TYPE   = NULL;
 jclass JINT_ARRAY_TYPE     = NULL;
 jclass JLONG_ARRAY_TYPE    = NULL;
@@ -72,9 +73,13 @@ jclass JSHORT_OBJ_TYPE  = NULL;
 jclass JINT_OBJ_TYPE    = NULL;
 jclass JLONG_OBJ_TYPE   = NULL;
 jclass JDOUBLE_OBJ_TYPE = NULL;
+jclass JFLOAT_OBJ_TYPE  = NULL;
+jclass JCHAR_OBJ_TYPE   = NULL;
 
 // cached types for frequently used classes
 jclass JNUMBER_TYPE      = NULL;
+jclass JMETHOD_TYPE      = NULL;
+jclass JFIELD_TYPE       = NULL;
 jclass JTHROWABLE_TYPE   = NULL;
 jclass JMODIFIER_TYPE    = NULL;
 jclass JARRAYLIST_TYPE   = NULL;
@@ -93,6 +98,9 @@ jclass ILLEGALARG_EXC_TYPE;
 jclass ARITHMETIC_EXC_TYPE;
 jclass OUTOFMEMORY_EXC_TYPE;
 jclass ASSERTION_EXC_TYPE;
+
+// cached java.lang.Class.getName()
+jmethodID JCLASS_GET_NAME;
 
 // cached methodids
 jmethodID objectToString        = 0;
@@ -133,86 +141,6 @@ PyObject* jobject_topystring(JNIEnv *env, jobject obj)
 }
 
 
-PyObject* pystring_split_item(PyObject *str, char *split, int pos)
-{
-    PyObject  *splitList, *ret;
-    Py_ssize_t len;
-
-    if (pos < 0) {
-        PyErr_SetString(PyExc_RuntimeError,
-                        "Invalid position to return.");
-        return NULL;
-    }
-
-    splitList = PyObject_CallMethod(str, "split", "s", split);
-    if (PyErr_Occurred() || !splitList) {
-        return NULL;
-    }
-
-    if (!PyList_Check(splitList)) {
-        PyErr_SetString(PyExc_RuntimeError,
-                        "Oops, split string return is not a list.");
-        return NULL;
-    }
-
-    len = PyList_Size(splitList);
-    if (pos > len - 1) {
-        PyErr_SetString(PyExc_RuntimeError,
-                        "Not enough items to return split position.");
-        return NULL;
-    }
-
-    // get requested item
-    ret = PyList_GetItem(splitList, pos);
-    if (PyErr_Occurred()) {
-        return NULL;
-    }
-    if (!PyString_Check(ret)) {
-        PyErr_SetString(PyExc_RuntimeError,
-                        "Oops, item is not a string.");
-        return NULL;
-    }
-
-    Py_INCREF(ret);
-    Py_DECREF(splitList);
-    return ret;
-}
-
-
-PyObject* pystring_split_last(PyObject *str, char *split)
-{
-    PyObject   *splitList, *ret;
-    Py_ssize_t  len;
-
-    splitList = PyObject_CallMethod(str, "split", "s", split);
-    if (PyErr_Occurred() || !splitList) {
-        return NULL;
-    }
-
-    if (!PyList_Check(splitList)) {
-        PyErr_SetString(PyExc_RuntimeError,
-                        "Oops, split string return is not a list.");
-        return NULL;
-    }
-
-    len = PyList_Size(splitList);
-
-    // get the last one
-    ret = PyList_GetItem(splitList, len - 1);
-    if (PyErr_Occurred()) {
-        return NULL;
-    }
-    if (!PyString_Check(ret)) {
-        PyErr_SetString(PyExc_RuntimeError,
-                        "Oops, item is not a string.");
-        return NULL;
-    }
-
-    Py_INCREF(ret);
-    Py_DECREF(splitList);
-    return ret;
-}
-
 // support for python 3.2
 // unnecessary for python 2.6, 2.7, and 3.3+
 char* pyunicode_to_utf8(PyObject *unicode)
@@ -249,14 +177,10 @@ jstring jobject_tostring(JNIEnv *env, jobject obj)
         return NULL;
     }
 
-    if (objectToString == 0) {
-        objectToString = (*env)->GetMethodID(env,
-                                             JOBJECT_TYPE,
-                                             "toString",
-                                             "()Ljava/lang/String;");
-        if (process_java_exception(env)) {
-            return NULL;
-        }
+    if (!JNI_METHOD(objectToString, env, JOBJECT_TYPE, "toString",
+                    "()Ljava/lang/String;")) {
+        process_java_exception(env);
+        return NULL;
     }
 
     if (!objectToString) {
@@ -323,6 +247,9 @@ void release_utf_char(JNIEnv *env, jstring str, const char *v)
             (*env)->DeleteLocalRef(env, clazz);\
         }\
         clazz = (*env)->CallObjectMethod(env, array, classGetComponentType);\
+        if ((*env)->ExceptionCheck(env)){\
+            return 0;\
+        }\
         primitive = (*env)->NewGlobalRef(env, clazz);\
         (*env)->DeleteLocalRef(env, clazz);\
     }\
@@ -355,18 +282,15 @@ int cache_primitive_classes(JNIEnv *env)
 {
     jclass   clazz, tmpclazz = NULL;
     jfieldID fieldId;
-    jobject  tmpobj          = NULL;
 
-    if (classGetComponentType == 0) {
-        classGetComponentType = (*env)->GetMethodID(env, JCLASS_TYPE,
-                                "getComponentType", "()Ljava/lang/Class;");
-        if ((*env)->ExceptionOccurred(env)) {
-            return 0;
-        }
+    if (!JNI_METHOD(classGetComponentType, env, JCLASS_TYPE, "getComponentType",
+                    "()Ljava/lang/Class;")) {
+        return 0;
     }
 
     CACHE_PRIMITIVE_ARRAY(JBOOLEAN_TYPE, JBOOLEAN_ARRAY_TYPE, "[Z");
     CACHE_PRIMITIVE_ARRAY(JBYTE_TYPE, JBYTE_ARRAY_TYPE, "[B");
+    CACHE_PRIMITIVE_ARRAY(JCHAR_TYPE, JCHAR_ARRAY_TYPE, "[C");
     CACHE_PRIMITIVE_ARRAY(JSHORT_TYPE, JSHORT_ARRAY_TYPE, "[S");
     CACHE_PRIMITIVE_ARRAY(JINT_TYPE, JINT_ARRAY_TYPE, "[I");
     CACHE_PRIMITIVE_ARRAY(JLONG_TYPE, JLONG_ARRAY_TYPE, "[J");
@@ -397,34 +321,6 @@ int cache_primitive_classes(JNIEnv *env)
 
         JVOID_TYPE = (*env)->NewGlobalRef(env, tmpclazz);
         (*env)->DeleteLocalRef(env, tmpclazz);
-        (*env)->DeleteLocalRef(env, tmpobj);
-        (*env)->DeleteLocalRef(env, clazz);
-    }
-
-    if (JCHAR_TYPE == NULL) {
-        clazz = (*env)->FindClass(env, "java/lang/Character");
-        if ((*env)->ExceptionOccurred(env)) {
-            return 0;
-        }
-
-        fieldId = (*env)->GetStaticFieldID(env,
-                                           clazz,
-                                           "TYPE",
-                                           "Ljava/lang/Class;");
-        if ((*env)->ExceptionOccurred(env)) {
-            return 0;
-        }
-
-        tmpclazz = (jclass) (*env)->GetStaticObjectField(env,
-                   clazz,
-                   fieldId);
-        if ((*env)->ExceptionOccurred(env)) {
-            return 0;
-        }
-
-        JCHAR_TYPE = (*env)->NewGlobalRef(env, tmpclazz);
-        (*env)->DeleteLocalRef(env, tmpclazz);
-        (*env)->DeleteLocalRef(env, tmpobj);
         (*env)->DeleteLocalRef(env, clazz);
     }
 
@@ -486,7 +382,11 @@ int cache_frequent_classes(JNIEnv *env)
     CACHE_CLASS(JINT_OBJ_TYPE, "java/lang/Integer");
     CACHE_CLASS(JLONG_OBJ_TYPE, "java/lang/Long");
     CACHE_CLASS(JDOUBLE_OBJ_TYPE, "java/lang/Double");
+    CACHE_CLASS(JFLOAT_OBJ_TYPE, "java/lang/Float");
+    CACHE_CLASS(JCHAR_OBJ_TYPE, "java/lang/Character");
     CACHE_CLASS(JNUMBER_TYPE, "java/lang/Number");
+    CACHE_CLASS(JMETHOD_TYPE, "java/lang/reflect/Method");
+    CACHE_CLASS(JFIELD_TYPE, "java/lang/reflect/Field");
     CACHE_CLASS(JTHROWABLE_TYPE, "java/lang/Throwable");
     CACHE_CLASS(JMODIFIER_TYPE, "java/lang/reflect/Modifier");
     CACHE_CLASS(JARRAYLIST_TYPE, "java/util/ArrayList");
@@ -506,6 +406,11 @@ int cache_frequent_classes(JNIEnv *env)
     CACHE_CLASS(ARITHMETIC_EXC_TYPE, "java/lang/ArithmeticException");
     CACHE_CLASS(OUTOFMEMORY_EXC_TYPE, "java/lang/OutOfMemoryError");
     CACHE_CLASS(ASSERTION_EXC_TYPE, "java/lang/AssertionError");
+
+    if (!JNI_METHOD(JCLASS_GET_NAME, env, JCLASS_TYPE, "getName",
+                    "()Ljava/lang/String;")) {
+        return 0;
+    }
 
     return 1;
 }
@@ -532,7 +437,11 @@ void unref_cache_frequent_classes(JNIEnv *env)
     UNCACHE_CLASS(JINT_OBJ_TYPE);
     UNCACHE_CLASS(JLONG_OBJ_TYPE);
     UNCACHE_CLASS(JDOUBLE_OBJ_TYPE);
+    UNCACHE_CLASS(JFLOAT_OBJ_TYPE);
+    UNCACHE_CLASS(JCHAR_OBJ_TYPE);
     UNCACHE_CLASS(JNUMBER_TYPE);
+    UNCACHE_CLASS(JMETHOD_TYPE);
+    UNCACHE_CLASS(JFIELD_TYPE);
     UNCACHE_CLASS(JTHROWABLE_TYPE);
     UNCACHE_CLASS(JMODIFIER_TYPE);
     UNCACHE_CLASS(JARRAYLIST_TYPE);
@@ -564,14 +473,8 @@ int get_jtype(JNIEnv *env, jclass clazz)
     jboolean array  = JNI_FALSE;
 
     // have to find Class.isArray() method
-    if (objectIsArray == 0) {
-        objectIsArray = (*env)->GetMethodID(env,
-                                            JCLASS_TYPE,
-                                            "isArray",
-                                            "()Z");
-        if ((*env)->ExceptionCheck(env) || !objectIsArray) {
-            return -1;
-        }
+    if (!JNI_METHOD(objectIsArray, env, JCLASS_TYPE, "isArray", "()Z")) {
+        return -1;
     }
 
     // object checks
@@ -698,125 +601,134 @@ int get_jtype(JNIEnv *env, jclass clazz)
 }
 
 
-// returns if the type of python object matches jclass
+/*
+ * Determines how well a parameter matches the expected type. For example a
+ * python integer can be passed to java as a bool, int, long, or
+ * java.lang.Integer. A bool is not very descriptive so it would return a much
+ * lower value than an int. A return value of 0 indicates there is no match,
+ * for example a python int cannot be used as a java.util.List. Larger return
+ * values indicate a better match.
+ */
 int pyarg_matches_jtype(JNIEnv *env,
                         PyObject *param,
                         jclass paramType,
                         int paramTypeId)
 {
-
-    switch (paramTypeId) {
-
-    case JCHAR_ID:
-        // must not be null...
-        if (PyString_Check(param) && PyString_GET_SIZE(param) == 1) {
+    if (PyBool_Check(param)) {
+        switch (paramTypeId) {
+        case JBOOLEAN_ID:
+            return 6;
+        case JBYTE_ID:
+            return 5;
+        case JSHORT_ID:
+            return 4;
+        case JINT_ID:
+            return 3;
+        case JLONG_ID:
+            return 2;
+        case JOBJECT_ID:
             return 1;
         }
-        return 0;
-
-    case JSTRING_ID:
-
-        if (param == Py_None) {
+    } else if (PyLong_Check(param)) {
+        switch (paramTypeId) {
+        case JLONG_ID:
+            return 6;
+        case JINT_ID:
+            return 5;
+        case JSHORT_ID:
+            return 4;
+        case JBYTE_ID:
+            return 3;
+        case JBOOLEAN_ID:
+            return 2;
+        case JOBJECT_ID:
             return 1;
         }
-
-        if (PyString_Check(param)) {
+    } else if (PyInt_Check(param)) {
+        switch (paramTypeId) {
+        case JINT_ID:
+            return 6;
+        case JLONG_ID:
+            return 5;
+        case JSHORT_ID:
+            return 4;
+        case JBYTE_ID:
+            return 3;
+        case JBOOLEAN_ID:
+            return 2;
+        case JOBJECT_ID:
             return 1;
         }
-
-        if (pyjobject_check(param)) {
-            // check if the object itself can cast to parameter type.
-            if ((*env)->IsAssignableFrom(env,
-                                         ((PyJObject *) param)->clazz,
-                                         paramType)) {
+    } else if (PyString_Check(param)) {
+        switch (paramTypeId) {
+        case JSTRING_ID:
+            return 3;
+        case JCHAR_ID:
+            if (PyString_GET_SIZE(param) == 1) {
+                return 2;
+            }
+            break;
+        case JOBJECT_ID:
+            if ((*env)->IsAssignableFrom(env, JSTRING_TYPE, paramType)) {
                 return 1;
             }
         }
-
-        break;
-
-    case JARRAY_ID:
-        if (param == Py_None) {
+    } else if (PyFloat_Check(param)) {
+        switch (paramTypeId) {
+        case JFLOAT_ID:
+        case JDOUBLE_ID:
+            return 2;
+        case JOBJECT_ID:
             return 1;
         }
-
-        if (pyjarray_check(param)) {
-            // check if the object itself can cast to parameter type.
+    } else if (param == Py_None) {
+        switch (paramTypeId) {
+        case JOBJECT_ID:
+            return 4;
+        case JARRAY_ID:
+            return 3;
+        case JSTRING_ID:
+            return 2;
+        case JCLASS_ID:
+            return 1;
+        }
+    } else if (pyjarray_check(param)) {
+        switch (paramTypeId) {
+        case JARRAY_ID:
             if ((*env)->IsAssignableFrom(env,
                                          ((PyJArrayObject *) param)->clazz,
                                          paramType)) {
-                return 1;
+                return 2;
             }
-        }
-
-        break;
-
-    case JCLASS_ID:
-        if (param == Py_None) {
+            break;
+        case JOBJECT_ID:
             return 1;
         }
-
-        if (pyjclass_check(param)) {
-            return 1;
-        }
-
-        break;
-
-    case JOBJECT_ID:
-        if (param == Py_None) {
-            return 1;
-        }
-
-        if (pyjobject_check(param)) {
-            // check if the object itself can cast to parameter type.
+    } else if (pyjclass_check(param)) {
+        switch (paramTypeId) {
+        case JCLASS_ID:
+            return 2;
+        case JOBJECT_ID:
             if ((*env)->IsAssignableFrom(env,
-                                         ((PyJObject *) param)->clazz,
+                                         JCLASS_TYPE,
                                          paramType)) {
                 return 1;
             }
         }
-
-        if (PyString_Check(param)) {
-            if ((*env)->IsAssignableFrom(env,
-                                         JSTRING_TYPE,
-                                         paramType)) {
+    } else if (pyjobject_check(param)) {
+        switch (paramTypeId) {
+        case JOBJECT_ID:
+            if ((*env)->IsSameObject(env,
+                                     ((PyJObject *) param)->clazz,
+                                     paramType)) {
+                return 2;
+            } else if ((*env)->IsAssignableFrom(env,
+                                                ((PyJObject *) param)->clazz,
+                                                paramType)) {
                 return 1;
             }
         }
-
-        break;
-
-    case JBYTE_ID:
-    case JSHORT_ID:
-    case JINT_ID:
-        if (PyInt_Check(param)) {
-            return 1;
-        }
-        break;
-
-    case JFLOAT_ID:
-    case JDOUBLE_ID:
-        if (PyFloat_Check(param)) {
-            return 1;
-        }
-        break;
-
-    case JLONG_ID:
-        if (PyLong_Check(param)) {
-            return 1;
-        }
-        if (PyInt_Check(param)) {
-            return 1;
-        }
-        break;
-
-    case JBOOLEAN_ID:
-        if (PyInt_Check(param)) {
-            return 1;
-        }
-        break;
     }
-
     // no match
     return 0;
 }
@@ -829,34 +741,25 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
     PyThreadState *_save;
 
     if (getIntValue == 0) {
-        jclass clazz;
+        int success = 1;
 
         // get all the methodIDs here. Faster this way for Number
         // subclasses, then we'll just call the right methods below
         Py_UNBLOCK_THREADS;
-        clazz = (*env)->FindClass(env, "java/lang/Number");
 
-        getIntValue = (*env)->GetMethodID(env,
-                                          clazz,
-                                          "intValue",
-                                          "()I");
-        getLongValue = (*env)->GetMethodID(env,
-                                           clazz,
-                                           "longValue",
-                                           "()J");
-        getDoubleValue = (*env)->GetMethodID(env,
-                                             clazz,
-                                             "doubleValue",
-                                             "()D");
-        getFloatValue = (*env)->GetMethodID(env,
-                                            clazz,
-                                            "floatValue",
-                                            "()F");
+        // Lookup each method only if the previous lookup succeeded
+        success = success
+                  && JNI_METHOD(getIntValue, env, JNUMBER_TYPE, "intValue", "()I");
+        success = success
+                  && JNI_METHOD(getLongValue, env, JNUMBER_TYPE, "longValue", "()J");
+        success = success
+                  && JNI_METHOD(getDoubleValue, env, JNUMBER_TYPE, "doubleValue", "()D");
+        success = success
+                  && JNI_METHOD(getFloatValue, env, JNUMBER_TYPE, "floatValue", "()F");
 
-        (*env)->DeleteLocalRef(env, clazz);
         Py_BLOCK_THREADS;
 
-        if ((*env)->ExceptionOccurred(env)) {
+        if (!success) {
             return NULL;
         }
     }
@@ -888,19 +791,32 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
     // wrap as a object... try to be diligent.
 
     case JOBJECT_ID:
+        if ((*env)->IsInstanceOf(env, val, JNUMBER_TYPE)) {
+            if ((*env)->IsInstanceOf(env, val, JBYTE_OBJ_TYPE)) {
+                return convert_jobject(env, val, JBYTE_ID);
+            } else if ((*env)->IsInstanceOf(env, val, JSHORT_OBJ_TYPE)) {
+                return convert_jobject(env, val, JSHORT_ID);
+            } else if ((*env)->IsInstanceOf(env, val, JINT_OBJ_TYPE)) {
+                return convert_jobject(env, val, JINT_ID);
+            } else if ((*env)->IsInstanceOf(env, val, JLONG_OBJ_TYPE)) {
+                return convert_jobject(env, val, JLONG_ID);
+            } else if ((*env)->IsInstanceOf(env, val, JDOUBLE_OBJ_TYPE)) {
+                return convert_jobject(env, val, JDOUBLE_ID);
+            } else if ((*env)->IsInstanceOf(env, val, JFLOAT_OBJ_TYPE)) {
+                return convert_jobject(env, val, JFLOAT_ID);
+            }
+        } else if ((*env)->IsInstanceOf(env, val, JBOOL_OBJ_TYPE)) {
+            return convert_jobject(env, val, JBOOLEAN_ID);
+        } else if ((*env)->IsInstanceOf(env, val, JCHAR_OBJ_TYPE)) {
+            return convert_jobject(env, val, JCHAR_ID);
+        }
         return (PyObject *) pyjobject_new(env, val);
 
     case JBOOLEAN_ID: {
         jboolean b;
 
-        if (getBooleanValue == 0) {
-            getBooleanValue = (*env)->GetMethodID(env,
-                                                  JBOOL_OBJ_TYPE,
-                                                  "booleanValue",
-                                                  "()Z");
-            if ((*env)->ExceptionOccurred(env)) {
-                return NULL;
-            }
+        if (!JNI_METHOD(getBooleanValue, env, JBOOL_OBJ_TYPE, "booleanValue", "()Z")) {
+            return NULL;
         }
 
         b = (*env)->CallBooleanMethod(env, val, getBooleanValue);
@@ -909,9 +825,9 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
         }
 
         if (b) {
-            return Py_BuildValue("i", 1);
+            Py_RETURN_TRUE;
         }
-        return Py_BuildValue("i", 0);
+        Py_RETURN_FALSE;
     }
 
     case JBYTE_ID:              /* pass through */
@@ -931,7 +847,7 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
             return NULL;
         }
 
-        return Py_BuildValue("i", b);
+        return PyLong_FromLongLong(b);
     }
 
     case JDOUBLE_ID: {
@@ -956,22 +872,8 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
     case JCHAR_ID: {
         jchar c;
 
-        if (getCharValue == 0) {
-            jclass clazz;
-
-            Py_UNBLOCK_THREADS;
-            clazz = (*env)->FindClass(env, "java/lang/Character");
-
-            getCharValue = (*env)->GetMethodID(env,
-                                               clazz,
-                                               "charValue",
-                                               "()C");
-            (*env)->DeleteLocalRef(env, clazz);
-            Py_BLOCK_THREADS;
-
-            if ((*env)->ExceptionOccurred(env)) {
-                return NULL;
-            }
+        if (!JNI_METHOD(getCharValue, env, JCHAR_OBJ_TYPE, "charValue", "()C")) {
+            return NULL;
         }
 
         c = (*env)->CallCharMethod(env, val, getCharValue);
@@ -1000,20 +902,9 @@ PyObject* convert_jobject_pyobject(JNIEnv *env, jobject val)
     int typeId         = -1;
 
     if (val != NULL) {
-        jclass    retClass = NULL;
-        jmethodID getClass = NULL;
-
-        getClass = (*env)->GetMethodID(env, JOBJECT_TYPE, "getClass",
-                                       "()Ljava/lang/Class;");
-        if (process_java_exception(env) || !getClass) {
-            return NULL;
-        }
-
-        retClass = (*env)->CallObjectMethod(env, val, getClass);
-        if (process_java_exception(env) || !retClass) {
-            return NULL;
-        }
+        jclass retClass = (*env)->GetObjectClass(env, val);
         typeId = get_jtype(env, retClass);
+        (*env)->DeleteLocalRef(env, retClass);
     }
 
     return convert_jobject(env, val, typeId);
@@ -1023,289 +914,19 @@ PyObject* convert_jobject_pyobject(JNIEnv *env, jobject val)
 // for parsing args.
 // takes a python object and sets the right jvalue member for the given java type.
 // returns uninitialized on error and raises a python exception.
-jvalue convert_pyarg_jvalue(JNIEnv *env,
-                            PyObject *param,
-                            jclass paramType,
-                            int paramTypeId,
-                            int pos)
+jvalue convert_pyarg_jvalue(JNIEnv *env, PyObject *param, jclass paramType,
+                            int paramTypeId, int pos)
 {
-    jvalue ret;
-    ret.l = NULL;
-
-    switch (paramTypeId) {
-
-    case JCHAR_ID: {
-        char *val;
-
-        if (param == Py_None ||
-                !PyString_Check(param) ||
-                PyString_GET_SIZE(param) != 1) {
-
-            PyErr_Format(PyExc_TypeError,
-                         "Expected char parameter at %i",
-                         pos + 1);
-            return ret;
-        }
-
-        val = PyString_AsString(param);
-        ret.c = (jchar) val[0];
-        return ret;
+    jvalue ret = PyObject_As_jvalue(env, param, paramType);
+    if (PyErr_Occurred()) {
+        PyObject *ptype, *pvalue, *ptrace;
+        PyErr_Fetch(&ptype, &pvalue, &ptrace);
+        PyErr_Format(PyExc_TypeError, "Error converting parameter %d: %s", pos + 1,
+                     PyString_AsString(pvalue));
+        Py_DECREF(ptype);
+        Py_XDECREF(pvalue);
+        Py_XDECREF(ptrace);
     }
-
-    case JSTRING_ID: {
-        jstring   jstr;
-        char     *val;
-
-        // none is okay, we'll set a null
-        if (param == Py_None) {
-            ret.l = NULL;
-        } else if (pyjobject_check(param)) {
-            // if they pass in a pyjobject with java.lang.String inside it
-            PyJObject *obj = (PyJObject*) param;
-            if (!(*env)->IsInstanceOf(env, obj->object, JSTRING_TYPE)) {
-                PyErr_Format(PyExc_TypeError,
-                             "Expected string parameter at %i.",
-                             pos + 1);
-                return ret;
-            }
-
-            ret.l = obj->object;
-            return ret;
-        } else {
-            // we could just convert it to a string...
-            if (!PyString_Check(param)) {
-                PyErr_Format(PyExc_TypeError,
-                             "Expected string parameter at %i.",
-                             pos + 1);
-                return ret;
-            }
-
-            val   = PyString_AsString(param);
-            jstr  = (*env)->NewStringUTF(env, (const char *) val);
-
-            ret.l = jstr;
-        }
-
-        return ret;
-    }
-
-    case JARRAY_ID: {
-        jobjectArray obj = NULL;
-
-        if (param == Py_None) {
-            ;
-        }
-#if JEP_NUMPY_ENABLED
-        else if (npy_array_check(param)) {
-            jarray arr;
-            jclass arrclazz;
-
-            arr = convert_pyndarray_jprimitivearray(env, param, paramType);
-            if (arr == NULL) {
-                PyErr_Format(PyExc_TypeError,
-                             "No JEP numpy support for type at parameter %i.",
-                             pos + 1);
-                return ret;
-            }
-
-            arrclazz = (*env)->GetObjectClass(env, arr);
-            if (!(*env)->IsAssignableFrom(env, arrclazz, paramType)) {
-                PyErr_Format(PyExc_TypeError,
-                             "numpy array type at parameter %i is incompatible with Java.",
-                             pos + 1);
-                return ret;
-            }
-
-            ret.l = arr;
-            return ret;
-        }
-#endif
-        else {
-            PyJArrayObject *ar;
-
-            if (!pyjarray_check(param)) {
-                PyErr_Format(PyExc_TypeError,
-                             "Expected jarray parameter at %i.",
-                             pos + 1);
-                return ret;
-            }
-
-            ar = (PyJArrayObject *) param;
-
-            if (!(*env)->IsAssignableFrom(env,
-                                          ar->clazz,
-                                          paramType)) {
-                PyErr_Format(PyExc_TypeError,
-                             "Incompatible array type at parameter %i.",
-                             pos + 1);
-                return ret;
-            }
-
-            // since this method is called before the value is used,
-            // release the pinned array from here.
-            pyjarray_release_pinned((PyJArrayObject *) param, 0);
-            obj = ((PyJArrayObject *) param)->object;
-        }
-
-        ret.l = obj;
-        return ret;
-    }
-
-    case JCLASS_ID: {
-        jobject obj = NULL;
-        // none is okay, we'll translate to null
-        if (param == Py_None)
-            ;
-        else {
-            if (!pyjclass_check(param)) {
-                PyErr_Format(PyExc_TypeError,
-                             "Expected class parameter at %i.",
-                             pos + 1);
-                return ret;
-            }
-
-            obj = ((PyJObject *) param)->clazz;
-        }
-
-        ret.l = obj;
-        return ret;
-    }
-
-    case JOBJECT_ID: {
-        jobject obj = pyembed_box_py(env, param);
-        if (obj != NULL && !(*env)->IsInstanceOf(env, obj, paramType)) {
-            jmethodID getName;
-            jstring expTypeJavaName, actTypeJavaName = NULL;
-            const char *expTypeName, *actTypeName;
-
-            getName = (*env)->GetMethodID(env, JCLASS_TYPE, "getName",
-                                          "()Ljava/lang/String;");
-            expTypeJavaName = (*env)->CallObjectMethod(env, paramType, getName);
-            expTypeName = (*env)->GetStringUTFChars(env, expTypeJavaName, 0);
-            if (pyjclass_check(param)) {
-                actTypeJavaName = (*env)->CallObjectMethod(env, JCLASS_TYPE, getName);
-                actTypeName = (*env)->GetStringUTFChars(env, actTypeJavaName, 0);
-            } else if (pyjobject_check(param)) {
-                actTypeJavaName = (*env)->CallObjectMethod(env, ((PyJObject *) param)->clazz,
-                                  getName);
-                actTypeName = (*env)->GetStringUTFChars(env, actTypeJavaName, 0);
-            } else {
-                actTypeName = param->ob_type->tp_name;
-            }
-            PyErr_Format(PyExc_TypeError,
-                         "Expected %s at parameter %i but received a %s.",
-                         expTypeName, pos + 1, actTypeName);
-            (*env)->ReleaseStringUTFChars(env, expTypeJavaName, expTypeName);
-            if (actTypeJavaName) {
-                (*env)->ReleaseStringUTFChars(env, actTypeJavaName, actTypeName);
-            }
-
-            obj = NULL;
-        }
-        ret.l = obj;
-        return ret;
-    }
-
-    case JSHORT_ID: {
-        if (param == Py_None || !PyInt_Check(param)) {
-            PyErr_Format(PyExc_TypeError,
-                         "Expected short parameter at %i.",
-                         pos + 1);
-            return ret;
-        }
-
-        // precision loss...
-        ret.s = (jshort) PyInt_AsLong(param);
-        return ret;
-    }
-
-    case JINT_ID: {
-        if (param == Py_None || !PyInt_Check(param)) {
-            PyErr_Format(PyExc_TypeError,
-                         "Expected int parameter at %i.",
-                         pos + 1);
-            return ret;
-        }
-
-        ret.i = (jint) PyInt_AS_LONG(param);
-        return ret;
-    }
-
-    case JBYTE_ID: {
-        if (param == Py_None || !PyInt_Check(param)) {
-            PyErr_Format(PyExc_TypeError,
-                         "Expected byte parameter at %i.",
-                         pos + 1);
-            return ret;
-        }
-
-        ret.b = (jbyte) PyInt_AS_LONG(param);
-        return ret;
-    }
-
-    case JDOUBLE_ID: {
-        if (param == Py_None || !PyFloat_Check(param)) {
-            PyErr_Format(PyExc_TypeError,
-                         "Expected double parameter at %i.",
-                         pos + 1);
-            return ret;
-        }
-
-        ret.d = (jdouble) PyFloat_AsDouble(param);
-        return ret;
-    }
-
-    case JFLOAT_ID: {
-        if (param == Py_None || !PyFloat_Check(param)) {
-            PyErr_Format(PyExc_TypeError,
-                         "Expected float parameter at %i.",
-                         pos + 1);
-            return ret;
-        }
-
-        // precision loss
-        ret.f = (jfloat) PyFloat_AsDouble(param);
-        return ret;
-    }
-
-    case JLONG_ID: {
-        if (PyInt_Check(param)) {
-            ret.j = (jlong) PyInt_AS_LONG(param);
-        } else if (PyLong_Check(param)) {
-            ret.j = (jlong) PyLong_AsLongLong(param);
-        } else {
-            PyErr_Format(PyExc_TypeError,
-                         "Expected long parameter at %i.",
-                         pos + 1);
-            return ret;
-        }
-
-        return ret;
-    }
-
-    case JBOOLEAN_ID: {
-        long bvalue;
-
-        if (param == Py_None || !PyInt_Check(param)) {
-            PyErr_Format(PyExc_TypeError,
-                         "Expected boolean parameter at %i.",
-                         pos + 1);
-            return ret;
-        }
-
-        bvalue = (long) PyInt_AsLong(param);
-        if (bvalue > 0) {
-            ret.z = JNI_TRUE;
-        } else {
-            ret.z = JNI_FALSE;
-        }
-        return ret;
-    }
-
-    } // switch
-
-    PyErr_Format(PyExc_TypeError, "Unknown java type at %i.",
-                 pos + 1);
     return ret;
 }
 

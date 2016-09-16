@@ -1,59 +1,56 @@
 package jep.test;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.util.ArrayList;
-
-import jep.python.*;
 
 import jep.Jep;
 import jep.JepException;
+import jep.python.PyModule;
 
 /**
  * Test.java
- *
- *
+ * 
+ * 
  * Created: Fri Apr 30 12:42:58 2004
- *
+ * 
  * @author [mrjohnson0 at sourceforge.net] Mike Johnson
- * @version $Id$
  */
 public class Test implements Runnable {
-    
+
     private Jep jep = null;
+
     private boolean testEval = false;
 
-    
     public static ClassLoader restrictedClassLoader = new ClassLoader() {
-            @Override
-            public Class<?> loadClass(final String name) throws ClassNotFoundException {
-                if (name.startsWith("java.io.")) {
-                    throw new ClassNotFoundException("restricted class: " + name);
-                }
-                return super.loadClass(name);
+        @Override
+        public Class<?> loadClass(final String name)
+                throws ClassNotFoundException {
+            if (name.startsWith("java.io.")) {
+                throw new ClassNotFoundException("restricted class: " + name);
             }
-        };
-
+            return super.loadClass(name);
+        }
+    };
 
     public Test() {
     }
-
 
     public Test(boolean testEval) {
         this.testEval = testEval;
     }
 
-
     public static enum TestEnum {
-        One,
-        Two
+        One, Two
     }
 
-    
+    @Override
     public void run() {
 
-        for(int i = 0; i < 1; i++) {
+        for (int i = 0; i < 1; i++) {
             System.out.println("running i: " + i);
-            
+
             try {
                 File pwd = new File(".");
 
@@ -74,7 +71,7 @@ public class Test implements Runnable {
                 // arrays
                 int[] ia = new int[] { 3 };
                 double[] da = new double[] { 2.0 };
-                String[] sa  = new String[] { "0" };
+                String[] sa = new String[] { "0" };
 
                 jep.eval("def manip(li, val):\n\tli[0]=val\n\tli.commit()");
                 jep.invoke("manip", ia, 1);
@@ -100,15 +97,15 @@ public class Test implements Runnable {
                 amod.set("testab", ab);
                 amod.set("testad", ad);
 
-                if(!this.testEval)
+                if (!this.testEval)
                     jep.runScript("test.py");
                 else {
-                    BufferedReader buf = new BufferedReader(
-                        new FileReader("test.py"));
+                    BufferedReader buf = new BufferedReader(new FileReader(
+                            "test.py"));
 
                     String line = null;
-                    while((line = buf.readLine()) != null) {
-                        if(line.trim().startsWith("#"))
+                    while ((line = buf.readLine()) != null) {
+                        if (line.trim().startsWith("#"))
                             continue;
 
                         System.out.println("Running line: " + line);
@@ -126,42 +123,42 @@ public class Test implements Runnable {
                 jep.invoke("testMethod", (byte) 211);
                 jep.invoke("testMethod", 't');
 
-                Object ret = jep.invoke("testMethod", "method called from Java");
+                Object ret = jep
+                        .invoke("testMethod", "method called from Java");
                 System.out.println("testMethod ret:   " + ret);
 
                 System.out.println("Test get object: " + jep.getValue("testo"));
                 System.out.println("Test get string: " + jep.getValue("test"));
-                System.out.println("Test get int: " +
-                                   ((Integer) jep.getValue("testi")).intValue());
-                System.out.println("Test get boolean: " + (Boolean) jep.getValue("testb"));
-                System.out.println("Test get long: " + (Long) jep.getValue("testl"));
-                System.out.println("Test get double: " + (Float) jep.getValue("testd"));
-                System.out.println("Test get float: " + (Float) jep.getValue("testf"));
-                System.out.println("Test get short: " + (Integer) jep.getValue("testy"));
+                System.out.println("Test get int: "
+                        + ((Integer) jep.getValue("testi")).intValue());
+                System.out
+                        .println("Test get boolean: " + jep.getValue("testb"));
+                System.out.println("Test get long: " + jep.getValue("testl"));
+                System.out.println("Test get double: " + jep.getValue("testd"));
+                System.out.println("Test get float: " + jep.getValue("testf"));
+                System.out.println("Test get short: " + jep.getValue("testy"));
                 System.out.println("Test get null: " + jep.getValue("testn"));
-                System.out.println("Test get class: " + (Class) jep.getValue("testz"));
+                System.out.println("Test get class: " + jep.getValue("testz"));
 
                 jep.eval("testmap = {'blah': 'har'}");
-                System.out.println("Test get Python object: " + jep.getValue("testmap"));
+                System.out.println("Test get Python object: "
+                        + jep.getValue("testmap"));
 
                 System.out.print("get unknown val:  ");
 
                 try {
                     System.out.println(jep.getValue("_asdf"));
                     System.out.println("whoops");
-                }
-                catch(JepException e) {
+                } catch (JepException e) {
                     System.out.println(e.getMessage());
                 }
-            }
-            catch(Throwable t) {
+            } catch (Throwable t) {
                 System.out.println("Java caught error:");
                 t.printStackTrace();
                 break;
-            }
-            finally {
+            } finally {
                 System.out.println("**** close me");
-                if(jep != null)
+                if (jep != null)
                     jep.close();
             }
         }
@@ -172,29 +169,13 @@ public class Test implements Runnable {
         return this.jep;
     }
 
+    @Override
     public String toString() {
         return "toString(). Thanks for calling Java(tm).";
     }
 
-
     public TestEnum getEnum() {
         return TestEnum.One;
-    }
-
-    public Integer getInteger() {
-        return new Integer(-2147483648);
-    }
-
-    public Long getClassLong() {
-        return new Long(9223372036854775807L);
-    }
-
-    public Double getClassDouble() {
-        return new Double(4.9E-324D);
-    }
-
-    public Float getClassFloat() {
-        return new Float(3.4028235E38F);
     }
 
     public ArrayList getObject() {
@@ -208,10 +189,12 @@ public class Test implements Runnable {
     }
 
     public String[][] getStringStringArray() {
-        return new String[][] {
-            new String[] { "one", "two" },
-            new String[] { "one", "two" }
-        };
+        return new String[][] { new String[] { "one", "two" },
+                new String[] { "one", "two" } };
+    }
+
+    public String[] setStringArray(String[] array) {
+        return array;
     }
 
     public int[] getIntArray() {
@@ -233,21 +216,21 @@ public class Test implements Runnable {
     public Test[] getObjectArray() {
         return new Test[] { new Test(), new Test() };
     }
-    
+
     public void sendObjectArray(Object p[]) {
-        if(p == null)
+        if (p == null)
             throw new NullPointerException("p is null?");
-        for(int i = 0; i < p.length; i++)
-            System.out.println("                  " +
-                               "array[" + i + "] = " + p[i]);
+        for (int i = 0; i < p.length; i++)
+            System.out.println("                  " + "array[" + i + "] = "
+                    + p[i]);
     }
 
     public void sendIntArray(int p[]) {
-        if(p == null)
+        if (p == null)
             throw new NullPointerException("p is null?");
-        for(int i = 0; i < p.length; i++)
-            System.out.println("                  " +
-                               "array[" + i + "] = " + p[i]);
+        for (int i = 0; i < p.length; i++)
+            System.out.println("                  " + "array[" + i + "] = "
+                    + p[i]);
     }
 
     public void sendMeSomeStuff(String v, ArrayList a) {
@@ -257,204 +240,25 @@ public class Test implements Runnable {
     public String callback() {
         return "Hey, you called a Java(tm) method!";
     }
-    
 
-    // -------------------------------------------------- fields
-
-    public String stringField = "a stringField";
-    public boolean booleanField = true;
-    public short shortField = 321;
-    public int intField = 123;
-    public long longField = 9223372036854775807L;
-    public double doubleField = 123.123D;
-    public float floatField = 3.4028235E38F;
-    public byte byteField = 43;
-    public char charField = 'c';
-    public Class classField = this.getClass();
-
-    public boolean isBooleanField() {
-        return booleanField;
+    public Object testObjectPassThrough(Object bool) {
+        return bool;
     }
 
-    public void setBooleanField(boolean booleanField) {
-        this.booleanField = booleanField;
-    }
-
-    public byte getByteField() {
-        return byteField;
-    }
-
-    public void setByteField(byte byteField) {
-        this.byteField = byteField;
-    }
-
-    public char getCharField() {
-        return charField;
-    }
-
-    public void setCharField(char charField) {
-        this.charField = charField;
-    }
-
-    public Class getClassField() {
-        return classField;
-    }
-
-    public void setClassField(Class classField) {
-        this.classField = classField;
-    }
-
-    public double getDoubleField() {
-        return doubleField;
-    }
-
-    public void setDoubleField(double doubleField) {
-        this.doubleField = doubleField;
-    }
-
-    public float getFloatField() {
-        return floatField;
-    }
-
-    public void setFloatField(float floatField) {
-        this.floatField = floatField;
-    }
-
-    public int getIntField() {
-        return intField;
-    }
-
-    public void setIntField(int intField) {
-        this.intField = intField;
-    }
-
-    public long getLongField() {
-        return longField;
-    }
-
-    public void setLongField(long longField) {
-        this.longField = longField;
-    }
-
-    public short getShortField() {
-        return shortField;
-    }
-
-    public void setShortField(short shortField) {
-        this.shortField = shortField;
-    }
-
-    public String getStringField() {
-        return stringField;
-    }
-
-    public void setStringField(String stringField) {
-        this.stringField = stringField;
-    }
-    
-    
-    // -------------------------------------------------- static fields
-    
-    public static String staticString = "stringField";
-    public static boolean staticBoolean = true;
-    public static short staticShort = 321;
-    public static int staticInt = 123;
-    public static long staticLong = 9223372036854775807L;
-    public static double staticDouble = 123.123D;
-    public static float staticFloat = 3.4028235E38F;
-    public static byte staticByte = 125;
-    public static char staticChar = 'j';
-    public static Class staticClass = Thread.currentThread().getClass();
-
-    
-    // -------------------------------------------------- static methods
-
-    public static boolean isStaticBoolean() {
-        return staticBoolean;
-    }
-
-    public static void setStaticBoolean(boolean staticBoolean) {
-        Test.staticBoolean = staticBoolean;
-    }
-
-    public static byte getStaticByte() {
-        return staticByte;
-    }
-
-    public static void setStaticByte(byte staticByte) {
-        Test.staticByte = staticByte;
-    }
-
-    public static char getStaticChar() {
-        return staticChar;
-    }
-
-    public static void setStaticChar(char staticChar) {
-        Test.staticChar = staticChar;
-    }
-
-    public static double getStaticDouble() {
-        return staticDouble;
-    }
-
-    public static void setStaticDouble(double staticDouble) {
-        Test.staticDouble = staticDouble;
-    }
-
-    public static float getStaticFloat() {
-        return staticFloat;
-    }
-
-    public static void setStaticFloat(float staticFloat) {
-        Test.staticFloat = staticFloat;
-    }
-
-    public static int getStaticInt() {
-        return staticInt;
-    }
-
-    public static void setStaticInt(int staticInt) {
-        Test.staticInt = staticInt;
-    }
-
-    public static long getStaticLong() {
-        return staticLong;
-    }
-
-    public static void setStaticLong(long staticLong) {
-        Test.staticLong = staticLong;
-    }
-
-    public static short getStaticShort() {
-        return staticShort;
-    }
-
-    public static void setStaticShort(short staticShort) {
-        Test.staticShort = staticShort;
-    }
-
-    public static String getStaticString() {
-        return staticString;
-    }
-
-    public static void setStaticString(String staticString) {
-        Test.staticString = staticString;
-    }
-    
-    // -------------------------------------------------- other static methods
-    
-    public static Object getStaticObject() {
-        return new Object();
-    }
-    
     public static void callStaticVoid() {
         return;
     }
 
-    public static Class getStaticClass() {
-        return Thread.currentThread().getClass();
+    public static Object[] test20Args(Object arg1, Object arg2, Object arg3,
+            Object arg4, Object arg5, Object arg6, Object arg7, Object arg8,
+            Object arg9, Object arg10, Object arg11, Object arg12,
+            Object arg13, Object arg14, Object arg15, Object arg16,
+            Object arg17, Object arg18, Object arg19, Object arg20) {
+        return new Object[] { arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8,
+                arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17,
+                arg18, arg19, arg20 };
     }
-    
+
     public static void testRestrictedClassLoader() throws Throwable {
         final Throwable[] t = new Throwable[1];
         Thread thread = new Thread(new Runnable() {
@@ -464,11 +268,11 @@ public class Test implements Runnable {
                 Jep jep = null;
                 try {
                     jep = new Jep(true, "", restrictedClassLoader);
-                    jep.eval("from java.io import File");                    
+                    jep.eval("from java.io import File");
                 } catch (Throwable th) {
                     t[0] = th;
                 } finally {
-                    if(jep != null) {
+                    if (jep != null) {
                         jep.close();
                     }
                     synchronized (Test.class) {
@@ -477,7 +281,7 @@ public class Test implements Runnable {
                 }
             }
         });
-        
+
         synchronized (Test.class) {
             thread.start();
             try {
@@ -486,20 +290,19 @@ public class Test implements Runnable {
                 e.printStackTrace();
             }
         }
-        
-        if(t[0] == null) {            
+
+        if (t[0] == null) {
             throw new RuntimeException("Did not throw classloader exception!");
-        } else if(!t[0].getMessage().contains("ImportError")) {
+        } else if (!t[0].getMessage().contains("ImportError")) {
             throw t[0];
         }
-    }    
-    
+    }
+
     public static void main(String argv[]) throws Throwable {
         Jep jep = new Jep();
         try {
             jep.runScript("runtests.py");
-        }
-        finally {
+        } finally {
             jep.close();
         }
     }

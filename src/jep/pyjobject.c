@@ -33,12 +33,10 @@ static void pyjobject_addmethod(PyJObject*, PyObject*);
 static void pyjobject_init_subtypes(void);
 static int  subtypes_initialized = 0;
 
-static jmethodID objectGetClass  = 0;
 static jmethodID objectEquals    = 0;
 static jmethodID objectHashCode  = 0;
 static jmethodID classGetMethods = 0;
 static jmethodID classGetFields  = 0;
-static jmethodID classGetName    = 0;
 
 /*
  * MSVC requires tp_base to be set at runtime instead of in
@@ -170,12 +168,13 @@ PyObject* pyjobject_new(JNIEnv *env, jobject obj)
 
 
     pyjob->object      = (*env)->NewGlobalRef(env, obj);
-    pyjob->clazz       = (*env)->NewGlobalRef(env, (*env)->GetObjectClass(env,
-                         obj));
+    pyjob->clazz       = (*env)->NewGlobalRef(env, objClz);
     pyjob->attr        = PyList_New(0);
     pyjob->methods     = PyList_New(0);
     pyjob->fields      = PyList_New(0);
     pyjob->finishAttr  = 0;
+
+    (*env)->DeleteLocalRef(env, objClz);
 
     if (pyjobject_init(env, pyjob)) {
         return (PyObject *) pyjob;
@@ -224,7 +223,6 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
     jobjectArray      methodArray = NULL;
     jobjectArray      fieldArray  = NULL;
     int               i, len = 0;
-    jobject           langClass   = NULL;
 
     jstring           className   = NULL;
     const char       *cClassName  = NULL;
@@ -234,59 +232,37 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
     JepThread   *jepThread;
     PyObject    *cachedMethodList = NULL;
 
-    (*env)->PushLocalFrame(env, 20);
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
+        process_java_exception(env);
+        return 0;
+    }
     // ------------------------------ call Class.getMethods()
-
-    // well, first call getClass()
-    if (objectGetClass == 0) {
-        objectGetClass = (*env)->GetMethodID(env,
-                                             pyjob->clazz,
-                                             "getClass",
-                                             "()Ljava/lang/Class;");
-        if (process_java_exception(env) || !objectGetClass) {
-            goto EXIT_ERROR;
-        }
-    }
-
-    langClass = (*env)->CallObjectMethod(env, pyjob->clazz, objectGetClass);
-    if (process_java_exception(env) || !langClass) {
-        goto EXIT_ERROR;
-    }
 
     /*
      * attach attribute java_name to the pyjobject instance to assist with
      * understanding the type at runtime
      */
-    if (classGetName == 0) {
-        classGetName = (*env)->GetMethodID(env, langClass, "getName",
-                                           "()Ljava/lang/String;");
+    className = (*env)->CallObjectMethod(env, pyjob->clazz, JCLASS_GET_NAME);
+    if (process_java_exception(env) || !className) {
+        goto EXIT_ERROR;
     }
-    className = (*env)->CallObjectMethod(env, pyjob->clazz, classGetName);
     cClassName = jstring2char(env, className);
     pyClassName = PyString_FromString(cClassName);
     release_utf_char(env, className, cClassName);
     pyAttrName = PyString_FromString("java_name");
     if (PyObject_SetAttr((PyObject *) pyjob, pyAttrName, pyClassName) == -1) {
-        PyErr_Format(PyExc_RuntimeError,
-                     "Couldn't add java_name as attribute.");
+        goto EXIT_ERROR;
     } else {
         pyjobject_addfield(pyjob, pyAttrName);
     }
     pyjob->javaClassName = pyClassName;
     Py_DECREF(pyAttrName);
-    (*env)->DeleteLocalRef(env, className);
-
     // then, get methodid for getMethods()
-    if (classGetMethods == 0) {
-        classGetMethods = (*env)->GetMethodID(env,
-                                              langClass,
-                                              "getMethods",
-                                              "()[Ljava/lang/reflect/Method;");
-        if (process_java_exception(env) || !classGetMethods) {
-            goto EXIT_ERROR;
-        }
+    if (!JNI_METHOD(classGetMethods, env, JCLASS_TYPE, "getMethods",
+                    "()[Ljava/lang/reflect/Method;")) {
+        process_java_exception(env);
+        goto EXIT_ERROR;
     }
-
     /*
      * Performance improvement.  The code below is very similar to previous
      * versions except methods are now cached in memory.
@@ -331,7 +307,6 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
         // so what i did here was find the methodid using langClass,
         // but then i call the method using clazz. methodIds for java
         // classes are shared....
-
         methodArray = (jobjectArray) (*env)->CallObjectMethod(env, pyjob->clazz,
                       classGetMethods);
         if (process_java_exception(env) || !methodArray) {
@@ -348,11 +323,7 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
             rmethod = (*env)->GetObjectArrayElement(env, methodArray, i);
 
             // make new PyJMethodObject, linked to pyjob
-            if (pyjob->object) {
-                pymethod = pyjmethod_new(env, rmethod, pyjob);
-            } else {
-                pymethod = pyjmethod_new_static(env, rmethod, pyjob);
-            }
+            pymethod = PyJMethod_New(env, rmethod);
 
             if (!pymethod) {
                 continue;
@@ -364,20 +335,20 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
                 int cacheIndex = 0;
                 for (cacheIndex = 0; cacheIndex < cacheLen; cacheIndex += 1) {
                     PyObject* cached = PyList_GetItem(pyjMethodList, cacheIndex);
-                    if (pyjmethod_check(cached)) {
+                    if (PyJMethod_Check(cached)) {
                         PyJMethodObject* cachedMethod = (PyJMethodObject*) cached;
                         if (PyObject_RichCompareBool(pymethod->pyMethodName, cachedMethod->pyMethodName,
                                                      Py_EQ)) {
-                            PyObject* multimethod = PyJmultiMethod_New((PyObject*) pymethod, cached);
+                            PyObject* multimethod = PyJMultiMethod_New((PyObject*) pymethod, cached);
                             PyList_SetItem(pyjMethodList, cacheIndex, multimethod);
                             multi = 1;
                             break;
                         }
-                    } else if (PyJmultiMethod_Check(cached)) {
-                        PyObject* methodName = PyJmultiMethod_GetName(cached);
+                    } else if (PyJMultiMethod_Check(cached)) {
+                        PyObject* methodName = PyJMultiMethod_GetName(cached);
                         if (PyObject_RichCompareBool(pymethod->pyMethodName, methodName, Py_EQ)) {
                             Py_DECREF(methodName);
-                            PyJmultiMethod_Append(cached, (PyObject*) pymethod);
+                            PyJMultiMethod_Append(cached, (PyObject*) pymethod);
                             multi = 1;
                             break;
                         } else {
@@ -405,17 +376,16 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
     for (i = 0; i < len; i++) {
         PyObject* name   = NULL;
         PyObject* cached = PyList_GetItem(cachedMethodList, i);
-        if (pyjmethod_check(cached)) {
+        if (PyJMethod_Check(cached)) {
             PyJMethodObject* cachedMethod = (PyJMethodObject*) cached;
             name = cachedMethod->pyMethodName;
             Py_INCREF(name);
-        } else if (PyJmultiMethod_Check(cached)) {
-            name = PyJmultiMethod_GetName(cached);
+        } else if (PyJMultiMethod_Check(cached)) {
+            name = PyJMultiMethod_GetName(cached);
         }
         if (name) {
-            if (PyObject_SetAttr((PyObject *) pyjob, name, cached) != 0) {
-                PyErr_SetString(PyExc_RuntimeError,
-                                "Couldn't add method as attribute.");
+            if (PyObject_SetAttr((PyObject *) pyjob, name, cached) == -1) {
+                goto EXIT_ERROR;
             } else {
                 pyjobject_addmethod(pyjob, name);
             }
@@ -425,15 +395,10 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
 
 
     // ------------------------------ process fields
-
-    if (classGetFields == 0) {
-        classGetFields = (*env)->GetMethodID(env,
-                                             langClass,
-                                             "getFields",
-                                             "()[Ljava/lang/reflect/Field;");
-        if (process_java_exception(env) || !classGetFields) {
-            goto EXIT_ERROR;
-        }
+    if (!JNI_METHOD(classGetFields, env,  JCLASS_TYPE, "getFields",
+                    "()[Ljava/lang/reflect/Field;")) {
+        process_java_exception(env);
+        goto EXIT_ERROR;
     }
 
     fieldArray = (jobjectArray) (*env)->CallObjectMethod(env,
@@ -463,8 +428,8 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
         if (pyjfield->pyFieldName && PyString_Check(pyjfield->pyFieldName)) {
             if (PyObject_SetAttr((PyObject *) pyjob,
                                  pyjfield->pyFieldName,
-                                 (PyObject *) pyjfield) != 0) {
-                printf("WARNING: couldn't add field.\n");
+                                 (PyObject *) pyjfield) == -1) {
+                goto EXIT_ERROR;
             } else {
                 pyjobject_addfield(pyjob, pyjfield->pyFieldName);
             }
@@ -612,15 +577,10 @@ static PyObject* pyjobject_richcompare(PyJObject *self,
         // skip calling Object.equals() if op is > or <
         if (opid != Py_GT && opid != Py_LT) {
             // get the methodid for Object.equals()
-            if (objectEquals == 0) {
-                objectEquals = (*env)->GetMethodID(
-                                   env,
-                                   self->clazz,
-                                   "equals",
-                                   "(Ljava/lang/Object;)Z");
-                if (process_java_exception(env) || !objectEquals) {
-                    return NULL;
-                }
+            if (!JNI_METHOD(objectEquals, env, JOBJECT_TYPE, "equals",
+                            "(Ljava/lang/Object;)Z")) {
+                process_java_exception(env);
+                return NULL;
             }
 
             eq = (*env)->CallBooleanMethod(
@@ -674,7 +634,8 @@ static PyObject* pyjobject_richcompare(PyJObject *self,
 
             compareTo = (*env)->GetMethodID(env, JCOMPARABLE_TYPE, "compareTo",
                                             "(Ljava/lang/Object;)I");
-            if (process_java_exception(env) || !compareTo) {
+            if (!compareTo) {
+                process_java_exception(env);
                 return NULL;
             }
 
@@ -774,7 +735,7 @@ PyObject* pyjobject_getattr(PyJObject *obj,
     Py_DECREF(pyname);
 
     // method optimizations
-    if (pyjmethod_check(ret) || PyJmultiMethod_Check(ret)) {
+    if (PyJMethod_Check(ret) || PyJMultiMethod_Check(ret)) {
         /*
          * TODO Should not bind non-static methods to pyjclass objects, but not
          * sure yet how to handle multimethods and static methods.
@@ -899,14 +860,9 @@ static long pyjobject_hash(PyJObject *self)
     JNIEnv *env = pyembed_get_env();
     int   hash = -1;
 
-    if (objectHashCode == 0) {
-        objectHashCode = (*env)->GetMethodID(env,
-                                             self->clazz,
-                                             "hashCode",
-                                             "()I");
-        if (process_java_exception(env) || !objectHashCode) {
-            return -1;
-        }
+    if (!JNI_METHOD(objectHashCode, env, JOBJECT_TYPE, "hashCode", "()I")) {
+        process_java_exception(env);
+        return -1;
     }
 
     if (self->object) {
@@ -946,14 +902,17 @@ static PyObject* pyjobject_dir(PyObject *o, PyObject* ignore)
         PyObject *item = PySequence_GetItem(self->methods, i);
         contains = PySequence_Contains(attrs, item);
         if (contains < 0) {
+            Py_DECREF(item);
             Py_DECREF(attrs);
             return NULL;
         } else if (contains == 0) {
             if (PyList_Append(attrs, item) < 0) {
+                Py_DECREF(item);
                 Py_DECREF(attrs);
                 return NULL;
             }
         }
+        Py_DECREF(item);
     }
 
     // TODO copy/paste is bad, turn it into a method
@@ -962,14 +921,17 @@ static PyObject* pyjobject_dir(PyObject *o, PyObject* ignore)
         PyObject *item = PySequence_GetItem(self->fields, i);
         contains = PySequence_Contains(attrs, item);
         if (contains < 0) {
+            Py_DECREF(item);
             Py_DECREF(attrs);
             return NULL;
         } else if (contains == 0) {
             if (PyList_Append(attrs, item) < 0) {
+                Py_DECREF(item);
                 Py_DECREF(attrs);
                 return NULL;
             }
         }
+        Py_DECREF(item);
     }
 
     if (PyList_Sort(attrs) < 0) {

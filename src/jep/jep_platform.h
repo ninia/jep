@@ -61,6 +61,19 @@
         #define FILE_SEP               '/'
     #endif // Windows compatibility
 
+    /*
+    * A default number of local references to reserve when using the
+    * PushLocalFrame JNI method. Most native jep methods need a few local java
+    * references that are deleted before the method returns. Rather than trying
+    * to get an exact number of local references for every frame it is simpler
+    * to overallocate. The JNI specification mandates that there are at least
+    * 16 local references avaialble when enetering native code from java so
+    * using the same value as a default for creating new local frames means
+    * that native methods will have the same number of local references
+    * available regardless of whether the frame was created by JNI or by a call
+    * from PushLocalFrame.
+    */
+    #define JLOCAL_REFS 16
 
     /* Python 3 compatibility */
     #if PY_MAJOR_VERSION >= 3
@@ -80,9 +93,9 @@
         #define PyString_FromFormat(fmt, ...)     PyUnicode_FromFormat(fmt, ##__VA_ARGS__)
 
         /*
-         * Python 3.3 drastically improved the unicode API.
-         * For Python 3.2 support, see jep_util.h.
-         */
+        * Python 3.3 drastically improved the unicode API.
+        * For Python 3.2 support, see jep_util.h.
+        */
         #if PY_MINOR_VERSION >= 3
             #define PyString_AsString(str)            PyUnicode_AsUTF8(str)
             #define PyString_AS_STRING(str)           PyUnicode_AsUTF8(str)

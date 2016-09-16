@@ -42,7 +42,6 @@ import jep.python.PyModule;
  * Implements {@link javax.script.ScriptEngine}
  * 
  * @author [mrjohnson0 at sourceforge.net] Mike Johnson
- * @version $Id$
  */
 public class JepScriptEngine implements ScriptEngine {
     private Jep jep = null;

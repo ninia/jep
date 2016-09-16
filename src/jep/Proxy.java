@@ -30,7 +30,6 @@ import java.lang.reflect.InvocationHandler;
  * Extends java.lang.reflect.Proxy for callbacks.
  * 
  * @author [mrjohnson0 at sourceforge.net] Mike Johnson
- * @version $Id: $
  */
 public class Proxy extends java.lang.reflect.Proxy {
 

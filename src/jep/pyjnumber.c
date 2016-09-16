@@ -61,6 +61,9 @@ int pyjnumber_check(PyObject *obj)
 #define TO_PYTHON_NUMBER(env, var)\
     if (pyjnumber_check(var)) {\
         var = java_number_to_python(env, var);\
+        if (var == NULL){\
+            return NULL;\
+        }\
     } else if (PyNumber_Check(var)) {\
         Py_INCREF(var);\
     }\
@@ -147,6 +150,8 @@ static PyObject* pyjnumber_power(PyObject *x, PyObject *y, PyObject *z)
     TO_PYTHON_NUMBER(env, y);
     if (z != Py_None) {
         TO_PYTHON_NUMBER(env, z);
+    } else {
+        Py_INCREF(z);
     }
 
     result = PyNumber_Power(x, y, z);
@@ -190,6 +195,9 @@ static int pyjnumber_nonzero(PyObject *x)
 
     if (pyjnumber_check(x)) {
         x = java_number_to_python(env, x);
+        if (x == NULL) {
+            return result;
+        }
     }
 
     result = PyObject_IsTrue(x);
@@ -253,7 +261,9 @@ static PyObject* pyjnumber_long(PyObject *x)
     JNIEnv   *env    = pyembed_get_env();
 
     result = java_number_to_pythonintlong(env, x);
-    if (PyInt_Check(result)) {
+    if (result == NULL) {
+        return result;
+    } else if (PyInt_Check(result)) {
         PyObject *longResult = PyLong_FromLong(PyInt_AS_LONG(result));
         Py_DECREF(result);
         return longResult;
@@ -266,6 +276,21 @@ static PyObject* pyjnumber_float(PyObject *x)
 {
     JNIEnv *env = pyembed_get_env();
     return java_number_to_pythonfloat(env, x);
+}
+
+static PyObject* pyjnumber_richcompare(PyObject *self,
+                                       PyObject *other,
+                                       int opid)
+{
+    PyObject *result = NULL;
+    JNIEnv   *env    = pyembed_get_env();
+
+    TO_PYTHON_NUMBER(env, self);
+    TO_PYTHON_NUMBER(env, other);
+    result = PyObject_RichCompare(self, other, opid);
+    Py_DECREF(self);
+    Py_DECREF(other);
+    return result;
 }
 
 
@@ -288,32 +313,33 @@ static PyObject* java_number_to_pythonintlong(JNIEnv *env, PyObject* n)
     jlong      value;
     PyJObject *jnumber  = (PyJObject*) n;
 
-    if (longValue == 0) {
-        longValue = (*env)->GetMethodID(env, JNUMBER_TYPE, "longValue", "()J");
-
-        if (process_java_exception(env)) {
-            return NULL;
-        }
+    if (!JNI_METHOD(longValue, env, JNUMBER_TYPE, "longValue", "()J")) {
+        process_java_exception(env);
+        return NULL;
     }
 
 #if PY_MAJOR_VERSION < 3
-    if (intValue == 0) {
-        intValue = (*env)->GetMethodID(env, JNUMBER_TYPE, "intValue", "()I");
+    if (!JNI_METHOD(intValue, env, JNUMBER_TYPE, "intValue", "()I")) {
 
-        if (process_java_exception(env)) {
-            return NULL;
-        }
+        process_java_exception(env);
+        return NULL;
     }
 
     if ((*env)->IsInstanceOf(env, jnumber->object, JBYTE_OBJ_TYPE) ||
             (*env)->IsInstanceOf(env, jnumber->object, JSHORT_OBJ_TYPE) ||
             (*env)->IsInstanceOf(env, jnumber->object, JINT_OBJ_TYPE)) {
         jint result = (*env)->CallIntMethod(env, jnumber->object, intValue);
+        if (process_java_exception(env)) {
+            return NULL;
+        }
         return PyInt_FromSsize_t(result);
     }
 #endif
 
     value = (*env)->CallLongMethod(env, jnumber->object, longValue);
+    if (process_java_exception(env)) {
+        return NULL;
+    }
     return PyLong_FromLongLong(value);
 }
 
@@ -323,15 +349,15 @@ static PyObject* java_number_to_pythonfloat(JNIEnv *env, PyObject* n)
     jdouble    value;
     PyJObject *jnumber  = (PyJObject*) n;
 
-    if (doubleValue == 0) {
-        doubleValue = (*env)->GetMethodID(env, JNUMBER_TYPE, "doubleValue", "()D");
-
-        if (process_java_exception(env)) {
-            return NULL;
-        }
+    if (!JNI_METHOD(doubleValue, env, JNUMBER_TYPE, "doubleValue", "()D")) {
+        process_java_exception(env);
+        return NULL;
     }
 
     value = (*env)->CallDoubleMethod(env, jnumber->object, doubleValue);
+    if (process_java_exception(env)) {
+        return NULL;
+    }
     return PyFloat_FromDouble(value);
 }
 
@@ -426,7 +452,7 @@ PyTypeObject PyJNumber_Type = {
     "jnumber",                                /* tp_doc */
     0,                                        /* tp_traverse */
     0,                                        /* tp_clear */
-    0,                                        /* tp_richcompare */
+    pyjnumber_richcompare,                    /* tp_richcompare */
     0,                                        /* tp_weaklistoffset */
     0,                                        /* tp_iter */
     0,                                        /* tp_iternext */

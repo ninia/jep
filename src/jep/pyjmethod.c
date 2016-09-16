@@ -35,193 +35,75 @@
 static void pyjmethod_dealloc(PyJMethodObject *self);
 
 // cache methodIds
-static jmethodID classGetName        = 0;
+static jmethodID methodGetName       = 0;
 static jmethodID methodGetType       = 0;
-static jmethodID methodGetParmTypes  = 0;
+static jmethodID methodGetParamTypes = 0;
 static jmethodID methodGetModifiers  = 0;
 
 
 
 // called internally to make new PyJMethodObject instances.
-// throws java exception and returns NULL on error.
-PyJMethodObject* pyjmethod_new(JNIEnv *env,
-                               jobject rmethod,
-                               PyJObject *pyjobject)
+// throws python exception and returns NULL on error.
+PyJMethodObject* PyJMethod_New(JNIEnv *env, jobject rmethod)
 {
-    PyJMethodObject *pym          = NULL;
-    jclass            rmethodClass = NULL;
-    const char       *methodName   = NULL;
-    jstring           jstr         = NULL;
+    jstring          jname  = NULL;
+    const char      *cname  = NULL;
+    PyObject        *pyname = NULL;
+    PyJMethodObject *pym    = NULL;
 
-    if (PyType_Ready(&PyJmethod_Type) < 0) {
+    if (PyType_Ready(&PyJMethod_Type) < 0) {
         return NULL;
     }
 
-    pym                = PyObject_NEW(PyJMethodObject, &PyJmethod_Type);
+    if (!JNI_METHOD(methodGetName, env, JMETHOD_TYPE, "getName",
+                    "()Ljava/lang/String;")) {
+        process_java_exception(env);
+        return NULL;
+    }
+
+    jname = (jstring) (*env)->CallObjectMethod(env, rmethod, methodGetName);
+    if (process_java_exception(env) || !jname) {
+        return NULL;
+    }
+    cname  = (*env)->GetStringUTFChars(env, jname, 0);
+    pyname = PyString_FromString(cname);
+    (*env)->ReleaseStringUTFChars(env, jname, cname);
+    (*env)->DeleteLocalRef(env, jname);
+
+    pym                = PyObject_NEW(PyJMethodObject, &PyJMethod_Type);
     pym->rmethod       = (*env)->NewGlobalRef(env, rmethod);
     pym->parameters    = NULL;
-    pym->lenParameters = 0;
-    pym->pyMethodName  = NULL;
+    pym->lenParameters = -1;
+    pym->pyMethodName  = pyname;
     pym->isStatic      = -1;
     pym->returnTypeId  = -1;
 
-    // ------------------------------ get method name
-
-    rmethodClass = (*env)->GetObjectClass(env, rmethod);
-    if (process_java_exception(env) || !rmethodClass) {
-        goto EXIT_ERROR;
-    }
-
-    if (classGetName == 0) {
-        classGetName = (*env)->GetMethodID(env,
-                                           rmethodClass,
-                                           "getName",
-                                           "()Ljava/lang/String;");
-        if (process_java_exception(env) || !classGetName) {
-            goto EXIT_ERROR;
-        }
-    }
-
-    jstr = (jstring) (*env)->CallObjectMethod(env,
-            rmethod,
-            classGetName);
-    if (process_java_exception(env) || !jstr) {
-        goto EXIT_ERROR;
-    }
-
-    methodName        = (*env)->GetStringUTFChars(env, jstr, 0);
-    pym->pyMethodName = PyString_FromString(methodName);
-    (*env)->ReleaseStringUTFChars(env, jstr, methodName);
-    (*env)->DeleteLocalRef(env, jstr);
-
-    (*env)->DeleteLocalRef(env, rmethodClass);
     return pym;
-
-
-EXIT_ERROR:
-    if (rmethodClass) {
-        (*env)->DeleteLocalRef(env, rmethodClass);
-    }
-
-    if (pym) {
-        pyjmethod_dealloc(pym);
-    }
-    return NULL;
 }
-
-
-// called internally to make new PyJMethodObject instances.
-// throws java exception and returns NULL on error.
-PyJMethodObject* pyjmethod_new_static(JNIEnv *env,
-                                      jobject rmethod,
-                                      PyJObject *pyjobject)
-{
-    PyJMethodObject *pym          = NULL;
-    jclass            rmethodClass = NULL;
-    const char       *methodName   = NULL;
-    jstring           jstr         = NULL;
-
-    pym                = PyObject_NEW(PyJMethodObject, &PyJmethod_Type);
-    pym->rmethod       = (*env)->NewGlobalRef(env, rmethod);
-    pym->parameters    = NULL;
-    pym->lenParameters = 0;
-    pym->pyMethodName  = NULL;
-    pym->isStatic      = -1;
-    pym->returnTypeId  = -1;
-
-    // ------------------------------ get method name
-
-    rmethodClass = (*env)->GetObjectClass(env, rmethod);
-    if (process_java_exception(env) || !rmethodClass) {
-        goto EXIT_ERROR;
-    }
-
-    if (classGetName == 0) {
-        classGetName = (*env)->GetMethodID(env,
-                                           rmethodClass,
-                                           "getName",
-                                           "()Ljava/lang/String;");
-        if (process_java_exception(env) || !classGetName) {
-            goto EXIT_ERROR;
-        }
-    }
-
-    jstr = (jstring) (*env)->CallObjectMethod(env,
-            rmethod,
-            classGetName);
-    if (process_java_exception(env) || !jstr) {
-        goto EXIT_ERROR;
-    }
-
-    methodName        = (*env)->GetStringUTFChars(env, jstr, 0);
-    pym->pyMethodName = PyString_FromString(methodName);
-    (*env)->ReleaseStringUTFChars(env, jstr, methodName);
-    (*env)->DeleteLocalRef(env, jstr);
-
-    (*env)->DeleteLocalRef(env, rmethodClass);
-    return pym;
-
-
-EXIT_ERROR:
-    if (rmethodClass) {
-        (*env)->DeleteLocalRef(env, rmethodClass);
-    }
-
-    if (pym) {
-        pyjmethod_dealloc(pym);
-    }
-    return NULL;
-}
-
 
 // 1 if successful, 0 if failed.
 int pyjmethod_init(JNIEnv *env, PyJMethodObject *self)
 {
-    jmethodID         methodId;
     jobject           returnType             = NULL;
     jobjectArray      paramArray             = NULL;
     jint              modifier               = -1;
+    jmethodID         isStaticMethod         = NULL;
     jboolean          isStatic               = JNI_FALSE;
-    jclass            rmethodClass           = NULL;
 
-    // use a local frame so we don't have to worry too much about local refs.
-    // make sure if this method errors out, that this is poped off again
-    (*env)->PushLocalFrame(env, 20);
-    if (process_java_exception(env)) {
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
+        process_java_exception(env);
         return 0;
     }
 
-    rmethodClass = (*env)->GetObjectClass(env, self->rmethod);
-    if (process_java_exception(env) || !rmethodClass) {
+    self->methodId = (*env)->FromReflectedMethod(env, self->rmethod);
+
+    if (!JNI_METHOD(methodGetType, env, JMETHOD_TYPE, "getReturnType",
+                    "()Ljava/lang/Class;")) {
+        process_java_exception(env);
         goto EXIT_ERROR;
     }
 
-    // ------------------------------ get methodid
-
-    methodId = (*env)->FromReflectedMethod(env,
-                                           self->rmethod);
-    if (process_java_exception(env) || !methodId) {
-        goto EXIT_ERROR;
-    }
-
-    self->methodId = methodId;
-
-
-    // ------------------------------ get return type
-
-    if (methodGetType == 0) {
-        methodGetType = (*env)->GetMethodID(env,
-                                            rmethodClass,
-                                            "getReturnType",
-                                            "()Ljava/lang/Class;");
-        if (process_java_exception(env) || !methodGetType) {
-            goto EXIT_ERROR;
-        }
-    }
-
-    returnType = (*env)->CallObjectMethod(env,
-                                          self->rmethod,
-                                          methodGetType);
+    returnType = (*env)->CallObjectMethod(env, self->rmethod, methodGetType);
     if (process_java_exception(env) || !returnType) {
         goto EXIT_ERROR;
     }
@@ -231,22 +113,13 @@ int pyjmethod_init(JNIEnv *env, PyJMethodObject *self)
         goto EXIT_ERROR;
     }
 
-
-    // ------------------------------ get parameter array
-
-    if (methodGetParmTypes == 0) {
-        methodGetParmTypes = (*env)->GetMethodID(env,
-                             rmethodClass,
-                             "getParameterTypes",
-                             "()[Ljava/lang/Class;");
-        if (process_java_exception(env) || !methodGetParmTypes) {
-            goto EXIT_ERROR;
-        }
+    if (!JNI_METHOD(methodGetParamTypes, env, JMETHOD_TYPE, "getParameterTypes",
+                    "()[Ljava/lang/Class;")) {
+        process_java_exception(env);
+        goto EXIT_ERROR;
     }
-
-    paramArray = (jobjectArray) (*env)->CallObjectMethod(env,
-                 self->rmethod,
-                 methodGetParmTypes);
+    paramArray = (jobjectArray) (*env)->CallObjectMethod(env, self->rmethod,
+                 methodGetParamTypes);
     if (process_java_exception(env) || !paramArray) {
         goto EXIT_ERROR;
     }
@@ -254,55 +127,38 @@ int pyjmethod_init(JNIEnv *env, PyJMethodObject *self)
     self->parameters    = (*env)->NewGlobalRef(env, paramArray);
     self->lenParameters = (*env)->GetArrayLength(env, paramArray);
 
-    // ------------------------------ get isStatic
-    if (self->isStatic != 1) { // may already know that
 
-        // call getModifers()
-        if (methodGetModifiers == 0) {
-            methodGetModifiers = (*env)->GetMethodID(env,
-                                 rmethodClass,
-                                 "getModifiers",
-                                 "()I");
-            if (process_java_exception(env) || !methodGetModifiers) {
-                goto EXIT_ERROR;
-            }
-        }
+    if (!JNI_METHOD(methodGetModifiers, env, JMETHOD_TYPE, "getModifiers", "()I")) {
+        process_java_exception(env);
+        goto EXIT_ERROR;
+    }
+    modifier = (*env)->CallIntMethod(env, self->rmethod, methodGetModifiers);
+    if (process_java_exception(env)) {
+        goto EXIT_ERROR;
+    }
 
-        modifier = (*env)->CallIntMethod(env,
-                                         self->rmethod,
-                                         methodGetModifiers);
-        if (process_java_exception(env) || !modifier) {
-            goto EXIT_ERROR;
-        }
+    // caching this methodid caused a crash on the mac
+    isStaticMethod = (*env)->GetStaticMethodID(env, JMODIFIER_TYPE, "isStatic",
+                     "(I)Z");
+    if (!isStaticMethod) {
+        process_java_exception(env);
+        goto EXIT_ERROR;
+    }
 
-        // caching this methodid caused a crash on the mac
-        methodId = (*env)->GetStaticMethodID(env,
-                                             JMODIFIER_TYPE,
-                                             "isStatic",
-                                             "(I)Z");
-        if (process_java_exception(env) || !methodId) {
-            goto EXIT_ERROR;
-        }
+    isStatic = (*env)->CallStaticBooleanMethod(env, JMODIFIER_TYPE, isStaticMethod,
+               modifier);
+    if (process_java_exception(env)) {
+        goto EXIT_ERROR;
+    }
 
-        isStatic = (*env)->CallStaticBooleanMethod(env,
-                   JMODIFIER_TYPE,
-                   methodId,
-                   modifier);
-        if (process_java_exception(env)) {
-            goto EXIT_ERROR;
-        }
-
-        if (isStatic == JNI_TRUE) {
-            self->isStatic = 1;
-        } else {
-            self->isStatic = 0;
-        }
-    } // is static
-
+    if (isStatic == JNI_TRUE) {
+        self->isStatic = 1;
+    } else {
+        self->isStatic = 0;
+    }
 
     (*env)->PopLocalFrame(env, NULL);
     return 1;
-
 
 EXIT_ERROR:
     (*env)->PopLocalFrame(env, NULL);
@@ -310,7 +166,7 @@ EXIT_ERROR:
     if (!PyErr_Occurred()) {
         PyErr_SetString(PyExc_RuntimeError, "Unknown");
     }
-    return -1;
+    return 0;
 }
 
 
@@ -334,44 +190,34 @@ static void pyjmethod_dealloc(PyJMethodObject *self)
 }
 
 
-int pyjmethod_check(PyObject *obj)
+int PyJMethod_Check(PyObject *obj)
 {
-    if (PyObject_TypeCheck(obj, &PyJmethod_Type)) {
-        return 1;
-    }
-    return 0;
+    return PyObject_TypeCheck(obj, &PyJMethod_Type);
 }
 
-int pyjmethod_check_simple_compat(PyJMethodObject* method, JNIEnv* env,
-                                  PyObject* methodName, Py_ssize_t argCount)
+int PyJMethod_GetParameterCount(PyJMethodObject *method, JNIEnv *env)
 {
-    if (method->parameters) {
-        // If init already happened check argCount first because int comparison is faster.
-        return method->lenParameters == argCount
-               && PyObject_RichCompareBool(method->pyMethodName, methodName, Py_EQ);
-    } else {
-        // If not init then check the name first to avoid init when its not necessay
-        if (PyObject_RichCompareBool(method->pyMethodName, methodName, Py_EQ)) {
-            if (!pyjmethod_init(env, method)) {
-                // init failed, that's not good.
-                PyErr_Warn(PyExc_Warning, "pyjmethod init failed.");
-            } else {
-                return method->lenParameters == argCount;
-            }
-        }
+    if (!method->parameters && !pyjmethod_init(env, method)) {
+        return -1;
     }
-    return 0;
+    return method->lenParameters;
 }
 
-int pyjmethod_check_complex_compat(PyJMethodObject* method, JNIEnv* env,
-                                   PyObject* args)
+
+int PyJMethod_CheckArguments(PyJMethodObject* method, JNIEnv *env,
+                             PyObject* args)
 {
-    int match = 1;
+    int matchTotal = 1;
     int parampos;
+
+    if (PyJMethod_GetParameterCount(method, env) != (PyTuple_Size(args) - 1)) {
+        return 0;
+    }
 
     for (parampos = 0; parampos < method->lenParameters; parampos += 1) {
         PyObject* param       = PyTuple_GetItem(args, parampos + 1);
         int       paramTypeId;
+        int       match;
         jclass    paramType   = (jclass) (*env)->GetObjectArrayElement(env,
                                 method->parameters, parampos);
 
@@ -392,9 +238,10 @@ int pyjmethod_check_complex_compat(PyJMethodObject* method, JNIEnv* env,
         if (!match) {
             break;
         }
+        matchTotal += match;
     }
 
-    return match;
+    return matchTotal;
 }
 
 // pyjmethod_call. where the magic happens.
@@ -408,11 +255,10 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
                                 PyObject *args,
                                 PyObject *keywords)
 {
+    JNIEnv        *env         = NULL;
     PyObject      *firstArg    = NULL;
     PyJObject     *instance    = NULL;
     PyObject      *result      = NULL;
-    const char    *str         = NULL;
-    JNIEnv        *env         = NULL;
     int            pos         = 0;
     jvalue        *jargs       = NULL;
     int            foundArray  = 0;   /* if params includes pyjarray instance */
@@ -422,16 +268,10 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
         PyErr_Format(PyExc_RuntimeError, "Keywords are not supported.");
         return NULL;
     }
+
     env = pyembed_get_env();
 
-    if (!self->parameters) {
-        if (!pyjmethod_init(env, self) || PyErr_Occurred()) {
-            return NULL;
-        }
-    }
-
-    // shouldn't happen
-    if (self->lenParameters != PyTuple_GET_SIZE(args) - 1) {
+    if (PyJMethod_GetParameterCount(self, env) != (PyTuple_Size(args) - 1)) {
         PyErr_Format(PyExc_RuntimeError,
                      "Invalid number of arguments: %i, expected %i.",
                      (int) PyTuple_GET_SIZE(args),
@@ -460,8 +300,10 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
     // ------------------------------ build jargs off python values
 
-    // hopefully 40 local references are enough per method call
-    (*env)->PushLocalFrame(env, 40);
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS + self->lenParameters) != 0) {
+        process_java_exception(env);
+        return NULL;
+    }
     for (pos = 0; pos < self->lenParameters; pos++) {
         PyObject *param = NULL;
         int paramTypeId = -1;
@@ -469,7 +311,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
                            self->parameters, pos);
 
         param = PyTuple_GetItem(args, pos + 1);               /* borrowed */
-        if (PyErr_Occurred()) {                               /* borrowed */
+        if (PyErr_Occurred()) {
             goto EXIT_ERROR;
         }
 
@@ -478,17 +320,13 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
             foundArray = 1;
         }
 
-        jargs[pos] = convert_pyarg_jvalue(env,
-                                          param,
-                                          paramType,
-                                          paramTypeId,
-                                          pos);
-        if (PyErr_Occurred()) {                               /* borrowed */
+        jargs[pos] = convert_pyarg_jvalue(env, param, paramType, paramTypeId, pos);
+        if (PyErr_Occurred()) {
             goto EXIT_ERROR;
         }
 
         (*env)->DeleteLocalRef(env, paramType);
-    } // for parameters
+    }
 
 
     // ------------------------------ call based off return type
@@ -523,9 +361,8 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
         Py_BLOCK_THREADS;
         if (!process_java_exception(env) && jstr != NULL) {
-            str    = (*env)->GetStringUTFChars(env, jstr, 0);
+            const char *str = (*env)->GetStringUTFChars(env, jstr, 0);
             result = PyString_FromString(str);
-
             (*env)->ReleaseStringUTFChars(env, jstr, str);
             (*env)->DeleteLocalRef(env, jstr);
         }
@@ -622,7 +459,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
         Py_BLOCK_THREADS;
         if (!process_java_exception(env) && obj != NULL) {
-            result = pyjobject_new(env, obj);
+            result = convert_jobject_pyobject(env, obj);
         }
 
         break;
@@ -940,7 +777,7 @@ static PyMethodDef pyjmethod_methods[] = {
 };
 
 
-PyTypeObject PyJmethod_Type = {
+PyTypeObject PyJMethod_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "jep.PyJMethod",
     sizeof(PyJMethodObject),

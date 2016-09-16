@@ -9,12 +9,17 @@ from jep import jdbc as dbapi
 from java.lang import Integer, Long, Double
 from java.sql import Date, Timestamp, Time
 
-@unittest.skipIf(sys.platform.startswith("win"), "file access issues on Windows")
+skip = sys.platform.startswith('win') or sys.platform.startswith('freebsd')
+if not skip:
+    try:
+        findClass('org.sqlite.JDBC')
+    except:
+        skip = True
+
+
+@unittest.skipIf(skip, 'file access issues on Windows or JDBC not on classpath')
 class TestJdbc(unittest.TestCase):
     jdbc_url = 'jdbc:sqlite:build/test.db'
-
-    def setUp(self):
-        findClass('org.sqlite.JDBC')
 
     def tearDown(self):
         if os.path.exists('build/test.db'):
@@ -88,7 +93,7 @@ class TestJdbc(unittest.TestCase):
 
         self.assertEqual(row[0], Integer.MAX_VALUE)
         self.assertEqual(cursor.description[0][0], 'one')
-        self.assertEqual(cursor.description[0][1], 4) # sql type integer
+        self.assertEqual(cursor.description[0][1], 4)  # sql type integer
 
         self.assertEqual(row[1], 'testé')
         self.assertEqual(cursor.description[1][0], 'two_string')
@@ -126,7 +131,8 @@ class TestJdbc(unittest.TestCase):
         cursor.execute('select * from dt')
 
         # crazy sqllite doesn't have normal date types.
-        # this will force jep.jdbc to interpret the result correctly for this test.
+        # this will force jep.jdbc to interpret the result correctly for this
+        # test.
         cursor.description = (
             ('one', 91, None, None, None, None, True),
             ('two', 91, None, None, None, None, True),

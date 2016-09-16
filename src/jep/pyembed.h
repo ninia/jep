@@ -43,13 +43,15 @@ struct __JepThread {
     jobject        caller;      /* Jep instance that called us. */
     int            printStack;
     PyObject      *fqnToPyJmethods; /* a dictionary of fully qualified Java
-                                       classnames to PyJmethods on the class */
+                                       classnames to PyJMethods on the class */
 };
 typedef struct __JepThread JepThread;
 
 
+void pyembed_preinit(jint, jint, jint, jint, jint, jint, jint);
 void pyembed_startup(void);
 void pyembed_shutdown(JavaVM*);
+void pyembed_shared_import(JNIEnv*, jstring);
 
 intptr_t pyembed_thread_init(JNIEnv*, jobject, jobject);
 void pyembed_thread_close(JNIEnv*, intptr_t);
@@ -65,7 +67,6 @@ void pyembed_setloader(JNIEnv*, intptr_t, jobject);
 jobject pyembed_getvalue(JNIEnv*, intptr_t, char*);
 jobject pyembed_getvalue_array(JNIEnv*, intptr_t, char*);
 jobject pyembed_getvalue_on(JNIEnv*, intptr_t, intptr_t, char*);
-jobject pyembed_box_py(JNIEnv*, PyObject*);
 
 JNIEnv* pyembed_get_env(void);
 JepThread* pyembed_get_jepthread(void);

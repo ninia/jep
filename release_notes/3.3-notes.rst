@@ -1,7 +1,8 @@
 Jep 3.3 Release Notes
 *********************
 This release emphasized numpy support and better exception handling.  It is
-compatible with Python 2.6 and 2.7.
+compatible with Python 2.6 and 2.7.  *Nathan Jensen became the new project
+lead.*
 
 
 Numpy support
@@ -31,6 +32,7 @@ Improved distutils build
 * The distutils build (setup.py) now supports building with the Oracle JDK
   on Mac OS X.
 * The distutils build (setup.py) now supports building on Windows.
+  *Contributed by Dave Lovely.*
 
 
 Improved exception handling

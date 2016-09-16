@@ -62,18 +62,15 @@ int pyjiterator_check(PyObject *obj)
     return 0;
 }
 
-
 PyObject* pyjiterator_next(PyObject* self)
 {
     jboolean      nextAvail = JNI_FALSE;
     PyJObject    *pyjob     = (PyJObject*) self;
     JNIEnv       *env       = pyembed_get_env();
 
-    if (itrHasNext == 0) {
-        itrHasNext = (*env)->GetMethodID(env, JITERATOR_TYPE, "hasNext", "()Z");
-        if (process_java_exception(env) || !itrHasNext) {
-            return NULL;
-        }
+    if (!JNI_METHOD(itrHasNext, env, JITERATOR_TYPE, "hasNext", "()Z")) {
+        process_java_exception(env);
+        return NULL;
     }
 
     nextAvail = (*env)->CallBooleanMethod(env, pyjob->object, itrHasNext);
@@ -83,21 +80,25 @@ PyObject* pyjiterator_next(PyObject* self)
 
     if (nextAvail) {
         jobject   nextItem;
+        PyObject* result;
 
-        if (itrNext == 0) {
-            itrNext = (*env)->GetMethodID(env, JITERATOR_TYPE, "next",
-                                          "()Ljava/lang/Object;");
-            if (process_java_exception(env) || !itrNext) {
-                return NULL;
-            }
+        if (!JNI_METHOD(itrNext, env, JITERATOR_TYPE, "next", "()Ljava/lang/Object;")) {
+            process_java_exception(env);
+            return NULL;
         }
-
+        if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
+            process_java_exception(env);
+            return NULL;
+        }
         nextItem = (*env)->CallObjectMethod(env, pyjob->object, itrNext);
         if (process_java_exception(env)) {
+            (*env)->PopLocalFrame(env, NULL);
             return NULL;
         }
 
-        return convert_jobject_pyobject(env, nextItem);
+        result = convert_jobject_pyobject(env, nextItem);
+        (*env)->PopLocalFrame(env, NULL);
+        return result;
     }
 
     return NULL;
