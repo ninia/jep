@@ -179,7 +179,7 @@ public class TestNumpy {
      * @return true on success
      */
     public boolean callBooleanMethod(boolean[] array) {
-        return array != null;
+        return array != null && array.getClass().isArray();
     }
 
     /**
@@ -190,7 +190,7 @@ public class TestNumpy {
      * @return true on success
      */
     public boolean callByteMethod(byte[] array) {
-        return array != null;
+        return array != null && array.getClass().isArray();
     }
 
     /**
@@ -201,7 +201,7 @@ public class TestNumpy {
      * @return true on success
      */
     public boolean callShortMethod(short[] array) {
-        return array != null;
+        return array != null && array.getClass().isArray();
     }
 
     /**
@@ -212,7 +212,7 @@ public class TestNumpy {
      * @return true on success
      */
     public boolean callIntMethod(int[] array) {
-        return array != null;
+        return array != null && array.getClass().isArray();
     }
 
     /**
@@ -223,7 +223,7 @@ public class TestNumpy {
      * @return true on success
      */
     public boolean callLongMethod(long[] array) {
-        return array != null;
+        return array != null && array.getClass().isArray();
     }
 
     /**
@@ -234,7 +234,7 @@ public class TestNumpy {
      * @return true on success
      */
     public boolean callFloatMethod(float[] array) {
-        return array != null;
+        return array != null && array.getClass().isArray();
     }
 
     /**
@@ -245,7 +245,7 @@ public class TestNumpy {
      * @return true on success
      */
     public boolean callDoubleMethod(double[] array) {
-        return array != null;
+        return array != null && array.getClass().isArray();
     }
 
     /**
