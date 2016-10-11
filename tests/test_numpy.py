@@ -98,6 +98,12 @@ class TestNumpy(unittest.TestCase):
         da.fill(True)
         self.assertTrue(self.test.callDoubleMethod(da))
 
+    def testIncompatibleConversion(self):
+        import numpy
+        fa = numpy.zeros((15, 5), numpy.float32)
+        with self.assertRaises(TypeError):
+            self.test.callDoubleMethod(fa)
+
     def testCharArrayCreation(self):
         NDArray = jep.findClass("jep.NDArray")
         with self.assertRaises(ValueError):
