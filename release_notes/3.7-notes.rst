@@ -16,3 +16,15 @@ and the memory remains shared. This provides faster data transfer between
 Java and Python since there is no need to copy the memory. This can also
 simplify any use cases that frequently transfer the same data between Java
 and Python.
+
+Improved unicode support
+~~~~~~~~~~~~~~~~~~~~~~~~
+Strings that represent the full range of unicode values will now be passed
+correctly between Java and Python. Previous versions of Jep had minor
+inconsistencies for characters outside the range of US-ASCII and major problems
+transforming characters outside of the Basic Multilingual Plane. The conversion 
+was also optimized to avoid unnecessary intermediary charset encodings. 
+Python 3 versions before 3.3 use a more complex unicode object than newer
+versions of Python 3 so these versions are no longer supported. Unicode objects
+are uncommon in Python 2 so Java Strings will be converted to UTF-8 encoded
+Python string objects.

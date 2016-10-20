@@ -114,12 +114,7 @@ int process_py_exception(JNIEnv *env, int printTrace)
                     return 1;
                 }
                 if (jmessage != NULL) {
-                    const char* charMessage;
-                    charMessage = jstring2char(env, jmessage);
-                    if (charMessage != NULL) {
-                        v = PyString_FromString(charMessage);
-                        release_utf_char(env, jmessage, charMessage);
-                    }
+                    v = jstring_To_PyObject(env, jmessage);
                 }
             }
 
@@ -289,11 +284,8 @@ int process_py_exception(JNIEnv *env, int printTrace)
                             PyErr_Format(PyExc_RuntimeError,
                                          "failed to create java.lang.StackTraceElement for python %s:%i.",
                                          charPyFile, pyLineNum);
-                            release_utf_char(env, pyFileNoDir, charPyFileNoDir);
-                            release_utf_char(env, pyFileNoExt, charPyFileNoExt);
                             free(charPyFileNoDir);
                             free(charPyFileNoExt);
-                            release_utf_char(env, pyFunc, charPyFunc);
                             Py_DECREF(pystack);
                             return 1;
                         }
@@ -417,7 +409,7 @@ int process_import_exception(JNIEnv *env)
     }
 
     message = (char *) jstring2char(env, estr);
-    PyErr_Format(pyException, "%s", message);
+    PyErr_SetString(pyException, message);
     release_utf_char(env, estr, message);
 
     (*env)->DeleteLocalRef(env, exception);

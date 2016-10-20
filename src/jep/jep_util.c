@@ -117,55 +117,29 @@ jmethodID getFloatValue      = 0;
 jmethodID getCharValue       = 0;
 
 
+#if PY_MAJOR_VERSION < 3
+    static jmethodID stringGetBytes = NULL;
+    static jstring UTF8 = NULL;
+#endif
+
 // call toString() on jobject, make a python string and return
 // sets error conditions as needed.
 // returns new reference to PyObject
 PyObject* jobject_topystring(JNIEnv *env, jobject obj)
 {
-    const char *result;
-    PyObject   *pyres;
+    PyObject   *result;
     jstring     jstr;
 
     jstr = jobject_tostring(env, obj);
-    // it's possible, i guess. don't throw an error....
-    if (process_java_exception(env) || jstr == NULL) {
-        return PyString_FromString("");
+    if (process_java_exception(env)) {
+        return NULL;
+    } else if (jstr == NULL) {
+        Py_RETURN_NONE;
     }
-
-    result = (*env)->GetStringUTFChars(env, jstr, 0);
-    pyres  = PyString_FromString(result);
-    (*env)->ReleaseStringUTFChars(env, jstr, result);
+    result = jstring_To_PyObject(env, jstr);
     (*env)->DeleteLocalRef(env, jstr);
-
-    // method returns new reference.
-    return pyres;
+    return result;
 }
-
-
-// support for python 3.2
-// unnecessary for python 2.6, 2.7, and 3.3+
-char* pyunicode_to_utf8(PyObject *unicode)
-{
-    PyObject *bytesObj;
-    char     *c;
-    bytesObj = PyUnicode_AsUTF8String(unicode);
-    if (bytesObj == NULL) {
-        if (PyErr_Occurred()) {
-            printf("Error converting PyUnicode to PyBytes\n");
-            PyErr_Print();
-        }
-        return NULL;
-    }
-
-    c = PyBytes_AsString(bytesObj);
-    Py_DECREF(bytesObj);
-    if (PyErr_Occurred()) {
-        PyErr_Print();
-        return NULL;
-    }
-    return c;
-}
-
 
 // call toString() on jobject and return result.
 // NULL on error
@@ -181,11 +155,6 @@ jstring jobject_tostring(JNIEnv *env, jobject obj)
     if (!JNI_METHOD(objectToString, env, JOBJECT_TYPE, "toString",
                     "()Ljava/lang/String;")) {
         process_java_exception(env);
-        return NULL;
-    }
-
-    if (!objectToString) {
-        PyErr_Format(PyExc_RuntimeError, "%s", "Couldn't get methodId.");
         return NULL;
     }
 
@@ -736,6 +705,68 @@ int pyarg_matches_jtype(JNIEnv *env,
 }
 
 
+PyObject* jstring_To_PyObject(JNIEnv *env, jobject jstr)
+{
+    PyObject* result;
+#if PY_MAJOR_VERSION < 3
+    // Do not use GetStringUTFChars because it does not return true UTF-8 and
+    // fails for some unicode input
+    jbyteArray stringJbytes = NULL;
+    jsize      length       = 0;
+    jbyte*     stringBytes  = NULL;
+    if (!JNI_METHOD(stringGetBytes, env, JSTRING_TYPE, "getBytes",
+                    "(Ljava/lang/String;)[B")) {
+        return NULL;
+    }
+    if ( UTF8 == NULL) {
+        jobject local = (*env)->NewStringUTF(env, "UTF-8");
+        UTF8 = (*env)->NewGlobalRef(env, local);
+        (*env)->DeleteLocalRef(env, local);
+    }
+
+    stringJbytes = (jbyteArray) (*env)->CallObjectMethod(env, jstr, stringGetBytes,
+                   UTF8);
+    if (process_java_exception(env)) {
+        return NULL;
+    }
+
+    length = (*env)->GetArrayLength(env, stringJbytes);
+    stringBytes = (*env)->GetByteArrayElements(env, stringJbytes, NULL);
+
+    result = PyString_FromStringAndSize((char *) stringBytes, length);
+
+    (*env)->ReleaseByteArrayElements(env, stringJbytes, stringBytes, JNI_ABORT);
+    (*env)->DeleteLocalRef(env, stringJbytes);
+#else
+    const jchar *str = (*env)->GetStringChars(env, jstr, 0);
+    jsize size = (*env)->GetStringLength(env, jstr);
+    result = PyUnicode_DecodeUTF16((const char*) str, size * 2, NULL, NULL);
+    (*env)->ReleaseStringChars(env, jstr, str);
+#endif
+    return result;
+}
+
+PyObject* jchar_To_PyObject(jchar jc)
+{
+#if PY_MAJOR_VERSION < 3
+    if (jc < 0xFF) {
+        char c = (char) jc;
+        return PyString_FromStringAndSize(&c, 1);
+    } else {
+        PyObject* pyunicode = PyUnicode_DecodeUTF16((const char*) &jc, 2, NULL, NULL);
+        if (pyunicode == NULL) {
+            return NULL;
+        }
+        PyObject* pystring = PyUnicode_AsUTF8String(pyunicode);
+        Py_DECREF(pyunicode);
+        return pystring;
+    }
+#else
+    Py_UCS2 value = (Py_UCS2) jc;
+    return PyUnicode_FromKindAndData(PyUnicode_2BYTE_KIND, &value, 1);
+#endif
+
+}
 // convert java object to python. use this to unbox jobject
 // throws java exception on error
 PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
@@ -775,14 +806,7 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
         return (PyObject *) pyjarray_new(env, val);
 
     case JSTRING_ID: {
-        const char *str;
-        PyObject *ret;
-
-        str = jstring2char(env, val);
-        ret = PyString_FromString(str);
-        release_utf_char(env, val, str);
-
-        return ret;
+        return jstring_To_PyObject(env, val);
     }
 
     case JCLASS_ID:
@@ -811,13 +835,13 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
             return convert_jobject(env, val, JBOOLEAN_ID);
         } else if ((*env)->IsInstanceOf(env, val, JCHAR_OBJ_TYPE)) {
             return convert_jobject(env, val, JCHAR_ID);
-        }else{
+        } else {
             PyObject* ret = (PyObject *) pyjobject_new(env, val);
 #if JEP_NUMPY_ENABLED
-        /*
-         * check for jep/DirectNDArray and autoconvert to numpy.ndarray
-         * pyjobject
-         */
+            /*
+             * check for jep/DirectNDArray and autoconvert to numpy.ndarray
+             * pyjobject
+             */
             if (jdndarray_check(env, val)) {
                 return convert_jdndarray_pyndarray(env, ret);
             }
@@ -897,7 +921,7 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
             return NULL;
         }
 
-        return PyString_FromFormat("%c", (char) c);
+        return jchar_To_PyObject(c);
     }
 
     default:
@@ -935,10 +959,16 @@ jvalue convert_pyarg_jvalue(JNIEnv *env, PyObject *param, jclass paramType,
 {
     jvalue ret = PyObject_As_jvalue(env, param, paramType);
     if (PyErr_Occurred()) {
-        PyObject *ptype, *pvalue, *ptrace;
+        PyObject *ptype, *pvalue, *ptrace, *pvalue_string;
         PyErr_Fetch(&ptype, &pvalue, &ptrace);
+        if (pvalue == NULL) {
+            pvalue_string = PyObject_Str(ptype);
+        } else {
+            pvalue_string = PyObject_Str(pvalue);
+        }
         PyErr_Format(PyExc_TypeError, "Error converting parameter %d: %s", pos + 1,
-                     PyString_AsString(pvalue));
+                     PyString_AsString(pvalue_string));
+        Py_DECREF(pvalue_string);
         Py_DECREF(ptype);
         Py_XDECREF(pvalue);
         Py_XDECREF(ptrace);

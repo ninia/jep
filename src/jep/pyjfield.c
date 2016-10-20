@@ -46,7 +46,6 @@ PyJFieldObject* pyjfield_new(JNIEnv *env,
 {
     PyJFieldObject *pyf;
     jstring          jstr        = NULL;
-    const char      *fieldName   = NULL;
 
     if (PyType_Ready(&PyJField_Type) < 0) {
         return NULL;
@@ -73,10 +72,8 @@ PyJFieldObject* pyjfield_new(JNIEnv *env,
         goto EXIT_ERROR;
     }
 
-    fieldName        = (*env)->GetStringUTFChars(env, jstr, 0);
-    pyf->pyFieldName = PyString_FromString(fieldName);
+    pyf->pyFieldName = jstring_To_PyObject(env, jstr);
 
-    (*env)->ReleaseStringUTFChars(env, jstr, fieldName);
     (*env)->DeleteLocalRef(env, jstr);
 
 
@@ -230,7 +227,6 @@ PyObject* pyjfield_get(PyJFieldObject *self)
 
     case JSTRING_ID: {
         jstring     jstr;
-        const char *str;
 
         if (self->isStatic)
             jstr = (jstring) (*env)->GetStaticObjectField(
@@ -250,10 +246,7 @@ PyObject* pyjfield_get(PyJFieldObject *self)
             Py_RETURN_NONE;
         }
 
-        str    = (*env)->GetStringUTFChars(env, jstr, 0);
-        result = PyString_FromString(str);
-
-        (*env)->ReleaseStringUTFChars(env, jstr, str);
+        result = jstring_To_PyObject(env, jstr);
         (*env)->DeleteLocalRef(env, jstr);
         break;
     }
@@ -350,7 +343,6 @@ PyObject* pyjfield_get(PyJFieldObject *self)
 
     case JCHAR_ID: {
         jchar ret;
-        char  val[2];
 
         if (self->isStatic)
             ret = (*env)->GetStaticCharField(env,
@@ -364,10 +356,7 @@ PyObject* pyjfield_get(PyJFieldObject *self)
         if (process_java_exception(env)) {
             return NULL;
         }
-
-        val[0] = (char) ret;
-        val[1] = '\0';
-        result = PyString_FromString(val);
+        result = jchar_To_PyObject(ret);
         break;
     }
 

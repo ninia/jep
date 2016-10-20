@@ -45,19 +45,6 @@
 #define JNI_METHOD(var, env, type, name, sig)\
     (var || (var = (*env)->GetMethodID(env, type, name, sig)))
 
-// this function exists solely to support python 3.2
-char* pyunicode_to_utf8(PyObject *unicode);
-
-// 3.3 reworked unicode so we have special handling for 3.2
-#if PY_MAJOR_VERSION >= 3
-    #if PY_MINOR_VERSION <= 2
-        #define PyString_AsString(str)            pyunicode_to_utf8(str)
-        #define PyString_AS_STRING(str)           pyunicode_to_utf8(str)
-        #define PyString_Size(str)                PyUnicode_GetSize(str)
-        #define PyString_GET_SIZE(str)            PyUnicode_GET_SIZE(str)
-    #endif
-#endif
-
 // call toString() on jobject, make a python string and return
 // sets error conditions as needed.
 // returns new reference to PyObject
@@ -83,6 +70,8 @@ void unref_cache_frequent_classes(JNIEnv*);
 
 int get_jtype(JNIEnv*, jclass);
 int pyarg_matches_jtype(JNIEnv*, PyObject*, jclass, int);
+PyObject* jstring_To_PyObject(JNIEnv*, jobject);
+PyObject* jchar_To_PyObject(jchar);
 PyObject* convert_jobject(JNIEnv*, jobject, int);
 PyObject* convert_jobject_pyobject(JNIEnv*, jobject);
 jvalue convert_pyarg_jvalue(JNIEnv*, PyObject*, jclass, int, int);

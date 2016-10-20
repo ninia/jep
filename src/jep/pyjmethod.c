@@ -47,7 +47,6 @@ static jmethodID methodGetModifiers  = 0;
 PyJMethodObject* PyJMethod_New(JNIEnv *env, jobject rmethod)
 {
     jstring          jname  = NULL;
-    const char      *cname  = NULL;
     PyObject        *pyname = NULL;
     PyJMethodObject *pym    = NULL;
 
@@ -65,9 +64,7 @@ PyJMethodObject* PyJMethod_New(JNIEnv *env, jobject rmethod)
     if (process_java_exception(env) || !jname) {
         return NULL;
     }
-    cname  = (*env)->GetStringUTFChars(env, jname, 0);
-    pyname = PyString_FromString(cname);
-    (*env)->ReleaseStringUTFChars(env, jname, cname);
+    pyname = jstring_To_PyObject(env, jname);
     (*env)->DeleteLocalRef(env, jname);
 
     pym                = PyObject_NEW(PyJMethodObject, &PyJMethod_Type);
@@ -361,9 +358,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
         Py_BLOCK_THREADS;
         if (!process_java_exception(env) && jstr != NULL) {
-            const char *str = (*env)->GetStringUTFChars(env, jstr, 0);
-            result = PyString_FromString(str);
-            (*env)->ReleaseStringUTFChars(env, jstr, str);
+            result = jstring_To_PyObject(env, jstr);
             (*env)->DeleteLocalRef(env, jstr);
         }
 
@@ -529,7 +524,6 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
     case JCHAR_ID: {
         jchar ret;
-        char  val[2];
         Py_UNBLOCK_THREADS;
 
         if (self->isStatic)
@@ -553,9 +547,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
         Py_BLOCK_THREADS;
         if (!process_java_exception(env)) {
-            val[0] = (char) ret;
-            val[1] = '\0';
-            result = PyString_FromString(val);
+            result = jchar_To_PyObject(ret);
         }
         break;
     }

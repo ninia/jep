@@ -225,7 +225,6 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
     int               i, len = 0;
 
     jstring           className   = NULL;
-    const char       *cClassName  = NULL;
     PyObject         *pyClassName = NULL;
     PyObject         *pyAttrName  = NULL;
 
@@ -246,9 +245,7 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
     if (process_java_exception(env) || !className) {
         goto EXIT_ERROR;
     }
-    cClassName = jstring2char(env, className);
-    pyClassName = PyString_FromString(cClassName);
-    release_utf_char(env, className, cClassName);
+    pyClassName = jstring_To_PyObject(env, className);
     pyAttrName = PyString_FromString("java_name");
     if (PyObject_SetAttr((PyObject *) pyjob, pyAttrName, pyClassName) == -1) {
         goto EXIT_ERROR;

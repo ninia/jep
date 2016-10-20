@@ -822,7 +822,6 @@ static PyObject* pyjarray_item(PyJArrayObject *self, Py_ssize_t pos)
 
     case JSTRING_ID: {
         jstring     jstr;
-        const char *str;
 
         jstr = (jstring) (*env)->GetObjectArrayElement(env,
                 self->object,
@@ -831,10 +830,8 @@ static PyObject* pyjarray_item(PyJArrayObject *self, Py_ssize_t pos)
         if (process_java_exception(env))
             ;
         else if (jstr != NULL) {
-            str = (*env)->GetStringUTFChars(env, jstr, 0);
-            ret = PyString_FromString((char *) str);
+            ret = jstring_To_PyObject(env, jstr);
 
-            (*env)->ReleaseStringUTFChars(env, jstr, str);
             (*env)->DeleteLocalRef(env, jstr);
         } else {
             // no error occurred, just return None
@@ -945,7 +942,6 @@ static int pyjarray_index(PyJArrayObject *self, PyObject *el)
         }
 
         for (i = 0; ret == 0 && i < self->length; i++) {
-            const char *val;
             PyObject   *t;
             jstring l = (*env)->GetObjectArrayElement(env,
                         self->object,
@@ -959,15 +955,13 @@ static int pyjarray_index(PyJArrayObject *self, PyObject *el)
                 continue;
             }
 
-            val = jstring2char(env, l);
-            t   = PyString_FromString((char *) val);
+            t   = jstring_To_PyObject(env, l);
 
             ret = PyObject_RichCompareBool(el,
                                            t,
                                            Py_EQ);
 
             Py_DECREF(t);
-            release_utf_char(env, l, val);
             (*env)->DeleteLocalRef(env, l);
 
             if (ret) {
