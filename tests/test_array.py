@@ -80,3 +80,7 @@ class TestArray(unittest.TestCase):
             ar[i] = i
         for array_item, i in enumerate(ar):
             self.assertEqual(array_item, i)
+
+    def test_jarray_one_arg_throws_exception(self):
+        with self.assertRaises(Exception):
+            jep.jarray(1)
