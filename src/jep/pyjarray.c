@@ -99,7 +99,7 @@ PyObject* pyjarray_new_v(PyObject *isnull, PyObject *args)
 
     env = pyembed_get_env();
 
-    if (!PyArg_UnpackTuple(args, "ref", 1, 3, &one, &two, &three)) {
+    if (!PyArg_UnpackTuple(args, "ref", 2, 3, &one, &two, &three)) {
         return NULL;
     }
 
