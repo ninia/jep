@@ -60,6 +60,11 @@ int process_py_exception(JNIEnv *env, int printTrace)
 
     // let's not turn this into a Java exception if the user exited
     if (PyErr_ExceptionMatches(PyExc_SystemExit)) {
+        /* 
+         * If you look at the CPython source code, the following line will
+         * trigger a clean exit from Python.
+         */
+        PyErr_PrintEx(1);
         return 0;
     }
 
