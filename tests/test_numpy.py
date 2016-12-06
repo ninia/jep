@@ -34,12 +34,14 @@ class TestNumpy(unittest.TestCase):
         and then Java returning the new ndarray to python.
         """
         import numpy
-        x = numpy.array(range(10), numpy.int32)
-        y = self.test.testArgAndReturn(x)
-        self.assertEqual(x.shape, y.shape)
-        self.assertEqual(x.dtype, y.dtype)
-        for i in range(10):
-            self.assertEqual(x[i] + 5, y[i])
+        for dtype in (numpy.byte, numpy.int16, numpy.int32, numpy.int64,
+                      numpy.ubyte, numpy.uint16, numpy.uint32, numpy.uint64):
+            x = numpy.array(range(10), dtype)
+            y = self.test.testArgAndReturn(x)
+            self.assertEqual(x.shape, y.shape)
+            self.assertEqual(x.dtype, y.dtype)
+            for i in range(10):
+                self.assertEqual(x[i] + 5, y[i])
 
     def testMultiDimensional(self):
         """
@@ -78,17 +80,33 @@ class TestNumpy(unittest.TestCase):
         ba.fill(1)
         self.assertTrue(self.test.callByteMethod(ba))
 
+        uba = numpy.zeros((15, 5), numpy.ubyte)
+        uba.fill(1)
+        self.assertTrue(self.test.callByteMethod(uba))
+
         sa = numpy.zeros((15, 5), numpy.short)
         sa.fill(2)
         self.assertTrue(self.test.callShortMethod(sa))
+
+        usa = numpy.zeros((15, 5), numpy.uint16)
+        usa.fill(True)
+        self.assertTrue(self.test.callShortMethod(usa))
 
         ia = numpy.zeros((15, 5), numpy.int32)
         ia.fill(True)
         self.assertTrue(self.test.callIntMethod(ia))
 
+        uia = numpy.zeros((15, 5), numpy.uint32)
+        uia.fill(True)
+        self.assertTrue(self.test.callIntMethod(uia))
+
         la = numpy.zeros((15, 5), numpy.int64)
         la.fill(True)
         self.assertTrue(self.test.callLongMethod(la))
+
+        ula = numpy.zeros((15, 5), numpy.uint64)
+        ula.fill(True)
+        self.assertTrue(self.test.callLongMethod(ula))
 
         fa = numpy.zeros((15, 5), numpy.float32)
         fa.fill(True)
