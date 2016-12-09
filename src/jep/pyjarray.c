@@ -659,30 +659,12 @@ static int pyjarray_setitem(PyJArrayObject *self,
     }
 
     case JOBJECT_ID: {
-        jobject    obj = NULL;
-        PyJObject *pyjob;
-
-        if (newitem == Py_None)
-            ; // setting NULL
-        else {
-            if (!pyjobject_check(newitem)) {
-                PyErr_SetString(PyExc_TypeError, "Expected jobject.");
-                return -1;
-            }
-
-            pyjob = (PyJObject *) newitem;
-            obj = pyjob->object;
-
-            if (!obj) {
-                PyErr_SetString(PyExc_TypeError, "Expected instance, not class.");
-                return -1;
-            }
+        jobject obj = PyObject_As_jobject(env, newitem, self->componentClass);
+        if (!obj && PyErr_Occurred) {
+            return -1;
         }
 
-        (*env)->SetObjectArrayElement(env,
-                                      self->object,
-                                      pos,
-                                      obj);
+        (*env)->SetObjectArrayElement(env, self->object, pos, obj);
         if (process_java_exception(env)) {
             return -1;
         }

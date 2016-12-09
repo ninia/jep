@@ -24,6 +24,49 @@ class TestArray(unittest.TestCase):
         with self.assertRaises(TypeError):
             ar[0] = 'fail'
 
+    def test_object_setitem(self):
+        from java.lang import Object
+        ar = jarray(1, Object)
+        t = Object()
+        ar[0] = t
+        self.assertEqual(ar[0], t)
+
+    def test_object_setitem_jclass(self):
+        from java.lang import Object
+        ar = jarray(1, Object)
+        t = Object
+        ar[0] = t
+        self.assertEqual(ar[0], t)
+
+    def test_object_setitem_jarray(self):
+        from java.lang import Object
+        ar = jarray(1, Object)
+        t = jarray(1, JINT_ID)
+        t[0] = 7
+        ar[0] = t
+        self.assertEqual(ar[0][0], t[0])
+
+    def test_object_setitem_int(self):
+        from java.lang import Object
+        ar = jarray(1, Object)
+        t = 1
+        ar[0] = t
+        self.assertEqual(ar[0], t)
+
+    def test_integer_setitem_int(self):
+        from java.lang import Integer
+        ar = jarray(1, Integer)
+        t = 1
+        ar[0] = t
+        self.assertEqual(ar[0], t)
+
+    def test_integer_setitem_object_throws_exception(self):
+        from java.lang import Integer, Object
+        ar = jarray(1, Integer)
+        t = Object()
+        with self.assertRaises(TypeError):
+            ar[0] = t
+
     def test_slice(self):
         ar = jarray(20, JINT_ID, 0)
         py_ar = list(range(20))
