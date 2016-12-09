@@ -53,6 +53,13 @@ class TestArray(unittest.TestCase):
         ar[0] = t
         self.assertEqual(ar[0], t)
 
+    def test_object_setitem_None(self):
+        from java.lang import Object
+        ar = jarray(1, Object)
+        t = None
+        ar[0] = t
+        self.assertEqual(ar[0], t)
+
     def test_integer_setitem_int(self):
         from java.lang import Integer
         ar = jarray(1, Integer)

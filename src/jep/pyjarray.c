@@ -660,11 +660,12 @@ static int pyjarray_setitem(PyJArrayObject *self,
 
     case JOBJECT_ID: {
         jobject obj = PyObject_As_jobject(env, newitem, self->componentClass);
-        if (!obj && PyErr_Occurred) {
+        if (!obj && PyErr_Occurred()) {
             return -1;
         }
 
         (*env)->SetObjectArrayElement(env, self->object, pos, obj);
+        (*env)->DeleteLocalRef(env, obj);
         if (process_java_exception(env)) {
             return -1;
         }
