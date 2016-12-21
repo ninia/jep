@@ -37,6 +37,7 @@ static jmethodID objectEquals    = 0;
 static jmethodID objectHashCode  = 0;
 static jmethodID classGetMethods = 0;
 static jmethodID classGetFields  = 0;
+static jmethodID compareTo       = 0;
 
 /*
  * MSVC requires tp_base to be set at runtime instead of in
@@ -616,7 +617,6 @@ static PyObject* pyjobject_richcompare(PyJObject *self,
              * NotImplemented (due to ClassCastException), Python 3 will
              * raise a TypeError.
              */
-            jmethodID compareTo;
             jint result;
 #if PY_MAJOR_VERSION >= 3
             jthrowable exc;
@@ -629,9 +629,8 @@ static PyObject* pyjobject_richcompare(PyJObject *self,
                 return NULL;
             }
 
-            compareTo = (*env)->GetMethodID(env, JCOMPARABLE_TYPE, "compareTo",
-                                            "(Ljava/lang/Object;)I");
-            if (!compareTo) {
+            if (!JNI_METHOD(compareTo, env, JCOMPARABLE_TYPE, "compareTo",
+                    "(Ljava/lang/Object;)I")) {
                 process_java_exception(env);
                 return NULL;
             }
@@ -640,8 +639,7 @@ static PyObject* pyjobject_richcompare(PyJObject *self,
 #if PY_MAJOR_VERSION >= 3
             exc = (*env)->ExceptionOccurred(env);
             if (exc != NULL) {
-                jclass castExc = (*env)->FindClass(env, "java/lang/ClassCastException");
-                if ((*env)->IsInstanceOf(env, exc, castExc)) {
+                if ((*env)->IsInstanceOf(env, exc, CLASSCAST_EXC_TYPE)) {
                     /*
                      * To properly meet the richcompare docs we detect
                      * ClassException and return NotImplemented, enabling
@@ -673,7 +671,7 @@ static PyObject* pyjobject_richcompare(PyJObject *self,
      * object.  You might think that's not allowed, but the python doc on
      * richcompare indicates that when encountering NotImplemented, allow the
      * reverse comparison in the hopes that that's implemented.  This works
-     * suprisingly well because it enables python comparison operations on
+     * suprisingly well because it enables Python comparison operations on
      * things such as pyjobject != Py_None or
      * assertSequenceEqual(pyjlist, pylist) where each list has the same
      * contents.  This saves us from having to worry about if the java object
