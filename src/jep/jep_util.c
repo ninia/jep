@@ -588,47 +588,77 @@ int pyarg_matches_jtype(JNIEnv *env,
     if (PyBool_Check(param)) {
         switch (paramTypeId) {
         case JBOOLEAN_ID:
-            return 6;
+            return 8;
         case JBYTE_ID:
-            return 5;
+            return 7;
         case JSHORT_ID:
-            return 4;
+            return 6;
         case JINT_ID:
-            return 3;
+            return 5;
         case JLONG_ID:
-            return 2;
+            return 4;
         case JOBJECT_ID:
-            return 1;
+            if ((*env)->IsSameObject(env, JBOOL_OBJ_TYPE, paramType)) {
+                return 3;
+            } else if ((*env)->IsSameObject(env, JOBJECT_TYPE, paramType)) {
+                return 1;
+            } else if ((*env)->IsAssignableFrom(env, JBOOL_OBJ_TYPE, paramType)) {
+                return 2;
+            }
         }
     } else if (PyLong_Check(param)) {
         switch (paramTypeId) {
         case JLONG_ID:
-            return 6;
+            return 11;
         case JINT_ID:
-            return 5;
+            return 10;
+        case JDOUBLE_ID:
+            return 9;
+        case JFLOAT_ID:
+            return 8;
         case JSHORT_ID:
-            return 4;
+            return 7;
         case JBYTE_ID:
-            return 3;
+            return 6;
         case JBOOLEAN_ID:
-            return 2;
+            return 5;
         case JOBJECT_ID:
-            return 1;
+            if ((*env)->IsSameObject(env, JLONG_OBJ_TYPE, paramType)) {
+                return 4;
+            } else if ((*env)->IsSameObject(env, JINT_OBJ_TYPE, paramType)) {
+                return 3;
+            } else if ((*env)->IsSameObject(env, JOBJECT_TYPE, paramType)) {
+                return 1;
+            } else if ((*env)->IsAssignableFrom(env, JLONG_OBJ_TYPE, paramType)) {
+                return 2;
+            }
         }
     } else if (PyInt_Check(param)) {
         switch (paramTypeId) {
         case JINT_ID:
-            return 6;
+            return 11;
         case JLONG_ID:
-            return 5;
+            return 10;
+        case JDOUBLE_ID:
+            return 9;
+        case JFLOAT_ID:
+            return 8;
         case JSHORT_ID:
-            return 4;
+            return 7;
         case JBYTE_ID:
-            return 3;
+            return 6;
         case JBOOLEAN_ID:
-            return 2;
+            return 5;
         case JOBJECT_ID:
-            return 1;
+            if ((*env)->IsSameObject(env, JINT_OBJ_TYPE, paramType)) {
+                return 4;
+            } else if ((*env)->IsSameObject(env, JLONG_OBJ_TYPE, paramType)) {
+                return 3;
+            } else if ((*env)->IsSameObject(env, JOBJECT_TYPE, paramType)) {
+                return 1;
+            } else if ((*env)->IsAssignableFrom(env, JINT_OBJ_TYPE, paramType)) {
+                return 2;
+            }
         }
     } else if (PyString_Check(param)) {
         switch (paramTypeId) {
@@ -644,7 +674,7 @@ int pyarg_matches_jtype(JNIEnv *env,
                 return 1;
             }
         }
-    } else if(PyUnicode_Check(param)) {
+    } else if (PyUnicode_Check(param)) {
         switch (paramTypeId) {
         case JSTRING_ID:
             return 3;
@@ -661,11 +691,20 @@ int pyarg_matches_jtype(JNIEnv *env,
         }
     } else if (PyFloat_Check(param)) {
         switch (paramTypeId) {
-        case JFLOAT_ID:
         case JDOUBLE_ID:
-            return 2;
+            return 6;
+        case JFLOAT_ID:
+            return 5;
         case JOBJECT_ID:
-            return 1;
+            if ((*env)->IsSameObject(env, JDOUBLE_OBJ_TYPE, paramType)) {
+                return 4;
+            } else if ((*env)->IsSameObject(env, JFLOAT_OBJ_TYPE, paramType)) {
+                return 3;
+            } else if ((*env)->IsSameObject(env, JOBJECT_TYPE, paramType)) {
+                return 1;
+            } else if ((*env)->IsAssignableFrom(env, JDOUBLE_OBJ_TYPE, paramType)) {
+                return 2;
+            }
         }
     } else if (param == Py_None) {
         switch (paramTypeId) {
@@ -707,11 +746,48 @@ int pyarg_matches_jtype(JNIEnv *env,
             if ((*env)->IsSameObject(env,
                                      ((PyJObject *) param)->clazz,
                                      paramType)) {
-                return 2;
+                return 3;
+            } else if ((*env)->IsSameObject(env, JOBJECT_TYPE, paramType)) {
+                return 1;
             } else if ((*env)->IsAssignableFrom(env,
                                                 ((PyJObject *) param)->clazz,
                                                 paramType)) {
-                return 1;
+                return 2;
+            }
+        }
+    } else if (PyList_Check(param)) {
+        switch (paramTypeId) {
+        case JBOOLEAN_ID:
+            return 1;
+        case JOBJECT_ID:
+            if ((*env)->IsSameObject(env, JOBJECT_TYPE, paramType)) {
+                return 2;
+            } else if ((*env)->IsSameObject(env, JARRAYLIST_TYPE, paramType)) {
+                return 4;
+            } else if ((*env)->IsAssignableFrom(env, JLIST_TYPE, paramType)) {
+                return 3;
+            }
+        }
+    } else if (PyTuple_Check(param)) {
+        switch (paramTypeId) {
+        case JBOOLEAN_ID:
+            return 1;
+        case JOBJECT_ID:
+            if ((*env)->IsSameObject(env, JOBJECT_TYPE, paramType)) {
+                return 2;
+            } else if ((*env)->IsAssignableFrom(env, JLIST_TYPE, paramType)) {
+                return 3;
+            }
+        }
+    } else if (PyDict_Check(param)) {
+        switch (paramTypeId) {
+        case JBOOLEAN_ID:
+            return 1;
+        case JOBJECT_ID:
+            if ((*env)->IsSameObject(env, JOBJECT_TYPE, paramType)) {
+                return 2;
+            } else if ((*env)->IsAssignableFrom(env, JMAP_TYPE, paramType)) {
+                return 3;
             }
         }
     }
