@@ -457,7 +457,9 @@ static jobject pyfloat_as_jobject(JNIEnv *env, PyObject *pyobject,
 static jobject pyfastsequence_as_jobject(JNIEnv *env, PyObject *pyseq,
         jclass expectedType)
 {
-    if ((*env)->IsAssignableFrom(env, JARRAYLIST_TYPE, expectedType)) {
+    if ((*env)->IsAssignableFrom(env, JLIST_TYPE, expectedType)
+            || (PyList_Check(pyseq)
+                && (*env)->IsAssignableFrom(env, JARRAYLIST_TYPE, expectedType))) {
         jobject jlist;
         Py_ssize_t size, i;
 

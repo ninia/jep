@@ -1,5 +1,9 @@
 package jep.test.types;
 
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+
 /**
  * @author Ben Steffensmeier
  */
@@ -42,6 +46,12 @@ public class TestFieldTypes {
     public Class objectClass;
 
     public Object object;
+
+    public List<?> list;
+
+    public ArrayList<?> arrayList;
+
+    public Map<?,?> map;
 
     /**
      * Some implementation of JNI will allow native code to assign a field using
@@ -86,6 +96,15 @@ public class TestFieldTypes {
         } else if (objectClass != null && objectClass.getClass() != Class.class) {
             throw new RuntimeException("Class field is actually a "
                     + objectClass.getClass().getName());
+        } else if (list != null && !List.class.isAssignableFrom(list.getClass())) {
+            throw new RuntimeException("List field is actually a "
+                    + list.getClass().getName());
+        } else if (arrayList != null && arrayList.getClass() != ArrayList.class) {
+            throw new RuntimeException("ArrayList field is actually a "
+                    + arrayList.getClass().getName());
+        } else if (map != null && !Map.class.isAssignableFrom(map.getClass())) {
+            throw new RuntimeException("Map field is actually a "
+                    + map.getClass().getName());
         }
     }
 }

@@ -1,5 +1,9 @@
 package jep.test.types;
 
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+
 /**
  * @author Ben Steffensmeier
  */
@@ -119,6 +123,30 @@ public class TestMethodTypes {
 
     public Object object(Object o) {
         return o;
+    }
+
+    public List<?> list(List<?> l) {
+        if (l != null && !List.class.isAssignableFrom(l.getClass())) {
+            throw new RuntimeException("List argument is actually an "
+                    + l.getClass().getName());
+        }
+        return l;
+    }
+
+    public ArrayList<?> arrayList(ArrayList<?> l) {
+        if (l != null && l.getClass() != ArrayList.class) {
+            throw new RuntimeException("ArrayList argument is actually an "
+                    + l.getClass().getName());
+        }
+        return l;
+    }
+
+    public Map<?,?> map(Map<?,?> m) {
+        if (m != null && !Map.class.isAssignableFrom(m.getClass())) {
+            throw new RuntimeException("Map argument is actually an "
+                    + m.getClass().getName());
+        }
+        return m;
     }
 
 }

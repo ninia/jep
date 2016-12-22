@@ -678,3 +678,82 @@ class TestTypes(unittest.TestCase):
                 self.fields.objectClass = c
             with self.assertRaises(TypeError):
                 self.staticFields.objectClass = c
+
+    def test_list(self):
+        for l in ([], (), [1, 2, 3], (1, 2, 3)):
+            self.assertSequenceEqual(l, self.methods.list(l))
+            self.assertSequenceEqual(l, self.methods.object(l))
+            self.assertSequenceEqual(l, self.staticMethods.list(l))
+            self.assertSequenceEqual(l, self.staticMethods.object(l))
+            self.fields.list = l
+            self.assertSequenceEqual(l, self.fields.list)
+            self.fields.object = l
+            self.assertSequenceEqual(l, self.fields.object)
+            self.staticFields.list = l
+            self.assertSequenceEqual(l, self.staticFields.list)
+            self.staticFields.object = l
+            self.assertSequenceEqual(l, self.staticFields.object)
+            self.fields.verify()
+            self.staticFields.verify()
+
+    def test_list_coercion(self):
+        for l in (False, True, 0, 1, 0.1, {}, 'string'):
+            with self.assertRaises(TypeError):
+                self.methods.list(l)
+            with self.assertRaises(TypeError):
+                self.staticMethods.list(l)
+            with self.assertRaises(TypeError):
+                self.fields.list = l
+            with self.assertRaises(TypeError):
+                self.staticFields.list = l
+
+    def test_arrayList(self):
+        for l in ([], [1, 2, 3]):
+            self.assertSequenceEqual(l, self.methods.arrayList(l))
+            self.assertSequenceEqual(l, self.staticMethods.arrayList(l))
+            self.fields.arrayList = l
+            self.assertSequenceEqual(l, self.fields.arrayList)
+            self.staticFields.arrayList = l
+            self.assertSequenceEqual(l, self.staticFields.arrayList)
+            self.fields.verify()
+            self.staticFields.verify()
+
+    def test_arrayList_coercion(self):
+        for l in ((), (1,2,3), False, True, 0, 1, 0.1, {}, 'string'):
+            with self.assertRaises(TypeError):
+                self.methods.arrayList(l)
+            with self.assertRaises(TypeError):
+                self.staticMethods.arrayList(l)
+            with self.assertRaises(TypeError):
+                self.fields.arrayList = l
+            with self.assertRaises(TypeError):
+                self.staticFields.arrayList = l
+
+    # disabled because a dict cannot be constructed from a pyjmap
+    def todo_test_map(self):
+        for m in ({}, {"a":"b", "c":"d"}):
+            self.assertEqual(m, dict(self.methods.map(m)))
+            self.assertEqual(m, dict(self.methods.object(m)))
+            self.assertEqual(m, dict(self.staticMethods.map(m)))
+            self.assertEqual(m, dict(self.staticMethods.object(m)))
+            self.fields.map = m
+            self.assertEqual(m, dict(self.fields.map))
+            self.fields.object = m
+            self.assertEqual(m, dict(self.fields.object))
+            self.staticFields.map = m
+            self.assertEqual(m, dict(self.staticFields.map))
+            self.staticFields.object = m
+            self.assertEqual(m, dict(self.staticFields.object))
+            self.fields.verify()
+            self.staticFields.verify()
+
+    def test_map_coercion(self):
+        for m in ((), [], False, True, 0, 1, 0.1, 'string'):
+            with self.assertRaises(TypeError):
+                self.methods.map(m)
+            with self.assertRaises(TypeError):
+                self.staticMethods.map(m)
+            with self.assertRaises(TypeError):
+                self.fields.map = m
+            with self.assertRaises(TypeError):
+                self.staticFields.map = m
