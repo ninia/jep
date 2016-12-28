@@ -28,11 +28,6 @@
 
 #include "Jep.h"
 
-// cached methodids
-jmethodID intValue    = 0;
-jmethodID longValue   = 0;
-jmethodID doubleValue = 0;
-
 static PyObject* java_number_to_python(JNIEnv*, PyObject*);
 static PyObject* java_number_to_pythonintlong(JNIEnv*, PyObject*);
 static PyObject* java_number_to_pythonfloat(JNIEnv*, PyObject*);
@@ -313,22 +308,11 @@ static PyObject* java_number_to_pythonintlong(JNIEnv *env, PyObject* n)
     jlong      value;
     PyJObject *jnumber  = (PyJObject*) n;
 
-    if (!JNI_METHOD(longValue, env, JNUMBER_TYPE, "longValue", "()J")) {
-        process_java_exception(env);
-        return NULL;
-    }
-
 #if PY_MAJOR_VERSION < 3
-    if (!JNI_METHOD(intValue, env, JNUMBER_TYPE, "intValue", "()I")) {
-
-        process_java_exception(env);
-        return NULL;
-    }
-
     if ((*env)->IsInstanceOf(env, jnumber->object, JBYTE_OBJ_TYPE) ||
             (*env)->IsInstanceOf(env, jnumber->object, JSHORT_OBJ_TYPE) ||
             (*env)->IsInstanceOf(env, jnumber->object, JINT_OBJ_TYPE)) {
-        jint result = (*env)->CallIntMethod(env, jnumber->object, intValue);
+        jint result = java_lang_Number_intValue(env, jnumber->object);
         if (process_java_exception(env)) {
             return NULL;
         }
@@ -336,7 +320,7 @@ static PyObject* java_number_to_pythonintlong(JNIEnv *env, PyObject* n)
     }
 #endif
 
-    value = (*env)->CallLongMethod(env, jnumber->object, longValue);
+    value = java_lang_Number_longValue(env, jnumber->object);
     if (process_java_exception(env)) {
         return NULL;
     }
@@ -349,12 +333,7 @@ static PyObject* java_number_to_pythonfloat(JNIEnv *env, PyObject* n)
     jdouble    value;
     PyJObject *jnumber  = (PyJObject*) n;
 
-    if (!JNI_METHOD(doubleValue, env, JNUMBER_TYPE, "doubleValue", "()D")) {
-        process_java_exception(env);
-        return NULL;
-    }
-
-    value = (*env)->CallDoubleMethod(env, jnumber->object, doubleValue);
+    value = java_lang_Number_doubleValue(env, jnumber->object);
     if (process_java_exception(env)) {
         return NULL;
     }

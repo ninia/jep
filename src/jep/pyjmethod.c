@@ -34,14 +34,6 @@
 
 static void pyjmethod_dealloc(PyJMethodObject *self);
 
-// cache methodIds
-static jmethodID methodGetName       = 0;
-static jmethodID methodGetType       = 0;
-static jmethodID methodGetParamTypes = 0;
-static jmethodID methodGetModifiers  = 0;
-
-
-
 // called internally to make new PyJMethodObject instances.
 // throws python exception and returns NULL on error.
 PyJMethodObject* PyJMethod_New(JNIEnv *env, jobject rmethod)
@@ -54,13 +46,7 @@ PyJMethodObject* PyJMethod_New(JNIEnv *env, jobject rmethod)
         return NULL;
     }
 
-    if (!JNI_METHOD(methodGetName, env, JMETHOD_TYPE, "getName",
-                    "()Ljava/lang/String;")) {
-        process_java_exception(env);
-        return NULL;
-    }
-
-    jname = (jstring) (*env)->CallObjectMethod(env, rmethod, methodGetName);
+    jname = java_lang_reflect_Member_getName(env, rmethod);
     if (process_java_exception(env) || !jname) {
         return NULL;
     }
@@ -84,7 +70,6 @@ int pyjmethod_init(JNIEnv *env, PyJMethodObject *self)
     jobject           returnType             = NULL;
     jobjectArray      paramArray             = NULL;
     jint              modifier               = -1;
-    jmethodID         isStaticMethod         = NULL;
     jboolean          isStatic               = JNI_FALSE;
 
     if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
@@ -94,13 +79,7 @@ int pyjmethod_init(JNIEnv *env, PyJMethodObject *self)
 
     self->methodId = (*env)->FromReflectedMethod(env, self->rmethod);
 
-    if (!JNI_METHOD(methodGetType, env, JMETHOD_TYPE, "getReturnType",
-                    "()Ljava/lang/Class;")) {
-        process_java_exception(env);
-        goto EXIT_ERROR;
-    }
-
-    returnType = (*env)->CallObjectMethod(env, self->rmethod, methodGetType);
+    returnType = java_lang_reflect_Method_getReturnType(env, self->rmethod);
     if (process_java_exception(env) || !returnType) {
         goto EXIT_ERROR;
     }
@@ -110,13 +89,7 @@ int pyjmethod_init(JNIEnv *env, PyJMethodObject *self)
         goto EXIT_ERROR;
     }
 
-    if (!JNI_METHOD(methodGetParamTypes, env, JMETHOD_TYPE, "getParameterTypes",
-                    "()[Ljava/lang/Class;")) {
-        process_java_exception(env);
-        goto EXIT_ERROR;
-    }
-    paramArray = (jobjectArray) (*env)->CallObjectMethod(env, self->rmethod,
-                 methodGetParamTypes);
+    paramArray = java_lang_reflect_Method_getParameterTypes(env, self->rmethod);
     if (process_java_exception(env) || !paramArray) {
         goto EXIT_ERROR;
     }
@@ -125,25 +98,12 @@ int pyjmethod_init(JNIEnv *env, PyJMethodObject *self)
     self->lenParameters = (*env)->GetArrayLength(env, paramArray);
 
 
-    if (!JNI_METHOD(methodGetModifiers, env, JMETHOD_TYPE, "getModifiers", "()I")) {
-        process_java_exception(env);
-        goto EXIT_ERROR;
-    }
-    modifier = (*env)->CallIntMethod(env, self->rmethod, methodGetModifiers);
+    modifier = java_lang_reflect_Member_getModifiers(env, self->rmethod);
     if (process_java_exception(env)) {
         goto EXIT_ERROR;
     }
 
-    // caching this methodid caused a crash on the mac
-    isStaticMethod = (*env)->GetStaticMethodID(env, JMODIFIER_TYPE, "isStatic",
-                     "(I)Z");
-    if (!isStaticMethod) {
-        process_java_exception(env);
-        goto EXIT_ERROR;
-    }
-
-    isStatic = (*env)->CallStaticBooleanMethod(env, JMODIFIER_TYPE, isStaticMethod,
-               modifier);
+    isStatic = java_lang_reflect_Modifier_isStatic(env, modifier);
     if (process_java_exception(env)) {
         goto EXIT_ERROR;
     }

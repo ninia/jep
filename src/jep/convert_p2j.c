@@ -42,10 +42,7 @@
 #define JCHAR_MAX   0xFFFF
 
 static jmethodID hashmapIConstructor   = 0;
-static jmethodID hashmapPut            = 0;
 static jmethodID arraylistIConstructor = 0;
-static jmethodID arraylistAdd          = 0;
-static jmethodID unmodifiableList      = 0;
 
 #if PY_MAJOR_VERSION < 3
     static jmethodID stringDecodingConstructor = NULL;
@@ -63,7 +60,7 @@ static void raiseTypeError(JNIEnv *env, PyObject *pyobject, jclass expectedType)
     jstring expTypeJavaName;
     const char *expTypeName, *actTypeName;
 
-    expTypeJavaName = (*env)->CallObjectMethod(env, expectedType, JCLASS_GET_NAME);
+    expTypeJavaName = java_lang_Class_getName(env, expectedType);
     if (process_java_exception(env)) {
         return;
     }
@@ -468,12 +465,6 @@ static jobject pyfastsequence_as_jobject(JNIEnv *env, PyObject *pyseq,
             process_java_exception(env);
             return NULL;
         }
-        if (!JNI_METHOD(arraylistAdd, env, JARRAYLIST_TYPE, "add",
-                        "(Ljava/lang/Object;)Z")) {
-            process_java_exception(env);
-            return NULL;
-        }
-
         size = PySequence_Fast_GET_SIZE(pyseq);
 
         if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
@@ -499,7 +490,7 @@ static jobject pyfastsequence_as_jobject(JNIEnv *env, PyObject *pyseq,
                  */
                 return (*env)->PopLocalFrame(env, NULL);
             }
-            (*env)->CallBooleanMethod(env, jlist, arraylistAdd, value);
+            java_util_List_add(env, jlist, value);
             (*env)->DeleteLocalRef(env, value);
             if (process_java_exception(env)) {
                 return (*env)->PopLocalFrame(env, NULL);
@@ -507,16 +498,7 @@ static jobject pyfastsequence_as_jobject(JNIEnv *env, PyObject *pyseq,
         }
 
         if (PyTuple_Check(pyseq)) {
-            if (!unmodifiableList) {
-                unmodifiableList = (*env)->GetStaticMethodID(env, JCOLLECTIONS_TYPE,
-                                   "unmodifiableList", "(Ljava/util/List;)Ljava/util/List;");
-                if (!unmodifiableList) {
-                    process_java_exception(env);
-                    return (*env)->PopLocalFrame(env, NULL);
-                }
-            }
-            jlist = (*env)->CallStaticObjectMethod(env, JCOLLECTIONS_TYPE,
-                                                   unmodifiableList, jlist);
+            jlist = java_util_Collections_unmodifiableList(env, jlist);
             if (process_java_exception(env)) {
                 return (*env)->PopLocalFrame(env, NULL);
             }
@@ -536,11 +518,6 @@ static jobject pydict_as_jobject(JNIEnv *env, PyObject *pydict,
         PyObject *key, *value;
 
         if (!JNI_METHOD(hashmapIConstructor, env, JHASHMAP_TYPE, "<init>", "(I)V")) {
-            process_java_exception(env);
-            return NULL;
-        }
-        if (!JNI_METHOD(hashmapPut, env, JHASHMAP_TYPE, "put",
-                        "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;")) {
             process_java_exception(env);
             return NULL;
         }
@@ -575,7 +552,7 @@ static jobject pydict_as_jobject(JNIEnv *env, PyObject *pydict,
                 return NULL;
             }
 
-            (*env)->CallObjectMethod(env, jmap, hashmapPut, jkey, jvalue);
+            java_util_Map_put(env, jmap, jkey, jvalue);
             (*env)->DeleteLocalRef(env, jkey);
             (*env)->DeleteLocalRef(env, jvalue);
             if (process_java_exception(env)) {

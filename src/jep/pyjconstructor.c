@@ -30,8 +30,6 @@
 
 static int pyjconstructor_init(JNIEnv*, PyJMethodObject*);
 
-static jmethodID constructorGetParamTypes = 0;
-
 /*
  * All constructors are named <init> so keep a single PyString around to use
  * as the methodName
@@ -95,19 +93,8 @@ static int pyjconstructor_init(JNIEnv *env, PyJMethodObject *self)
 
     self->methodId = (*env)->FromReflectedMethod(env, self->rmethod);
 
-    if (constructorGetParamTypes == 0) {
-        jclass initClass = (*env)->GetObjectClass(env, self->rmethod);
-        constructorGetParamTypes = (*env)->GetMethodID(env, initClass,
-                                   "getParameterTypes", "()[Ljava/lang/Class;");
-        if (!constructorGetParamTypes) {
-            process_java_exception(env);
-            goto EXIT_ERROR;
-        }
-        (*env)->DeleteLocalRef(env, initClass);
-    }
-
-    paramArray = (jobjectArray) (*env)->CallObjectMethod(env, self->rmethod,
-                 constructorGetParamTypes);
+    paramArray = java_lang_reflect_Constructor_getParameterTypes(env,
+                 self->rmethod);
     if (process_java_exception(env) || !paramArray) {
         goto EXIT_ERROR;
     }

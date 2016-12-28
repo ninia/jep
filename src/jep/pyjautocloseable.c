@@ -28,9 +28,6 @@
 
 #include "Jep.h"
 
-
-static jmethodID java_close = 0;
-
 /*
  * News up a PyJAautoCloseableObject, which is just a PyJObject that supports
  * close(). This should only be called from PyJObject_New().
@@ -69,17 +66,12 @@ static PyObject* pyjautocloseable_exit(PyObject* self, PyObject* args)
     PyJObject    *pyjob    = (PyJObject*) self;
     JNIEnv       *env      = pyembed_get_env();
 
-    if (!JNI_METHOD(java_close, env, JAUTOCLOSEABLE_TYPE, "close",
-                    "()V")) {
-        process_java_exception(env);
-        return NULL;
-    }
     if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
         process_java_exception(env);
         return NULL;
     }
 
-    (*env)->CallVoidMethod(env, pyjob->object, java_close);
+    java_lang_AutoCloseable_close(env, pyjob->object);
     if (process_java_exception(env)) {
         return NULL;
     }

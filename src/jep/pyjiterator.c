@@ -28,9 +28,6 @@
 
 #include "Jep.h"
 
-jmethodID itrHasNext = 0;
-jmethodID itrNext    = 0;
-
 /*
  * News up a pyjiterator, which is just a pyjobject for iterators.
  */
@@ -68,12 +65,7 @@ PyObject* pyjiterator_next(PyObject* self)
     PyJObject    *pyjob     = (PyJObject*) self;
     JNIEnv       *env       = pyembed_get_env();
 
-    if (!JNI_METHOD(itrHasNext, env, JITERATOR_TYPE, "hasNext", "()Z")) {
-        process_java_exception(env);
-        return NULL;
-    }
-
-    nextAvail = (*env)->CallBooleanMethod(env, pyjob->object, itrHasNext);
+    nextAvail = java_util_Iterator_hasNext(env, pyjob->object);
     if (process_java_exception(env)) {
         return NULL;
     }
@@ -82,15 +74,11 @@ PyObject* pyjiterator_next(PyObject* self)
         jobject   nextItem;
         PyObject* result;
 
-        if (!JNI_METHOD(itrNext, env, JITERATOR_TYPE, "next", "()Ljava/lang/Object;")) {
-            process_java_exception(env);
-            return NULL;
-        }
         if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
             process_java_exception(env);
             return NULL;
         }
-        nextItem = (*env)->CallObjectMethod(env, pyjob->object, itrNext);
+        nextItem = java_util_Iterator_next(env, pyjob->object);
         if (process_java_exception(env)) {
             (*env)->PopLocalFrame(env, NULL);
             return NULL;

@@ -35,11 +35,6 @@
 
 static void pyjfield_dealloc(PyJFieldObject *self);
 
-static jmethodID fieldGetName = 0;
-static jmethodID fieldGetType = 0;
-static jmethodID fieldGetMod  = 0;
-static jmethodID modIsStatic  = 0;
-
 PyJFieldObject* pyjfield_new(JNIEnv *env,
                              jobject rfield,
                              PyJObject *pyjobject)
@@ -61,13 +56,7 @@ PyJFieldObject* pyjfield_new(JNIEnv *env,
 
     // ------------------------------ get field name
 
-    if (!JNI_METHOD(fieldGetName, env, JFIELD_TYPE, "getName",
-                    "()Ljava/lang/String;")) {
-        process_java_exception(env);
-        goto EXIT_ERROR;
-    }
-
-    jstr = (jstring) (*env)->CallObjectMethod(env, rfield, fieldGetName);
+    jstr = java_lang_reflect_Member_getName(env, rfield);
     if (process_java_exception(env) || !jstr) {
         goto EXIT_ERROR;
     }
@@ -104,14 +93,7 @@ static int pyjfield_init(JNIEnv *env, PyJFieldObject *self)
 
 
     // ------------------------------ get return type
-
-    if (!JNI_METHOD(fieldGetType, env, JFIELD_TYPE, "getType",
-                    "()Ljava/lang/Class;")) {
-        process_java_exception(env);
-        goto EXIT_ERROR;
-    }
-
-    self->fieldType = (*env)->CallObjectMethod(env, self->rfield, fieldGetType);
+    self->fieldType = java_lang_reflect_Field_getType(env, self->rfield);
     if (process_java_exception(env) || !self->fieldType) {
         goto EXIT_ERROR;
     }
@@ -124,29 +106,12 @@ static int pyjfield_init(JNIEnv *env, PyJFieldObject *self)
     // ------------------------------ get isStatic
 
     // call getModifers()
-    if (!JNI_METHOD(fieldGetMod, env, JFIELD_TYPE, "getModifiers", "()I")) {
-        process_java_exception(env);
-        goto EXIT_ERROR;
-    }
-    modifier = (*env)->CallIntMethod(env, self->rfield, fieldGetMod);
+    modifier = java_lang_reflect_Member_getModifiers(env, self->rfield);
     if (process_java_exception(env)) {
         goto EXIT_ERROR;
     }
 
-    if (modIsStatic == 0) {
-        modIsStatic = (*env)->GetStaticMethodID(env,
-                                                JMODIFIER_TYPE,
-                                                "isStatic",
-                                                "(I)Z");
-        if (process_java_exception(env) || !modIsStatic) {
-            goto EXIT_ERROR;
-        }
-    }
-
-    isStatic = (*env)->CallStaticBooleanMethod(env,
-               JMODIFIER_TYPE,
-               modIsStatic,
-               modifier);
+    isStatic = java_lang_reflect_Modifier_isStatic(env, modifier);
     if (process_java_exception(env)) {
         goto EXIT_ERROR;
     }

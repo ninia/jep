@@ -30,8 +30,8 @@
 
 
 /*
- * Caching of jclass and jmethodID objects for optimal performance.  These
- * are shared for all threads and should be considered constants.
+ * Caching of jclass objects for optimal performance.  These are shared for
+ * all threads and should be considered constants.
  */
 
 // primitive class types
@@ -79,8 +79,10 @@ jclass JCHAR_OBJ_TYPE   = NULL;
 
 // cached types for frequently used classes
 jclass JNUMBER_TYPE      = NULL;
+jclass JMEMBER_TYPE      = NULL;
 jclass JMETHOD_TYPE      = NULL;
 jclass JFIELD_TYPE       = NULL;
+jclass JCONSTRUCTOR_TYPE = NULL;
 jclass JTHROWABLE_TYPE   = NULL;
 jclass JMODIFIER_TYPE    = NULL;
 jclass JARRAYLIST_TYPE   = NULL;
@@ -101,25 +103,7 @@ jclass ARITHMETIC_EXC_TYPE;
 jclass OUTOFMEMORY_EXC_TYPE;
 jclass ASSERTION_EXC_TYPE;
 
-// cached java.lang.Class.getName()
-jmethodID JCLASS_GET_NAME;
-
-// cached methodids
-jmethodID objectToString        = 0;
-jmethodID objectIsArray         = 0;
-jmethodID classGetComponentType = 0;
-
-// for convert_jobject
-jmethodID getBooleanValue    = 0;
-jmethodID getIntValue        = 0;
-jmethodID getLongValue       = 0;
-jmethodID getDoubleValue     = 0;
-jmethodID getFloatValue      = 0;
-jmethodID getCharValue       = 0;
-
-
 #if PY_MAJOR_VERSION < 3
-    static jmethodID stringGetBytes = NULL;
     static jstring UTF8 = NULL;
 #endif
 
@@ -146,22 +130,13 @@ PyObject* jobject_topystring(JNIEnv *env, jobject obj)
 // NULL on error
 jstring jobject_tostring(JNIEnv *env, jobject obj)
 {
-    PyThreadState *_save;
     jstring     jstr;
 
     if (!env || !obj) {
         return NULL;
     }
 
-    if (!JNI_METHOD(objectToString, env, JOBJECT_TYPE, "toString",
-                    "()Ljava/lang/String;")) {
-        process_java_exception(env);
-        return NULL;
-    }
-
-    Py_UNBLOCK_THREADS
-    jstr = (jstring) (*env)->CallObjectMethod(env, obj, objectToString);
-    Py_BLOCK_THREADS
+    jstr = java_lang_Object_toString(env, obj);
     if (process_java_exception(env)) {
         return NULL;
     }
@@ -217,7 +192,7 @@ void release_utf_char(JNIEnv *env, jstring str, const char *v)
             array = (*env)->NewGlobalRef(env, clazz);\
             (*env)->DeleteLocalRef(env, clazz);\
         }\
-        clazz = (*env)->CallObjectMethod(env, array, classGetComponentType);\
+        clazz = java_lang_Class_getComponentType(env, array);\
         if ((*env)->ExceptionCheck(env)){\
             return 0;\
         }\
@@ -253,11 +228,6 @@ int cache_primitive_classes(JNIEnv *env)
 {
     jclass   clazz, tmpclazz = NULL;
     jfieldID fieldId;
-
-    if (!JNI_METHOD(classGetComponentType, env, JCLASS_TYPE, "getComponentType",
-                    "()Ljava/lang/Class;")) {
-        return 0;
-    }
 
     CACHE_PRIMITIVE_ARRAY(JBOOLEAN_TYPE, JBOOLEAN_ARRAY_TYPE, "[Z");
     CACHE_PRIMITIVE_ARRAY(JBYTE_TYPE, JBYTE_ARRAY_TYPE, "[B");
@@ -357,8 +327,10 @@ int cache_frequent_classes(JNIEnv *env)
     CACHE_CLASS(JFLOAT_OBJ_TYPE, "java/lang/Float");
     CACHE_CLASS(JCHAR_OBJ_TYPE, "java/lang/Character");
     CACHE_CLASS(JNUMBER_TYPE, "java/lang/Number");
+    CACHE_CLASS(JMEMBER_TYPE, "java/lang/reflect/Member");
     CACHE_CLASS(JMETHOD_TYPE, "java/lang/reflect/Method");
     CACHE_CLASS(JFIELD_TYPE, "java/lang/reflect/Field");
+    CACHE_CLASS(JCONSTRUCTOR_TYPE, "java/lang/reflect/Constructor");
     CACHE_CLASS(JTHROWABLE_TYPE, "java/lang/Throwable");
     CACHE_CLASS(JMODIFIER_TYPE, "java/lang/reflect/Modifier");
     CACHE_CLASS(JARRAYLIST_TYPE, "java/util/ArrayList");
@@ -379,11 +351,6 @@ int cache_frequent_classes(JNIEnv *env)
     CACHE_CLASS(ARITHMETIC_EXC_TYPE, "java/lang/ArithmeticException");
     CACHE_CLASS(OUTOFMEMORY_EXC_TYPE, "java/lang/OutOfMemoryError");
     CACHE_CLASS(ASSERTION_EXC_TYPE, "java/lang/AssertionError");
-
-    if (!JNI_METHOD(JCLASS_GET_NAME, env, JCLASS_TYPE, "getName",
-                    "()Ljava/lang/String;")) {
-        return 0;
-    }
 
     return 1;
 }
@@ -414,8 +381,10 @@ void unref_cache_frequent_classes(JNIEnv *env)
     UNCACHE_CLASS(JFLOAT_OBJ_TYPE);
     UNCACHE_CLASS(JCHAR_OBJ_TYPE);
     UNCACHE_CLASS(JNUMBER_TYPE);
+    UNCACHE_CLASS(JMEMBER_TYPE);
     UNCACHE_CLASS(JMETHOD_TYPE);
     UNCACHE_CLASS(JFIELD_TYPE);
+    UNCACHE_CLASS(JCONSTRUCTOR_TYPE);
     UNCACHE_CLASS(JTHROWABLE_TYPE);
     UNCACHE_CLASS(JMODIFIER_TYPE);
     UNCACHE_CLASS(JARRAYLIST_TYPE);
@@ -446,11 +415,6 @@ int get_jtype(JNIEnv *env, jclass clazz)
     jboolean equals = JNI_FALSE;
     jboolean array  = JNI_FALSE;
 
-    // have to find Class.isArray() method
-    if (!JNI_METHOD(objectIsArray, env, JCLASS_TYPE, "isArray", "()Z")) {
-        return -1;
-    }
-
     // object checks
     if ((*env)->IsAssignableFrom(env, clazz, JOBJECT_TYPE)) {
         // check for string
@@ -464,7 +428,7 @@ int get_jtype(JNIEnv *env, jclass clazz)
 
 
         // check if it's an array first
-        array = (*env)->CallBooleanMethod(env, clazz, objectIsArray);
+        array = java_lang_Class_isArray(env, clazz);
         if ((*env)->ExceptionCheck(env)) {
             return -1;
         }
@@ -808,18 +772,13 @@ PyObject* jstring_To_PyObject(JNIEnv *env, jobject jstr)
     jbyteArray stringJbytes = NULL;
     jsize      length       = 0;
     jbyte*     stringBytes  = NULL;
-    if (!JNI_METHOD(stringGetBytes, env, JSTRING_TYPE, "getBytes",
-                    "(Ljava/lang/String;)[B")) {
-        return NULL;
-    }
     if ( UTF8 == NULL) {
         jobject local = (*env)->NewStringUTF(env, "UTF-8");
         UTF8 = (*env)->NewGlobalRef(env, local);
         (*env)->DeleteLocalRef(env, local);
     }
 
-    stringJbytes = (jbyteArray) (*env)->CallObjectMethod(env, jstr, stringGetBytes,
-                   UTF8);
+    stringJbytes = java_lang_String_getBytes(env, jstr, UTF8);
     if (process_java_exception(env)) {
         return NULL;
     }
@@ -867,32 +826,6 @@ PyObject* jchar_To_PyObject(jchar jc)
 // throws java exception on error
 PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
 {
-    PyThreadState *_save;
-
-    if (getIntValue == 0) {
-        int success = 1;
-
-        // get all the methodIDs here. Faster this way for Number
-        // subclasses, then we'll just call the right methods below
-        Py_UNBLOCK_THREADS;
-
-        // Lookup each method only if the previous lookup succeeded
-        success = success
-                  && JNI_METHOD(getIntValue, env, JNUMBER_TYPE, "intValue", "()I");
-        success = success
-                  && JNI_METHOD(getLongValue, env, JNUMBER_TYPE, "longValue", "()J");
-        success = success
-                  && JNI_METHOD(getDoubleValue, env, JNUMBER_TYPE, "doubleValue", "()D");
-        success = success
-                  && JNI_METHOD(getFloatValue, env, JNUMBER_TYPE, "floatValue", "()F");
-
-        Py_BLOCK_THREADS;
-
-        if (!success) {
-            return NULL;
-        }
-    }
-
     switch (typeid) {
     case -1:
         // null
@@ -953,13 +886,7 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
         }
 
     case JBOOLEAN_ID: {
-        jboolean b;
-
-        if (!JNI_METHOD(getBooleanValue, env, JBOOL_OBJ_TYPE, "booleanValue", "()Z")) {
-            return NULL;
-        }
-
-        b = (*env)->CallBooleanMethod(env, val, getBooleanValue);
+        jboolean b = java_lang_Boolean_booleanValue(env, val);
         if ((*env)->ExceptionOccurred(env)) {
             return NULL;
         }
@@ -973,7 +900,7 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
     case JBYTE_ID:              /* pass through */
     case JSHORT_ID:             /* pass through */
     case JINT_ID: {
-        jint b = (*env)->CallIntMethod(env, val, getIntValue);
+        jint b = java_lang_Number_intValue(env, val);
         if ((*env)->ExceptionOccurred(env)) {
             return NULL;
         }
@@ -982,7 +909,7 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
     }
 
     case JLONG_ID: {
-        jlong b = (*env)->CallLongMethod(env, val, getLongValue);
+        jlong b = java_lang_Number_longValue(env, val);
         if ((*env)->ExceptionOccurred(env)) {
             return NULL;
         }
@@ -991,7 +918,7 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
     }
 
     case JDOUBLE_ID: {
-        jdouble b = (*env)->CallDoubleMethod(env, val, getDoubleValue);
+        jdouble b = java_lang_Number_doubleValue(env, val);
         if ((*env)->ExceptionOccurred(env)) {
             return NULL;
         }
@@ -1000,7 +927,7 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
     }
 
     case JFLOAT_ID: {
-        jfloat b = (*env)->CallFloatMethod(env, val, getFloatValue);
+        jfloat b = java_lang_Number_floatValue(env, val);
         if ((*env)->ExceptionOccurred(env)) {
             return NULL;
         }
@@ -1010,13 +937,7 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
 
 
     case JCHAR_ID: {
-        jchar c;
-
-        if (!JNI_METHOD(getCharValue, env, JCHAR_OBJ_TYPE, "charValue", "()C")) {
-            return NULL;
-        }
-
-        c = (*env)->CallCharMethod(env, val, getCharValue);
+        jchar c = java_lang_Character_charValue(env, val);
         if ((*env)->ExceptionOccurred(env)) {
             return NULL;
         }

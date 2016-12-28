@@ -133,8 +133,10 @@ extern jclass JFLOAT_OBJ_TYPE;
 extern jclass JDOUBLE_OBJ_TYPE;
 extern jclass JCHAR_OBJ_TYPE;
 
+extern jclass JMEMBER_TYPE;
 extern jclass JMETHOD_TYPE;
 extern jclass JFIELD_TYPE;
+extern jclass JCONSTRUCTOR_TYPE;
 extern jclass JNUMBER_TYPE;
 extern jclass JTHROWABLE_TYPE;
 extern jclass JMODIFIER_TYPE;

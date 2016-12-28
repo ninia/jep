@@ -35,12 +35,6 @@ static int pyjobject_init(JNIEnv *env, PyJObject*);
 static void pyjobject_init_subtypes(void);
 static int  subtypes_initialized = 0;
 
-static jmethodID objectEquals    = 0;
-static jmethodID objectHashCode  = 0;
-static jmethodID classGetMethods = 0;
-static jmethodID classGetFields  = 0;
-static jmethodID compareTo       = 0;
-
 /*
  * MSVC requires tp_base to be set at runtime instead of in
  * the type declaration. :/  Since we are building an
@@ -237,7 +231,7 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
      * attach attribute java_name to the pyjobject instance to assist with
      * understanding the type at runtime
      */
-    className = (*env)->CallObjectMethod(env, pyjob->clazz, JCLASS_GET_NAME);
+    className = java_lang_Class_getName(env, pyjob->clazz);
     if (process_java_exception(env) || !className) {
         goto EXIT_ERROR;
     }
@@ -249,11 +243,6 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
     pyjob->javaClassName = pyClassName;
     Py_DECREF(pyAttrName);
     // then, get methodid for getMethods()
-    if (!JNI_METHOD(classGetMethods, env, JCLASS_TYPE, "getMethods",
-                    "()[Ljava/lang/reflect/Method;")) {
-        process_java_exception(env);
-        goto EXIT_ERROR;
-    }
     /*
      * Performance improvement.  The code below is very similar to previous
      * versions except methods are now cached in memory.
@@ -298,8 +287,7 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
         // so what i did here was find the methodid using langClass,
         // but then i call the method using clazz. methodIds for java
         // classes are shared....
-        methodArray = (jobjectArray) (*env)->CallObjectMethod(env, pyjob->clazz,
-                      classGetMethods);
+        methodArray = java_lang_Class_getMethods(env, pyjob->clazz);
         if (process_java_exception(env) || !methodArray) {
             goto EXIT_ERROR;
         }
@@ -384,15 +372,7 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
 
 
     // ------------------------------ process fields
-    if (!JNI_METHOD(classGetFields, env,  JCLASS_TYPE, "getFields",
-                    "()[Ljava/lang/reflect/Field;")) {
-        process_java_exception(env);
-        goto EXIT_ERROR;
-    }
-
-    fieldArray = (jobjectArray) (*env)->CallObjectMethod(env,
-                 pyjob->clazz,
-                 classGetFields);
+    fieldArray = java_lang_Class_getFields(env, pyjob->clazz);
     if (process_java_exception(env) || !fieldArray) {
         goto EXIT_ERROR;
     }
@@ -533,18 +513,7 @@ static PyObject* pyjobject_richcompare(PyJObject *self,
         eq = JNI_FALSE;
         // skip calling Object.equals() if op is > or <
         if (opid != Py_GT && opid != Py_LT) {
-            // get the methodid for Object.equals()
-            if (!JNI_METHOD(objectEquals, env, JOBJECT_TYPE, "equals",
-                            "(Ljava/lang/Object;)Z")) {
-                process_java_exception(env);
-                return NULL;
-            }
-
-            eq = (*env)->CallBooleanMethod(
-                     env,
-                     target,
-                     objectEquals,
-                     other_target);
+            eq = java_lang_Object_equals(env, target, other_target);
         }
 
         if (process_java_exception(env)) {
@@ -588,13 +557,7 @@ static PyObject* pyjobject_richcompare(PyJObject *self,
                 return NULL;
             }
 
-            if (!JNI_METHOD(compareTo, env, JCOMPARABLE_TYPE, "compareTo",
-                            "(Ljava/lang/Object;)I")) {
-                process_java_exception(env);
-                return NULL;
-            }
-
-            result = (*env)->CallIntMethod(env, target, compareTo, other_target);
+            result = java_lang_Comparable_compareTo(env, target, other_target);
 #if PY_MAJOR_VERSION >= 3
             exc = (*env)->ExceptionOccurred(env);
             if (exc != NULL) {
@@ -712,15 +675,10 @@ static long pyjobject_hash(PyJObject *self)
     JNIEnv *env = pyembed_get_env();
     int   hash = -1;
 
-    if (!JNI_METHOD(objectHashCode, env, JOBJECT_TYPE, "hashCode", "()I")) {
-        process_java_exception(env);
-        return -1;
-    }
-
     if (self->object) {
-        hash = (*env)->CallIntMethod(env, self->object, objectHashCode);
+        hash = java_lang_Object_hashCode(env, self->object);
     } else {
-        hash = (*env)->CallIntMethod(env, self->clazz, objectHashCode);
+        hash = java_lang_Object_hashCode(env, self->clazz);
     }
     if (process_java_exception(env)) {
         return -1;

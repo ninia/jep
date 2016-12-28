@@ -33,8 +33,6 @@
 
 #include "Jep.h"
 
-jmethodID objectComponentType = 0;
-
 static void pyjarray_dealloc(PyJArrayObject *self);
 static int pyjarray_init(JNIEnv*, PyJArrayObject*, int, PyObject*);
 static Py_ssize_t pyjarray_length(PyObject *self);
@@ -230,15 +228,7 @@ static int pyjarray_init(JNIEnv *env,
     // ------------------------------ first, get the array's type
 
     if (pyarray->componentType < 0) { // may already know that
-        if (!JNI_METHOD(objectComponentType, env, JCLASS_TYPE, "getComponentType",
-                        "()Ljava/lang/Class;")) {
-            process_java_exception(env);
-            goto EXIT_ERROR;
-        }
-
-        compType = (*env)->CallObjectMethod(env,
-                                            pyarray->clazz,
-                                            objectComponentType);
+        compType = java_lang_Class_getComponentType(env, pyarray->clazz);
         if (process_java_exception(env) || !compType) {
             goto EXIT_ERROR;
         }
