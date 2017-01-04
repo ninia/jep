@@ -919,10 +919,16 @@ jvalue convert_pyarg_jvalue(JNIEnv *env, PyObject *param, jclass paramType,
 {
     jvalue ret = PyObject_As_jvalue(env, param, paramType);
     if (PyErr_Occurred()) {
-        PyObject *ptype, *pvalue, *ptrace;
+        PyObject *ptype, *pvalue, *ptrace, *pvalue_string;
         PyErr_Fetch(&ptype, &pvalue, &ptrace);
+        if (pvalue == NULL) {
+            pvalue_string = PyObject_Str(ptype);
+        } else {
+            pvalue_string = PyObject_Str(pvalue);
+        }
         PyErr_Format(PyExc_TypeError, "Error converting parameter %d: %s", pos + 1,
-                     PyString_AsString(pvalue));
+                     PyString_AsString(pvalue_string));
+        Py_DECREF(pvalue_string);
         Py_DECREF(ptype);
         Py_XDECREF(pvalue);
         Py_XDECREF(ptrace);
