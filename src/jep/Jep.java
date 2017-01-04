@@ -212,6 +212,8 @@ public final class Jep implements Closeable {
      * 
      * @param config
      *            the python configuration to use.
+     * 
+     * @since 3.6
      */
     public static void setInitParams(PyConfig config) throws JepException {
         if (null != topInterpreter) {

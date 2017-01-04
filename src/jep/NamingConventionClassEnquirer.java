@@ -48,6 +48,8 @@ import java.util.Set;
  * </ul>
  * 
  * @author [ndjensen at gmail.com] Nate Jensen
+ * 
+ * @since 3.3
  */
 public class NamingConventionClassEnquirer implements ClassEnquirer {
 
