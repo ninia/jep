@@ -37,6 +37,8 @@ import java.util.Set;
  * </p>
  * 
  * @author [ndjensen at gmail.com] Nate Jensen
+ * 
+ * @since 3.5
  */
 public class JepConfig {
 
@@ -95,7 +97,7 @@ public class JepConfig {
         }
         for (String path : includePaths) {
             if (this.includePath.length() > 0) {
-                this.includePath.append(File.separatorChar);
+                this.includePath.append(File.pathSeparator);
             }
             this.includePath.append(path);
         }
@@ -152,6 +154,8 @@ public class JepConfig {
      * @param sharedModules
      *            a set of module names that should be shared
      * @return a reference to this JepConfig
+     * 
+     * @since 3.6
      */
     public JepConfig setSharedModules(Set<String> sharedModules) {
         this.sharedModules = sharedModules;
@@ -159,18 +163,44 @@ public class JepConfig {
     }
 
     /**
-     * Add a module name to the set of modules
+     * Add a module name to the set of shared modules
+     * 
+     * @deprecated This method will be removed in a future release. Use
+     *             #addSharedModules(String...) instead.
      * 
      * @param sharedModule
-     *            a set of module names that should be shared
+     *            a module name that should be shared
      * @return a reference to this JepConfig
      * @see #setSharedModules(Set)
+     * 
+     * @since 3.6
      */
+    @Deprecated
     public JepConfig addSharedModule(String sharedModule) {
         if (sharedModules == null) {
             sharedModules = new HashSet<String>();
         }
         sharedModules.add(sharedModule);
+        return this;
+    }
+    
+    /**
+     * Adds module names to the set of shared modules
+     * 
+     * @param sharedModules
+     *            a set of module names that should be shared
+     * @return a reference to this JepConfig
+     * @see #setSharedModules(Set)
+     * 
+     * @since 3.6
+     */
+    public JepConfig addSharedModules(String... sharedModule) {
+        if (sharedModules == null) {
+            sharedModules = new HashSet<String>();
+        }
+        for (String sm : sharedModule) {
+            sharedModules.add(sm);
+        }
         return this;
     }
 }

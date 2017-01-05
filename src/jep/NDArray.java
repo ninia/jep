@@ -47,6 +47,8 @@ import java.util.Arrays;
  * 
  * 
  * @author [ndjensen at gmail.com] Nate Jensen
+ * 
+ * @since 3.3
  */
 public class NDArray<T extends Object> {
 
