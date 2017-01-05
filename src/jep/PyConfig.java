@@ -30,6 +30,8 @@ package jep;
  * </p>
  * 
  * @author Jeff V Stein
+ * 
+ * @since 3.6
  */
 public class PyConfig {
 

@@ -20,7 +20,7 @@ public class TestNumpyArrayToString {
 
         try {
             jep0 = new Jep(new JepConfig().addIncludePaths(".")
-                    .addSharedModule("numpy"));
+                    .addSharedModules("numpy"));
             jep0.eval("import numpy");
 
             Thread t = new Thread() {
@@ -29,7 +29,7 @@ public class TestNumpyArrayToString {
                     Jep jep1 = null;
                     try {
                         jep1 = new Jep(new JepConfig().addIncludePaths(".")
-                                .addSharedModule("numpy"));
+                                .addSharedModules("numpy"));
                         jep1.eval("import numpy");
                     } catch (JepException e) {
                         e.printStackTrace();

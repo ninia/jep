@@ -18,7 +18,7 @@ public class TestSharedModules {
         Jep jep = null;
         try {
             JepConfig config = new JepConfig().addIncludePaths(".")
-                    .addSharedModule("datetime");
+                    .addSharedModules("datetime");
             jep = new Jep(config);
             jep.eval("import datetime");
             jep.eval("setattr(datetime, 'shared', True)");

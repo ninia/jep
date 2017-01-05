@@ -29,9 +29,11 @@ package jep;
  * Jep's importer hook (see <a
  * href="https://www.python.org/dev/peps/pep-0302/">PEP 302</a>) to determine if
  * an attempt to import a module/package or class should be directed to the
- * Python importer or the Java <code>ClassLoader</codE>.
+ * Python importer or the Java <code>ClassLoader</code>.
  * 
  * @author [ndjensen at gmail.com] Nate Jensen
+ * 
+ * @since 3.3
  */
 public interface ClassEnquirer {
 

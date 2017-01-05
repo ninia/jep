@@ -20,7 +20,7 @@ public class TestNumpyProdShared {
         Jep jep = null;
         try {
             JepConfig config = new JepConfig().addIncludePaths(".")
-                    .addSharedModule("numpy");
+                    .addSharedModules("numpy");
             jep = new Jep(config);
             jep.eval("import numpy");
             jep.eval("numpy.ndarray([1]).prod()");
