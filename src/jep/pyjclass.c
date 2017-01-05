@@ -123,7 +123,6 @@ static PyObject* pyjclass_add_inner_class(JNIEnv *env, PyJObject *topClz,
             printf("Error adding inner class %s\n", charName);
         } else {
             PyObject *pyname = PyString_FromString(charName);
-            pyjobject_addfield((PyJObject*) topClz, pyname);
             Py_DECREF(pyname);
         }
         Py_DECREF(attrClz); // parent class will hold the reference

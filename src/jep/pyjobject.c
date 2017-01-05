@@ -28,8 +28,10 @@
 
 #include "Jep.h"
 
+// https://bugs.python.org/issue2897
+#include "structmember.h"
+
 static int pyjobject_init(JNIEnv *env, PyJObject*);
-static void pyjobject_addmethod(PyJObject*, PyObject*);
 static void pyjobject_init_subtypes(void);
 static int  subtypes_initialized = 0;
 
@@ -170,9 +172,7 @@ PyObject* pyjobject_new(JNIEnv *env, jobject obj)
 
     pyjob->object      = (*env)->NewGlobalRef(env, obj);
     pyjob->clazz       = (*env)->NewGlobalRef(env, objClz);
-    pyjob->attr        = PyList_New(0);
-    pyjob->methods     = PyList_New(0);
-    pyjob->fields      = PyList_New(0);
+    pyjob->attr        = PyDict_New();
     pyjob->finishAttr  = 0;
 
     (*env)->DeleteLocalRef(env, objClz);
@@ -205,9 +205,7 @@ PyObject* pyjobject_new_class(JNIEnv *env, jclass clazz)
     pyjob              = (PyJObject*) pyjclass;
     pyjob->object      = NULL;
     pyjob->clazz       = (*env)->NewGlobalRef(env, clazz);
-    pyjob->attr        = PyList_New(0);
-    pyjob->methods     = PyList_New(0);
-    pyjob->fields      = PyList_New(0);
+    pyjob->attr        = PyDict_New();
     pyjob->finishAttr  = 0;
 
     if (pyjclass_init(env, (PyObject *) pyjob)) {
@@ -250,8 +248,6 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
     pyAttrName = PyString_FromString("java_name");
     if (PyObject_SetAttr((PyObject *) pyjob, pyAttrName, pyClassName) == -1) {
         goto EXIT_ERROR;
-    } else {
-        pyjobject_addfield(pyjob, pyAttrName);
     }
     pyjob->javaClassName = pyClassName;
     Py_DECREF(pyAttrName);
@@ -384,8 +380,6 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
         if (name) {
             if (PyObject_SetAttr((PyObject *) pyjob, name, cached) == -1) {
                 goto EXIT_ERROR;
-            } else {
-                pyjobject_addmethod(pyjob, name);
             }
             Py_DECREF(name);
         }
@@ -428,8 +422,6 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
                                  pyjfield->pyFieldName,
                                  (PyObject *) pyjfield) == -1) {
                 goto EXIT_ERROR;
-            } else {
-                pyjobject_addfield(pyjob, pyjfield->pyFieldName);
             }
         }
 
@@ -471,8 +463,6 @@ void pyjobject_dealloc(PyJObject *self)
     }
 
     Py_CLEAR(self->attr);
-    Py_CLEAR(self->methods);
-    Py_CLEAR(self->fields);
     Py_CLEAR(self->javaClassName);
 
     PyObject_Del(self);
@@ -487,34 +477,6 @@ int pyjobject_check(PyObject *obj)
     }
     return 0;
 }
-
-
-// add a method name to obj->methods list
-static void pyjobject_addmethod(PyJObject *obj, PyObject *name)
-{
-    if (!PyString_Check(name)) {
-        return;
-    }
-    if (!PyList_Check(obj->methods)) {
-        return;
-    }
-
-    PyList_Append(obj->methods, name);
-}
-
-
-void pyjobject_addfield(PyJObject *obj, PyObject *name)
-{
-    if (!PyString_Check(name)) {
-        return;
-    }
-    if (!PyList_Check(obj->fields)) {
-        return;
-    }
-
-    PyList_Append(obj->fields, name);
-}
-
 
 // call toString() on jobject. returns null on error.
 // excpected to return new reference.
@@ -630,7 +592,7 @@ static PyObject* pyjobject_richcompare(PyJObject *self,
             }
 
             if (!JNI_METHOD(compareTo, env, JCOMPARABLE_TYPE, "compareTo",
-                    "(Ljava/lang/Object;)I")) {
+                            "(Ljava/lang/Object;)I")) {
                 process_java_exception(env);
                 return NULL;
             }
@@ -685,52 +647,14 @@ static PyObject* pyjobject_richcompare(PyJObject *self,
 
 
 // get attribute 'name' for object.
-// uses obj->attr list of tuples for storage.
+// uses obj->attr dict for storage.
 // returns new reference.
-PyObject* pyjobject_getattr(PyJObject *obj,
-                            char *name)
+PyObject* pyjobject_getattro(PyObject *obj, PyObject *name)
 {
-    PyObject *ret, *pyname, *methods, *members;
-    ret = pyname = methods = members = NULL;
-
-    if (!name) {
-        Py_RETURN_NONE;
-    }
-    pyname  = PyString_FromString(name);
-    methods = PyString_FromString("__methods__");
-    members = PyString_FromString("__members__");
-
-    if (PyObject_RichCompareBool(pyname, methods, Py_EQ)) {
-        Py_DECREF(pyname);
-        Py_DECREF(methods);
-        Py_DECREF(members);
-
-        Py_INCREF(obj->methods);
-        return obj->methods;
-    }
-    Py_DECREF(methods);
-
-    if (PyObject_RichCompareBool(pyname, members, Py_EQ)) {
-        Py_DECREF(pyname);
-        Py_DECREF(members);
-
-        Py_INCREF(obj->fields);
-        return obj->fields;
-    }
-    Py_DECREF(members);
-
-    if (!PyList_Check(obj->attr)) {
-        Py_DECREF(pyname);
-        PyErr_Format(PyExc_RuntimeError, "Invalid attr list.");
+    PyObject *ret = PyObject_GenericGetAttr(obj, name);
+    if (ret == NULL) {
         return NULL;
-    }
-
-    // util function fetches from attr list for us.
-    ret = tuplelist_getitem(obj->attr, pyname);      /* new reference */
-    Py_DECREF(pyname);
-
-    // method optimizations
-    if (PyJMethod_Check(ret) || PyJMultiMethod_Check(ret)) {
+    } else if (PyJMethod_Check(ret) || PyJMultiMethod_Check(ret)) {
         /*
          * TODO Should not bind non-static methods to pyjclass objects, but not
          * sure yet how to handle multimethods and static methods.
@@ -742,69 +666,33 @@ PyObject* pyjobject_getattr(PyJObject *obj,
                                          (PyObject*) Py_TYPE(obj));
 #endif
         Py_DECREF(ret);
-        ret = wrapper;
-    }
-
-    if (PyErr_Occurred() || ret == Py_None) {
-        if (ret == Py_None) {
-            Py_DECREF(Py_None);
-        }
-        PyErr_Format(PyExc_AttributeError, "attr not found: %s", name);
-        return NULL;
-    }
-
-    if (pyjfield_check(ret)) {
-        PyObject *t = pyjfield_get((PyJFieldObject *) ret);
+        return wrapper;
+    } else if (pyjfield_check(ret)) {
+        PyObject *resolved = pyjfield_get((PyJFieldObject *) ret);
         Py_DECREF(ret);
-        return t;
+        return resolved;
     }
-
     return ret;
 }
 
 
 // set attribute v for object.
 // uses obj->attr dictionary for storage.
-int pyjobject_setattr(PyJObject *obj,
-                      char *name,
-                      PyObject *v)
+int pyjobject_setattro(PyJObject *obj, PyObject *name, PyObject *v)
 {
-    PyObject *pyname, *tuple;
-
     if (v == NULL) {
         PyErr_Format(PyExc_TypeError,
                      "Deleting attributes from PyJObjects is not allowed.");
         return -1;
     }
-    if (!name) {
-        PyErr_Format(PyExc_RuntimeError, "Invalid name: NULL.");
-        return -1;
-    }
-
-    if (!PyList_Check(obj->attr)) {
-        PyErr_Format(PyExc_RuntimeError, "Invalid attr list.");
-        return -1;
-    }
-
-    Py_INCREF(v);
-
     if (obj->finishAttr) {
-        PyObject *cur, *pyname;
-        int       ret;
-
-        // finished setting internal objects.
-        // don't allow python to add new, but do
-        // allow python script to change values on pyjfields
-
-        pyname = PyString_FromString(name);
-        cur    = tuplelist_getitem(obj->attr, pyname);      /* new reference */
-        Py_DECREF(pyname);
+        PyObject *cur = PyDict_GetItem(obj->attr, name);
 
         if (PyErr_Occurred()) {
             return -1;
         }
 
-        if (cur == Py_None) {
+        if (cur == NULL) {
             PyErr_SetString(PyExc_RuntimeError, "No such field.");
             return -1;
         }
@@ -814,40 +702,12 @@ int pyjobject_setattr(PyJObject *obj,
             return -1;
         }
 
-        if (!PyList_Check(obj->attr)) {
-            Py_DECREF(pyname);
-            PyErr_SetString(PyExc_RuntimeError, "Invalid attr list.");
-            return -1;
-        }
-
-        // now, just ask pyjfield to handle.
-        ret = pyjfield_set((PyJFieldObject *) cur, v); /* borrows ref */
-
-        Py_DECREF(cur);
-        Py_DECREF(v);
-        return ret;
+        return pyjfield_set((PyJFieldObject *) cur, v);
     }
 
-    pyname = PyString_FromString((const char *) name);
-    tuple  = PyTuple_New(2);
+    PyDict_SetItem(obj->attr, name, v);
 
-    Py_INCREF(pyname);
-    PyTuple_SetItem(tuple, 0, pyname);   /* steals ref */
-    PyTuple_SetItem(tuple, 1, v);        /* steals ref */
-
-    // the docs don't mention this, but the source INCREFs tuple
-    // ...
-    // after much printf'ing. uhm. must decref it somewhere.
-    // ...
-    // doh. the docs suck.
-
-    // Py_INCREF(tuple);
-
-    PyList_Append(obj->attr, tuple);
-
-    Py_DECREF(tuple);
-    Py_DECREF(pyname);
-    return 0;  // success
+    return 0;
 }
 
 static long pyjobject_hash(PyJObject *self)
@@ -880,75 +740,14 @@ static long pyjobject_hash(PyJObject *self)
     return hash;
 }
 
-
-/*
- * Implements PyObject_Dir(PyObject*) for pyjobjects. This is required for
- * Python 3.3+ for dir(pyjobject) to work correctly.
- */
-static PyObject* pyjobject_dir(PyObject *o, PyObject* ignore)
-{
-    PyObject* attrs;
-    PyJObject *self = (PyJObject*) o;
-    Py_ssize_t size, i, contains;
-
-    attrs = PyList_New(0);
-    size = PySequence_Size(self->methods);
-    for (i = 0; i < size; i++) {
-        PyObject *item = PySequence_GetItem(self->methods, i);
-        contains = PySequence_Contains(attrs, item);
-        if (contains < 0) {
-            Py_DECREF(item);
-            Py_DECREF(attrs);
-            return NULL;
-        } else if (contains == 0) {
-            if (PyList_Append(attrs, item) < 0) {
-                Py_DECREF(item);
-                Py_DECREF(attrs);
-                return NULL;
-            }
-        }
-        Py_DECREF(item);
-    }
-
-    // TODO copy/paste is bad, turn it into a method
-    size = PySequence_Size(self->fields);
-    for (i = 0; i < size; i++) {
-        PyObject *item = PySequence_GetItem(self->fields, i);
-        contains = PySequence_Contains(attrs, item);
-        if (contains < 0) {
-            Py_DECREF(item);
-            Py_DECREF(attrs);
-            return NULL;
-        } else if (contains == 0) {
-            if (PyList_Append(attrs, item) < 0) {
-                Py_DECREF(item);
-                Py_DECREF(attrs);
-                return NULL;
-            }
-        }
-        Py_DECREF(item);
-    }
-
-    if (PyList_Sort(attrs) < 0) {
-        Py_DECREF(attrs);
-        return NULL;
-    }
-
-    return attrs;
-}
-
-
 static struct PyMethodDef pyjobject_methods[] = {
-    {
-        "__dir__",
-        (PyCFunction) pyjobject_dir,
-        METH_NOARGS,
-        "__dir__ for pyjobjects"
-    },
-
     { NULL, NULL }
 };
 
+static PyMemberDef pyjobject_members[] = {
+    {"__dict__", T_OBJECT, offsetof(PyJObject, attr), READONLY},
+    {0}
+};
 
 PyTypeObject PyJObject_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
@@ -957,8 +756,8 @@ PyTypeObject PyJObject_Type = {
     0,                                        /* tp_itemsize */
     (destructor) pyjobject_dealloc,           /* tp_dealloc */
     0,                                        /* tp_print */
-    (getattrfunc) pyjobject_getattr,          /* tp_getattr */
-    (setattrfunc) pyjobject_setattr,          /* tp_setattr */
+    0,                                        /* tp_getattr */
+    0,                                        /* tp_setattr */
     0,                                        /* tp_compare */
     0,                                        /* tp_repr */
     0,                                        /* tp_as_number */
@@ -967,8 +766,8 @@ PyTypeObject PyJObject_Type = {
     (hashfunc) pyjobject_hash,                /* tp_hash  */
     0,                                        /* tp_call */
     (reprfunc) pyjobject_str,                 /* tp_str */
-    0,                                        /* tp_getattro */
-    0,                                        /* tp_setattro */
+    (getattrofunc) pyjobject_getattro,        /* tp_getattro */
+    (setattrofunc) pyjobject_setattro,        /* tp_setattro */
     0,                                        /* tp_as_buffer */
     Py_TPFLAGS_DEFAULT |
     Py_TPFLAGS_BASETYPE,                      /* tp_flags */
@@ -980,13 +779,13 @@ PyTypeObject PyJObject_Type = {
     0,                                        /* tp_iter */
     0,                                        /* tp_iternext */
     pyjobject_methods,                        /* tp_methods */
-    0,                                        /* tp_members */
+    pyjobject_members,                        /* tp_members */
     0,                                        /* tp_getset */
     0,                                        /* tp_base */
     0,                                        /* tp_dict */
     0,                                        /* tp_descr_get */
     0,                                        /* tp_descr_set */
-    0,                                        /* tp_dictoffset */
+    offsetof(PyJObject, attr),                /* tp_dictoffset */
     0,                                        /* tp_init */
     0,                                        /* tp_alloc */
     NULL,                                     /* tp_new */

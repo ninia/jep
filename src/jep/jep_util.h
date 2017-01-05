@@ -76,8 +76,6 @@ PyObject* convert_jobject(JNIEnv*, jobject, int);
 PyObject* convert_jobject_pyobject(JNIEnv*, jobject);
 jvalue convert_pyarg_jvalue(JNIEnv*, PyObject*, jclass, int, int);
 
-PyObject* tuplelist_getitem(PyObject*, PyObject*);
-
 
 #define JBOOLEAN_ID 0
 #define JINT_ID     1

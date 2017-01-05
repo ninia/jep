@@ -41,9 +41,7 @@ typedef struct {
     PyObject_HEAD
     jobject          object;      /* the jni object */
     jclass           clazz;       /* java class object */
-    PyObject        *attr;        /* list of tuples for get/set attr */
-    PyObject        *methods;     /* list of method names */
-    PyObject        *fields;      /* list of field names */
+    PyObject        *attr;        /* dict for get/set attr */
     int              finishAttr;  /* true if object attributes are finished */
     PyObject        *javaClassName; /* string of the fully-qualified name of
                                        the object's Java clazz */
@@ -53,12 +51,6 @@ PyObject* pyjobject_new(JNIEnv*, jobject);
 PyObject* pyjobject_new_class(JNIEnv*, jclass);
 int pyjobject_check(PyObject *obj);
 
-// this method needs to be available to pyjclass
-void pyjobject_addfield(PyJObject*, PyObject*);
-
-// these methods need to be available to pyjlist
-int pyjobject_setattr(PyJObject*, char*, PyObject*);
-PyObject* pyjobject_getattr(PyJObject*, char*);
 void pyjobject_dealloc(PyJObject*);
 PyObject* pyjobject_str(PyJObject*);
 
