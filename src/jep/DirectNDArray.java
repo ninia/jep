@@ -47,6 +47,7 @@ import java.util.Arrays;
  * 
  * 
  * @author [ben.steffensmeier at gmail.com] Ben Steffensmeier
+ * @since 3.7
  */
 public class DirectNDArray<T extends Buffer> extends AbstractNDArray<T>{
 

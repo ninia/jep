@@ -36,6 +36,7 @@ package jep;
  * This class provides a base implementation that can be subclassed for specifc
  * representations of the data in java (like primitive arrays or Buffers).
  *
+ * @since 3.7
  */
 abstract class AbstractNDArray<T> {
 

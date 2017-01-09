@@ -180,6 +180,8 @@ public class TestNumpy {
      * 
      * @param array
      * @return the argument
+     *
+     * @since 3.7
      */
     public DirectNDArray<IntBuffer> testDirectArgAndReturn(DirectNDArray<IntBuffer> array) {
         return array;

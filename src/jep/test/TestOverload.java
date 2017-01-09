@@ -6,6 +6,7 @@ import java.util.Map;
 
 /**
  * @author Ben Steffensmeier
+ * @since 3.7
  */
 public class TestOverload {
 

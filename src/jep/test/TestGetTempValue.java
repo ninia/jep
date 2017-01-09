@@ -9,7 +9,8 @@ import jep.JepConfig;
  * passed to getValue and are not referenced anywhere else so that they are
  * garbage collected before the call to getValue returns.
  * 
- * @author Ben Steffensmeier 
+ * @author Ben Steffensmeier
+ * @since 3.7 
  */
 public class TestGetTempValue {
 
