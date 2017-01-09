@@ -1048,9 +1048,7 @@ intptr_t pyembed_create_module_on(JNIEnv *env,
 
 EXIT:
     Py_XDECREF(globals);
-
     PyEval_ReleaseThread(jepThread->tstate);
-
     return ret;
 }
 
@@ -1134,9 +1132,8 @@ jobject pyembed_getvalue_on(JNIEnv *env,
     }
 
 EXIT:
-    PyEval_ReleaseThread(jepThread->tstate);
-
     Py_XDECREF(result);
+    PyEval_ReleaseThread(jepThread->tstate);
     return ret;
 }
 
@@ -1183,9 +1180,8 @@ jobject pyembed_getvalue(JNIEnv *env, intptr_t _jepThread, char *str)
     }
 
 EXIT:
-    PyEval_ReleaseThread(jepThread->tstate);
-
     Py_XDECREF(result);
+    PyEval_ReleaseThread(jepThread->tstate);
     return ret;
 }
 
@@ -1250,9 +1246,8 @@ jobject pyembed_getvalue_array(JNIEnv *env, intptr_t _jepThread, char *str)
 
 
 EXIT:
-    PyEval_ReleaseThread(jepThread->tstate);
-
     Py_XDECREF(result);
+    PyEval_ReleaseThread(jepThread->tstate);
     return ret;
 }
 
