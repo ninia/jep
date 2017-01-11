@@ -673,6 +673,21 @@ int pyarg_matches_jtype(JNIEnv *env,
                 return 1;
             }
         }
+    } else if(PyUnicode_Check(param)) {
+        switch (paramTypeId) {
+        case JSTRING_ID:
+            return 3;
+            break;
+        case JCHAR_ID:
+            if (PyUnicode_GET_SIZE(param) == 1) {
+                return 2;
+            }
+            break;
+        case JOBJECT_ID:
+            if ((*env)->IsAssignableFrom(env, JSTRING_TYPE, paramType)) {
+                return 1;
+            }
+        }
     } else if (PyFloat_Check(param)) {
         switch (paramTypeId) {
         case JFLOAT_ID:
