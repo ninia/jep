@@ -835,6 +835,10 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
             return convert_jobject(env, val, JBOOLEAN_ID);
         } else if ((*env)->IsInstanceOf(env, val, JCHAR_OBJ_TYPE)) {
             return convert_jobject(env, val, JCHAR_ID);
+#if JEP_NUMPY_ENABLED
+        } else if (jndarray_check(env, val)) {
+            return convert_jndarray_pyndarray(env, val);
+#endif
         } else {
             PyObject* ret = (PyObject *) pyjobject_new(env, val);
 #if JEP_NUMPY_ENABLED

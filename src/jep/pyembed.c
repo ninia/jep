@@ -1428,12 +1428,7 @@ void pyembed_setparameter_object(JNIEnv *env,
     // does common things
     GET_COMMON;
 
-    if (value == NULL) {
-        Py_INCREF(Py_None);
-        pyjob = Py_None;
-    } else {
-        pyjob = pyjobject_new(env, value);
-    }
+    pyjob = convert_jobject_pyobject(env, value);
 
     if (pyjob) {
         if (pymodule == NULL) {

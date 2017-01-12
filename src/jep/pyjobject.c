@@ -132,19 +132,6 @@ PyObject* pyjobject_new(JNIEnv *env, jobject obj)
     } else if (jtype == JCLASS_ID) {
         return pyjobject_new_class(env, obj);
     } else {
-#if JEP_NUMPY_ENABLED
-        /*
-         * check for jep/NDArray and autoconvert to numpy.ndarray instead of
-         * pyjobject
-         */
-        if (jndarray_check(env, obj)) {
-            return convert_jndarray_pyndarray(env, obj);
-        }
-        if (PyErr_Occurred()) {
-            return NULL;
-        }
-#endif
-
         // check for some of our extensions to pyjobject
         if ((*env)->IsInstanceOf(env, obj, JITERABLE_TYPE)) {
             if ((*env)->IsInstanceOf(env, obj, JCOLLECTION_TYPE)) {
