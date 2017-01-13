@@ -31,13 +31,9 @@
 /* this whole file is a no-op if numpy support is disabled */
 #if JEP_NUMPY_ENABLED
 
-/* get numpy config so we can check the version of numpy */
-#include "numpy/numpyconfig.h"
 #define PY_ARRAY_UNIQUE_SYMBOL JEP_ARRAY_API
-/* if we have at least numpy 1.7, let's force the code to be 1.7 compliant */
-#ifdef NPY_1_7_API_VERSION
-    #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-#endif
+/* require at least numpy 1.7 */
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include "numpy/arrayobject.h"
 
 

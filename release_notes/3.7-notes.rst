@@ -1,7 +1,8 @@
 Jep 3.7 Release Notes
 *********************
 This release emphasized consistency and new features.  It is compatible
-with Python 2.6, 2.7, 3.3, 3.4, and 3.5.  Python 3.2 is no longer supported.
+with Python 2.7, 3.3, 3.4, and 3.5.  Python 2.6 and 3.2 are no longer
+supported.
 
 
 Shared NDArrays
