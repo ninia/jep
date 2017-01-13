@@ -230,7 +230,7 @@ class JDBCCursor(object):
                 self.description = tuple(desc)
 
         except Exception as e:
-            raise DatabaseError(e.args)
+            raise DatabaseError(str(e.args[0]))
 
     def executemany(self, operation, seq_of_parameters):
         if log.isEnabledFor(logging.DEBUG):
