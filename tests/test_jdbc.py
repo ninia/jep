@@ -6,7 +6,7 @@ import sys
 from jep import findClass
 from jep.jdbc import connect
 from jep import jdbc as dbapi
-from java.lang import Integer, Long, Double
+from java.lang import Integer, Long, Double, Math
 from java.sql import Date, Timestamp, Time
 
 skip = sys.platform.startswith('win') or sys.platform.startswith('freebsd')
@@ -86,11 +86,15 @@ class TestJdbc(unittest.TestCase):
                 five real
                 )
             ''')
+            
+            # sqlite double precision is iffy at best on some systems
+            doubleValue = Math.nextDown(Double.MAX_VALUE)
+            
             cursor.execute('insert into primitives values (?, ?, ?, ?, ?)',
                            Integer.MAX_VALUE,
                            'testé',
                            None,
-                           Double.MAX_VALUE,
+                           doubleValue,
                            5.6,
                            )
             cursor.execute('select * from primitives')
@@ -106,9 +110,7 @@ class TestJdbc(unittest.TestCase):
             self.assertIsNone(row[2])
             self.assertEqual(cursor.description[2][0], 'three')
     
-            print "row[3]", row[3]
-            print "type(row[3])", type(row[3])
-            self.assertEqual(row[3], Double.MAX_VALUE)
+            self.assertAlmostEqual(row[3], doubleValue, delta=Double.MAX_VALUE / 1e6)
             self.assertEqual(cursor.description[3][0], 'four')
     
             self.assertEqual(row[4], 5.6)
