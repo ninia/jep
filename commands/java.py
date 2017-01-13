@@ -159,10 +159,10 @@ def get_output_jar_paths(version):
     jep-${version}.jar, the test jar, and the src jars.
     """
     return [
-        'build/java/jep.src-{0}.jar'.format(version),
+        'build/java/jep-{0}-sources.jar'.format(version),
         'build/java/jep-{0}.jar'.format(version),
-        'build/java/jep.test.src-{0}.jar'.format(version),
-        'build/java/jep.test-{0}.jar'.format(version)
+        'build/java/jep-{0}-test-sources.jar'.format(version),
+        'build/java/jep-{0}-test.jar'.format(version)
     ]
 
 
@@ -299,10 +299,10 @@ class build_jar(Command):
                 os.makedirs(dest_dir)
             shutil.copy(src, dest)
 
-        spawn([self.jar, '-cf', 'build/java/jep.src-{0}.jar'.format(self.version), '-C', 'build/java/jep.src', 'jep'])
+        spawn([self.jar, '-cf', 'build/java/jep-{0}-sources.jar'.format(self.version), '-C', 'build/java/jep.src', 'jep'])
         spawn([self.jar, '-cfe', 'build/java/jep-{0}.jar'.format(self.version), 'jep.Run', '-C', 'build/java/', 'jep'])
-        spawn([self.jar, '-cf', 'build/java/jep.test.src-{0}.jar'.format(self.version), '-C', 'build/java/jep.test.src', 'jep'])
-        spawn([self.jar, '-cfe', 'build/java/jep.test-{0}.jar'.format(self.version), 'test.jep.Test', '-C', 'build/java/test/', 'jep'])
+        spawn([self.jar, '-cf', 'build/java/jep-{0}-test-sources.jar'.format(self.version), '-C', 'build/java/jep.test.src', 'jep'])
+        spawn([self.jar, '-cfe', 'build/java/jep-{0}-test.jar'.format(self.version), 'test.jep.Test', '-C', 'build/java/test/', 'jep'])
 
     def run(self):
         if not skip_java_build(self):

@@ -32,7 +32,7 @@ class test(Command):
         # setup java classpath
         version = self.distribution.metadata.get_version()
         classpath = os.path.join(self.java_build, 'jep-' + version + '.jar')
-        classpath += os.pathsep + os.path.join(self.java_build, 'jep.test-' + version + '.jar')
+        classpath += os.pathsep + os.path.join(self.java_build, 'jep-' + version + '-test.jar')
         classpath += os.pathsep + 'tests/lib/sqlitejdbc-v056.jar'
         classpath += os.pathsep + 'tests/lib/fakenetty.jar'
 
