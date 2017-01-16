@@ -35,13 +35,13 @@
 #ifndef _Included_jbox
 #define _Included_jbox
 
-PyAPI_FUNC(jobject) JBox_Boolean(JNIEnv*, jboolean);
-PyAPI_FUNC(jobject) JBox_Byte(JNIEnv*, jbyte);
-PyAPI_FUNC(jobject) JBox_Short(JNIEnv*, jshort);
-PyAPI_FUNC(jobject) JBox_Int(JNIEnv*, jint);
-PyAPI_FUNC(jobject) JBox_Long(JNIEnv*, jlong);
-PyAPI_FUNC(jobject) JBox_Float(JNIEnv*, jfloat);
-PyAPI_FUNC(jobject) JBox_Double(JNIEnv*, jdouble);
-PyAPI_FUNC(jobject) JBox_Char(JNIEnv*, jchar);
+jobject JBox_Boolean(JNIEnv*, jboolean);
+jobject JBox_Byte(JNIEnv*, jbyte);
+jobject JBox_Short(JNIEnv*, jshort);
+jobject JBox_Int(JNIEnv*, jint);
+jobject JBox_Long(JNIEnv*, jlong);
+jobject JBox_Float(JNIEnv*, jfloat);
+jobject JBox_Double(JNIEnv*, jdouble);
+jobject JBox_Char(JNIEnv*, jchar);
 
 #endif // ifndef _Included_jbox

@@ -38,7 +38,7 @@
 #ifndef _Included_pyjiterable
 #define _Included_pyjiterable
 
-PyAPI_DATA(PyTypeObject) PyJIterable_Type;
+PyTypeObject PyJIterable_Type;
 
 typedef struct {
     PyJObject obj; /* magic inheritance */

@@ -38,7 +38,7 @@
 #ifndef _Included_pyjmap
 #define _Included_pyjmap
 
-PyAPI_DATA(PyTypeObject) PyJMap_Type;
+PyTypeObject PyJMap_Type;
 
 typedef struct {
     PyJObject obj; /* magic inheritance */

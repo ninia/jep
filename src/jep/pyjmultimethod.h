@@ -34,7 +34,7 @@
 #define _Included_pyjmultimethod
 
 
-PyAPI_DATA(PyTypeObject) PyJMultiMethod_Type;
+PyTypeObject PyJMultiMethod_Type;
 
 typedef struct {
     PyObject_HEAD
@@ -46,12 +46,12 @@ typedef struct {
  * make a PyJMultiMethod, after creation it is possible to add more than two
  * methods using PyJMultiMethod_Append.
  */
-PyAPI_FUNC(PyObject*) PyJMultiMethod_New(PyObject*, PyObject*);
+PyObject* PyJMultiMethod_New(PyObject*, PyObject*);
 /* Args must be a PyJMultiMethodObject and a PyJMethodObject */
-PyAPI_FUNC(int) PyJMultiMethod_Append(PyObject*, PyObject*);
+int PyJMultiMethod_Append(PyObject*, PyObject*);
 /* Check if the arg is a PyJMultiMethodObject */
-PyAPI_FUNC(int) PyJMultiMethod_Check(PyObject*);
+int PyJMultiMethod_Check(PyObject*);
 /* Get the name of a PyJMultiMethodObject, returns a new reference to the name */
-PyAPI_FUNC(PyObject*) PyJMultiMethod_GetName(PyObject*);
+PyObject* PyJMultiMethod_GetName(PyObject*);
 
 #endif // ndef pyjmultimethod

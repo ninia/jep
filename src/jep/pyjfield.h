@@ -32,7 +32,7 @@
 #ifndef _Included_pyjfield
 #define _Included_pyjfield
 
-PyAPI_DATA(PyTypeObject) PyJField_Type;
+PyTypeObject PyJField_Type;
 
 /* Represents a java field on a java object and allows getting and setting values */
 typedef struct {

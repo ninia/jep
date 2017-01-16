@@ -31,7 +31,7 @@
 #define _Included_pyjarray
 
 
-PyAPI_DATA(PyTypeObject) PyJArray_Type;
+PyTypeObject PyJArray_Type;
 
 // c storage for our stuff, managed by python interpreter.
 typedef struct {

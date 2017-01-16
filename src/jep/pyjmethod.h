@@ -33,7 +33,7 @@
 #define _Included_pyjmethod
 
 
-PyAPI_DATA(PyTypeObject) PyJMethod_Type;
+PyTypeObject PyJMethod_Type;
 
 /*
  * A callable python object which wraps a java method and is dynamically added
@@ -53,16 +53,16 @@ typedef struct {
 } PyJMethodObject;
 
 /* Create a new PyJMethod from a java.lang.reflect.Method*/
-PyAPI_FUNC(PyJMethodObject*) PyJMethod_New(JNIEnv*, jobject);
+PyJMethodObject* PyJMethod_New(JNIEnv*, jobject);
 
 /* Check if the arg is a PyJMethodObject */
-PyAPI_FUNC(int) PyJMethod_Check(PyObject *obj);
+int PyJMethod_Check(PyObject *obj);
 
 /*
  * Get the number of parameters the method is expecting. If the method has not
  * been initialized yet this will trigger initialization.
  */
-PyAPI_FUNC(int) PyJMethod_GetParameterCount(PyJMethodObject*, JNIEnv*);
+int PyJMethod_GetParameterCount(PyJMethodObject*, JNIEnv*);
 
 /*
  * Check if a method is compatible with the types of a tuple of arguments.
@@ -73,6 +73,6 @@ PyAPI_FUNC(int) PyJMethod_GetParameterCount(PyJMethodObject*, JNIEnv*);
  * does not need to be called before using calling this method, it is only
  * necessary for resolving method overloading.
  */
-PyAPI_FUNC(int) PyJMethod_CheckArguments(PyJMethodObject*, JNIEnv*, PyObject*);
+int PyJMethod_CheckArguments(PyJMethodObject*, JNIEnv*, PyObject*);
 
 #endif // ndef pyjmethod

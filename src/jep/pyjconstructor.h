@@ -32,11 +32,11 @@
 #ifndef _Included_pyjconstructor
 #define _Included_pyjconstructor
 
-PyAPI_DATA(PyTypeObject) PyJConstructor_Type;
+PyTypeObject PyJConstructor_Type;
 
 /* Second arg must be a java.lang.reflect.Constructor */
-PyAPI_FUNC(PyObject*) PyJConstructor_New(JNIEnv*, jobject);
+PyObject* PyJConstructor_New(JNIEnv*, jobject);
 
-PyAPI_FUNC(int) PyJConstructor_Check(PyObject*);
+int PyJConstructor_Check(PyObject*);
 
 #endif // ndef pyjconstructor
