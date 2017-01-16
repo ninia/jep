@@ -9,15 +9,14 @@ from jep import jdbc as dbapi
 from java.lang import Integer, Long, Double, Math
 from java.sql import Date, Timestamp, Time
 
-skip = sys.platform.startswith('win') or sys.platform.startswith('freebsd')
-if not skip:
-    try:
-        findClass('org.sqlite.JDBC')
-    except:
-        skip = True
+skip = False
+try:
+    findClass('org.sqlite.JDBC')
+except:
+    skip = True
 
 
-@unittest.skipIf(skip, 'file access issues on Windows or JDBC not on classpath')
+@unittest.skipIf(skip, 'JDBC not on classpath')
 class TestJdbc(unittest.TestCase):
     jdbc_url = 'jdbc:sqlite:build/test.db'
 
@@ -31,10 +30,11 @@ class TestJdbc(unittest.TestCase):
 
         example and library from: http://www.zentus.com/sqlitejdbc/
         """
-        from java.sql import DriverManager
-        
-        conn = DriverManager.getConnection(self.jdbc_url)
+        conn = None
         try:
+            from java.sql import DriverManager 
+            conn = DriverManager.getConnection(self.jdbc_url)
+
             stat = conn.createStatement()
             stat.executeUpdate("drop table if exists people")
             stat.executeUpdate("create table people (name, occupation)")
@@ -70,11 +70,13 @@ class TestJdbc(unittest.TestCase):
             prep.close()
             stat.close()
         finally:
-            conn.close()
+            if conn:
+                conn.close()
 
     def test_dbapi_primitives(self):
-        conn = connect(self.jdbc_url)
+        conn = None
         try:
+            conn = connect(self.jdbc_url)
             cursor = conn.cursor()
     
             cursor.execute('''
@@ -88,7 +90,7 @@ class TestJdbc(unittest.TestCase):
             ''')
             
             # sqlite double precision is iffy at best on some systems
-            doubleValue = Math.nextDown(Double.MAX_VALUE)
+            doubleValue = Math.nextAfter(Double.MAX_VALUE, -1)
             
             cursor.execute('insert into primitives values (?, ?, ?, ?, ?)',
                            Integer.MAX_VALUE,
@@ -117,11 +119,13 @@ class TestJdbc(unittest.TestCase):
             self.assertEqual(cursor.description[4][0], 'five')
             cursor.close()
         finally:
-            conn.close()
+            if conn:
+                conn.close()
 
     def test_datetime(self):
-        conn = connect(self.jdbc_url)
+        conn = None
         try:
+            conn = connect(self.jdbc_url)
             cursor = conn.cursor()
     
             cursor.execute('''
@@ -162,11 +166,13 @@ class TestJdbc(unittest.TestCase):
             self.assertEqual(row[4].toString(), '2012-06-01 01:02:03.0')
             cursor.close()
         finally:
-            conn.close()
+            if conn:
+                conn.close()
 
     def test_batch(self):
-        conn = connect(self.jdbc_url)
+        conn = None
         try:
+            conn = connect(self.jdbc_url)
             cursor = conn.cursor()
     
             cursor.execute('create table batch ( one integer )')
@@ -182,7 +188,8 @@ class TestJdbc(unittest.TestCase):
             self.assertEqual(row[0], 6)
             cursor.close()
         finally:
-            conn.close()
+            if conn:
+                conn.close()
 
 
 if __name__ == '__main__':
