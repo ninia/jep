@@ -844,11 +844,13 @@ PyObject* jchar_To_PyObject(jchar jc)
         char c = (char) jc;
         return PyString_FromStringAndSize(&c, 1);
     } else {
-        PyObject* pyunicode = PyUnicode_DecodeUTF16((const char*) &jc, 2, NULL, NULL);
+        PyObject* pyunicode = NULL;
+        PyObject* pystring  = NULL;
+        pyunicode = PyUnicode_DecodeUTF16((const char*) &jc, 2, NULL, NULL);
         if (pyunicode == NULL) {
             return NULL;
         }
-        PyObject* pystring = PyUnicode_AsUTF8String(pyunicode);
+        pystring = PyUnicode_AsUTF8String(pyunicode);
         Py_DECREF(pyunicode);
         return pystring;
     }

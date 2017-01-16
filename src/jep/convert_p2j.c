@@ -233,7 +233,7 @@ static jstring pyunicode_as_jstring(JNIEnv *env, PyObject *pyunicode)
     }
     /* +2 is to strip the BOM */
     result = (*env)->NewString(env, (jchar*) (PyBytes_AS_STRING(bytes) + 2),
-                               (PyBytes_GET_SIZE(bytes) - 2) / 2);
+                               (jsize) (PyBytes_GET_SIZE(bytes) - 2) / 2);
     Py_DECREF(bytes);
     return result;
 }
@@ -288,12 +288,12 @@ static jstring pystring_as_jstring(JNIEnv *env, PyObject *pystring)
     }
 
     length = PyString_Size(pystring);
-    stringJbytes = (*env)->NewByteArray(env, length);
+    stringJbytes = (*env)->NewByteArray(env, (jsize) length);
     if (process_java_exception(env)) {
         return NULL;
     }
 
-    (*env)->SetByteArrayRegion(env, stringJbytes, 0, length, (jbyte*) cstr);
+    (*env)->SetByteArrayRegion(env, stringJbytes, 0, (jsize) length, (jbyte*) cstr);
     result = (*env)->NewObject(env, JSTRING_TYPE, stringDecodingConstructor,
                                stringJbytes, UTF8);
     (*env)->DeleteLocalRef(env, stringJbytes);
