@@ -38,7 +38,7 @@
 #ifndef _Included_pyjnumber
 #define _Included_pyjnumber
 
-PyTypeObject PyJNumber_Type;
+extern PyTypeObject PyJNumber_Type;
 
 typedef struct {
     PyJObject obj; /* magic inheritance */

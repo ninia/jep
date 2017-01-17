@@ -33,7 +33,7 @@
 #define _Included_pyjmethod
 
 
-PyTypeObject PyJMethod_Type;
+extern PyTypeObject PyJMethod_Type;
 
 /*
  * A callable python object which wraps a java method and is dynamically added

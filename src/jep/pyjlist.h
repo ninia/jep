@@ -38,7 +38,7 @@
 #ifndef _Included_pyjlist
 #define _Included_pyjlist
 
-PyTypeObject PyJList_Type;
+extern PyTypeObject PyJList_Type;
 
 typedef struct {
     PyJCollectionObject obj; /* magic inheritance */

@@ -39,7 +39,7 @@
 #ifndef _Included_pyjcollection
 #define _Included_pyjcollection
 
-PyTypeObject PyJCollection_Type;
+extern PyTypeObject PyJCollection_Type;
 
 typedef struct {
     PyJIterableObject obj; /* magic inheritance */

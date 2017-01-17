@@ -34,7 +34,7 @@
 #define _Included_pyjmultimethod
 
 
-PyTypeObject PyJMultiMethod_Type;
+extern PyTypeObject PyJMultiMethod_Type;
 
 typedef struct {
     PyObject_HEAD

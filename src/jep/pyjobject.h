@@ -32,7 +32,7 @@
 #define _Included_pyjobject
 
 
-PyTypeObject PyJObject_Type;
+extern PyTypeObject PyJObject_Type;
 
 // c storage for our stuff, managed by python interpreter.
 // doesn't need much, just a dictionary for attributes and

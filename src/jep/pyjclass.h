@@ -37,7 +37,7 @@
 #ifndef _Included_pyjclass
 #define _Included_pyjclass
 
-PyTypeObject PyJClass_Type;
+extern PyTypeObject PyJClass_Type;
 
 typedef struct {
     PyJObject  obj;            /* magic inheritance */
