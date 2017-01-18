@@ -40,6 +40,7 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
     private long target;
 
     private Jep jep;
+    private final boolean isDirect;
 
     /**
      * Creates a new <code>InvocationHandler</code> instance.
@@ -53,11 +54,12 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
      * @exception JepException
      *                if an error occurs
      */
-    public InvocationHandler(long tstate, long ltarget, Jep jep)
+    public InvocationHandler(long tstate, long ltarget, Jep jep, final boolean isDirect)
             throws JepException {
         this.tstate = tstate;
         this.target = ltarget;
         this.jep = jep;
+        this.isDirect = isDirect;
 
         // track target with jep.
 
@@ -130,9 +132,9 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
             types[i] = Util.getTypeId(args[i]);
 
         return invoke(method.getName(), this.tstate, this.target, args, types,
-                Util.getTypeId(method.getReturnType()));
+                Util.getTypeId(method.getReturnType()), this.isDirect);
     }
 
     private static native Object invoke(String name, long tstate, long target,
-            Object[] args, int[] types, int returnType);
+            Object[] args, int[] types, int returnType, boolean isDirect);
 }

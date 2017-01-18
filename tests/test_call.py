@@ -5,6 +5,7 @@ Test = jep.findClass('jep.test.Test')
 Boolean = jep.findClass('java.lang.Boolean')
 StringBuilder = jep.findClass('java.lang.StringBuilder')
 ArrayList = jep.findClass('java.util.ArrayList')
+LongStream = jep.findClass('java.util.stream.LongStream')
 
 
 class TestTypes(unittest.TestCase):
@@ -89,3 +90,16 @@ class TestTypes(unittest.TestCase):
         list.add("Three")
         list.remove(1)
         self.assertEqual(list.size(), 2)
+
+    def test_callaback(self):
+        expected = ArrayList([1, 2, 3, 4, 5])
+        actual = ArrayList()
+        expected.forEach(lambda x: actual.add(x))
+        self.assertTrue(expected == actual)
+
+    def test_stream_callbacks(self):
+        result = LongStream.range(1, 1000)\
+            .filter(lambda i: i % 2 == 0)\
+            .reduce(lambda first, second: first + second)\
+            .getAsLong()
+        self.assertTrue(result == sum(range(2, 1000, 2)))

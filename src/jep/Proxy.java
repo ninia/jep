@@ -45,6 +45,10 @@ public class Proxy extends java.lang.reflect.Proxy {
     protected Proxy(InvocationHandler h) {
         super(h);
     }
+    private static Object newDirectProxyInstance(long tstate, long ltarget, Jep jep,
+            ClassLoader loader, Class<?> targetInterface) {
+        return newProxyInstance(tstate, ltarget, jep, loader, new String[] { targetInterface.getName() }, true);
+    }
 
     /**
      * <pre>
@@ -76,12 +80,15 @@ public class Proxy extends java.lang.reflect.Proxy {
      *                if an error occurs
      */
     public static Object newProxyInstance(long tstate, long ltarget, Jep jep,
-            ClassLoader loader, String[] interfaces)
-            throws IllegalArgumentException {
+            ClassLoader loader, String[] interfaces) {
+        return newProxyInstance(tstate, ltarget, jep, loader, interfaces, false);
+    }
 
+    private static Object newProxyInstance(long tstate, long ltarget, Jep jep,
+            ClassLoader loader, String[] interfaces, boolean isDirect) {
         InvocationHandler ih = null;
         try {
-            ih = new jep.InvocationHandler(tstate, ltarget, jep);
+            ih = new jep.InvocationHandler(tstate, ltarget, jep, isDirect);
         } catch (JepException e) {
             throw new IllegalArgumentException(e);
         }
