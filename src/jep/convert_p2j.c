@@ -27,7 +27,6 @@
 */
 
 #include "Jep.h"
-#include <stdbool.h>
 
 #define JBYTE_MAX   127
 #define JBYTE_MIN  -128
@@ -43,7 +42,7 @@
 #define JCHAR_MAX   0xFFFF
 
 static jmethodID classGetMethods = 0;
-static jmethodID classGetModifiers = 0;
+static jmethodID classIsInterfaceMethod = 0;
 static jmethodID methodGetModifiers = 0;
 static jmethodID hashmapIConstructor   = 0;
 static jmethodID hashmapPut            = 0;
@@ -56,31 +55,30 @@ static jmethodID unmodifiableList      = 0;
     static jstring UTF8 = NULL;
 #endif
 
-bool isFunctionalInterfaceType(JNIEnv *env, jclass type) {
+char isFunctionalInterfaceType(JNIEnv *env, jclass type) {
     if (!JNI_METHOD(classGetMethods, env, JCLASS_TYPE, "getMethods", "()[Ljava/lang/reflect/Method;")) {
         process_java_exception(env);
-        return NULL;
+        return 0;
     }
-    if (!JNI_METHOD(classGetModifiers, env, JCLASS_TYPE, "getModifiers", "()I")) {
+    if (!JNI_METHOD(classIsInterfaceMethod, env, JCLASS_TYPE, "isInterface", "()Z")) {
         process_java_exception(env);
-        return NULL;
+        return 0;
     }
     if (!JNI_METHOD(methodGetModifiers, env, JMETHOD_TYPE, "getModifiers", "()I")) {
         process_java_exception(env);
-        return NULL;
+        return 0;
     }
     if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
         process_java_exception(env);
-        return NULL;
+        return 0;
     }
-    int classModifiers = (*env)->CallIntMethod(env, type, classGetModifiers);
-    if (!(classModifiers & 512)) {
-        return NULL; // It's not an interface, so it can't be functional
+    if (!(*env)->CallBooleanMethod(env, type, classIsInterfaceMethod)) {
+        return 0; // It's not an interface, so it can't be functional
     }
     jobjectArray methods = (jobjectArray) (*env)->CallObjectMethod(env, type, classGetMethods);
     if (process_java_exception(env)) {
         (*env)->PopLocalFrame(env, NULL);
-        return NULL;
+        return 0;
     }
     jsize numMethods = (*env)->GetArrayLength(env, methods);
     jobject abstractMethod = NULL;
@@ -89,13 +87,13 @@ bool isFunctionalInterfaceType(JNIEnv *env, jclass type) {
         jint modifiers = (*env)->CallIntMethod(env, method, methodGetModifiers);
         if (process_java_exception(env)) {
             (*env)->PopLocalFrame(env, NULL);
-            return NULL;
+            return 0;
         }
         if (modifiers & 1024) { // check if the method is abstract
-            // We found two different abstract methods, so we're not a functional interfaces
             if (abstractMethod != NULL) {
+                // We found two different abstract methods, so we're not a functional interfaces
                 (*env)->PopLocalFrame(env, NULL);
-                return NULL;
+                return 0;
             } else {
                 abstractMethod = method;
             }
@@ -735,8 +733,12 @@ jobject PyObject_As_jobject(JNIEnv *env, PyObject *pyobject,
         return pyfastsequence_as_jobject(env, pyobject, expectedType);
     } else if (PyDict_Check(pyobject)) {
         return pydict_as_jobject(env, pyobject, expectedType);
-    } else if (PyCallable_Check(pyobject) && isFunctionalInterfaceType(env, expectedType)) {
-        return PyCallable_as_functional_interface(env, pyobject, expectedType);
+    } else if (PyCallable_Check(pyobject)) {
+        if (isFunctionalInterfaceType(env, expectedType)) {
+            return PyCallable_as_functional_interface(env, pyobject, expectedType);
+        } else if (PyErr_Occurred()) {
+            return NULL;
+        }
 #if JEP_NUMPY_ENABLED
     } else if (npy_array_check(pyobject)) {
         return convert_pyndarray_jobject(env, pyobject, expectedType);

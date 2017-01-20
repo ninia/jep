@@ -50,7 +50,7 @@ JNIEXPORT jobject JNICALL Java_jep_InvocationHandler_invoke
  jobjectArray args,
  jintArray types,
  jint returnType,
- jboolean isDirect
+ jboolean functionalInterface
 )
 {
 
@@ -75,7 +75,7 @@ JNIEXPORT jobject JNICALL Java_jep_InvocationHandler_invoke
     // now get the callable object
     cname = jstring2char(env, jname);
     // python docs say this returns a new ref. they lie like dogs.
-    callable = isDirect ? target : PyObject_GetAttrString(target, (char *) cname);
+    callable = functionalInterface ? target : PyObject_GetAttrString(target, (char *) cname);
     release_utf_char(env, jname, cname);
 
     if (process_py_exception(env, 0) || !callable) {
