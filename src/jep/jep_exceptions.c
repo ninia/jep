@@ -60,7 +60,7 @@ int process_py_exception(JNIEnv *env, int printTrace)
 
     // let's not turn this into a Java exception if the user exited
     if (PyErr_ExceptionMatches(PyExc_SystemExit)) {
-        /* 
+        /*
          * If you look at the CPython source code, the following line will
          * trigger a clean exit from Python.
          */
@@ -208,8 +208,9 @@ int process_py_exception(JNIEnv *env, int printTrace)
              * incrementing so far to the right
              */
             if (pystack != NULL) {
-                Py_ssize_t stackSize, i, count, index;
-                jobjectArray stackArray, reverse;
+                Py_ssize_t stackSize, i, count;
+                jsize index, javaStackLength;
+                jobjectArray stackArray, javaStack, reverse;
                 jclass stackTraceElemClazz;
 
                 stackTraceElemClazz = (*env)->FindClass(env,
@@ -316,10 +317,28 @@ int process_py_exception(JNIEnv *env, int printTrace)
                 Py_DECREF(pystack);
 
                 /*
-                 * reverse order of stack and ensure no null elements so it will
-                 * appear like a java stacktrace
+                 * Get the current java stack trace
                  */
-                reverse = (*env)->NewObjectArray(env, (jsize) count,
+                if (!JNI_METHOD(getStackTrace, env, JTHROWABLE_TYPE, "getStackTrace",
+                                "()[Ljava/lang/StackTraceElement;")) {
+                    PyErr_Format(PyExc_RuntimeError,
+                                 "Failed to find getStackTrace method.");
+                    return 1;
+                }
+                javaStack = (*env)->CallObjectMethod(env, jepException, getStackTrace);
+                if ((*env)->ExceptionCheck(env) || !javaStack) {
+                    PyErr_Format(PyExc_RuntimeError,
+                                 "Lookup of current java stack failed.");
+                    return 1;
+                }
+                javaStackLength = (*env)->GetArrayLength(env, javaStack);
+
+                /*
+                 * reverse order of stack the python stack and ensure no null
+                 * elements so it will appear like a java stacktrace, then add
+                 * the java stack trace.
+                 */
+                reverse = (*env)->NewObjectArray(env, (jsize) (count + javaStackLength),
                                                  stackTraceElemClazz, NULL);
                 if ((*env)->ExceptionCheck(env) || !reverse) {
                     PyErr_Format(PyExc_RuntimeError,
@@ -329,31 +348,36 @@ int process_py_exception(JNIEnv *env, int printTrace)
 
                 index = 0;
                 for (i = stackSize - 1; i > -1; i--) {
-                    jobject element;
-                    element = (*env)->GetObjectArrayElement(env, stackArray, (jsize) i);
+                    jobject element = (*env)->GetObjectArrayElement(env, stackArray, (jsize) i);
                     if (element != NULL) {
-                        (*env)->SetObjectArrayElement(env, reverse, (jsize) index,
-                                                      element);
+                        (*env)->SetObjectArrayElement(env, reverse, index, element);
+                        (*env)->DeleteLocalRef(env, element);
                         index++;
                     }
                 }
+                for (i = 0; i < javaStackLength; i += 1) {
+                    jobject element = (*env)->GetObjectArrayElement(env, javaStack, (jsize) i);
+                    (*env)->SetObjectArrayElement(env, reverse, index, element);
+                    (*env)->DeleteLocalRef(env, element);
+                    index += 1;
+                }
                 (*env)->DeleteLocalRef(env, stackArray);
+                (*env)->DeleteLocalRef(env, javaStack);
 
-                if (jepException != NULL) {
-                    if (setStackTrace == 0) {
-                        setStackTrace = (*env)->GetMethodID(env, jepExcClazz,
-                                                            "setStackTrace",
-                                                            "([Ljava/lang/StackTraceElement;)V");
-                    }
-                    (*env)->CallObjectMethod(env, jepException, setStackTrace,
-                                             reverse);
-                    if ((*env)->ExceptionCheck(env)) {
-                        fprintf(stderr,
-                                "Error while processing a Python exception, unexpected java exception.\n");
-                        PyErr_Restore(ptype, pvalue, ptrace);
-                        PyErr_Print();
-                        return 1;
-                    }
+
+                if (setStackTrace == 0) {
+                    setStackTrace = (*env)->GetMethodID(env, jepExcClazz,
+                                                        "setStackTrace",
+                                                        "([Ljava/lang/StackTraceElement;)V");
+                }
+                (*env)->CallObjectMethod(env, jepException, setStackTrace,
+                                         reverse);
+                if ((*env)->ExceptionCheck(env)) {
+                    fprintf(stderr,
+                            "Error while processing a Python exception, unexpected java exception.\n");
+                    PyErr_Restore(ptype, pvalue, ptrace);
+                    PyErr_Print();
+                    return 1;
                 }
                 (*env)->DeleteLocalRef(env, reverse);
             }
@@ -471,9 +495,11 @@ int process_java_exception(JNIEnv *env)
      * looks like a noop it is very important.
      */
     Py_UNBLOCK_THREADS
-    if (getStackTrace == 0) {
-        getStackTrace = (*env)->GetMethodID(env, JTHROWABLE_TYPE, "getStackTrace",
-                                            "()[Ljava/lang/StackTraceElement;");
+    if (!JNI_METHOD(getStackTrace, env, JTHROWABLE_TYPE, "getStackTrace",
+                    "()[Ljava/lang/StackTraceElement;")) {
+        PyErr_Format(PyExc_RuntimeError,
+                     "wrapping java exception in pyjobject failed.");
+        return 1;
     }
     stack = (*env)->CallObjectMethod(env, exception, getStackTrace);
     if ((*env)->ExceptionCheck(env)) {
