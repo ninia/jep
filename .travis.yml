@@ -1,0 +1,18 @@
+language: python
+python:
+ - 2.7
+ - 3.3
+ - 3.4
+ - 3.5
+env:
+ global:
+  # Force error for earlier detection of python 2.7 windows build problems
+  - CFLAGS="-Wdeclaration-after-statement -Werror=declaration-after-statement"
+ matrix:
+  - JAVA_HOME=/usr/lib/jvm/java-7-oracle
+  - JAVA_HOME=/usr/lib/jvm/java-8-oracle
+addons:
+ apt:
+  packages:
+   - oracle-java8-installer
+script: ./setup.py test

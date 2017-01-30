@@ -1,12 +1,15 @@
 from __future__ import print_function
 from distutils.cmd import Command
 from distutils import sysconfig
+from distutils.errors import DistutilsExecError
 from commands.util import configure_error
 from commands.util import is_osx
 from commands.util import is_windows
 from commands.link_util import link_native_lib
 from commands.python import get_libpython
+from commands.java import get_java_home
 import os
+import os.path
 import sys
 
 
@@ -51,11 +54,15 @@ class test(Command):
         if is_windows():
             environment['SYSTEMROOT'] = os.environ['SYSTEMROOT']
 
+        java_path = os.path.join(get_java_home(), 'bin')
         # if multiple versions of python are installed, this helps ensure the right
         # version is used
         executable = sys.executable
         if executable:
-            environment['PATH'] = os.path.dirname(executable) + os.pathsep + os.environ['PATH']
+            py_path = os.path.dirname(executable)
+            environment['PATH'] = py_path + os.pathsep + java_path + os.pathsep + os.environ['PATH']
+        else:
+            environment['PATH'] = java_path + os.pathsep + os.environ['PATH']
 
         # find the jep library and makes sure it's named correctly
         build_ext = self.get_finalized_command('build_ext')
@@ -65,9 +72,11 @@ class test(Command):
 
         # actually kick off the tests
         import subprocess
-        args = ['java',
+        args = [os.path.join(java_path, 'java'),
                 '-classpath', '{0}'.format(classpath),
                 '-Djava.library.path={0}'.format(built_dir),
                 'jep.Run', 'tests/runtests.py']
         p = subprocess.Popen(args, env=environment)
-        p.wait()
+        rc = p.wait()
+        if rc != 0:
+            raise DistutilsExecError("Unit tests failed with exit status %d" % (rc))

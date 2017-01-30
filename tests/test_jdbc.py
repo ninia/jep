@@ -89,8 +89,9 @@ class TestJdbc(unittest.TestCase):
                 )
             ''')
             
-            # sqlite double precision is iffy at best on some systems
-            doubleValue = Math.nextAfter(Double.MAX_VALUE, -1)
+            # Some versions of sqlite are not storing full precision.
+            # This is Double.MAX_VALUE, but truncated to 10 digits after the decimal.
+            doubleValue = 1.7976931348e+308
             
             cursor.execute('insert into primitives values (?, ?, ?, ?, ?)',
                            Integer.MAX_VALUE,
@@ -112,7 +113,7 @@ class TestJdbc(unittest.TestCase):
             self.assertIsNone(row[2])
             self.assertEqual(cursor.description[2][0], 'three')
     
-            self.assertAlmostEqual(row[3], doubleValue, delta=Double.MAX_VALUE / 1e6)
+            self.assertEqual(row[3], doubleValue)
             self.assertEqual(cursor.description[3][0], 'four')
     
             self.assertEqual(row[4], 5.6)
