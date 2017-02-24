@@ -64,6 +64,7 @@ static PyThreadState *mainThreadState = NULL;
 
 /* Saved for cross thread access to shared modules. */
 static PyObject* mainThreadModules = NULL;
+static PyObject* mainThreadModulesLock = NULL;
 
 int pyembed_version_unsafe(void);
 
@@ -173,6 +174,8 @@ static PyObject* initjep(void)
         PyModule_AddIntConstant(modjep, "JEP_NUMPY_ENABLED", JEP_NUMPY_ENABLED);
         Py_INCREF(mainThreadModules);
         PyModule_AddObject(modjep, "topInterpreterModules", mainThreadModules);
+        Py_INCREF(mainThreadModulesLock);
+        PyModule_AddObject(modjep, "topInterpreterModulesLock", mainThreadModulesLock);
     }
 
     return modjep;
@@ -212,7 +215,9 @@ void pyembed_preinit(jint noSiteFlag,
 
 void pyembed_startup(void)
 {
-    PyObject* sysModule = NULL;
+    PyObject* sysModule       = NULL;
+    PyObject* threadingModule = NULL;
+    PyObject* lockCreator     = NULL;
 #ifdef __APPLE__
 #ifndef WITH_NEXT_FRAMEWORK
 // workaround for
@@ -240,6 +245,11 @@ void pyembed_startup(void)
     sysModule = PyImport_ImportModule("sys");
     mainThreadModules = PyObject_GetAttrString(sysModule, "modules");
     Py_DECREF(sysModule);
+    threadingModule = PyImport_ImportModule("threading");
+    lockCreator = PyObject_GetAttrString(threadingModule, "Lock");
+    mainThreadModulesLock = PyObject_CallObject(lockCreator, NULL);
+    Py_DECREF(threadingModule);
+    Py_DECREF(lockCreator);
 
     // save a pointer to the main PyThreadState object
     mainThreadState = PyThreadState_Get();

@@ -98,14 +98,15 @@ class JepSharedModuleImporter(object):
 
     def load_module(self, fullname):
         if fullname not in sys.modules:
-            from _jep import topInterpreterModules
-            if fullname not in topInterpreterModules and sys.version_info.major > 2:
-                self.sharedImporter.sharedImport(fullname)
-            # Must copy all modules or relative imports will be broken
-            for moduleName in self.moduleList:
-                for key in topInterpreterModules:
-                    if key == moduleName or key.startswith(moduleName + "."):
-                        sys.modules[key] = topInterpreterModules[key]
+            from _jep import topInterpreterModules, topInterpreterModulesLock
+            with topInterpreterModulesLock:
+                if fullname not in topInterpreterModules and sys.version_info.major > 2:
+                    self.sharedImporter.sharedImport(fullname)
+                # Must copy all modules or relative imports will be broken
+                for moduleName in self.moduleList:
+                    for key in topInterpreterModules:
+                        if key == moduleName or key.startswith(moduleName + "."):
+                            sys.modules[key] = topInterpreterModules[key]
         return sys.modules[fullname]
 
     def unload_modules(self):

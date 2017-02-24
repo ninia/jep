@@ -14,6 +14,9 @@ class TestSharedModules(unittest.TestCase):
     def test_shared_modules(self):
         jep_pipe(build_java_process_cmd('jep.test.TestSharedModules'))
 
+    def test_shared_modules_threads(self):
+        jep_pipe(build_java_process_cmd('jep.test.TestSharedModulesThreads'))
+
     @unittest.skipIf(not jep.JEP_NUMPY_ENABLED, 'Jep library built without numpy support')
     def test_numpy_prod_succeeds(self):
         jep_pipe(build_java_process_cmd('jep.test.numpy.TestNumpyProdShared'))
