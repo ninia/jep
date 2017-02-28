@@ -647,8 +647,7 @@ static PyObject* pyembed_set_print_stack(PyObject *self, PyObject *args)
         jepThread->printStack = 1;
     }
 
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 

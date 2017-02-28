@@ -59,12 +59,13 @@ jclass JFLOAT_ARRAY_TYPE   = NULL;
 jclass JDOUBLE_ARRAY_TYPE  = NULL;
 
 // cached types for interfaces
-jclass JLIST_TYPE       = NULL;
-jclass JMAP_TYPE        = NULL;
-jclass JITERABLE_TYPE   = NULL;
-jclass JITERATOR_TYPE   = NULL;
-jclass JCOLLECTION_TYPE = NULL;
-jclass JCOMPARABLE_TYPE = NULL;
+jclass JLIST_TYPE          = NULL;
+jclass JMAP_TYPE           = NULL;
+jclass JITERABLE_TYPE      = NULL;
+jclass JITERATOR_TYPE      = NULL;
+jclass JCOLLECTION_TYPE    = NULL;
+jclass JCOMPARABLE_TYPE    = NULL;
+jclass JAUTOCLOSEABLE_TYPE = NULL;
 
 // cached types for Object equivalents of primitives
 jclass JBOOL_OBJ_TYPE   = NULL;
@@ -346,6 +347,7 @@ int cache_frequent_classes(JNIEnv *env)
     CACHE_CLASS(JITERATOR_TYPE, "java/util/Iterator");
     CACHE_CLASS(JCOLLECTION_TYPE, "java/util/Collection");
     CACHE_CLASS(JCOMPARABLE_TYPE, "java/lang/Comparable");
+    CACHE_CLASS(JAUTOCLOSEABLE_TYPE, "java/lang/AutoCloseable");
     CACHE_CLASS(JBOOL_OBJ_TYPE, "java/lang/Boolean");
     CACHE_CLASS(JBYTE_OBJ_TYPE, "java/lang/Byte");
     CACHE_CLASS(JSHORT_OBJ_TYPE, "java/lang/Short");
@@ -402,6 +404,7 @@ void unref_cache_frequent_classes(JNIEnv *env)
     UNCACHE_CLASS(JITERATOR_TYPE);
     UNCACHE_CLASS(JCOLLECTION_TYPE);
     UNCACHE_CLASS(JCOMPARABLE_TYPE);
+    UNCACHE_CLASS(JAUTOCLOSEABLE_TYPE);
     UNCACHE_CLASS(JBOOL_OBJ_TYPE);
     UNCACHE_CLASS(JBYTE_OBJ_TYPE);
     UNCACHE_CLASS(JSHORT_OBJ_TYPE);

@@ -90,11 +90,19 @@ static void pyjobject_init_subtypes(void)
         return;
     }
 
-    // last do map
+    // next do map
     if (!PyJMap_Type.tp_base) {
         PyJMap_Type.tp_base = &PyJObject_Type;
     }
     if (PyType_Ready(&PyJMap_Type) < 0) {
+        return;
+    }
+
+    // last do autocloseable
+    if (!PyJAutoCloseable_Type.tp_base) {
+        PyJAutoCloseable_Type.tp_base = &PyJObject_Type;
+    }
+    if (PyType_Ready(&PyJAutoCloseable_Type) < 0) {
         return;
     }
 
@@ -149,6 +157,8 @@ PyObject* pyjobject_new(JNIEnv *env, jobject obj)
             pyjob = (PyJObject*) pyjmap_new();
         } else if ((*env)->IsInstanceOf(env, obj, JITERATOR_TYPE)) {
             pyjob = (PyJObject*) pyjiterator_new();
+        } else if ((*env)->IsInstanceOf(env, obj, JAUTOCLOSEABLE_TYPE)) {
+            pyjob = (PyJObject*) pyjautocloseable_new();
         } else if ((*env)->IsInstanceOf(env, obj, JNUMBER_TYPE)) {
             pyjob = (PyJObject*) pyjnumber_new();
         } else {

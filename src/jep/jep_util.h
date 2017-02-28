@@ -121,6 +121,7 @@ extern jclass JITERABLE_TYPE;
 extern jclass JITERATOR_TYPE;
 extern jclass JCOLLECTION_TYPE;
 extern jclass JCOMPARABLE_TYPE;
+extern jclass JAUTOCLOSEABLE_TYPE;
 
 // cache some frequently looked up classes
 extern jclass JBOOL_OBJ_TYPE;

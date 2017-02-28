@@ -2,7 +2,7 @@ Jep 3.7 Release Notes
 *********************
 This release emphasized consistency and new features.  It is compatible
 with Python 2.7, 3.3, 3.4, and 3.5.  Python 2.6 and 3.2 are no longer
-supported.
+supported.  Java 1.6 is no longer supported.
 
 
 Shared NDArrays
@@ -18,6 +18,7 @@ Java and Python since there is no need to copy the memory. This can also
 simplify any use cases that frequently transfer the same data between Java
 and Python.
 
+
 Improved unicode support
 ~~~~~~~~~~~~~~~~~~~~~~~~
 Strings that represent the full range of unicode values will now be passed
@@ -29,3 +30,19 @@ Python 3 versions before 3.3 use a more complex unicode object than newer
 versions of Python 3 so these versions are no longer supported. Unicode objects
 are uncommon in Python 2 so Java Strings will be converted to UTF-8 encoded
 Python string objects.
+
+
+Added PyJAutoCloseable type
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PyJAutoCloseable has been created to enable developers to more closely match
+Python syntax when working with Java AutoCloseables.  The new type extends
+PyJObject to retain all previous functionality.  This enables Python's "with"
+keyword and ContextManagers to be used similarly to Java 7's try-with-resources.
+For example:
+::
+
+    from java.io import FileWriter
+    with FileWriter("/tmp/test.txt") as f:
+        f.write("abc")
+
+
