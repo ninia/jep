@@ -158,7 +158,7 @@ PyObject* pyjobject_new(JNIEnv *env, jobject obj)
         } else if ((*env)->IsInstanceOf(env, obj, JITERATOR_TYPE)) {
             pyjob = (PyJObject*) pyjiterator_new();
         } else if ((*env)->IsInstanceOf(env, obj, JAUTOCLOSEABLE_TYPE)) {
-            pyjob = (PyJObject*) pyjautocloseable_new();
+            pyjob = (PyJObject*) PyJAutoCloseable_New();
         } else if ((*env)->IsInstanceOf(env, obj, JNUMBER_TYPE)) {
             pyjob = (PyJObject*) pyjnumber_new();
         } else {

@@ -7,6 +7,7 @@ class TestAutoCloseables(unittest.TestCase):
     def test_with(self):
         with TestAutoCloseable() as writer:
             writer.write("abc")
+            self.assertFalse(writer.isClosed())
         self.assertTrue(writer.isClosed())
     
     def test_io_exception(self):

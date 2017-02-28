@@ -45,7 +45,7 @@ typedef struct {
 } PyJAutoCloseableObject;
 
 
-PyJAutoCloseableObject* pyjautocloseable_new(void);
-int pyjautocloseable_check(PyObject*);
+PyJAutoCloseableObject* PyJAutoCloseable_New(void);
+int PyJAutoCloseable_Check(PyObject*);
 
 #endif // ndef pyjautocloseable

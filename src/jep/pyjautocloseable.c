@@ -29,22 +29,22 @@
 #include "Jep.h"
 
 
-jmethodID java_close = 0;
+static jmethodID java_close = 0;
 
 /*
- * News up a pyjautocloseable, which is just a pyjobject that supports
- * close(). This should only be called from pyjobject_new().
+ * News up a PyJAautoCloseableObject, which is just a PyJObject that supports
+ * close(). This should only be called from PyJObject_New().
  */
-PyJAutoCloseableObject* pyjautocloseable_new()
+PyJAutoCloseableObject* PyJAutoCloseable_New()
 {
-    // pyjobject will have already initialized PyJAutoCloseable_Type
+    // PyJObject will have already initialized PyJAutoCloseable_Type
     return PyObject_NEW(PyJAutoCloseableObject, &PyJAutoCloseable_Type);
 }
 
 /*
- * Checks if the object is a pyjautocloseable.
+ * Checks if the object is a PyJAutoCloseable.
  */
-int pyjautocloseable_check(PyObject *obj)
+int PyJAutoCloseable_Check(PyObject *obj)
 {
     if (PyObject_TypeCheck(obj, &PyJAutoCloseable_Type)) {
         return 1;
@@ -55,7 +55,7 @@ int pyjautocloseable_check(PyObject *obj)
 /*
  * Enters the Python ContextManager.
  */
-PyObject* pyjautocloseable_enter(PyObject* self, PyObject* args)
+static PyObject* pyjautocloseable_enter(PyObject* self, PyObject* args)
 {
     Py_INCREF(self);
     return self;
@@ -64,7 +64,7 @@ PyObject* pyjautocloseable_enter(PyObject* self, PyObject* args)
 /*
  * Exits the Python ContextManager and calls java.lang.AutoCloseable.close().
  */
-PyObject* pyjautocloseable_exit(PyObject* self, PyObject* args)
+static PyObject* pyjautocloseable_exit(PyObject* self, PyObject* args)
 {
     PyJObject    *pyjob    = (PyJObject*) self;
     JNIEnv       *env      = pyembed_get_env();
