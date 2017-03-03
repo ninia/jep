@@ -28,7 +28,7 @@
 
 /*
  * A PyJMapObject is a PyJObject with some extra methods attached to meet
- * the python Mapping protocol/interface.  It should only be used where the
+ * the Python Mapping protocol/interface.  It should only be used where the
  * underlying jobject of the PyJObject is an implementation of java.util.Map.
  */
 
@@ -45,7 +45,15 @@ typedef struct {
 } PyJMapObject;
 
 
-PyJMapObject* PyJMap_New(void);
+/*
+ * Returns a new PyJMap, which is a PyJObject with some mapping methods
+ * attached to it.
+ */
+PyJObject* PyJMap_New(void);
+
+/*
+ * Returns true if the object is a PyJMap.
+ */
 int PyJMap_Check(PyObject*);
 
 

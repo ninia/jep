@@ -29,24 +29,13 @@
 #include "Jep.h"
 
 
-static Py_ssize_t pyjcollection_len(PyObject*);
-static int pyjcollection_contains(PyObject*, PyObject*);
-
-
-/*
- * News up a pyjcollection, which is just a pyjiterable with a few methods
- * attached to it.  This should only be called from PyJObject_New().
- */
-PyJCollectionObject* PyJCollection_New()
+PyJObject* PyJCollection_New()
 {
-    // pyjobject will have already initialized PyJCollection_Type
-    return PyObject_NEW(PyJCollectionObject, &PyJCollection_Type);
+    // PyJObject will have already initialized PyJCollection_Type
+    return (PyJObject*) PyObject_NEW(PyJCollectionObject, &PyJCollection_Type);
 }
 
 
-/*
- * Checks if the object is a pyjcollection.
- */
 int PyJCollection_Check(PyObject *obj)
 {
     if (PyObject_TypeCheck(obj, &PyJCollection_Type)) {
@@ -109,10 +98,6 @@ FINALLY:
 }
 
 
-static PyMethodDef pyjcollection_methods[] = {
-    {NULL, NULL, 0, NULL}
-};
-
 static PySequenceMethods pyjcollection_seq_methods = {
     pyjcollection_len,      /* sq_length */
     0,                      /* sq_concat */
@@ -159,7 +144,7 @@ PyTypeObject PyJCollection_Type = {
     0,                                        /* tp_weaklistoffset */
     0, // inherited                           /* tp_iter */
     0,                                        /* tp_iternext */
-    pyjcollection_methods,                    /* tp_methods */
+    0,                                        /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
     0, // &PyJIterable_Type                   /* tp_base */

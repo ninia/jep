@@ -26,25 +26,70 @@
    distribution.
 */
 
+
 #include "Jep.h"
 
-static PyObject* java_number_to_python(JNIEnv*, PyObject*);
-static PyObject* java_number_to_pythonintlong(JNIEnv*, PyObject*);
-static PyObject* java_number_to_pythonfloat(JNIEnv*, PyObject*);
 
-/*
- * News up a pyjnumber, which is just a pyjobject with some number methods
- * attached to it.  This should only be called from PyJObject_New().
- */
-PyJNumberObject* PyJNumber_New()
+static PyObject* java_number_to_pythonintlong(JNIEnv *env, PyObject* n)
 {
-    // pyjobject will have already initialized PyJNumber_Type
-    return PyObject_NEW(PyJNumberObject, &PyJNumber_Type);
+    jlong      value;
+    PyJObject *jnumber  = (PyJObject*) n;
+
+#if PY_MAJOR_VERSION < 3
+    if ((*env)->IsInstanceOf(env, jnumber->object, JBYTE_OBJ_TYPE) ||
+            (*env)->IsInstanceOf(env, jnumber->object, JSHORT_OBJ_TYPE) ||
+            (*env)->IsInstanceOf(env, jnumber->object, JINT_OBJ_TYPE)) {
+        jint result = java_lang_Number_intValue(env, jnumber->object);
+        if (process_java_exception(env)) {
+            return NULL;
+        }
+        return PyInt_FromSsize_t(result);
+    }
+#endif
+
+    value = java_lang_Number_longValue(env, jnumber->object);
+    if (process_java_exception(env)) {
+        return NULL;
+    }
+    return PyLong_FromLongLong(value);
 }
 
-/*
- * Checks if the object is a pyjnumber.
- */
+
+static PyObject* java_number_to_pythonfloat(JNIEnv *env, PyObject* n)
+{
+    jdouble    value;
+    PyJObject *jnumber  = (PyJObject*) n;
+
+    value = java_lang_Number_doubleValue(env, jnumber->object);
+    if (process_java_exception(env)) {
+        return NULL;
+    }
+    return PyFloat_FromDouble(value);
+}
+
+
+static PyObject* java_number_to_python(JNIEnv *env, PyObject* n)
+{
+    PyJObject *jnumber  = (PyJObject*) n;
+
+    if ((*env)->IsInstanceOf(env, jnumber->object, JBYTE_OBJ_TYPE) ||
+            (*env)->IsInstanceOf(env, jnumber->object, JSHORT_OBJ_TYPE) ||
+            (*env)->IsInstanceOf(env, jnumber->object, JINT_OBJ_TYPE) ||
+            (*env)->IsInstanceOf(env, jnumber->object, JLONG_OBJ_TYPE)) {
+        return java_number_to_pythonintlong(env, n);
+    } else {
+        return java_number_to_pythonfloat(env, n);
+    }
+}
+
+
+PyJObject* PyJNumber_New()
+{
+    // PyJObject will have already initialized PyJNumber_Type
+    return (PyJObject*) PyObject_NEW(PyJNumberObject, &PyJNumber_Type);
+}
+
+
 int PyJNumber_Check(PyObject *obj)
 {
     if (PyObject_TypeCheck(obj, &PyJNumber_Type)) {
@@ -289,62 +334,6 @@ static PyObject* pyjnumber_richcompare(PyObject *self,
 }
 
 
-static PyObject* java_number_to_python(JNIEnv *env, PyObject* n)
-{
-    PyJObject *jnumber  = (PyJObject*) n;
-
-    if ((*env)->IsInstanceOf(env, jnumber->object, JBYTE_OBJ_TYPE) ||
-            (*env)->IsInstanceOf(env, jnumber->object, JSHORT_OBJ_TYPE) ||
-            (*env)->IsInstanceOf(env, jnumber->object, JINT_OBJ_TYPE) ||
-            (*env)->IsInstanceOf(env, jnumber->object, JLONG_OBJ_TYPE)) {
-        return java_number_to_pythonintlong(env, n);
-    } else {
-        return java_number_to_pythonfloat(env, n);
-    }
-}
-
-static PyObject* java_number_to_pythonintlong(JNIEnv *env, PyObject* n)
-{
-    jlong      value;
-    PyJObject *jnumber  = (PyJObject*) n;
-
-#if PY_MAJOR_VERSION < 3
-    if ((*env)->IsInstanceOf(env, jnumber->object, JBYTE_OBJ_TYPE) ||
-            (*env)->IsInstanceOf(env, jnumber->object, JSHORT_OBJ_TYPE) ||
-            (*env)->IsInstanceOf(env, jnumber->object, JINT_OBJ_TYPE)) {
-        jint result = java_lang_Number_intValue(env, jnumber->object);
-        if (process_java_exception(env)) {
-            return NULL;
-        }
-        return PyInt_FromSsize_t(result);
-    }
-#endif
-
-    value = java_lang_Number_longValue(env, jnumber->object);
-    if (process_java_exception(env)) {
-        return NULL;
-    }
-    return PyLong_FromLongLong(value);
-}
-
-
-static PyObject* java_number_to_pythonfloat(JNIEnv *env, PyObject* n)
-{
-    jdouble    value;
-    PyJObject *jnumber  = (PyJObject*) n;
-
-    value = java_lang_Number_doubleValue(env, jnumber->object);
-    if (process_java_exception(env)) {
-        return NULL;
-    }
-    return PyFloat_FromDouble(value);
-}
-
-
-static PyMethodDef pyjnumber_methods[] = {
-    {NULL, NULL, 0, NULL}
-};
-
 static PyNumberMethods pyjnumber_number_methods = {
     (binaryfunc) pyjnumber_add,                 /* nb_add */
     (binaryfunc) pyjnumber_subtract,            /* nb_subtract */
@@ -435,7 +424,7 @@ PyTypeObject PyJNumber_Type = {
     0,                                        /* tp_weaklistoffset */
     0,                                        /* tp_iter */
     0,                                        /* tp_iternext */
-    pyjnumber_methods,                        /* tp_methods */
+    0,                                        /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
     0, // &PyJObject_Type                     /* tp_base */

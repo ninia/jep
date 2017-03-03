@@ -52,6 +52,5 @@ PyObject* PyJObject_NewClass(JNIEnv*, jclass);
 int PyJObject_Check(PyObject*);
 
 void pyjobject_dealloc(PyJObject*);
-PyObject* pyjobject_str(PyJObject*);
 
 #endif // ndef pyjobject

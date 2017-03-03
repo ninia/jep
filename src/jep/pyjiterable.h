@@ -27,7 +27,7 @@
 */
 
 /*
- * A PyJIterableObject is a PyJObject that has tp_iter implemented. It should
+ * A PyJIterableObject is a PyJObject that has tp_iter implemented to support iteration. It should
  * only be used where the underlying jobject of the PyJObject is an
  * implementation of java.util.Iterable.
  */
@@ -45,9 +45,15 @@ typedef struct {
 } PyJIterableObject;
 
 
-PyJIterableObject* PyJIterable_New(void);
+/*
+ * Returns a new PyJIterable, which is a PyJObject that supports iteration.
+ */
+PyJObject* PyJIterable_New(void);
+
+/*
+ * Returns true if the object is a PyJIterable.
+ */
 int PyJIterable_Check(PyObject*);
-PyObject* pyjiterable_getiter(PyObject*);
 
 
 #endif // ndef pyjiterable

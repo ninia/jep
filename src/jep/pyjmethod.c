@@ -32,8 +32,6 @@
 #include "structmember.h"
 
 
-static void pyjmethod_dealloc(PyJMethodObject *self);
-
 // called internally to make new PyJMethodObject instances.
 // throws python exception and returns NULL on error.
 PyJMethodObject* PyJMethod_New(JNIEnv *env, jobject rmethod)
@@ -65,7 +63,7 @@ PyJMethodObject* PyJMethod_New(JNIEnv *env, jobject rmethod)
 }
 
 // 1 if successful, 0 if failed.
-int pyjmethod_init(JNIEnv *env, PyJMethodObject *self)
+static int pyjmethod_init(JNIEnv *env, PyJMethodObject *self)
 {
     jobject           returnType             = NULL;
     jobjectArray      paramArray             = NULL;
@@ -724,10 +722,6 @@ static PyMemberDef pyjmethod_members[] = {
     {NULL}  /* Sentinel */
 };
 
-static PyMethodDef pyjmethod_methods[] = {
-    {NULL, NULL, 0, NULL}
-};
-
 
 PyTypeObject PyJMethod_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
@@ -757,7 +751,7 @@ PyTypeObject PyJMethod_Type = {
     0,                                        /* tp_weaklistoffset */
     0,                                        /* tp_iter */
     0,                                        /* tp_iternext */
-    pyjmethod_methods,                        /* tp_methods */
+    0,                                        /* tp_methods */
     pyjmethod_members,                        /* tp_members */
     0,                                        /* tp_getset */
     0,                                        /* tp_base */

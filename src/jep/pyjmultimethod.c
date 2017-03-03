@@ -28,6 +28,7 @@
 
 #include "Jep.h"
 
+
 PyObject* PyJMultiMethod_New(PyObject* method1, PyObject* method2)
 {
     PyJMultiMethodObject* mm = NULL;
@@ -175,7 +176,7 @@ static PyObject* pyjmultimethod_call(PyObject *multimethod,
 }
 
 /* returns internal list as tuple since its not safe to modify the list*/
-PyObject* pyjmultimethod_getmethods(PyObject* multimethod)
+static PyObject* pyjmultimethod_getmethods(PyObject* multimethod)
 {
     PyJMultiMethodObject* mm         = NULL;
     if (!PyJMultiMethod_Check(multimethod)) {

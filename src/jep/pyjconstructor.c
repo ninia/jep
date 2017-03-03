@@ -28,13 +28,41 @@
 
 #include "Jep.h"
 
-static int pyjconstructor_init(JNIEnv*, PyJMethodObject*);
 
 /*
  * All constructors are named <init> so keep a single PyString around to use
  * as the methodName
  */
 static PyObject* initMethodName = NULL;
+
+
+static int pyjconstructor_init(JNIEnv *env, PyJMethodObject *self)
+{
+    jobjectArray paramArray = NULL;
+
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
+        process_java_exception(env);
+        return 0;
+    }
+
+    self->methodId = (*env)->FromReflectedMethod(env, self->rmethod);
+
+    paramArray = java_lang_reflect_Constructor_getParameterTypes(env,
+                 self->rmethod);
+    if (process_java_exception(env) || !paramArray) {
+        goto EXIT_ERROR;
+    }
+
+    self->parameters    = (*env)->NewGlobalRef(env, paramArray);
+    self->lenParameters = (*env)->GetArrayLength(env, paramArray);
+    (*env)->PopLocalFrame(env, NULL);
+    return 1;
+
+EXIT_ERROR:
+    (*env)->PopLocalFrame(env, NULL);
+    return 0;
+}
+
 
 PyObject* PyJConstructor_New(JNIEnv *env, jobject constructor)
 {
@@ -82,32 +110,6 @@ int PyJConstructor_Check(PyObject* object)
     return PyObject_TypeCheck(object, &PyJConstructor_Type);
 }
 
-static int pyjconstructor_init(JNIEnv *env, PyJMethodObject *self)
-{
-    jobjectArray paramArray = NULL;
-
-    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
-        process_java_exception(env);
-        return 0;
-    }
-
-    self->methodId = (*env)->FromReflectedMethod(env, self->rmethod);
-
-    paramArray = java_lang_reflect_Constructor_getParameterTypes(env,
-                 self->rmethod);
-    if (process_java_exception(env) || !paramArray) {
-        goto EXIT_ERROR;
-    }
-
-    self->parameters    = (*env)->NewGlobalRef(env, paramArray);
-    self->lenParameters = (*env)->GetArrayLength(env, paramArray);
-    (*env)->PopLocalFrame(env, NULL);
-    return 1;
-
-EXIT_ERROR:
-    (*env)->PopLocalFrame(env, NULL);
-    return 0;
-}
 
 static PyObject* pyjconstructor_call(PyJMethodObject *self, PyObject *args,
                                      PyObject *keywords)

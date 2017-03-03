@@ -28,7 +28,7 @@
 
 /*
  * A PyJNumberObject is a PyJObject with some extra methods attached to meet
- * the python Number protocol/interface.  It should only be used where the
+ * the Python Number protocol/interface.  It should only be used where the
  * underlying jobject of the PyJObject is an implementation of java.lang.Number.
  */
 
@@ -45,7 +45,15 @@ typedef struct {
 } PyJNumberObject;
 
 
-PyJNumberObject* PyJNumber_New(void);
+/*
+ * Returns a new PyJNumber, which is a PyJObject with some number methods
+ * attached to it.
+ */
+PyJObject* PyJNumber_New(void);
+
+/*
+ * Returns true if the object is a PyJNumber.
+ */
 int PyJNumber_Check(PyObject*);
 
 

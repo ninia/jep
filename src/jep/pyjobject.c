@@ -31,9 +31,8 @@
 // https://bugs.python.org/issue2897
 #include "structmember.h"
 
-static int pyjobject_init(JNIEnv *env, PyJObject*);
-static void pyjobject_init_subtypes(void);
-static int  subtypes_initialized = 0;
+
+static int subtypes_initialized = 0;
 
 /*
  * MSVC requires tp_base to be set at runtime instead of in
@@ -65,6 +64,14 @@ static void pyjobject_init_subtypes(void)
         PyJIterable_Type.tp_base = &PyJObject_Type;
     }
     if (PyType_Ready(&PyJIterable_Type) < 0) {
+        return;
+    }
+
+    // next do iterator
+    if (!PyJIterator_Type.tp_base) {
+        PyJIterator_Type.tp_base = &PyJObject_Type;
+    }
+    if (PyType_Ready(&PyJIterator_Type) < 0) {
         return;
     }
 
@@ -101,110 +108,6 @@ static void pyjobject_init_subtypes(void)
     }
 
     subtypes_initialized = 1;
-}
-
-
-// called internally to make new PyJObject instances
-PyObject* PyJObject_New(JNIEnv *env, jobject obj)
-{
-    PyJObject    *pyjob;
-    jclass        objClz;
-    int           jtype;
-
-    if (!subtypes_initialized) {
-        pyjobject_init_subtypes();
-    }
-    if (!obj) {
-        PyErr_Format(PyExc_RuntimeError, "Invalid object.");
-        return NULL;
-    }
-
-    objClz = (*env)->GetObjectClass(env, obj);
-
-    /*
-     * There exist situations where a Java method signature has a return
-     * type of Object but actually returns a Class or array.  Also if you
-     * call Jep.set(String, Object[]) it should be treated as an array, not
-     * an object.  Hence this check here to build the optimal jep type in
-     * the interpreter regardless of signature.
-     */
-    jtype = get_jtype(env, objClz);
-    if (jtype == JARRAY_ID) {
-        return pyjarray_new(env, obj);
-    } else if (jtype == JCLASS_ID) {
-        return PyJObject_NewClass(env, obj);
-    } else {
-        // check for some of our extensions to pyjobject
-        if ((*env)->IsInstanceOf(env, obj, JITERABLE_TYPE)) {
-            if ((*env)->IsInstanceOf(env, obj, JCOLLECTION_TYPE)) {
-                if ((*env)->IsInstanceOf(env, obj, JLIST_TYPE)) {
-                    pyjob = (PyJObject*) PyJList_New();
-                } else {
-                    // a Collection we have less support for
-                    pyjob = (PyJObject*) PyJCollection_New();
-                }
-            } else {
-                // an Iterable we have less support for
-                pyjob = (PyJObject*) PyJIterable_New();
-            }
-        } else if ((*env)->IsInstanceOf(env, obj, JMAP_TYPE)) {
-            pyjob = (PyJObject*) PyJMap_New();
-        } else if ((*env)->IsInstanceOf(env, obj, JITERATOR_TYPE)) {
-            pyjob = (PyJObject*) PyJIterator_New();
-        } else if ((*env)->IsInstanceOf(env, obj, JAUTOCLOSEABLE_TYPE)) {
-            pyjob = (PyJObject*) PyJAutoCloseable_New();
-        } else if ((*env)->IsInstanceOf(env, obj, JNUMBER_TYPE)) {
-            pyjob = (PyJObject*) PyJNumber_New();
-        } else {
-            pyjob = PyObject_NEW(PyJObject, &PyJObject_Type);
-        }
-    }
-
-
-    pyjob->object      = (*env)->NewGlobalRef(env, obj);
-    pyjob->clazz       = (*env)->NewGlobalRef(env, objClz);
-    pyjob->attr        = PyDict_New();
-    pyjob->finishAttr  = 0;
-
-    (*env)->DeleteLocalRef(env, objClz);
-
-    if (pyjobject_init(env, pyjob)) {
-        return (PyObject *) pyjob;
-    }
-    return NULL;
-}
-
-
-PyObject* PyJObject_NewClass(JNIEnv *env, jclass clazz)
-{
-    PyJObject       *pyjob;
-    PyJClassObject  *pyjclass;  // same object as pyjob, just casted
-
-    if (!clazz) {
-        PyErr_Format(PyExc_RuntimeError, "Invalid class object.");
-        return NULL;
-    }
-
-    if (!PyJClass_Type.tp_base) {
-        PyJClass_Type.tp_base = &PyJObject_Type;
-    }
-    if (PyType_Ready(&PyJClass_Type) < 0) {
-        return NULL;
-    }
-
-    pyjclass           = PyObject_NEW(PyJClassObject, &PyJClass_Type);
-    pyjob              = (PyJObject*) pyjclass;
-    pyjob->object      = NULL;
-    pyjob->clazz       = (*env)->NewGlobalRef(env, clazz);
-    pyjob->attr        = PyDict_New();
-    pyjob->finishAttr  = 0;
-
-    if (pyjclass_init(env, (PyObject *) pyjob)) {
-        if (pyjobject_init(env, pyjob)) {
-            return (PyObject *) pyjob;
-        }
-    }
-    return NULL;
 }
 
 
@@ -426,6 +329,110 @@ EXIT_ERROR:
 }
 
 
+// called internally to make new PyJObject instances
+PyObject* PyJObject_New(JNIEnv *env, jobject obj)
+{
+    PyJObject    *pyjob;
+    jclass        objClz;
+    int           jtype;
+
+    if (!subtypes_initialized) {
+        pyjobject_init_subtypes();
+    }
+    if (!obj) {
+        PyErr_Format(PyExc_RuntimeError, "Invalid object.");
+        return NULL;
+    }
+
+    objClz = (*env)->GetObjectClass(env, obj);
+
+    /*
+     * There exist situations where a Java method signature has a return
+     * type of Object but actually returns a Class or array.  Also if you
+     * call Jep.set(String, Object[]) it should be treated as an array, not
+     * an object.  Hence this check here to build the optimal jep type in
+     * the interpreter regardless of signature.
+     */
+    jtype = get_jtype(env, objClz);
+    if (jtype == JARRAY_ID) {
+        return pyjarray_new(env, obj);
+    } else if (jtype == JCLASS_ID) {
+        return PyJObject_NewClass(env, obj);
+    } else {
+        // check for some of our extensions to pyjobject
+        if ((*env)->IsInstanceOf(env, obj, JITERABLE_TYPE)) {
+            if ((*env)->IsInstanceOf(env, obj, JCOLLECTION_TYPE)) {
+                if ((*env)->IsInstanceOf(env, obj, JLIST_TYPE)) {
+                    pyjob = PyJList_New();
+                } else {
+                    // a Collection we have less support for
+                    pyjob = PyJCollection_New();
+                }
+            } else {
+                // an Iterable we have less support for
+                pyjob = PyJIterable_New();
+            }
+        } else if ((*env)->IsInstanceOf(env, obj, JMAP_TYPE)) {
+            pyjob = PyJMap_New();
+        } else if ((*env)->IsInstanceOf(env, obj, JITERATOR_TYPE)) {
+            pyjob = PyJIterator_New();
+        } else if ((*env)->IsInstanceOf(env, obj, JAUTOCLOSEABLE_TYPE)) {
+            pyjob = PyJAutoCloseable_New();
+        } else if ((*env)->IsInstanceOf(env, obj, JNUMBER_TYPE)) {
+            pyjob = PyJNumber_New();
+        } else {
+            pyjob = PyObject_NEW(PyJObject, &PyJObject_Type);
+        }
+    }
+
+
+    pyjob->object      = (*env)->NewGlobalRef(env, obj);
+    pyjob->clazz       = (*env)->NewGlobalRef(env, objClz);
+    pyjob->attr        = PyDict_New();
+    pyjob->finishAttr  = 0;
+
+    (*env)->DeleteLocalRef(env, objClz);
+
+    if (pyjobject_init(env, pyjob)) {
+        return (PyObject *) pyjob;
+    }
+    return NULL;
+}
+
+
+PyObject* PyJObject_NewClass(JNIEnv *env, jclass clazz)
+{
+    PyJObject       *pyjob;
+    PyJClassObject  *pyjclass;  // same object as pyjob, just casted
+
+    if (!clazz) {
+        PyErr_Format(PyExc_RuntimeError, "Invalid class object.");
+        return NULL;
+    }
+
+    if (!PyJClass_Type.tp_base) {
+        PyJClass_Type.tp_base = &PyJObject_Type;
+    }
+    if (PyType_Ready(&PyJClass_Type) < 0) {
+        return NULL;
+    }
+
+    pyjclass           = PyObject_NEW(PyJClassObject, &PyJClass_Type);
+    pyjob              = (PyJObject*) pyjclass;
+    pyjob->object      = NULL;
+    pyjob->clazz       = (*env)->NewGlobalRef(env, clazz);
+    pyjob->attr        = PyDict_New();
+    pyjob->finishAttr  = 0;
+
+    if (pyjclass_init(env, (PyObject *) pyjob)) {
+        if (pyjobject_init(env, pyjob)) {
+            return (PyObject *) pyjob;
+        }
+    }
+    return NULL;
+}
+
+
 void pyjobject_dealloc(PyJObject *self)
 {
 #if USE_DEALLOC
@@ -457,7 +464,7 @@ int PyJObject_Check(PyObject *obj)
 
 // call toString() on jobject. returns null on error.
 // excpected to return new reference.
-PyObject* pyjobject_str(PyJObject *self)
+static PyObject* pyjobject_str(PyJObject *self)
 {
     PyObject   *pyres     = NULL;
     JNIEnv     *env;
@@ -609,7 +616,7 @@ static PyObject* pyjobject_richcompare(PyJObject *self,
 // get attribute 'name' for object.
 // uses obj->attr dict for storage.
 // returns new reference.
-PyObject* pyjobject_getattro(PyObject *obj, PyObject *name)
+static PyObject* pyjobject_getattro(PyObject *obj, PyObject *name)
 {
     PyObject *ret = PyObject_GenericGetAttr(obj, name);
     if (ret == NULL) {
@@ -638,7 +645,7 @@ PyObject* pyjobject_getattro(PyObject *obj, PyObject *name)
 
 // set attribute v for object.
 // uses obj->attr dictionary for storage.
-int pyjobject_setattro(PyJObject *obj, PyObject *name, PyObject *v)
+static int pyjobject_setattro(PyJObject *obj, PyObject *name, PyObject *v)
 {
     if (v == NULL) {
         PyErr_Format(PyExc_TypeError,
@@ -695,14 +702,12 @@ static long pyjobject_hash(PyJObject *self)
     return hash;
 }
 
-static struct PyMethodDef pyjobject_methods[] = {
-    { NULL, NULL }
-};
 
 static PyMemberDef pyjobject_members[] = {
     {"__dict__", T_OBJECT, offsetof(PyJObject, attr), READONLY},
     {0}
 };
+
 
 PyTypeObject PyJObject_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
@@ -733,7 +738,7 @@ PyTypeObject PyJObject_Type = {
     0,                                        /* tp_weaklistoffset */
     0,                                        /* tp_iter */
     0,                                        /* tp_iternext */
-    pyjobject_methods,                        /* tp_methods */
+    0,                                        /* tp_methods */
     pyjobject_members,                        /* tp_members */
     0,                                        /* tp_getset */
     0,                                        /* tp_base */

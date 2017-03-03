@@ -39,21 +39,17 @@ static PyObject* pyjlist_inplace_add(PyObject*, PyObject*);
 static PyObject* pyjlist_inplace_fill(PyObject*, Py_ssize_t);
 
 
-/*
- * News up a pyjlist, which is just a pyjobject with some sequence methods
- * attached to it.  This should only be called from PyJObject_New().
- */
-PyJListObject* PyJList_New()
+PyJObject* PyJList_New()
 {
-    // pyjobject will have already initialized PyJList_Type
-    return PyObject_NEW(PyJListObject, &PyJList_Type);
+    // PyJObject will have already initialized PyJList_Type
+    return (PyJObject*) PyObject_NEW(PyJListObject, &PyJList_Type);
 }
 
 /*
  * Convenience method to copy a list's items into a new java.util.List of the
  * same type.
  */
-PyObject* pyjlist_new_copy(PyObject *toCopy)
+static PyObject* pyjlist_new_copy(PyObject *toCopy)
 {
     jobject       newList     = NULL;
     PyJObject    *obj         = (PyJObject*) toCopy;
@@ -87,9 +83,7 @@ FINALLY:
     return result;
 }
 
-/*
- * Checks if the object is a pyjlist.
- */
+
 int PyJList_Check(PyObject *obj)
 {
     if (PyObject_TypeCheck(obj, &PyJList_Type)) {
@@ -515,9 +509,6 @@ static int pyjlist_set_subscript(PyObject* self, PyObject* item,
 
 }
 
-static PyMethodDef pyjlist_methods[] = {
-    {NULL, NULL, 0, NULL}
-};
 
 static PySequenceMethods pyjlist_seq_methods = {
     0, // inherited       /* sq_length */
@@ -531,6 +522,7 @@ static PySequenceMethods pyjlist_seq_methods = {
     pyjlist_inplace_add,  /* sq_inplace_concat */
     pyjlist_inplace_fill, /* sq_inplace_repeat */
 };
+
 
 static PyMappingMethods pyjlist_map_methods = {
     0,                                        /* mp_length */
@@ -570,7 +562,7 @@ PyTypeObject PyJList_Type = {
     0,                                        /* tp_weaklistoffset */
     0, // inherited                           /* tp_iter */
     0,                                        /* tp_iternext */
-    pyjlist_methods,                          /* tp_methods */
+    0,                                        /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
     0, // &PyJCollection_Type                 /* tp_base */

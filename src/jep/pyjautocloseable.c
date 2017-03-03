@@ -28,19 +28,15 @@
 
 #include "Jep.h"
 
-/*
- * News up a PyJAautoCloseableObject, which is just a PyJObject that supports
- * close(). This should only be called from PyJObject_New().
- */
-PyJAutoCloseableObject* PyJAutoCloseable_New()
+
+PyJObject* PyJAutoCloseable_New()
 {
     // PyJObject will have already initialized PyJAutoCloseable_Type
-    return PyObject_NEW(PyJAutoCloseableObject, &PyJAutoCloseable_Type);
+    return (PyJObject*) PyObject_NEW(PyJAutoCloseableObject,
+                                     &PyJAutoCloseable_Type);
 }
 
-/*
- * Checks if the object is a PyJAutoCloseable.
- */
+
 int PyJAutoCloseable_Check(PyObject *obj)
 {
     if (PyObject_TypeCheck(obj, &PyJAutoCloseable_Type)) {

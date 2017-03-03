@@ -28,19 +28,14 @@
 
 #include "Jep.h"
 
-/*
- * News up a pyjiterable, which is just a pyjobject that supports iteration.
- * This should only be called from PyJObject_New().
- */
-PyJIterableObject* PyJIterable_New()
+
+PyJObject* PyJIterable_New()
 {
-    // pyjobject will have already initialized PyJIterable_Type
-    return PyObject_NEW(PyJIterableObject, &PyJIterable_Type);
+    // PyJObject will have already initialized PyJIterable_Type
+    return (PyJObject*) PyObject_NEW(PyJIterableObject, &PyJIterable_Type);
 }
 
-/*
- * Checks if the object is a pyjiterable.
- */
+
 int PyJIterable_Check(PyObject *obj)
 {
     if (PyObject_TypeCheck(obj, &PyJIterable_Type)) {
@@ -52,7 +47,7 @@ int PyJIterable_Check(PyObject *obj)
 /*
  * Gets the iterator for the object.
  */
-PyObject* pyjiterable_getiter(PyObject* obj)
+static PyObject* pyjiterable_getiter(PyObject* obj)
 {
     jobject       iter     = NULL;
     PyJObject    *pyjob    = (PyJObject*) obj;
@@ -77,11 +72,6 @@ FINALLY:
     (*env)->PopLocalFrame(env, NULL);
     return result;
 }
-
-
-static PyMethodDef pyjiterable_methods[] = {
-    {NULL, NULL, 0, NULL}
-};
 
 
 /*
@@ -116,7 +106,7 @@ PyTypeObject PyJIterable_Type = {
     0,                                        /* tp_weaklistoffset */
     (getiterfunc) pyjiterable_getiter,        /* tp_iter */
     0,                                        /* tp_iternext */
-    pyjiterable_methods,                      /* tp_methods */
+    0,                                        /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
     0, // &PyJObject_Type                     /* tp_base */

@@ -28,29 +28,6 @@
 
 #include "Jep.h"
 
-static PyObject* pyjclass_add_inner_classes(JNIEnv*, PyJObject*);
-
-int pyjclass_init(JNIEnv *env, PyObject *pyjob)
-{
-    ((PyJClassObject*) pyjob)->constructor = NULL;
-
-    /*
-     * attempt to add public inner classes as attributes since lots of people
-     * code with public enum.  Note this will not allow the inner class to be
-     * imported separately, it must be accessed through the enclosing class.
-     */
-    if (!pyjclass_add_inner_classes(env, (PyJObject*) pyjob)) {
-        /*
-         * let's just print the error to stderr and continue on without
-         * inner class support, it's not the end of the world
-         */
-        if (PyErr_Occurred()) {
-            PyErr_PrintEx(0);
-        }
-    }
-
-    return 1;
-}
 
 /*
  * Adds a single inner class as attributes to the pyjclass. This will check if
@@ -106,6 +83,7 @@ static PyObject* pyjclass_add_inner_class(JNIEnv *env, PyJObject *topClz,
     return (PyObject*) topClz;
 }
 
+
 /*
  * Adds a Java class's public inner classes as attributes to the pyjclass.
  *
@@ -157,6 +135,30 @@ static PyObject* pyjclass_add_inner_classes(JNIEnv *env,
     return (PyObject*) topClz;
 }
 
+
+int pyjclass_init(JNIEnv *env, PyObject *pyjob)
+{
+    ((PyJClassObject*) pyjob)->constructor = NULL;
+
+    /*
+     * attempt to add public inner classes as attributes since lots of people
+     * code with public enum.  Note this will not allow the inner class to be
+     * imported separately, it must be accessed through the enclosing class.
+     */
+    if (!pyjclass_add_inner_classes(env, (PyJObject*) pyjob)) {
+        /*
+         * let's just print the error to stderr and continue on without
+         * inner class support, it's not the end of the world
+         */
+        if (PyErr_Occurred()) {
+            PyErr_PrintEx(0);
+        }
+    }
+
+    return 1;
+}
+
+
 int PyJClass_Check(PyObject *obj)
 {
     if (PyObject_TypeCheck(obj, &PyJClass_Type)) {
@@ -179,7 +181,7 @@ static void pyjclass_dealloc(PyJClassObject *self)
  *
  * @return 1 on successful initialization, -1 on error.
  */
-int pyjclass_init_constructors(PyJClassObject *pyc)
+static int pyjclass_init_constructors(PyJClassObject *pyc)
 {
     jclass        clazz       = NULL;
     JNIEnv       *env         = NULL;
@@ -251,9 +253,9 @@ EXIT_ERROR:
 }
 
 // call constructor as a method and return pyjobject.
-PyObject* pyjclass_call(PyJClassObject *self,
-                        PyObject *args,
-                        PyObject *keywords)
+static PyObject* pyjclass_call(PyJClassObject *self,
+                               PyObject *args,
+                               PyObject *keywords)
 {
     PyObject *boundConstructor = NULL;
     PyObject *result           = NULL;
@@ -280,11 +282,6 @@ PyObject* pyjclass_call(PyJClassObject *self,
     Py_DECREF(boundConstructor);
     return result;
 }
-
-
-static PyMethodDef pyjclass_methods[] = {
-    {NULL, NULL, 0, NULL}
-};
 
 
 PyTypeObject PyJClass_Type = {
@@ -315,7 +312,7 @@ PyTypeObject PyJClass_Type = {
     0,                                        /* tp_weaklistoffset */
     0,                                        /* tp_iter */
     0,                                        /* tp_iternext */
-    pyjclass_methods,                         /* tp_methods */
+    0,                                        /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
     0, // &PyJObject_Type                     /* tp_base */

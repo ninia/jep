@@ -46,7 +46,15 @@ typedef struct {
 } PyJCollectionObject;
 
 
-PyJCollectionObject* PyJCollection_New(void);
+/*
+ * Returns a new PyJCollection, which is a PyJIterable with a few more methods
+ * attached to it.
+ */
+PyJObject* PyJCollection_New(void);
+
+/*
+ * Returns true if the object is a PyJCollection.
+ */
 int PyJCollection_Check(PyObject*);
 
 

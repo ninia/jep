@@ -27,8 +27,8 @@
 */
 
 /*
- * A PyJListObject is a PyJCollection with some extra methods attached to meet
- * the python Sequence protocol/interface.  It should only be used where the
+ * A PyJListObject is a PyJCollectionObject with some extra methods attached to meet
+ * the Python Sequence protocol/interface.  It should only be used where the
  * underlying jobject of the PyJObject is an implementation of java.util.List.
  */
 
@@ -45,8 +45,15 @@ typedef struct {
 } PyJListObject;
 
 
-PyJListObject* PyJList_New(void);
-PyObject* pyjlist_new_copy(PyObject*);
+/*
+ * Returns a new PyJList, which is a PyJCollection with some sequence methods
+ * attached to it.
+ */
+PyJObject* PyJList_New(void);
+
+/*
+ * Returns true if the object is a PyJList.
+ */
 int PyJList_Check(PyObject*);
 
 

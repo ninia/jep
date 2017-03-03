@@ -28,24 +28,14 @@
 
 #include "Jep.h"
 
-static Py_ssize_t pyjmap_len(PyObject*);
-static PyObject* pyjmap_getitem(PyObject*, PyObject*);
-static int pyjmap_setitem(PyObject*, PyObject*, PyObject*);
 
-
-/*
- * News up a pyjmap, which is just a pyjobject with some mapping methods
- * attached to it.  This should only be called from PyJObject_New().
- */
-PyJMapObject* PyJMap_New()
+PyJObject* PyJMap_New()
 {
-    // pyjobject will have already initialized PyJMap_Type
-    return PyObject_NEW(PyJMapObject, &PyJMap_Type);
+    // PyJObject will have already initialized PyJMap_Type
+    return (PyJObject*) PyObject_NEW(PyJMapObject, &PyJMap_Type);
 }
 
-/*
- * Checks if the object is a pyjmap.
- */
+
 int PyJMap_Check(PyObject *obj)
 {
     if (PyObject_TypeCheck(obj, &PyJMap_Type)) {
@@ -221,7 +211,7 @@ FINALLY:
  * Method for iterating over the keys of the dictionary.  For example,
  * for key in o:
  */
-PyObject* pyjmap_getiter(PyObject* obj)
+static PyObject* pyjmap_getiter(PyObject* obj)
 {
     jobject       set      = NULL;
     jobject       iter     = NULL;
@@ -250,10 +240,6 @@ FINALLY:
     return result;
 }
 
-
-static PyMethodDef pyjmap_methods[] = {
-    {NULL, NULL, 0, NULL}
-};
 
 static PySequenceMethods pyjmap_seq_methods = {
     0,                          /* sq_length */
@@ -306,7 +292,7 @@ PyTypeObject PyJMap_Type = {
     0,                                        /* tp_weaklistoffset */
     (getiterfunc) pyjmap_getiter,             /* tp_iter */
     0,                                        /* tp_iternext */
-    pyjmap_methods,                           /* tp_methods */
+    0,                                        /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
     0, // &PyJObject_Type                     /* tp_base */

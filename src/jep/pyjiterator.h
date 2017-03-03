@@ -28,7 +28,7 @@
 
 /*
  * A PyJIteratorObject is a PyJObject that has tp_iter and tp_iternext
- * implemented. It exists to support PyJIterableObject.
+ * implemented to support iteration. It exists primarily to support PyJIterableObject.
  */
 
 #include "jep_platform.h"
@@ -44,10 +44,15 @@ typedef struct {
 } PyJIteratorObject;
 
 
-PyJIteratorObject* PyJIterator_New(void);
+/*
+ * Returns a new PyJIterator, which is a PyJObject for iterators.
+ */
+PyJObject* PyJIterator_New(void);
+
+/*
+ * Returns true if the object is a PyJIterator.
+ */
 int PyJIterator_Check(PyObject*);
-PyObject* pyjiterator_getiter(PyObject*);
-PyObject* pyjiterator_next(PyObject*);
 
 
 #endif // ndef pyjiterator

@@ -33,7 +33,23 @@
 
 #include "Jep.h"
 
-static void pyjfield_dealloc(PyJFieldObject *self);
+
+static void pyjfield_dealloc(PyJFieldObject *self)
+{
+#if USE_DEALLOC
+    JNIEnv *env  = pyembed_get_env();
+    if (env) {
+        if (self->rfield) {
+            (*env)->DeleteGlobalRef(env, self->rfield);
+        }
+    }
+
+    Py_CLEAR(self->pyFieldName);
+
+    PyObject_Del(self);
+#endif
+}
+
 
 PyJFieldObject* PyJField_New(JNIEnv *env,
                              jobject rfield,
@@ -139,23 +155,6 @@ EXIT_ERROR:
     }
 
     return 0;
-}
-
-
-static void pyjfield_dealloc(PyJFieldObject *self)
-{
-#if USE_DEALLOC
-    JNIEnv *env  = pyembed_get_env();
-    if (env) {
-        if (self->rfield) {
-            (*env)->DeleteGlobalRef(env, self->rfield);
-        }
-    }
-
-    Py_CLEAR(self->pyFieldName);
-
-    PyObject_Del(self);
-#endif
 }
 
 
@@ -593,11 +592,6 @@ int pyjfield_set(PyJFieldObject *self, PyObject *value)
 }
 
 
-static PyMethodDef pyjfield_methods[] = {
-    {NULL, NULL, 0, NULL}
-};
-
-
 PyTypeObject PyJField_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "jep.PyJField",
@@ -626,7 +620,7 @@ PyTypeObject PyJField_Type = {
     0,                                        /* tp_weaklistoffset */
     0,                                        /* tp_iter */
     0,                                        /* tp_iternext */
-    pyjfield_methods,                         /* tp_methods */
+    0,                                        /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
     0,                                        /* tp_base */

@@ -28,29 +28,14 @@
 
 #include "Jep.h"
 
-/*
- * News up a pyjiterator, which is just a pyjobject for iterators.
- */
-PyJIteratorObject* PyJIterator_New()
+
+PyJObject* PyJIterator_New()
 {
-    /*
-     * MSVC requires tp_base to be set here
-     * See https://docs.python.org/2/extending/newtypes.html
-     */
-    if (!PyJIterator_Type.tp_base) {
-        PyJIterator_Type.tp_base = &PyJObject_Type;
-    }
-
-    if (PyType_Ready(&PyJIterator_Type) < 0) {
-        return NULL;
-    }
-
-    return PyObject_NEW(PyJIteratorObject, &PyJIterator_Type);
+    // PyJObject will have already initialized PyJIterator_Type
+    return (PyJObject*) PyObject_NEW(PyJIteratorObject, &PyJIterator_Type);
 }
 
-/*
- * Checks if the object is a pyjiterator.
- */
+
 int PyJIterator_Check(PyObject *obj)
 {
     if (PyObject_TypeCheck(obj, &PyJIterator_Type)) {
@@ -59,7 +44,7 @@ int PyJIterator_Check(PyObject *obj)
     return 0;
 }
 
-PyObject* pyjiterator_next(PyObject* self)
+static PyObject* pyjiterator_next(PyObject* self)
 {
     jboolean      nextAvail = JNI_FALSE;
     PyJObject    *pyjob     = (PyJObject*) self;
@@ -93,11 +78,6 @@ PyObject* pyjiterator_next(PyObject* self)
 }
 
 
-static PyMethodDef pyjiterator_methods[] = {
-    {NULL, NULL, 0, NULL}
-};
-
-
 /*
  * Inherits from PyJObject_Type
  */
@@ -129,7 +109,7 @@ PyTypeObject PyJIterator_Type = {
     0,                                        /* tp_weaklistoffset */
     PyObject_SelfIter,                        /* tp_iter */
     (iternextfunc) pyjiterator_next,          /* tp_iternext */
-    pyjiterator_methods,                      /* tp_methods */
+    0,                                        /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
     0, // &PyJObject_Type                     /* tp_base */

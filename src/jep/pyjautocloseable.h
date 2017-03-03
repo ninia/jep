@@ -27,7 +27,7 @@
 */
 
 /*
- * A PyJAutoCloseable is a PyJObject that has __enter__ and __exit__
+ * A PyJAutoCloseableObject is a PyJObject that has __enter__ and __exit__
  * implemented. It should only be used where the underlying jobject
  * of the PyJObject is an implementation of java.lang.AutoCloseable.
  */
@@ -45,7 +45,15 @@ typedef struct {
 } PyJAutoCloseableObject;
 
 
-PyJAutoCloseableObject* PyJAutoCloseable_New(void);
+/*
+ * Returns a new PyJAutoCloseable, which is a PyJObject that implements
+ * close().
+ */
+PyJObject* PyJAutoCloseable_New(void);
+
+/*
+ * Returns true if the object is a PyJAutoCloseable.
+ */
 int PyJAutoCloseable_Check(PyObject*);
 
 #endif // ndef pyjautocloseable
