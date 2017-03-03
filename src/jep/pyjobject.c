@@ -28,7 +28,10 @@
 
 #include "Jep.h"
 
-// https://bugs.python.org/issue2897
+/*
+ * https://bugs.python.org/issue2897
+ * structmember.h must be included to use PyMemberDef
+ */
 #include "structmember.h"
 
 
@@ -128,11 +131,10 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
         process_java_exception(env);
         return 0;
     }
-    // ------------------------------ call Class.getMethods()
 
     /*
-     * attach attribute java_name to the pyjobject instance to assist with
-     * understanding the type at runtime
+     * Attach the attribute java_name to the PyJObject instance to assist
+     * developers with understanding the type at runtime.
      */
     className = java_lang_Class_getName(env, pyjob->clazz);
     if (process_java_exception(env) || !className) {
@@ -145,23 +147,25 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
     }
     pyjob->javaClassName = pyClassName;
     Py_DECREF(pyAttrName);
-    // then, get methodid for getMethods()
+
     /*
-     * Performance improvement.  The code below is very similar to previous
-     * versions except methods are now cached in memory.
+     * Get methods for the PyJObject, optimized for performance.  The code
+     * below is very similar to previous versions except methods are now
+     * cached in memory.
      *
-     * Previously every time you instantiate a pyjobject, JEP would get the
-     * complete list of methods, turn them into pyjmethods, and add them as
-     * attributes to the pyjobject.
+     * Previously every time you instantiate a PyJObject, Jep would get the
+     * complete list of methods through reflection, turn them into PyJMethods,
+     * and add them as attributes to the PyJObject.
      *
-     * Now JEP retains a python dictionary in memory with a key of the fully
-     * qualified Java classname to a list of pyjmethods. Since the
-     * Java methods will never change at runtime for a particular Class, this
-     * is safe and drastically speeds up pyjobject instantiation by reducing
-     * reflection calls. We continue to set and reuse the pyjmethods as
-     * attributes on the pyjobject instance, but if pyjobject_getattr sees a
-     * pyjmethod, it will put it inside a pymethod and return that, enabling
-     * the reuse of the pyjmethod for this particular object instance.
+     * Now Jep retains a Python dictionary in memory with a key of the fully
+     * qualified Java classname to a list of PyJMethods and PyJMultiMethods.
+     * Since the Java methods will never change at runtime for a particular
+     * Class, this is safe and drastically speeds up PyJObject instantiation
+     * by reducing reflection calls. We continue to set and reuse the
+     * PyJMethods and PyJMultiMethods attributes on the PyJObject instance,
+     * but if pyjobject_getattro sees a PyJMethod or PyJMultiMethod, it will
+     * put it inside a PyMethod and return that, enabling the reuse of the
+     * PyJMethod or PyJMultiMethod for this particular object instance.
      *
      * We have the GIL at this point, so we can safely assume we're
      * synchronized and multiple threads will not alter the dictionary at the
@@ -195,22 +199,28 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
             goto EXIT_ERROR;
         }
 
-        // for each method, create a new pyjmethod object
-        // and add to the internal methods list.
+        /*
+         * For each method, create a new PyJMethod object and either add it to
+         * the cached methods list or a PyJMultiMethod.
+         */
         len = (*env)->GetArrayLength(env, methodArray);
         for (i = 0; i < len; i++) {
             PyJMethodObject *pymethod = NULL;
             jobject rmethod = NULL;
 
             rmethod = (*env)->GetObjectArrayElement(env, methodArray, i);
-
-            // make new PyJMethodObject, linked to pyjob
             pymethod = PyJMethod_New(env, rmethod);
 
             if (!pymethod) {
                 continue;
             }
 
+            /*
+             * For every method of this name, check to see if a PyJMethod or
+             * PyJMultiMethod is already in the cache with the same name. If
+             * so, turn it into a PyJMultiMethod or add it to the existing
+             * PyJMultiMethod.
+             */
             if (pymethod->pyMethodName && PyString_Check(pymethod->pyMethodName)) {
                 int multi = 0;
                 Py_ssize_t cacheLen = PyList_Size(pyjMethodList);
@@ -248,6 +258,7 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
             Py_DECREF(pymethod);
             (*env)->DeleteLocalRef(env, rmethod);
         } // end of looping over available methods
+
         PyDict_SetItem(jepThread->fqnToPyJmethods, pyClassName, pyjMethodList);
         cachedMethodList = pyjMethodList;
         Py_DECREF(pyjMethodList); // fqnToPyJmethods will hold the reference
@@ -350,7 +361,7 @@ PyObject* PyJObject_New(JNIEnv *env, jobject obj)
      * There exist situations where a Java method signature has a return
      * type of Object but actually returns a Class or array.  Also if you
      * call Jep.set(String, Object[]) it should be treated as an array, not
-     * an object.  Hence this check here to build the optimal jep type in
+     * an object.  Hence this check here to build the optimal Jep type in
      * the interpreter regardless of signature.
      */
     jtype = get_jtype(env, objClz);
@@ -359,17 +370,21 @@ PyObject* PyJObject_New(JNIEnv *env, jobject obj)
     } else if (jtype == JCLASS_ID) {
         return PyJObject_NewClass(env, obj);
     } else {
-        // check for some of our extensions to pyjobject
+        /*
+         * Check the Java type against our extensions to PyJObject. If we have
+         * an extension to PyJObject that matches, then Python code using this
+         * PyJObject can appear more pythonic: e.g. java.lang.Iterable can
+         * become a PyJIterable and be used as a PyJObject but also as a Python
+         * iterable such as "for i in obj:".
+         */
         if ((*env)->IsInstanceOf(env, obj, JITERABLE_TYPE)) {
             if ((*env)->IsInstanceOf(env, obj, JCOLLECTION_TYPE)) {
                 if ((*env)->IsInstanceOf(env, obj, JLIST_TYPE)) {
                     pyjob = PyJList_New();
                 } else {
-                    // a Collection we have less support for
                     pyjob = PyJCollection_New();
                 }
             } else {
-                // an Iterable we have less support for
                 pyjob = PyJIterable_New();
             }
         } else if ((*env)->IsInstanceOf(env, obj, JMAP_TYPE)) {
@@ -463,7 +478,7 @@ int PyJObject_Check(PyObject *obj)
 }
 
 // call toString() on jobject. returns null on error.
-// excpected to return new reference.
+// expected to return new reference.
 static PyObject* pyjobject_str(PyJObject *self)
 {
     PyObject   *pyres     = NULL;
@@ -600,10 +615,10 @@ static PyObject* pyjobject_richcompare(PyJObject *self,
      * object.  You might think that's not allowed, but the python doc on
      * richcompare indicates that when encountering NotImplemented, allow the
      * reverse comparison in the hopes that that's implemented.  This works
-     * suprisingly well because it enables Python comparison operations on
+     * surprisingly well because it enables Python comparison operations on
      * things such as pyjobject != Py_None or
      * assertSequenceEqual(pyjlist, pylist) where each list has the same
-     * contents.  This saves us from having to worry about if the java object
+     * contents.  This saves us from having to worry about if the Java object
      * is on the left side or the right side of the operator.
      *
      * In short, this is intentional to keep comparisons working well.
@@ -692,8 +707,8 @@ static long pyjobject_hash(PyJObject *self)
     }
 
     /*
-     * this seems odd but python expects -1 for error occurred and other
-     * built-in types then return -2 if the actual hash is -1
+     * This seems odd but Python expects -1 for error occurred. Other Python
+     * built-in types then return -2 if the actual hash is -1.
      */
     if (hash == -1) {
         hash = -2;
