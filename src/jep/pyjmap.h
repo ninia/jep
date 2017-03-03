@@ -45,8 +45,8 @@ typedef struct {
 } PyJMapObject;
 
 
-PyJMapObject* pyjmap_new(void);
-int pyjmap_check(PyObject*);
+PyJMapObject* PyJMap_New(void);
+int PyJMap_Check(PyObject*);
 
 
 #endif // ndef pyjmap

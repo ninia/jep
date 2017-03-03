@@ -44,8 +44,8 @@ typedef struct {
 } PyJIteratorObject;
 
 
-PyJIteratorObject* pyjiterator_new(void);
-int pyjiterator_check(PyObject*);
+PyJIteratorObject* PyJIterator_New(void);
+int PyJIterator_Check(PyObject*);
 PyObject* pyjiterator_getiter(PyObject*);
 PyObject* pyjiterator_next(PyObject*);
 

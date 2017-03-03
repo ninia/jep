@@ -65,9 +65,9 @@ static void raiseTypeError(JNIEnv *env, PyObject *pyobject, jclass expectedType)
         return;
     }
     expTypeName = (*env)->GetStringUTFChars(env, expTypeJavaName, 0);
-    if (pyjclass_check(pyobject)) {
+    if (PyJClass_Check(pyobject)) {
         actTypeName = "java.lang.Class";
-    } else if (pyjobject_check(pyobject)) {
+    } else if (PyJObject_Check(pyobject)) {
         actTypeName = PyString_AsString(((PyJObject*) pyobject)->javaClassName);
     } else {
         actTypeName = pyobject->ob_type->tp_name;
@@ -572,11 +572,11 @@ jobject PyObject_As_jobject(JNIEnv *env, PyObject *pyobject,
 {
     if (pyobject == Py_None) {
         return NULL;
-    } else if (pyjclass_check(pyobject)) {
+    } else if (PyJClass_Check(pyobject)) {
         if ((*env)->IsAssignableFrom(env, JCLASS_TYPE, expectedType)) {
             return (*env)->NewLocalRef(env, ((PyJObject *) pyobject)->clazz);
         }
-    } else if (pyjobject_check(pyobject)) {
+    } else if (PyJObject_Check(pyobject)) {
         PyJObject *pyjobject = (PyJObject*) pyobject;
         if ((*env)->IsAssignableFrom(env, pyjobject->clazz, expectedType)) {
             return (*env)->NewLocalRef(env, pyjobject->object);

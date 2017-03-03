@@ -34,9 +34,9 @@ static PyObject* java_number_to_pythonfloat(JNIEnv*, PyObject*);
 
 /*
  * News up a pyjnumber, which is just a pyjobject with some number methods
- * attached to it.  This should only be called from pyjobject_new().
+ * attached to it.  This should only be called from PyJObject_New().
  */
-PyJNumberObject* pyjnumber_new()
+PyJNumberObject* PyJNumber_New()
 {
     // pyjobject will have already initialized PyJNumber_Type
     return PyObject_NEW(PyJNumberObject, &PyJNumber_Type);
@@ -45,7 +45,7 @@ PyJNumberObject* pyjnumber_new()
 /*
  * Checks if the object is a pyjnumber.
  */
-int pyjnumber_check(PyObject *obj)
+int PyJNumber_Check(PyObject *obj)
 {
     if (PyObject_TypeCheck(obj, &PyJNumber_Type)) {
         return 1;
@@ -54,7 +54,7 @@ int pyjnumber_check(PyObject *obj)
 }
 
 #define TO_PYTHON_NUMBER(env, var)\
-    if (pyjnumber_check(var)) {\
+    if (PyJNumber_Check(var)) {\
         var = java_number_to_python(env, var);\
         if (var == NULL){\
             return NULL;\
@@ -188,7 +188,7 @@ static int pyjnumber_nonzero(PyObject *x)
     JNIEnv *env    = pyembed_get_env();
     int     result = -1;
 
-    if (pyjnumber_check(x)) {
+    if (PyJNumber_Check(x)) {
         x = java_number_to_python(env, x);
         if (x == NULL) {
             return result;

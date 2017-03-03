@@ -35,9 +35,9 @@ static int pyjcollection_contains(PyObject*, PyObject*);
 
 /*
  * News up a pyjcollection, which is just a pyjiterable with a few methods
- * attached to it.  This should only be called from pyjobject_new().
+ * attached to it.  This should only be called from PyJObject_New().
  */
-PyJCollectionObject* pyjcollection_new()
+PyJCollectionObject* PyJCollection_New()
 {
     // pyjobject will have already initialized PyJCollection_Type
     return PyObject_NEW(PyJCollectionObject, &PyJCollection_Type);
@@ -47,7 +47,7 @@ PyJCollectionObject* pyjcollection_new()
 /*
  * Checks if the object is a pyjcollection.
  */
-int pyjcollection_check(PyObject *obj)
+int PyJCollection_Check(PyObject *obj)
 {
     if (PyObject_TypeCheck(obj, &PyJCollection_Type)) {
         return 1;

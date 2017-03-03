@@ -31,7 +31,7 @@
 /*
  * News up a pyjiterator, which is just a pyjobject for iterators.
  */
-PyJIteratorObject* pyjiterator_new()
+PyJIteratorObject* PyJIterator_New()
 {
     /*
      * MSVC requires tp_base to be set here
@@ -51,7 +51,7 @@ PyJIteratorObject* pyjiterator_new()
 /*
  * Checks if the object is a pyjiterator.
  */
-int pyjiterator_check(PyObject *obj)
+int PyJIterator_Check(PyObject *obj)
 {
     if (PyObject_TypeCheck(obj, &PyJIterator_Type)) {
         return 1;

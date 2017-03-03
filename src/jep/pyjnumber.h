@@ -45,8 +45,8 @@ typedef struct {
 } PyJNumberObject;
 
 
-PyJNumberObject* pyjnumber_new(void);
-int pyjnumber_check(PyObject*);
+PyJNumberObject* PyJNumber_New(void);
+int PyJNumber_Check(PyObject*);
 
 
 #endif // ndef pyjnumber

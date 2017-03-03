@@ -41,9 +41,9 @@ static PyObject* pyjlist_inplace_fill(PyObject*, Py_ssize_t);
 
 /*
  * News up a pyjlist, which is just a pyjobject with some sequence methods
- * attached to it.  This should only be called from pyjobject_new().
+ * attached to it.  This should only be called from PyJObject_New().
  */
-PyJListObject* pyjlist_new()
+PyJListObject* PyJList_New()
 {
     // pyjobject will have already initialized PyJList_Type
     return PyObject_NEW(PyJListObject, &PyJList_Type);
@@ -61,7 +61,7 @@ PyObject* pyjlist_new_copy(PyObject *toCopy)
     PyObject     *result      = NULL;
 
 
-    if (!pyjlist_check(toCopy)) {
+    if (!PyJList_Check(toCopy)) {
         PyErr_Format(PyExc_RuntimeError, "pyjlist_new_copy() must receive a PyJList");
         return NULL;
     }
@@ -81,7 +81,7 @@ PyObject* pyjlist_new_copy(PyObject *toCopy)
         goto FINALLY;
     }
 
-    result = pyjobject_new(env, newList);
+    result = PyJObject_New(env, newList);
 FINALLY:
     (*env)->PopLocalFrame(env, NULL);
     return result;
@@ -90,7 +90,7 @@ FINALLY:
 /*
  * Checks if the object is a pyjlist.
  */
-int pyjlist_check(PyObject *obj)
+int PyJList_Check(PyObject *obj)
 {
     if (PyObject_TypeCheck(obj, &PyJList_Type)) {
         return 1;
@@ -199,7 +199,7 @@ static PyObject* pyjlist_getslice(PyObject *o, Py_ssize_t i1, Py_ssize_t i2)
         goto FINALLY;
     }
 
-    pyres = pyjobject_new(env, result);
+    pyres = PyJObject_New(env, result);
 FINALLY:
     (*env)->PopLocalFrame(env, NULL);
     return pyres;

@@ -259,7 +259,7 @@ jobject get_base_jdndarray_from_pyndarray(JNIEnv *env, PyObject *pyobj)
     jobject jbase  = NULL;
 
     base = PyArray_BASE((PyArrayObject*) pyobj);
-    if (!base || !pyjobject_check(base)) {
+    if (!base || !PyJObject_Check(base)) {
         return NULL;
     }
     jbase = ((PyJObject*) base)->object;

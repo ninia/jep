@@ -135,7 +135,7 @@ static PyObject* pyjconstructor_call(PyJMethodObject *self, PyObject *args,
     }
 
     firstArg = PyTuple_GetItem(args, 0);
-    if (!pyjclass_check(firstArg)) {
+    if (!PyJClass_Check(firstArg)) {
         PyErr_SetString(PyExc_RuntimeError,
                         "First argument to a java constructor must be a java class.");
         return NULL;
@@ -188,7 +188,7 @@ static PyObject* pyjconstructor_call(PyJMethodObject *self, PyObject *args,
     }
 
     // finally, make pyjobject and return
-    pobj = pyjobject_new(env, obj);
+    pobj = PyJObject_New(env, obj);
 
     // we already closed the local frame, so make
     // sure to delete this local ref.

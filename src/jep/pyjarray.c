@@ -154,7 +154,7 @@ PyObject* pyjarray_new_v(PyObject *isnull, PyObject *args)
             } // switch
 
         } // if int(two)
-        else if (pyjobject_check(two)) {
+        else if (PyJObject_Check(two)) {
             PyJObject *pyjob = (PyJObject *) two;
             typeId = JOBJECT_ID;
 
@@ -1007,7 +1007,7 @@ static int pyjarray_index(PyJArrayObject *self, PyObject *el)
 
         JNIEnv *env = pyembed_get_env();
 
-        if (el != Py_None && !pyjobject_check(el)) {
+        if (el != Py_None && !PyJObject_Check(el)) {
             PyErr_SetString(PyExc_TypeError, "Expected jobject.");
             return -1;
         }

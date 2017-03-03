@@ -50,6 +50,6 @@ typedef struct {
 
 int pyjclass_init(JNIEnv*, PyObject*);
 PyObject* pyjclass_call(PyJClassObject*, PyObject*, PyObject*);
-int pyjclass_check(PyObject*);
+int PyJClass_Check(PyObject*);
 
 #endif // ndef pyjclass

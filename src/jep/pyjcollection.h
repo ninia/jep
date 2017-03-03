@@ -46,8 +46,8 @@ typedef struct {
 } PyJCollectionObject;
 
 
-PyJCollectionObject* pyjcollection_new(void);
-int pyjcollection_check(PyObject*);
+PyJCollectionObject* PyJCollection_New(void);
+int PyJCollection_Check(PyObject*);
 
 
 #endif // ndef pyjcollection

@@ -45,9 +45,9 @@ typedef struct {
 } PyJListObject;
 
 
-PyJListObject* pyjlist_new(void);
+PyJListObject* PyJList_New(void);
 PyObject* pyjlist_new_copy(PyObject*);
-int pyjlist_check(PyObject*);
+int PyJList_Check(PyObject*);
 
 
 #endif // ndef pyjlist

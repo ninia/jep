@@ -47,9 +47,9 @@ typedef struct {
                                        the object's Java clazz */
 } PyJObject;
 
-PyObject* pyjobject_new(JNIEnv*, jobject);
-PyObject* pyjobject_new_class(JNIEnv*, jclass);
-int pyjobject_check(PyObject *obj);
+PyObject* PyJObject_New(JNIEnv*, jobject);
+PyObject* PyJObject_NewClass(JNIEnv*, jclass);
+int PyJObject_Check(PyObject*);
 
 void pyjobject_dealloc(PyJObject*);
 PyObject* pyjobject_str(PyJObject*);

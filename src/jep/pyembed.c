@@ -630,7 +630,7 @@ static PyObject* pyembed_jproxy(PyObject *self, PyObject *args)
     // make sure target doesn't get garbage collected
     Py_INCREF(pytarget);
 
-    return pyjobject_new(env, proxy);
+    return PyJObject_New(env, proxy);
 }
 
 
@@ -701,7 +701,7 @@ static PyObject* pyembed_forname(PyObject *self, PyObject *args)
     if (process_java_exception(env) || !objclazz) {
         return NULL;
     }
-    result = (PyObject *) pyjobject_new_class(env, objclazz);
+    result = (PyObject *) PyJObject_NewClass(env, objclazz);
     (*env)->DeleteLocalRef(env, objclazz);
     return result;
 }
@@ -742,7 +742,7 @@ static PyObject* pyembed_findclass(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    result = (PyObject *) pyjobject_new_class(env, clazz);
+    result = (PyObject *) PyJObject_NewClass(env, clazz);
     (*env)->DeleteLocalRef(env, clazz);
     return result;
 }
@@ -1514,7 +1514,7 @@ void pyembed_setparameter_class(JNIEnv *env,
         Py_INCREF(Py_None);
         pyjob = Py_None;
     } else {
-        pyjob = pyjobject_new_class(env, value);
+        pyjob = PyJObject_NewClass(env, value);
     }
 
     if (pyjob) {

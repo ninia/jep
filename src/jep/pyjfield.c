@@ -35,7 +35,7 @@
 
 static void pyjfield_dealloc(PyJFieldObject *self);
 
-PyJFieldObject* pyjfield_new(JNIEnv *env,
+PyJFieldObject* PyJField_New(JNIEnv *env,
                              jobject rfield,
                              PyJObject *pyjobject)
 {
@@ -159,7 +159,7 @@ static void pyjfield_dealloc(PyJFieldObject *self)
 }
 
 
-int pyjfield_check(PyObject *obj)
+int PyJField_Check(PyObject *obj)
 {
     if (PyObject_TypeCheck(obj, &PyJField_Type)) {
         return 1;
@@ -236,7 +236,7 @@ PyObject* pyjfield_get(PyJFieldObject *self)
             Py_RETURN_NONE;
         }
 
-        result = pyjobject_new_class(env, obj);
+        result = PyJObject_NewClass(env, obj);
         (*env)->DeleteLocalRef(env, obj);
         break;
     }

@@ -237,7 +237,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
     }
 
     firstArg = PyTuple_GetItem(args, 0);
-    if (!pyjobject_check(firstArg)) {
+    if (!PyJObject_Check(firstArg)) {
         PyErr_SetString(PyExc_RuntimeError,
                         "First argument to a java method must be a java object.");
         return NULL;
@@ -383,7 +383,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
         Py_BLOCK_THREADS;
         if (!process_java_exception(env) && obj != NULL) {
-            result = pyjobject_new_class(env, obj);
+            result = PyJObject_NewClass(env, obj);
         }
 
         break;

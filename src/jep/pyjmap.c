@@ -35,9 +35,9 @@ static int pyjmap_setitem(PyObject*, PyObject*, PyObject*);
 
 /*
  * News up a pyjmap, which is just a pyjobject with some mapping methods
- * attached to it.  This should only be called from pyjobject_new().
+ * attached to it.  This should only be called from PyJObject_New().
  */
-PyJMapObject* pyjmap_new()
+PyJMapObject* PyJMap_New()
 {
     // pyjobject will have already initialized PyJMap_Type
     return PyObject_NEW(PyJMapObject, &PyJMap_Type);
@@ -46,7 +46,7 @@ PyJMapObject* pyjmap_new()
 /*
  * Checks if the object is a pyjmap.
  */
-int pyjmap_check(PyObject *obj)
+int PyJMap_Check(PyObject *obj)
 {
     if (PyObject_TypeCheck(obj, &PyJMap_Type)) {
         return 1;
@@ -244,7 +244,7 @@ PyObject* pyjmap_getiter(PyObject* obj)
         goto FINALLY;
     }
 
-    result = pyjobject_new(env, iter);
+    result = PyJObject_New(env, iter);
 FINALLY:
     (*env)->PopLocalFrame(env, NULL);
     return result;

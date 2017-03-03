@@ -696,7 +696,7 @@ int pyarg_matches_jtype(JNIEnv *env,
         case JOBJECT_ID:
             return 1;
         }
-    } else if (pyjclass_check(param)) {
+    } else if (PyJClass_Check(param)) {
         switch (paramTypeId) {
         case JCLASS_ID:
             return 2;
@@ -707,7 +707,7 @@ int pyarg_matches_jtype(JNIEnv *env,
                 return 1;
             }
         }
-    } else if (pyjobject_check(param)) {
+    } else if (PyJObject_Check(param)) {
         switch (paramTypeId) {
         case JOBJECT_ID:
             if ((*env)->IsSameObject(env,
@@ -839,7 +839,7 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
     }
 
     case JCLASS_ID:
-        return (PyObject *) pyjobject_new_class(env, val);
+        return (PyObject *) PyJObject_NewClass(env, val);
 
     case JVOID_ID:
     // pass through
@@ -869,7 +869,7 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
             return convert_jndarray_pyndarray(env, val);
 #endif
         } else {
-            PyObject* ret = (PyObject *) pyjobject_new(env, val);
+            PyObject* ret = (PyObject *) PyJObject_New(env, val);
 #if JEP_NUMPY_ENABLED
             /*
              * check for jep/DirectNDArray and autoconvert to numpy.ndarray

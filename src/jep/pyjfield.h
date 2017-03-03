@@ -50,10 +50,10 @@ typedef struct {
 } PyJFieldObject;
 
 
-PyJFieldObject* pyjfield_new(JNIEnv*, jobject, PyJObject*);
-int pyjfield_check(PyObject*);
+PyJFieldObject* PyJField_New(JNIEnv*, jobject, PyJObject*);
+int PyJField_Check(PyObject*);
 
 PyObject* pyjfield_get(PyJFieldObject*);
-int pyjfield_set(PyJFieldObject *self, PyObject *value);
+int pyjfield_set(PyJFieldObject*, PyObject*);
 
 #endif // ndef pyjfield

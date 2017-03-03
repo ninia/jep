@@ -84,7 +84,7 @@ static PyObject* pyjclass_add_inner_class(JNIEnv *env, PyJObject *topClz,
         jstring          shortName  = NULL;
         const char      *charName   = NULL;
 
-        attrClz = pyjobject_new_class(env, innerClz);
+        attrClz = PyJObject_NewClass(env, innerClz);
         if (!attrClz) {
             return NULL;
         }
@@ -157,7 +157,7 @@ static PyObject* pyjclass_add_inner_classes(JNIEnv *env,
     return (PyObject*) topClz;
 }
 
-int pyjclass_check(PyObject *obj)
+int PyJClass_Check(PyObject *obj)
 {
     if (PyObject_TypeCheck(obj, &PyJClass_Type)) {
         return 1;

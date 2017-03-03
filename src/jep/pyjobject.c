@@ -105,7 +105,7 @@ static void pyjobject_init_subtypes(void)
 
 
 // called internally to make new PyJObject instances
-PyObject* pyjobject_new(JNIEnv *env, jobject obj)
+PyObject* PyJObject_New(JNIEnv *env, jobject obj)
 {
     PyJObject    *pyjob;
     jclass        objClz;
@@ -132,29 +132,29 @@ PyObject* pyjobject_new(JNIEnv *env, jobject obj)
     if (jtype == JARRAY_ID) {
         return pyjarray_new(env, obj);
     } else if (jtype == JCLASS_ID) {
-        return pyjobject_new_class(env, obj);
+        return PyJObject_NewClass(env, obj);
     } else {
         // check for some of our extensions to pyjobject
         if ((*env)->IsInstanceOf(env, obj, JITERABLE_TYPE)) {
             if ((*env)->IsInstanceOf(env, obj, JCOLLECTION_TYPE)) {
                 if ((*env)->IsInstanceOf(env, obj, JLIST_TYPE)) {
-                    pyjob = (PyJObject*) pyjlist_new();
+                    pyjob = (PyJObject*) PyJList_New();
                 } else {
                     // a Collection we have less support for
-                    pyjob = (PyJObject*) pyjcollection_new();
+                    pyjob = (PyJObject*) PyJCollection_New();
                 }
             } else {
                 // an Iterable we have less support for
-                pyjob = (PyJObject*) pyjiterable_new();
+                pyjob = (PyJObject*) PyJIterable_New();
             }
         } else if ((*env)->IsInstanceOf(env, obj, JMAP_TYPE)) {
-            pyjob = (PyJObject*) pyjmap_new();
+            pyjob = (PyJObject*) PyJMap_New();
         } else if ((*env)->IsInstanceOf(env, obj, JITERATOR_TYPE)) {
-            pyjob = (PyJObject*) pyjiterator_new();
+            pyjob = (PyJObject*) PyJIterator_New();
         } else if ((*env)->IsInstanceOf(env, obj, JAUTOCLOSEABLE_TYPE)) {
             pyjob = (PyJObject*) PyJAutoCloseable_New();
         } else if ((*env)->IsInstanceOf(env, obj, JNUMBER_TYPE)) {
-            pyjob = (PyJObject*) pyjnumber_new();
+            pyjob = (PyJObject*) PyJNumber_New();
         } else {
             pyjob = PyObject_NEW(PyJObject, &PyJObject_Type);
         }
@@ -175,7 +175,7 @@ PyObject* pyjobject_new(JNIEnv *env, jobject obj)
 }
 
 
-PyObject* pyjobject_new_class(JNIEnv *env, jclass clazz)
+PyObject* PyJObject_NewClass(JNIEnv *env, jclass clazz)
 {
     PyJObject       *pyjob;
     PyJClassObject  *pyjclass;  // same object as pyjob, just casted
@@ -388,7 +388,7 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
                                                fieldArray,
                                                i);
 
-        pyjfield = pyjfield_new(env, rfield, pyjob);
+        pyjfield = PyJField_New(env, rfield, pyjob);
 
         if (!pyjfield) {
             continue;
@@ -447,7 +447,7 @@ void pyjobject_dealloc(PyJObject *self)
 }
 
 
-int pyjobject_check(PyObject *obj)
+int PyJObject_Check(PyObject *obj)
 {
     if (PyObject_TypeCheck(obj, &PyJObject_Type)) {
         return 1;
@@ -627,7 +627,7 @@ PyObject* pyjobject_getattro(PyObject *obj, PyObject *name)
 #endif
         Py_DECREF(ret);
         return wrapper;
-    } else if (pyjfield_check(ret)) {
+    } else if (PyJField_Check(ret)) {
         PyObject *resolved = pyjfield_get((PyJFieldObject *) ret);
         Py_DECREF(ret);
         return resolved;
@@ -657,7 +657,7 @@ int pyjobject_setattro(PyJObject *obj, PyObject *name, PyObject *v)
             return -1;
         }
 
-        if (!pyjfield_check(cur)) {
+        if (!PyJField_Check(cur)) {
             PyErr_SetString(PyExc_TypeError, "Not a pyjfield object.");
             return -1;
         }

@@ -45,8 +45,8 @@ typedef struct {
 } PyJIterableObject;
 
 
-PyJIterableObject* pyjiterable_new(void);
-int pyjiterable_check(PyObject*);
+PyJIterableObject* PyJIterable_New(void);
+int PyJIterable_Check(PyObject*);
 PyObject* pyjiterable_getiter(PyObject*);
 
 

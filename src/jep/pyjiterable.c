@@ -30,9 +30,9 @@
 
 /*
  * News up a pyjiterable, which is just a pyjobject that supports iteration.
- * This should only be called from pyjobject_new().
+ * This should only be called from PyJObject_New().
  */
-PyJIterableObject* pyjiterable_new()
+PyJIterableObject* PyJIterable_New()
 {
     // pyjobject will have already initialized PyJIterable_Type
     return PyObject_NEW(PyJIterableObject, &PyJIterable_Type);
@@ -41,7 +41,7 @@ PyJIterableObject* pyjiterable_new()
 /*
  * Checks if the object is a pyjiterable.
  */
-int pyjiterable_check(PyObject *obj)
+int PyJIterable_Check(PyObject *obj)
 {
     if (PyObject_TypeCheck(obj, &PyJIterable_Type)) {
         return 1;
@@ -72,7 +72,7 @@ PyObject* pyjiterable_getiter(PyObject* obj)
                         "java.util.Iterable returned a null value from iterator()");
         goto FINALLY;
     }
-    result = pyjobject_new(env, iter);
+    result = PyJObject_New(env, iter);
 FINALLY:
     (*env)->PopLocalFrame(env, NULL);
     return result;

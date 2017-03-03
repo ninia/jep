@@ -89,20 +89,20 @@ int process_py_exception(JNIEnv *env, int printTrace)
 
         if (pvalue) {
             PyObject *v = NULL;
-            if (!pyjobject_check(pvalue)) {
+            if (!PyJObject_Check(pvalue)) {
                 /*
                  * if Python went through PyErr_NormalizeException(...), then
                  * it's possible a PyJObject pvalue was moved to
                  * pvalue.message
                  */
                  PyObject *tmp = PyObject_GetAttrString(pvalue, "message");
-                 if (tmp != NULL && pyjobject_check(tmp)) {
+                 if (tmp != NULL && PyJObject_Check(tmp)) {
                      Py_DECREF(pvalue);
                      pvalue = tmp;
                  }
             }
 
-            if (pyjobject_check(pvalue)) {
+            if (PyJObject_Check(pvalue)) {
                 // it's a java exception that came from process_java_exception
                 jstring jmessage;
                 jexc = (PyJObject*) pvalue;
@@ -481,7 +481,7 @@ int process_java_exception(JNIEnv *env)
     pyExceptionType = pyerrtype_from_throwable(env, exception);
 
     // turn the Java exception into a PyJObject so the interpreter can handle it
-    jpyExc = pyjobject_new(env, exception);
+    jpyExc = PyJObject_New(env, exception);
     if ((*env)->ExceptionCheck(env) || !jpyExc) {
         PyErr_Format(PyExc_RuntimeError,
                      "wrapping java exception in pyjobject failed.");
