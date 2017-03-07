@@ -868,22 +868,21 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
         } else if (jndarray_check(env, val)) {
             return convert_jndarray_pyndarray(env, val);
 #endif
-        } else {
-            PyObject* ret = (PyObject *) PyJObject_New(env, val);
-#if JEP_NUMPY_ENABLED
-            /*
-             * check for jep/DirectNDArray and autoconvert to numpy.ndarray
-             * pyjobject
-             */
-            if (jdndarray_check(env, val)) {
-                return convert_jdndarray_pyndarray(env, ret);
-            }
-            if (PyErr_Occurred()) {
-                return NULL;
-            }
-#endif
-            return ret;
         }
+        PyObject* ret = (PyObject *) PyJObject_New(env, val);
+#if JEP_NUMPY_ENABLED
+        /*
+         * check for jep/DirectNDArray and autoconvert to numpy.ndarray
+         * pyjobject
+         */
+        if (jdndarray_check(env, val)) {
+            return convert_jdndarray_pyndarray(env, ret);
+        }
+        if (PyErr_Occurred()) {
+            return NULL;
+        }
+#endif
+        return ret;
 
     case JBOOLEAN_ID: {
         jboolean b = java_lang_Boolean_booleanValue(env, val);
