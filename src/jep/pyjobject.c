@@ -38,11 +38,16 @@
 static int subtypes_initialized = 0;
 
 /*
- * MSVC requires tp_base to be set at runtime instead of in
- * the type declaration. :/  Since we are building an
- * inheritance tree of types, we need to ensure that all the
- * tp_base are set for the subtypes before we possibly use
- * those subtypes.
+ * MSVC requires tp_base to be set at runtime instead of in the type
+ * declaration. :/  Otherwise we could just set tp_base in the type declaration
+ * and be done with it.  Since we are building an inheritance tree of types, we
+ * need to ensure that all the tp_base are set for the subtypes before we
+ * possibly use those subtypes.
+ *
+ * Furthermore, we need to ensure that the inheritance tree is built in the
+ * correct order, i.e. from the top down.  For example, we need to set that
+ * PyJIterable's tp_base extends PyJObject before we set that PyJCollection's
+ * tp_base extends PyJIterable.
  *
  * See https://docs.python.org/2/extending/newtypes.html
  *     https://docs.python.org/3/extending/newtypes.html
@@ -717,6 +722,36 @@ static long pyjobject_hash(PyJObject *self)
     return hash;
 }
 
+/*
+ * Creates a PyJMonitor that can emulate a Java synchronized(self) {...} block. 
+ */
+static PyObject* pyjobject_synchronized(PyObject* self, PyObject* args)
+{
+    PyObject   *monitor = NULL;
+    PyJObject  *thisObj = (PyJObject*) self;
+
+    if (thisObj->object) {
+        // PyJObject
+        monitor = PyJMonitor_New(thisObj->object);
+    } else {
+        // PyJClass
+        monitor = PyJMonitor_New(thisObj->clazz);
+    }
+
+    return monitor;
+}
+
+static PyMethodDef pyjobject_methods[] = {
+    {
+        "synchronized",
+        pyjobject_synchronized,
+        METH_NOARGS,
+        "synchronized that emulates Java's synchronized { obj } and returns a Python ContextManager"
+    },
+
+    { NULL, NULL }
+};
+
 
 static PyMemberDef pyjobject_members[] = {
     {"__dict__", T_OBJECT, offsetof(PyJObject, attr), READONLY},
@@ -753,7 +788,7 @@ PyTypeObject PyJObject_Type = {
     0,                                        /* tp_weaklistoffset */
     0,                                        /* tp_iter */
     0,                                        /* tp_iternext */
-    0,                                        /* tp_methods */
+    pyjobject_methods,                        /* tp_methods */
     pyjobject_members,                        /* tp_members */
     0,                                        /* tp_getset */
     0,                                        /* tp_base */

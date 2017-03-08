@@ -52,6 +52,7 @@
 #include "pyjmultimethod.h"
 #include "pyjnumber.h"
 #include "pyjautocloseable.h"
+#include "pyjmonitor.h"
 #include "pyjobject.h"
 #include "jbox.h"
 #include "convert_p2j.h"
