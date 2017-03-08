@@ -77,7 +77,7 @@ import sys
 class JepSharedModuleImporter(object):
 
     def __init__(self, moduleList, sharedImporter):
-        self.moduleList = moduleList
+        self.moduleList = list(moduleList)
         self.sharedImporter = sharedImporter
         if sys.version_info.major <= 2:
             # Python 2 will deadlock if you attempt to switch threads and import

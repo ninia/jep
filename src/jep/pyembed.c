@@ -477,7 +477,14 @@ JNIEnv* pyembed_get_env(void)
     JNIEnv *env;
 
     JNI_GetCreatedJavaVMs(&jvm, 1, NULL);
-    (*jvm)->AttachCurrentThread(jvm, (void**) &env, NULL);
+    /* 
+     * If the thread is already part of the JVM, the daemon status is not
+     * changed. If this is a new thread, started by Python then this tells
+     * Java to allow the process to exit even if the thread is still attached.
+     * Since there are no hooks to detach the thread later daemon is the only
+     * way to let the process exit normally.
+     */
+    (*jvm)->AttachCurrentThreadAsDaemon(jvm, (void**) &env, NULL);
 
     return env;
 }
@@ -502,8 +509,11 @@ JepThread* pyembed_get_jepthread(void)
 #endif
         }
     }
-
-    Py_DECREF(key);
+    Py_XDECREF(key);
+    if (!ret && !PyErr_Occurred()) {
+        PyErr_SetString(PyExc_RuntimeError,
+                        "No Jep instance available on current thread.");
+    }
     return ret;
 }
 
