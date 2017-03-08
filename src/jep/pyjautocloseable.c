@@ -62,17 +62,11 @@ static PyObject* pyjautocloseable_exit(PyObject* self, PyObject* args)
     PyJObject    *pyjob    = (PyJObject*) self;
     JNIEnv       *env      = pyembed_get_env();
 
-    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
-        process_java_exception(env);
-        return NULL;
-    }
-
     java_lang_AutoCloseable_close(env, pyjob->object);
     if (process_java_exception(env)) {
         return NULL;
     }
 
-    (*env)->PopLocalFrame(env, NULL);
     Py_RETURN_NONE;
 }
 
