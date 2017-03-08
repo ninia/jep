@@ -846,6 +846,7 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
     // wrap as a object... try to be diligent.
 
     case JOBJECT_ID:
+        PyObject* ret = NULL;
         if ((*env)->IsInstanceOf(env, val, JNUMBER_TYPE)) {
             if ((*env)->IsInstanceOf(env, val, JBYTE_OBJ_TYPE)) {
                 return convert_jobject(env, val, JBYTE_ID);
@@ -869,7 +870,8 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
             return convert_jndarray_pyndarray(env, val);
 #endif
         }
-        PyObject* ret = (PyObject *) PyJObject_New(env, val);
+
+        ret = (PyObject*) PyJObject_New(env, val);
 #if JEP_NUMPY_ENABLED
         /*
          * check for jep/DirectNDArray and autoconvert to numpy.ndarray
