@@ -846,7 +846,6 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
     // wrap as a object... try to be diligent.
 
     case JOBJECT_ID:
-        PyObject* ret = NULL;
         if ((*env)->IsInstanceOf(env, val, JNUMBER_TYPE)) {
             if ((*env)->IsInstanceOf(env, val, JBYTE_OBJ_TYPE)) {
                 return convert_jobject(env, val, JBYTE_ID);
@@ -871,20 +870,23 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
 #endif
         }
 
-        ret = (PyObject*) PyJObject_New(env, val);
+        // none of the above checks matched, make a new PyJObject
+        {
+            PyObject* ret = (PyObject*) PyJObject_New(env, val);
 #if JEP_NUMPY_ENABLED
-        /*
-         * check for jep/DirectNDArray and autoconvert to numpy.ndarray
-         * pyjobject
-         */
-        if (jdndarray_check(env, val)) {
-            return convert_jdndarray_pyndarray(env, ret);
-        }
-        if (PyErr_Occurred()) {
-            return NULL;
-        }
+            /*
+             * check for jep/DirectNDArray and autoconvert to numpy.ndarray
+             * pyjobject
+             */
+            if (jdndarray_check(env, val)) {
+                return convert_jdndarray_pyndarray(env, ret);
+            }
+            if (PyErr_Occurred()) {
+                return NULL;
+            }
 #endif
-        return ret;
+            return ret;
+        }
 
     case JBOOLEAN_ID: {
         jboolean b = java_lang_Boolean_booleanValue(env, val);
