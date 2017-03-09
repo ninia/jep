@@ -20,10 +20,12 @@ import jep.JepException;
  */
 public class TestCrossLangSync {
     
-    protected Object lock = new Object();
-//    protected Object lock = TestCrossLangSync.class;
+    private static final int THREADS_PER_LANG = 16;
     
     protected final AtomicInteger atomicInt = new AtomicInteger(0);
+    
+    protected Object lock = new Object();
+//    protected Object lock = TestCrossLangSync.class;        
 
     private static final String PY_CODE = new StringBuilder(
             "def doIt(obj, atom, count):\n").append(
@@ -33,29 +35,6 @@ public class TestCrossLangSync {
             "            atom.getAndIncrement()\n").append(
             "            if atom.get() != startValue + i:\n").append(
             "                raise ValueError(str(atom.get()) + ' != ' + str(startValue + i))\n").toString();
-
-    public static void main(String[] args) throws Exception {
-        TestCrossLangSync test = new TestCrossLangSync();
-        int size = 16;
-
-        TestThread[] tt = new TestThread[size * 2];
-
-        for (int i = 0; i < size * 2; i += 2) {
-            tt[i] = test.new PyThread(i);
-            tt[i + 1] = test.new JavaThread(i);
-        }
-
-        for (int i = 0; i < size * 2; i++) {
-            tt[i].start();
-        }
-
-        for (int i = 0; i < size * 2; i++) {
-            tt[i].join();
-            if (tt[i].e != null) {
-                throw tt[i].e;
-            }
-        }
-    }
 
     private abstract class TestThread extends Thread {
 
@@ -116,5 +95,39 @@ public class TestCrossLangSync {
             }
         }
     }
+    
+    public JavaThread buildJavaThread(int count) {
+        return new JavaThread(count);
+    }
+    
+    public PyThread buildPythonThread(int count) {
+        return new PyThread(count);
+    }
+    
+    public void runTest() throws Exception {
+        TestThread[] tt = new TestThread[THREADS_PER_LANG * 2];
+
+        for (int i = 0; i < THREADS_PER_LANG * 2; i += 2) {
+            tt[i] = new PyThread(i * 100);
+            tt[i + 1] = new JavaThread(i * 100);
+        }
+
+        for (int i = 0; i < THREADS_PER_LANG * 2; i++) {
+            tt[i].start();
+        }
+
+        for (int i = 0; i < THREADS_PER_LANG * 2; i++) {
+            tt[i].join();
+            if (tt[i].e != null) {
+                throw tt[i].e;
+            }
+        }
+    }
+    
+    public static void main(String[] args) throws Exception {
+        TestCrossLangSync test = new TestCrossLangSync();
+        test.runTest();
+    }
+
 
 }

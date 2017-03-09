@@ -75,8 +75,8 @@ static PyObject* pyjmonitor_enter(PyObject* self, PyObject* args)
      * but is awaiting the GIL.
      */
     Py_BEGIN_ALLOW_THREADS
-    if ((*env)->MonitorEnter(env, monitor->lock) < 0
-            || process_java_exception(env)) {
+    if ((*env)->MonitorEnter(env, monitor->lock) < 0) {
+        process_java_exception(env);
         failed = 1;
     }
     Py_END_ALLOW_THREADS
@@ -118,7 +118,6 @@ void pyjmonitor_dealloc(PyJMonitorObject *self)
     PyObject_Del(self);
 #endif
 }
-
 
 
 static PyMethodDef pyjmonitor_methods[] = {
