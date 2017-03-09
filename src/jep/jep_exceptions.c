@@ -65,6 +65,17 @@ int process_py_exception(JNIEnv *env, int printTrace)
         return 0;
     }
 
+    if ((*env)->ExceptionOccurred(env)) {
+        /*
+         * There's a bug in Jep somewhere, hopefully this printout will help
+         * diagnose it.  Then clear the error so the code can attempt to
+         * continue on.
+         */
+        printf("WARNING: Jep internal error. Java exception detected at start of process_py_exception():\n");
+        (*env)->ExceptionDescribe(env);
+        (*env)->ExceptionClear(env);
+    }
+
     /*
      * If there's a trace, we'll try and attach it as the cause on the
      * JepException so the application can determine if/how stack traces
@@ -90,17 +101,17 @@ int process_py_exception(JNIEnv *env, int printTrace)
 
         if (pvalue) {
             PyObject *v = NULL;
-            if (!PyJObject_Check(pvalue)) {
+            if (PyObject_TypeCheck(pvalue, (PyTypeObject*) PyExc_BaseException)) {
                 /*
                  * If Python went through PyErr_NormalizeException(...), then
                  * it's possible a PyJObject pvalue was moved to
                  * pvalue.message.
                  */
-                 PyObject *tmp = PyObject_GetAttrString(pvalue, "message");
-                 if (tmp != NULL && PyJObject_Check(tmp)) {
-                     Py_DECREF(pvalue);
-                     pvalue = tmp;
-                 }
+                PyObject *tmp = PyObject_GetAttrString(pvalue, "message");
+                if (tmp != NULL && PyJObject_Check(tmp)) {
+                    Py_DECREF(pvalue);
+                    pvalue = tmp;
+                }
             }
 
             if (PyJObject_Check(pvalue)) {
@@ -226,10 +237,10 @@ int process_py_exception(JNIEnv *env, int printTrace)
                     return 1;
                 }
 
-               /*
-                * Loop over each item in the Python traceback and build a Java
-                * StackTraceElement for each one.
-                */
+                /*
+                 * Loop over each item in the Python traceback and build a Java
+                 * StackTraceElement for each one.
+                 */
                 count = 0;
                 for (i = 0; i < stackSize; i++) {
                     PyObject *stackEntry, *pyLine;
@@ -462,6 +473,16 @@ int process_java_exception(JNIEnv *env)
 
     if ((exception = (*env)->ExceptionOccurred(env)) == NULL) {
         return 0;
+    }
+
+    if (PyErr_Occurred()) {
+        /*
+         * There's a bug in Jep somewhere, hopefully this printout will help
+         * diagnose it.  Then clear the error so the code can attempt to
+         * continue on.
+         */
+        printf("WARNING: Jep internal error. Python exception detected at start of process_java_exception():\n");
+        PyErr_Print();
     }
 
     jepThread = pyembed_get_jepthread();
