@@ -16,3 +16,7 @@ class TestObject(unittest.TestCase):
         o = Object()
         with self.assertRaises(TypeError):
             del o.equals
+
+    def test_java_name(self):
+        self.assertEquals(Object.java_name, "java.lang.Object")
+        self.assertEquals(Object().java_name, "java.lang.Object")

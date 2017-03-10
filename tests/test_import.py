@@ -41,3 +41,7 @@ class TestImport(unittest.TestCase):
 
     def test_conflicting_package(self):
         from io import DEFAULT_BUFFER_SIZE
+
+    def test_inner_class(self):
+        from java.lang import Thread
+        self.assertEquals(Thread.currentThread().getState(), Thread.State.RUNNABLE)
