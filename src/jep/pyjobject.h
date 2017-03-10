@@ -42,7 +42,6 @@ typedef struct {
     jobject          object;      /* the jni object */
     jclass           clazz;       /* java class object */
     PyObject        *attr;        /* dict for get/set attr */
-    int              finishAttr;  /* true if object attributes are finished */
     PyObject        *javaClassName; /* string of the fully-qualified name of
                                        the object's Java clazz */
 } PyJObject;

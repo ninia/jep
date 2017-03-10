@@ -71,7 +71,7 @@ static PyObject* pyjclass_add_inner_class(JNIEnv *env, PyJObject *topClz,
         }
         charName = jstring2char(env, shortName);
 
-        if (PyObject_SetAttrString((PyObject*) topClz, charName, attrClz) == -1) {
+        if (PyDict_SetItemString(topClz->attr, charName, attrClz) != 0) {
             printf("Error adding inner class %s\n", charName);
         } else {
             PyObject *pyname = PyString_FromString(charName);
