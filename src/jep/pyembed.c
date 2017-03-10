@@ -348,7 +348,81 @@ void pyembed_shared_import(JNIEnv *env, jstring module)
     PyEval_ReleaseThread(mainThreadState);
 }
 
-intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller, jboolean hasSharedModules)
+#if PY_MAJOR_VERSION == 2
+/*
+ * In python 2.7 when a module is shared between threads it will be run in
+ * restricted mode because the __builtins__ attribute of the module does not
+ * match the running interpreter. This causes some functionality to break.
+ * To get around this limitation the builtins module is shared between all the
+ * interpreters that are using shared modules.
+ *
+ * This is not necessary in python 3 because restricted mode was removed.
+ */
+
+void assignBuiltins(PyObject* modules, PyObject* builtins)
+{
+    PyObject *key, *value;
+    Py_ssize_t pos = 0;
+
+    while (PyDict_Next(modules, &pos, &key, &value)) {
+        PyObject* moddict = PyModule_GetDict(value);
+        if (moddict) {
+            PyDict_SetItemString(moddict, "__builtins__", builtins);
+        }
+    }
+}
+
+void shareBuiltins(JepThread *jepThread)
+{
+    PyInterpreterState* interp = jepThread->tstate->interp;
+
+    PyObject* sharedBuiltinModule = PyDict_GetItemString(mainThreadModules,
+                                    "__builtin__");
+    PyObject* sharedBuiltinDict   = PyModule_GetDict(sharedBuiltinModule);
+
+    PyObject* originalBuiltinModule = PyDict_GetItemString(interp->modules,
+                                      "__builtin__");
+    PyObject* originalBuiltinDict   = interp->builtins;
+
+    Py_INCREF(sharedBuiltinDict);
+    interp->builtins = sharedBuiltinDict;
+    Py_DECREF(originalBuiltinDict);
+
+    // Incref to make sure this isn't collected when it is replaced, it
+    // will be restored when the itnterpreter is closed.
+    Py_INCREF(originalBuiltinModule);
+
+    PyDict_SetItemString(interp->modules, "__builtin__", sharedBuiltinModule);
+    assignBuiltins(interp->modules, sharedBuiltinDict);
+
+    jepThread->originalBuiltins = originalBuiltinModule;
+}
+
+void unshareBuiltins(JepThread *jepThread)
+{
+    PyInterpreterState* interp = jepThread->tstate->interp;
+
+    PyObject* originalBuiltinModule = jepThread->originalBuiltins;
+    PyObject* originalBuiltinDict   = PyModule_GetDict(originalBuiltinModule);
+
+    PyObject* sharedBuiltinDict   = interp->builtins;
+
+    Py_INCREF(originalBuiltinDict);
+    interp->builtins = originalBuiltinDict;
+    Py_DECREF(sharedBuiltinDict);
+
+    PyDict_SetItemString(interp->modules, "__builtin__", originalBuiltinModule);
+
+    assignBuiltins(interp->modules, originalBuiltinDict);
+
+    jepThread->originalBuiltins = NULL;
+    Py_DECREF(originalBuiltinModule);
+}
+
+#endif
+
+intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller,
+                             jboolean hasSharedModules)
 {
     JepThread *jepThread;
     PyObject  *tdict, *mod_main, *globals;
@@ -372,6 +446,14 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller, jboolean h
     }
 
     jepThread->tstate = Py_NewInterpreter();
+#if PY_MAJOR_VERSION == 2
+    if (hasSharedModules) {
+        shareBuiltins(jepThread);
+    } else {
+        jepThread->originalBuiltins = NULL;
+    }
+#endif
+
     /*
      * Py_NewInterpreter() seems to take the thread state, but we're going to
      * save/release and reacquire it since that doesn't seem documented
@@ -440,6 +522,11 @@ void pyembed_thread_close(JNIEnv *env, intptr_t _jepThread)
     }
 
     PyEval_AcquireThread(jepThread->tstate);
+#if PY_MAJOR_VERSION == 2
+    if (jepThread->originalBuiltins) {
+        unshareBuiltins(jepThread);
+    }
+#endif
 
     key = PyString_FromString(DICT_KEY);
     if ((tdict = PyThreadState_GetDict()) != NULL && key != NULL) {
@@ -471,7 +558,7 @@ JNIEnv* pyembed_get_env(void)
     JNIEnv *env;
 
     JNI_GetCreatedJavaVMs(&jvm, 1, NULL);
-    /* 
+    /*
      * If the thread is already part of the JVM, the daemon status is not
      * changed. If this is a new thread, started by Python then this tells
      * Java to allow the process to exit even if the thread is still attached.
@@ -1583,10 +1670,10 @@ void pyembed_setparameter_string(JNIEnv *env,
 }
 
 void pyembed_setparameter_bool(JNIEnv *env,
-                              intptr_t _jepThread,
-                              intptr_t module,
-                              const char *name,
-                              jboolean value)
+                               intptr_t _jepThread,
+                               intptr_t module,
+                               const char *name,
+                               jboolean value)
 {
     PyObject      *pyvalue;
     PyObject      *pymodule;

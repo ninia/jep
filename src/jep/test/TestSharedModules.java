@@ -2,6 +2,7 @@ package jep.test;
 
 import jep.Jep;
 import jep.JepConfig;
+import jep.JepException;
 
 /**
  * Tests that shared modules are really shared between multiple instances of Jep
@@ -14,39 +15,41 @@ import jep.JepConfig;
  */
 public class TestSharedModules {
 
-    public static void main(String[] args) {
-        Jep jep = null;
-        try {
-            JepConfig config = new JepConfig().addIncludePaths(".")
-                    .addSharedModules("datetime");
-            jep = new Jep(config);
+    public static void main(String[] args) throws JepException {
+        JepConfig config = new JepConfig().addIncludePaths(".")
+                .addSharedModules("datetime");
+        try (Jep jep = new Jep(config)){
             jep.eval("import datetime");
             jep.eval("setattr(datetime, 'shared', True)");
-            jep.close();
-            jep = new Jep(config);
+        }
+        try(Jep jep = new Jep(config)){
             jep.eval("import datetime");
             Object hasattr = jep.getValue("hasattr(datetime,'shared')");
-            jep.close();
             if (!Boolean.TRUE.equals(hasattr)) {
                 throw new IllegalStateException(
                         "datetime module was not shared when it should be.");
             }
-            config = new JepConfig().addIncludePaths(".");
-            jep = new Jep(config);
+        }
+        config = new JepConfig().addIncludePaths(".");
+        try(Jep jep = new Jep(config)){
             jep.eval("import datetime");
-            hasattr = jep.getValue("hasattr(datetime,'shared')");
-            jep.close();
+            Object hasattr = jep.getValue("hasattr(datetime,'shared')");
             if (!Boolean.FALSE.equals(hasattr)) {
                 throw new IllegalStateException(
                         "datetime module was shared when it should not be.");
             }
-            System.exit(0);
-        } catch (Throwable e) {
-            if (jep != null) {
-                jep.close();
+        }
+        /* Check that python 2.7 is not putting shared modules in restricted mode */
+        config = new JepConfig().addIncludePaths(".")
+                .addSharedModules("xml.etree.ElementTree");
+        try (Jep jep = new Jep(config)){
+            jep.eval("import xml.etree.ElementTree as ET");
+            jep.eval("ET.parse('fakeFile.xml')");
+        }catch (JepException e){
+            /* Ignore exception because file does not exist but throw exceptions about restricted mode. */
+            if(e.getMessage().contains("restricted mode")){
+                throw e;
             }
-            e.printStackTrace();
-            System.exit(1);
         }
         System.exit(0);
     }
