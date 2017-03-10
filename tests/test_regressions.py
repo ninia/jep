@@ -1,6 +1,8 @@
 from __future__ import print_function
 import unittest
 
+import jep
+TestFieldTypes = jep.findClass('jep.test.types.TestFieldTypes')
 
 class TestRegressions(unittest.TestCase):
 
@@ -15,3 +17,7 @@ class TestRegressions(unittest.TestCase):
             Integer.byteValue()
         except:
             pass
+
+    def test_static_access_to_nonstatic_field(self):
+        with self.assertRaises(TypeError):
+            TestFieldTypes.objectString = ""

@@ -307,7 +307,7 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
                                                fieldArray,
                                                i);
 
-        pyjfield = PyJField_New(env, rfield, pyjob);
+        pyjfield = PyJField_New(env, rfield);
 
         if (!pyjfield) {
             continue;
@@ -655,7 +655,7 @@ static PyObject* pyjobject_getattro(PyObject *obj, PyObject *name)
         Py_DECREF(ret);
         return wrapper;
     } else if (PyJField_Check(ret)) {
-        PyObject *resolved = pyjfield_get((PyJFieldObject *) ret);
+        PyObject *resolved = pyjfield_get((PyJFieldObject *) ret, (PyJObject*) obj);
         Py_DECREF(ret);
         return resolved;
     }
@@ -689,7 +689,7 @@ static int pyjobject_setattro(PyJObject *obj, PyObject *name, PyObject *v)
             return -1;
         }
 
-        return pyjfield_set((PyJFieldObject *) cur, v);
+        return pyjfield_set((PyJFieldObject *) cur, obj, v);
     }
 
     PyDict_SetItem(obj->attr, name, v);

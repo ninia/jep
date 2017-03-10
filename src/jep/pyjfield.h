@@ -39,8 +39,6 @@ typedef struct {
     PyObject_HEAD
     jfieldID          fieldId;             /* Resolved fieldid */
     jobject           rfield;              /* reflect/Field object */
-    PyJObject        *pyjobject;           /* parent, should point to
-                                              PyJObject_Object */
     jclass            fieldType;           /* field's type */
     int               fieldTypeId;         /* field's typeid */
     PyObject         *pyFieldName;         /* python name... :-) */
@@ -50,10 +48,10 @@ typedef struct {
 } PyJFieldObject;
 
 
-PyJFieldObject* PyJField_New(JNIEnv*, jobject, PyJObject*);
+PyJFieldObject* PyJField_New(JNIEnv*, jobject);
 int PyJField_Check(PyObject*);
 
-PyObject* pyjfield_get(PyJFieldObject*);
-int pyjfield_set(PyJFieldObject*, PyObject*);
+PyObject* pyjfield_get(PyJFieldObject*, PyJObject*);
+int pyjfield_set(PyJFieldObject*, PyJObject*, PyObject*);
 
 #endif // ndef pyjfield
