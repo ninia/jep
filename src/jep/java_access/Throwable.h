@@ -27,7 +27,7 @@
 */
 
 #ifndef _Included_java_lang_Throwable
-#define _Included_java_lang_Trowable
+#define _Included_java_lang_Throwable
 
 jstring java_lang_Throwable_getLocalizedMessage(JNIEnv*, jobject);
 jarray  java_lang_Throwable_getStackTrace(JNIEnv*, jobject);
