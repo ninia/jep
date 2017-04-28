@@ -1,18 +1,49 @@
 language: python
-python:
- - 2.7
- - 3.3
- - 3.4
- - 3.5
-env:
- global:
-  # Force error for earlier detection of python 2.7 windows build problems
-  - CFLAGS="-Wdeclaration-after-statement -Werror=declaration-after-statement"
- matrix:
-  - JAVA_HOME=/usr/lib/jvm/java-7-oracle
-  - JAVA_HOME=/usr/lib/jvm/java-8-oracle
+
+matrix:
+ include:
+  - os: linux
+    python: 2.7
+    env: JAVA_HOME=/usr/lib/jvm/java-7-oracle
+  - os: linux
+    python: 2.7
+    env: JAVA_HOME=/usr/lib/jvm/java-8-oracle
+  - os: linux
+    python: 3.3
+    env: JAVA_HOME=/usr/lib/jvm/java-7-oracle
+  - os: linux
+    python: 3.3
+    env: JAVA_HOME=/usr/lib/jvm/java-8-oracle
+  - os: linux
+    python: 3.4
+    env: JAVA_HOME=/usr/lib/jvm/java-7-oracle
+  - os: linux
+    python: 3.4
+    env: JAVA_HOME=/usr/lib/jvm/java-8-oracle
+  - os: linux
+    python: 3.5
+    env: JAVA_HOME=/usr/lib/jvm/java-7-oracle
+  - os: linux
+    python: 3.5
+    env: JAVA_HOME=/usr/lib/jvm/java-8-oracle
+  - os: linux
+    python: 3.6
+    env: JAVA_HOME=/usr/lib/jvm/java-7-oracle
+  - os: linux
+    python: 3.6
+    env: JAVA_HOME=/usr/lib/jvm/java-8-oracle
+   # Force error for earlier detection of python 2.7 windows build problems
+  - os: linux
+    python: 2.7
+    env:
+      - JAVA_HOME=/usr/lib/jvm/java-8-oracle
+      - CFLAGS="-Wdeclaration-after-statement -Werror=declaration-after-statement"
+  - os: osx
+    language: generic
+
 addons:
  apt:
   packages:
    - oracle-java8-installer
+
 script: ./setup.py test
