@@ -662,7 +662,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
         Py_BLOCK_THREADS;
         if (!process_java_exception(env)) {
-            result = Py_BuildValue("i", ret);
+            result = PyBool_FromLong(ret);
         }
 
         break;

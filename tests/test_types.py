@@ -20,23 +20,35 @@ class TestTypes(unittest.TestCase):
     def test_boolean(self):
         for b in (True, False):
             self.assertEqual(b, self.methods.primitiveBoolean(b))
+            self.assertIsInstance(self.methods.primitiveBoolean(b), bool)
             self.assertEqual(b, self.methods.objectBoolean(b))
+            self.assertIsInstance(self.methods.objectBoolean(b), bool)
             self.assertEqual(b, self.methods.object(b))
+            self.assertIsInstance(self.methods.object(b), bool)
             self.assertEqual(b, self.staticMethods.primitiveBoolean(b))
+            self.assertIsInstance(self.staticMethods.primitiveBoolean(b), bool)
             self.assertEqual(b, self.staticMethods.objectBoolean(b))
+            self.assertIsInstance(self.staticMethods.objectBoolean(b), bool)
             self.assertEqual(b, self.staticMethods.object(b))
+            self.assertIsInstance(self.staticMethods.object(b), bool)
             self.fields.primitiveBoolean = b
             self.assertEqual(b, self.fields.primitiveBoolean)
+            self.assertIsInstance(self.fields.primitiveBoolean, bool)
             self.fields.objectBoolean = b
             self.assertEqual(b, self.fields.objectBoolean)
+            self.assertIsInstance(self.fields.objectBoolean, bool)
             self.fields.object = b
             self.assertEqual(b, self.fields.object)
+            self.assertIsInstance(self.fields.object, bool)
             self.staticFields.primitiveBoolean = b
             self.assertEqual(b, self.staticFields.primitiveBoolean)
+            self.assertIsInstance(self.staticFields.primitiveBoolean, bool)
             self.staticFields.objectBoolean = b
             self.assertEqual(b, self.staticFields.objectBoolean)
+            self.assertIsInstance(self.staticFields.objectBoolean, bool)
             self.staticFields.object = b
             self.assertEqual(b, self.staticFields.object)
+            self.assertIsInstance(self.staticFields.object, bool)
             self.fields.verify()
             self.staticFields.verify()
 

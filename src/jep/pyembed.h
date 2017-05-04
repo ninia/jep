@@ -84,6 +84,8 @@ void pyembed_setparameter_class(JNIEnv *, intptr_t, intptr_t, const char*,
                                 jclass);
 void pyembed_setparameter_string(JNIEnv*, intptr_t, intptr_t, const char*,
                                  const char*);
+void pyembed_setparameter_bool(JNIEnv*, intptr_t, intptr_t, const char*,
+                               jboolean);
 void pyembed_setparameter_int(JNIEnv*, intptr_t, intptr_t, const char*, int);
 void pyembed_setparameter_long(JNIEnv*, intptr_t, intptr_t, const char*,
                                PY_LONG_LONG);

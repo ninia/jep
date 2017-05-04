@@ -1583,6 +1583,39 @@ void pyembed_setparameter_string(JNIEnv *env,
     return;
 }
 
+void pyembed_setparameter_bool(JNIEnv *env,
+                              intptr_t _jepThread,
+                              intptr_t module,
+                              const char *name,
+                              jboolean value)
+{
+    PyObject      *pyvalue;
+    PyObject      *pymodule;
+
+    // does common things
+    GET_COMMON;
+
+    if ((pyvalue = PyBool_FromLong(value)) == NULL) {
+        PyErr_SetString(PyExc_MemoryError, "Out of memory.");
+        return;
+    }
+
+    if (pymodule == NULL) {
+        PyObject *key = PyString_FromString(name);
+        PyDict_SetItem(jepThread->globals,
+                       key,
+                       pyvalue); /* ownership */
+        Py_DECREF(key);
+        Py_DECREF(pyvalue);
+    } else {
+        PyModule_AddObject(pymodule,
+                           (char *) name,
+                           pyvalue); // steals reference
+    }
+
+    PyEval_ReleaseThread(jepThread->tstate);
+    return;
+}
 
 void pyembed_setparameter_int(JNIEnv *env,
                               intptr_t _jepThread,

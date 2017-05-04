@@ -419,7 +419,7 @@ PyObject* pyjfield_get(PyJFieldObject *self, PyJObject* pyjobject)
             return NULL;
         }
 
-        result = Py_BuildValue("i", ret);
+        result = PyBool_FromLong(ret);
         break;
     }
 

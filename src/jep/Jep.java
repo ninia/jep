@@ -831,12 +831,13 @@ public final class Jep implements Closeable {
      *                if an error occurs
      */
     public void set(String name, boolean v) throws JepException {
-        // there's essentially no difference between int and bool...
-        if (v)
-            set(name, 1);
-        else
-            set(name, 0);
+        isValidThread();
+
+        set(tstate, name, v);
     }
+
+    private native void set(long tstate, String name, boolean v)
+            throws JepException;
 
     /**
      * Sets the Java int into the sub-interpreter's global scope with the
