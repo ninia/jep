@@ -22,3 +22,9 @@ class TestSharedModules(unittest.TestCase):
     def test_numpy_array_to_string(self):
         jep_pipe(build_java_process_cmd(
             'jep.test.numpy.TestNumpyArrayToString'))
+
+    def test_unshared(self):
+        # The default jep has no shared modules so it should not be possible
+        # to access topInterpreterModules
+        with self.assertRaises(AttributeError):
+            jep.topInterpreterModules

@@ -144,7 +144,7 @@ static struct PyModuleDef jep_module_def = {
 };
 #endif
 
-static PyObject* initjep(void)
+static PyObject* initjep(jboolean hasSharedModules)
 {
     PyObject *modjep;
 
@@ -172,10 +172,12 @@ static PyObject* initjep(void)
         PyModule_AddIntConstant(modjep, "JCHAR_ID", JCHAR_ID);
         PyModule_AddIntConstant(modjep, "JBYTE_ID", JBYTE_ID);
         PyModule_AddIntConstant(modjep, "JEP_NUMPY_ENABLED", JEP_NUMPY_ENABLED);
-        Py_INCREF(mainThreadModules);
-        PyModule_AddObject(modjep, "topInterpreterModules", mainThreadModules);
-        Py_INCREF(mainThreadModulesLock);
-        PyModule_AddObject(modjep, "topInterpreterModulesLock", mainThreadModulesLock);
+        if (hasSharedModules) {
+            Py_INCREF(mainThreadModules);
+            PyModule_AddObject(modjep, "topInterpreterModules", mainThreadModules);
+            Py_INCREF(mainThreadModulesLock);
+            PyModule_AddObject(modjep, "topInterpreterModulesLock", mainThreadModulesLock);
+        }
     }
 
     return modjep;
@@ -354,7 +356,7 @@ void pyembed_shared_import(JNIEnv *env, jstring module)
     PyEval_ReleaseThread(mainThreadState);
 }
 
-intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller)
+intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller, jboolean hasSharedModules)
 {
     JepThread *jepThread;
     PyObject  *tdict, *mod_main, *globals;
@@ -405,7 +407,7 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller)
     Py_INCREF(globals);
 
     // init static module
-    jepThread->modjep          = initjep();
+    jepThread->modjep          = initjep(hasSharedModules);
     jepThread->globals         = globals;
     jepThread->env             = env;
     jepThread->classloader     = (*env)->NewGlobalRef(env, cl);

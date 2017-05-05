@@ -372,8 +372,10 @@ public final class Jep implements Closeable {
         else
             this.classLoader = config.classLoader;
 
+        boolean hasSharedModules = config.sharedModules != null && !config.sharedModules.isEmpty();
+
         this.interactive = config.interactive;
-        this.tstate = init(this.classLoader);
+        this.tstate = init(this.classLoader, hasSharedModules);
         threadUsed.set(true);
         this.thread = Thread.currentThread();
 
@@ -392,7 +394,7 @@ public final class Jep implements Closeable {
         }
 
         eval("import jep");
-        if (config.sharedModules != null && !config.sharedModules.isEmpty()) {
+        if (hasSharedModules) {
             set("sharedModules", config.sharedModules);
             set("sharedImporter", topInterpreter);
             eval("jep.shared_modules_hook.setupImporter(sharedModules,sharedImporter)");
@@ -416,7 +418,7 @@ public final class Jep implements Closeable {
         }
     }
 
-    private native long init(ClassLoader classloader) throws JepException;
+    private native long init(ClassLoader classloader, boolean hasSharedModules) throws JepException;
 
     /**
      * Checks if the current thread is valid for the method call. All calls must

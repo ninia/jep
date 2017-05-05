@@ -104,12 +104,12 @@ JNIEXPORT void JNICALL Java_jep_Jep_sharedImport
 /*
  * Class:     jep_Jep
  * Method:    init
- * Signature: (Ljava/lang/ClassLoader;)I
+ * Signature: (Ljava/lang/ClassLoader;Z)I
  */
 JNIEXPORT jlong JNICALL Java_jep_Jep_init
-(JNIEnv *env, jobject obj, jobject cl)
+(JNIEnv *env, jobject obj, jobject cl, jboolean hasSharedModules)
 {
-    return pyembed_thread_init(env, cl, obj);
+    return pyembed_thread_init(env, cl, obj, hasSharedModules);
 }
 
 

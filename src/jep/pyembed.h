@@ -53,7 +53,7 @@ void pyembed_startup(void);
 void pyembed_shutdown(JavaVM*);
 void pyembed_shared_import(JNIEnv*, jstring);
 
-intptr_t pyembed_thread_init(JNIEnv*, jobject, jobject);
+intptr_t pyembed_thread_init(JNIEnv*, jobject, jobject, jboolean);
 void pyembed_thread_close(JNIEnv*, intptr_t);
 
 void pyembed_close(void);
