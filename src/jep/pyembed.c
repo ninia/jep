@@ -1330,6 +1330,11 @@ static void pyembed_run_pyc(JepThread *jepThread,
         return;
     }
     (void) PyMarshal_ReadLongFromFile(fp);
+#if PY_MAJOR_VERSION >= 3
+    // Python 3.3 added an extra long containing the size of the source.
+    // https://github.com/python/cpython/commit/5136ac0ca21a05691978df8d0650f902c8ca3463
+    (void) PyMarshal_ReadLongFromFile(fp);
+#endif
     v = (PyObject *) (intptr_t) PyMarshal_ReadLastObjectFromFile(fp);
     if (v == NULL || !PyCode_Check(v)) {
         Py_XDECREF(v);
