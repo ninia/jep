@@ -46,3 +46,26 @@ For example:
         f.write("abc")
 
 
+Synchronization on Java Objects within Python
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Since every Java Object has an intrinsic lock associated with it, you can now
+synchronize on Java Objects from within Python.  Every PyJObject has a
+synchronized() method attached to it to enter the lock.  Developers should
+always use Python's "with" keyword to ensure the lock is released when the
+block of code is exited.
+The Java code
+::
+
+    synchronized(obj) {
+        // code here
+    }
+
+can be expressed in Python as
+::
+
+    with obj.synchronized():
+        // code here
+
+where obj is a PyJObject.
+
+
