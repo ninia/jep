@@ -273,7 +273,7 @@ int pyembed_version_unsafe(void)
     int         i         = 0;
 
     pyversion = Py_GetVersion();
-    version = malloc(sizeof(char) * strlen(pyversion));
+    version = malloc(sizeof(char) * (strlen(pyversion) + 1));
     strcpy(version, pyversion);
     major = version;
 
