@@ -42,7 +42,6 @@ jmethodID stackTraceElemInit  = 0;
  */
 int process_py_exception(JNIEnv *env, int printTrace)
 {
-    JepThread *jepThread;
     PyObject *ptype, *pvalue, *ptrace, *pystack = NULL;
     PyObject *message = NULL;
     char *m = NULL;
@@ -83,18 +82,6 @@ int process_py_exception(JNIEnv *env, int printTrace)
      */
 
     PyErr_Fetch(&ptype, &pvalue, &ptrace);
-
-    jepThread = pyembed_get_jepthread();
-    if (!jepThread) {
-        printf("Error while processing a Python exception, "
-               "invalid JepThread.\n");
-        if (jepThread->printStack) {
-            PyErr_Print();
-            if (!PyErr_Occurred()) {
-                return 0;
-            }
-        }
-    }
 
     if (ptype) {
         message = PyObject_Str(ptype);

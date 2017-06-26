@@ -194,7 +194,7 @@ public final class Jep implements Closeable {
                 Object result = importResults.take();
                 if (result instanceof JepException) {
                     throw new JepException(
-                            ((JepException) result).getLocalizedMessage());
+                            ((JepException) result));
                 }
             } catch (InterruptedException e) {
                 throw new JepException(e);

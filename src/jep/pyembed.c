@@ -342,16 +342,8 @@ void pyembed_shared_import(JNIEnv *env, jstring module)
     if (pymodule) {
         Py_DECREF(pymodule);
     } else {
-        PyObject *ptype, *pvalue, *pvaluestr, *ptrace;
-        PyErr_Fetch(&ptype, &pvalue, &ptrace);
-        Py_DECREF(ptype);
-        Py_XDECREF(ptrace);
-        pvaluestr = PyObject_Str(pvalue);
-        Py_DECREF(pvalue);
-        THROW_JEP(env, PyString_AsString(pvaluestr));
-        Py_DECREF(pvaluestr);
+        process_py_exception(env, 0);
     }
-
     (*env)->ReleaseStringUTFChars(env, module, moduleName);
     PyEval_ReleaseThread(mainThreadState);
 }
