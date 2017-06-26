@@ -76,7 +76,7 @@ JNIEXPORT jobject JNICALL Java_jep_InvocationHandler_invoke
     callable = PyObject_GetAttrString(target, (char *) cname);
     release_utf_char(env, jname, cname);
 
-    if (process_py_exception(env, 0) || !callable) {
+    if (process_py_exception(env) || !callable) {
         goto EXIT;
     }
 

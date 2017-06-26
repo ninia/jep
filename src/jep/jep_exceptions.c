@@ -40,7 +40,7 @@ jmethodID stackTraceElemInit  = 0;
  * exception was processed.  This can also handle a Java Throwable embedded
  * in a Python exception if process_java_exception(...) was called.
  */
-int process_py_exception(JNIEnv *env, int printTrace)
+int process_py_exception(JNIEnv *env)
 {
     PyObject *ptype, *pvalue, *ptrace, *pystack = NULL;
     PyObject *message = NULL;

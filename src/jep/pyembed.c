@@ -342,7 +342,7 @@ void pyembed_shared_import(JNIEnv *env, jstring module)
     if (pymodule) {
         Py_DECREF(pymodule);
     } else {
-        process_py_exception(env, 0);
+        process_py_exception(env);
     }
     (*env)->ReleaseStringUTFChars(env, module, moduleName);
     PyEval_ReleaseThread(mainThreadState);
@@ -777,7 +777,7 @@ jobject pyembed_invoke_method(JNIEnv *env,
         THROW_JEP(env, "Object was not found in the global dictionary.");
         goto EXIT;
     }
-    if (process_py_exception(env, 0)) {
+    if (process_py_exception(env)) {
         goto EXIT;
     }
 
@@ -844,14 +844,14 @@ jobject pyembed_invoke(JNIEnv *env,
     } // for(iarg = 0; iarg < arglen; iarg++)
 
     pyret = PyObject_CallObject(callable, pyargs);
-    if (process_py_exception(env, 0) || !pyret) {
+    if (process_py_exception(env) || !pyret) {
         goto EXIT;
     }
 
     // handles errors
     ret = PyObject_As_jobject(env, pyret, JOBJECT_TYPE);
     if (!ret) {
-        process_py_exception(env, 0);
+        process_py_exception(env);
     }
 
 EXIT:
@@ -890,7 +890,7 @@ void pyembed_eval(JNIEnv *env,
         goto EXIT;
     }
 
-    if (process_py_exception(env, 1)) {
+    if (process_py_exception(env)) {
         goto EXIT;
     }
 
@@ -903,7 +903,7 @@ void pyembed_eval(JNIEnv *env,
     fflush(stdout);
     fflush(stderr);
 
-    process_py_exception(env, 1);
+    process_py_exception(env);
 
     Py_XDECREF(result);
 
@@ -942,7 +942,7 @@ int pyembed_compile_string(JNIEnv *env,
         PyErr_Clear();
         ret = 0;
     } else {
-        process_py_exception(env, 0);
+        process_py_exception(env);
     }
 
     PyEval_ReleaseThread(jepThread->tstate);
@@ -973,7 +973,7 @@ intptr_t pyembed_create_module(JNIEnv *env,
 
     PyEval_AcquireThread(jepThread->tstate);
 
-    if (PyImport_AddModule(str) == NULL || process_py_exception(env, 1)) {
+    if (PyImport_AddModule(str) == NULL || process_py_exception(env)) {
         goto EXIT;
     }
 
@@ -991,7 +991,7 @@ intptr_t pyembed_create_module(JNIEnv *env,
     Py_DECREF(key);
     Py_DECREF(module);
 
-    if (process_py_exception(env, 0) || module == NULL) {
+    if (process_py_exception(env) || module == NULL) {
         ret = 0;
     } else {
         ret = (intptr_t) module;
@@ -1039,7 +1039,7 @@ intptr_t pyembed_create_module_on(JNIEnv *env,
     globals = PyModule_GetDict(onModule);
     Py_INCREF(globals);
 
-    if (PyImport_AddModule(str) == NULL || process_py_exception(env, 1)) {
+    if (PyImport_AddModule(str) == NULL || process_py_exception(env)) {
         goto EXIT;
     }
 
@@ -1053,7 +1053,7 @@ intptr_t pyembed_create_module_on(JNIEnv *env,
     Py_DECREF(key);
     Py_DECREF(module);
 
-    if (process_py_exception(env, 0) || module == NULL) {
+    if (process_py_exception(env) || module == NULL) {
         ret = 0;
     } else {
         ret = (intptr_t) module;
@@ -1113,7 +1113,7 @@ jobject pyembed_getvalue_on(JNIEnv *env,
 
     PyEval_AcquireThread(jepThread->tstate);
 
-    if (process_py_exception(env, 1)) {
+    if (process_py_exception(env)) {
         goto EXIT;
     }
 
@@ -1128,7 +1128,7 @@ jobject pyembed_getvalue_on(JNIEnv *env,
 
     result = PyRun_String(str, Py_eval_input, dict, dict);      /* new ref */
 
-    process_py_exception(env, 1);
+    process_py_exception(env);
     Py_DECREF(dict);
 
     if (result == NULL) {
@@ -1141,7 +1141,7 @@ jobject pyembed_getvalue_on(JNIEnv *env,
     // convert results to jobject
     ret = PyObject_As_jobject(env, result, JOBJECT_TYPE);
     if (!ret) {
-        process_py_exception(env, 1);
+        process_py_exception(env);
     }
 
 EXIT:
@@ -1171,7 +1171,7 @@ jobject pyembed_getvalue(JNIEnv *env, intptr_t _jepThread, char *str)
 
     PyEval_AcquireThread(jepThread->tstate);
 
-    if (process_py_exception(env, 1)) {
+    if (process_py_exception(env)) {
         goto EXIT;
     }
 
@@ -1180,7 +1180,7 @@ jobject pyembed_getvalue(JNIEnv *env, intptr_t _jepThread, char *str)
                           jepThread->globals,
                           jepThread->globals);
 
-    process_py_exception(env, 1);
+    process_py_exception(env);
 
     if (result == NULL || result == Py_None) {
         goto EXIT;    /* don't return, need to release GIL */
@@ -1189,7 +1189,7 @@ jobject pyembed_getvalue(JNIEnv *env, intptr_t _jepThread, char *str)
     // convert results to jobject
     ret = PyObject_As_jobject(env, result, JOBJECT_TYPE);
     if (!ret) {
-        process_py_exception(env, 1);
+        process_py_exception(env);
     }
 
 EXIT:
@@ -1220,7 +1220,7 @@ jobject pyembed_getvalue_array(JNIEnv *env, intptr_t _jepThread, char *str)
 
     PyEval_AcquireThread(jepThread->tstate);
 
-    if (process_py_exception(env, 1)) {
+    if (process_py_exception(env)) {
         goto EXIT;
     }
 
@@ -1229,7 +1229,7 @@ jobject pyembed_getvalue_array(JNIEnv *env, intptr_t _jepThread, char *str)
                           jepThread->globals,
                           jepThread->globals);
 
-    process_py_exception(env, 1);
+    process_py_exception(env);
 
     if (result == NULL || result == Py_None) {
         goto EXIT;    /* don't return, need to release GIL */
@@ -1238,7 +1238,7 @@ jobject pyembed_getvalue_array(JNIEnv *env, intptr_t _jepThread, char *str)
 #if PY_MAJOR_VERSION >= 3
     if (PyBytes_Check(result) == 0) {
         PyObject *temp = PyBytes_FromObject(result);
-        if (process_py_exception(env, 1) || result == NULL) {
+        if (process_py_exception(env) || result == NULL) {
             goto EXIT;
         } else {
             Py_DECREF(result);
@@ -1319,7 +1319,7 @@ void pyembed_run(JNIEnv *env,
         fflush(stderr);
 
         fclose(script);
-        process_py_exception(env, 1);
+        process_py_exception(env);
     }
 
 EXIT:

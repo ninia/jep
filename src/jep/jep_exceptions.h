@@ -64,8 +64,7 @@
 
 
 // convert pyerr to java exception.
-// int param is printTrace, send traceback to stderr
-int process_py_exception(JNIEnv*, int);
+int process_py_exception(JNIEnv*);
 
 // convert java exception to pyerr.
 // true (1) if an exception was processed.
