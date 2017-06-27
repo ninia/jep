@@ -193,7 +193,7 @@ public final class Jep implements Closeable {
                 importQueue.put(module);
                 Object result = importResults.take();
                 if (result instanceof JepException) {
-                    throw new JepException(
+                    throw new JepException("Error importing shared module " + module,
                             ((JepException) result));
                 }
             } catch (InterruptedException e) {
