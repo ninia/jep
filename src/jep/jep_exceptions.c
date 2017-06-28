@@ -31,7 +31,7 @@
 static PyObject* pyerrtype_from_throwable(JNIEnv*, jthrowable);
 
 // exception handling
-jmethodID jepExcInitStr       = 0;
+jmethodID jepExcInitStrLong   = 0;
 jmethodID jepExcInitStrThrow  = 0;
 jmethodID stackTraceElemInit  = 0;
 
@@ -47,7 +47,6 @@ int process_py_exception(JNIEnv *env)
     char *m = NULL;
     PyJObject *jexc = NULL;
     jobject jepException = NULL;
-    jclass jepExcClazz;
     jstring jmsg;
 
     if (!PyErr_Occurred()) {
@@ -140,24 +139,23 @@ int process_py_exception(JNIEnv *env)
 
             // make a JepException
             jmsg = (*env)->NewStringUTF(env, (const char *) m);
-            jepExcClazz = (*env)->FindClass(env, JEPEXCEPTION);
             if (jexc != NULL) {
                 // constructor JepException(String, Throwable)
                 if (jepExcInitStrThrow == 0) {
-                    jepExcInitStrThrow = (*env)->GetMethodID(env, jepExcClazz,
+                    jepExcInitStrThrow = (*env)->GetMethodID(env, JEP_EXC_TYPE,
                                          "<init>",
                                          "(Ljava/lang/String;Ljava/lang/Throwable;)V");
                 }
-                jepException = (*env)->NewObject(env, jepExcClazz,
+                jepException = (*env)->NewObject(env, JEP_EXC_TYPE,
                                                  jepExcInitStrThrow, jmsg, jexc->object);
             } else {
-                // constructor JepException(String)
-                if (jepExcInitStr == 0) {
-                    jepExcInitStr = (*env)->GetMethodID(env, jepExcClazz,
-                                                        "<init>", "(Ljava/lang/String;)V");
+                // constructor JepException(String, long)
+                if (jepExcInitStrLong == 0) {
+                    jepExcInitStrLong = (*env)->GetMethodID(env, JEP_EXC_TYPE,
+                                                        "<init>", "(Ljava/lang/String;J)V");
                 }
-                jepException = (*env)->NewObject(env, jepExcClazz,
-                                                 jepExcInitStr, jmsg);
+                jepException = (*env)->NewObject(env, JEP_EXC_TYPE,
+                                                 jepExcInitStrLong, jmsg, (jlong) ptype);
             }
             (*env)->DeleteLocalRef(env, jmsg);
             if ((*env)->ExceptionCheck(env) || !jepException) {
@@ -563,6 +561,14 @@ static PyObject* pyerrtype_from_throwable(JNIEnv *env, jthrowable exception)
     // map AssertionError to AssertionError
     if ((*env)->IsInstanceOf(env, exception, ASSERTION_EXC_TYPE)) {
         return PyExc_AssertionError;
+    }
+    
+    // Reuse the python type of the exception that caused the JepException if it is available
+    if ((*env)->IsInstanceOf(env, exception, JEP_EXC_TYPE)) {
+        PyObject* oldType = (PyObject*) jep_JepException_getPythonType(env, exception);
+        if(oldType){
+            return oldType;
+        }
     }
 
     // default

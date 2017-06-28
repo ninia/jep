@@ -102,6 +102,7 @@ jclass ILLEGALARG_EXC_TYPE;
 jclass ARITHMETIC_EXC_TYPE;
 jclass OUTOFMEMORY_EXC_TYPE;
 jclass ASSERTION_EXC_TYPE;
+jclass JEP_EXC_TYPE;
 
 #if PY_MAJOR_VERSION < 3
     static jstring UTF8 = NULL;
@@ -351,6 +352,7 @@ int cache_frequent_classes(JNIEnv *env)
     CACHE_CLASS(ARITHMETIC_EXC_TYPE, "java/lang/ArithmeticException");
     CACHE_CLASS(OUTOFMEMORY_EXC_TYPE, "java/lang/OutOfMemoryError");
     CACHE_CLASS(ASSERTION_EXC_TYPE, "java/lang/AssertionError");
+    CACHE_CLASS(JEP_EXC_TYPE, "jep/JepException");
 
     return 1;
 }
@@ -404,6 +406,7 @@ void unref_cache_frequent_classes(JNIEnv *env)
     UNCACHE_CLASS(ARITHMETIC_EXC_TYPE);
     UNCACHE_CLASS(OUTOFMEMORY_EXC_TYPE);
     UNCACHE_CLASS(ASSERTION_EXC_TYPE);
+    UNCACHE_CLASS(JEP_EXC_TYPE);
 }
 
 

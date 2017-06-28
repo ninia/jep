@@ -67,6 +67,7 @@
 #include "java_access/Field.h"
 #include "java_access/Iterable.h"
 #include "java_access/Iterator.h"
+#include "java_access/JepException.h"
 #include "java_access/List.h"
 #include "java_access/Map.h"
 #include "java_access/Member.h"

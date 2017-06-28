@@ -34,11 +34,19 @@ public class JepException extends Exception {
     private static final long serialVersionUID = 1L;
 
     /**
+     * The address of the python type which caused this exception. This is used
+     * if the JepException is thrown back into python so that a new python
+     * exception can be thrown with the same type as the original exception.
+     */
+    private final long pythonType;
+
+    /**
      * Creates a new <code>JepException</code> instance.
      * 
      */
     public JepException() {
         super();
+        this.pythonType = 0;
     }
 
     /**
@@ -49,6 +57,7 @@ public class JepException extends Exception {
      */
     public JepException(String s) {
         super(s);
+        this.pythonType = 0;
     }
 
     /**
@@ -59,6 +68,13 @@ public class JepException extends Exception {
      */
     public JepException(Throwable t) {
         super(t);
+        if (t instanceof JepException) {
+            JepException j = (JepException) t;
+            this.pythonType = j.pythonType;
+        } else {
+            this.pythonType = 0;
+
+        }
     }
 
     /**
@@ -71,5 +87,30 @@ public class JepException extends Exception {
      */
     public JepException(String s, Throwable t) {
         super(s, t);
+        if (t instanceof JepException) {
+            JepException j = (JepException) t;
+            this.pythonType = j.pythonType;
+        } else {
+            this.pythonType = 0;
+
+        }
     }
+
+    /**
+     * Construct with the address of a python exception type. This is for
+     * internal use only.
+     */
+    protected JepException(String s, long pythonType){
+        super(s);
+        this.pythonType = pythonType;
+    }
+
+    /**
+     * Get the address of the python exception type that triggered this
+     * exceptions. This is for internal use only.
+     */
+    protected long getPythonType(){
+        return pythonType;
+    }
+    
 }

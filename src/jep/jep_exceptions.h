@@ -36,32 +36,10 @@
 #ifndef _Included_jep_exceptions
 #define _Included_jep_exceptions
 
-
-#define JEPEXCEPTION "jep/JepException"
-
 #define THROW_JEP(env, msg)                         \
-{                                                   \
-    jclass clazz = (*env)->FindClass(env,           \
-                                     JEPEXCEPTION); \
-    if(clazz)                                       \
-        (*env)->ThrowNew(env, clazz, msg);          \
-}
+        (*env)->ThrowNew(env, JEP_EXC_TYPE, msg);
 
 #define THROW_JEP_EXC(env, jepExc) { (*env)->Throw(env, jepExc); }
-
-// does the same thing as the function version, but
-// restores thread blocking first
-#define PROCESS_JAVA_EXCEPTION(env)             \
-{                                               \
-    if((*env)->ExceptionCheck(env)) {           \
-        Py_BLOCK_THREADS;                       \
-        process_java_exception(env);            \
-        Py_UNBLOCK_THREADS;                     \
-        goto EXIT_ERROR;                        \
-    }                                           \
-}
-
-
 
 // convert pyerr to java exception.
 int process_py_exception(JNIEnv*);
@@ -84,5 +62,6 @@ extern jclass ILLEGALARG_EXC_TYPE;
 extern jclass ARITHMETIC_EXC_TYPE;
 extern jclass OUTOFMEMORY_EXC_TYPE;
 extern jclass ASSERTION_EXC_TYPE;
+extern jclass JEP_EXC_TYPE;
 
 #endif // ifndef _Included_jep_exceptions
