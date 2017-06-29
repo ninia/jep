@@ -41,6 +41,9 @@
 
 #define JCHAR_MAX   0xFFFF
 
+static jmethodID classGetMethods = 0;
+static jmethodID classIsInterfaceMethod = 0;
+static jmethodID methodGetModifiers = 0;
 static jmethodID hashmapIConstructor   = 0;
 static jmethodID arraylistIConstructor = 0;
 
@@ -48,6 +51,57 @@ static jmethodID arraylistIConstructor = 0;
     static jmethodID stringDecodingConstructor = NULL;
     static jstring UTF8 = NULL;
 #endif
+
+char isFunctionalInterfaceType(JNIEnv *env, jclass type) {
+    if (!JNI_METHOD(classGetMethods, env, JCLASS_TYPE, "getMethods", "()[Ljava/lang/reflect/Method;")) {
+        process_java_exception(env);
+        return 0;
+    }
+    if (!JNI_METHOD(classIsInterfaceMethod, env, JCLASS_TYPE, "isInterface", "()Z")) {
+        process_java_exception(env);
+        return 0;
+    }
+    if (!JNI_METHOD(methodGetModifiers, env, JMETHOD_TYPE, "getModifiers", "()I")) {
+        process_java_exception(env);
+        return 0;
+    }
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
+        process_java_exception(env);
+        return 0;
+    }
+    if (!(*env)->CallBooleanMethod(env, type, classIsInterfaceMethod)) {
+        return 0; // It's not an interface, so it can't be functional
+    }
+    jobjectArray methods = (jobjectArray) (*env)->CallObjectMethod(env, type, classGetMethods);
+    if (process_java_exception(env)) {
+        (*env)->PopLocalFrame(env, NULL);
+        return 0;
+    }
+    jsize numMethods = (*env)->GetArrayLength(env, methods);
+    jobject abstractMethod = NULL;
+    for (jsize i = 0; i < numMethods; i++) {
+        jobject method = (*env)->GetObjectArrayElement(env, methods, i);
+        jint modifiers = (*env)->CallIntMethod(env, method, methodGetModifiers);
+        if (process_java_exception(env)) {
+            (*env)->PopLocalFrame(env, NULL);
+            return 0;
+        }
+        if (modifiers & 1024) { // check if the method is abstract
+            if (abstractMethod != NULL) {
+                // We found two different abstract methods, so we're not a functional interfaces
+                (*env)->PopLocalFrame(env, NULL);
+                return 0;
+            } else {
+                abstractMethod = method;
+            }
+        } else {
+            // it's a default method, so just ignore it
+            (*env)->DeleteLocalRef(env, method);
+        }
+    }
+    (*env)->PopLocalFrame(env, NULL);
+    return abstractMethod != NULL;
+}
 
 /*
  * When there is no way to convert a PyObject of a specific expected Java type
@@ -566,6 +620,55 @@ static jobject pydict_as_jobject(JNIEnv *env, PyObject *pydict,
     return NULL;
 }
 
+static jmethodID newDirectProxyInstance = 0;
+jobject PyCallable_as_functional_interface(JNIEnv *env, PyObject *callable, jclass expectedType) {
+
+    JepThread *jepThread = pyembed_get_jepthread();
+    if (!jepThread) {
+        if (!PyErr_Occurred()) {
+            PyErr_SetString(PyExc_RuntimeError, "Invalid JepThread pointer.");
+        }
+        return NULL;
+    }
+
+    env = jepThread->env;
+    jobject classLoader  = jepThread->classloader;
+
+    jclass clazz = (*env)->FindClass(env, "jep/Proxy");
+    if (process_java_exception(env) || !clazz) {
+        return NULL;
+    }
+
+    if (newDirectProxyInstance == 0) {
+        newDirectProxyInstance =
+                (*env)->GetStaticMethodID(
+                        env,
+                        clazz,
+                        "newDirectProxyInstance",
+                        "(JJLjep/Jep;Ljava/lang/ClassLoader;Ljava/lang/Class;)Ljava/lang/Object;");
+
+        if (process_java_exception(env) || !newDirectProxyInstance) {
+            return NULL;
+        }
+    }
+
+    jobject proxy = (*env)->CallStaticObjectMethod(env,
+                                           clazz,
+                                           newDirectProxyInstance,
+                                           (jlong) (intptr_t) jepThread,
+                                           (jlong) (intptr_t) callable,
+                                           jepThread->caller,
+                                           classLoader,
+                                           expectedType);
+    if (process_java_exception(env) || !proxy) {
+        return NULL;
+    }
+
+    // make sure target doesn't get garbage collected
+    Py_INCREF(callable);
+
+    return proxy;
+};
 
 jobject PyObject_As_jobject(JNIEnv *env, PyObject *pyobject,
                             jclass expectedType)
@@ -607,6 +710,12 @@ jobject PyObject_As_jobject(JNIEnv *env, PyObject *pyobject,
         return pyfastsequence_as_jobject(env, pyobject, expectedType);
     } else if (PyDict_Check(pyobject)) {
         return pydict_as_jobject(env, pyobject, expectedType);
+    } else if (PyCallable_Check(pyobject)) {
+        if (isFunctionalInterfaceType(env, expectedType)) {
+            return PyCallable_as_functional_interface(env, pyobject, expectedType);
+        } else if (PyErr_Occurred()) {
+            return NULL;
+        }
 #if JEP_NUMPY_ENABLED
     } else if (npy_array_check(pyobject)) {
         return convert_pyndarray_jobject(env, pyobject, expectedType);
