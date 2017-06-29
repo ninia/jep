@@ -68,4 +68,20 @@ can be expressed in Python as
 
 where obj is a PyJObject.
 
-
+Python Callables can be converted to Java Functional Interfaces
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+A Python function (or any other callable) can be passed to a Java method which
+takes a functional interface (such as java.lang.Runnable). Similar to Java 8,
+the type is not required to have the FunctionalInterface annotation to be
+treated as a functional interface. Although the concept of functional
+interfaces was not introduced until Java 8, Jep will allow the conversion on
+all supported Java versions. Similar to other Jep Proxy objects, the new Java
+Object can only be used on the thread where it was created.
+For Example:
+::
+    def printOne():
+        print(1)
+    from java.util.concurrent import Executors
+    javaCallable = Executors.callable(printOne)
+    javaCallable.call()
+*Contributed by Techcable.*

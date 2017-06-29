@@ -28,8 +28,9 @@
 
 #include "Jep.h"
 
-static jmethodID isPublic = 0;
-static jmethodID isStatic = 0;
+static jmethodID isPublic   = 0;
+static jmethodID isStatic   = 0;
+static jmethodID isAbstract = 0;
 
 jboolean java_lang_reflect_Modifier_isPublic(JNIEnv* env, jint mod)
 {
@@ -49,6 +50,17 @@ jboolean java_lang_reflect_Modifier_isStatic(JNIEnv* env, jint mod)
             || (isStatic = (*env)->GetStaticMethodID(env, JMODIFIER_TYPE, "isStatic",
                            "(I)Z"))) {
         result = (*env)->CallStaticBooleanMethod(env, JMODIFIER_TYPE, isStatic, mod);
+    }
+    return result;
+}
+
+jboolean java_lang_reflect_Modifier_isAbstract(JNIEnv* env, jint mod)
+{
+    jboolean result = JNI_FALSE;
+    if (isAbstract
+            || (isAbstract = (*env)->GetStaticMethodID(env, JMODIFIER_TYPE, "isAbstract",
+                           "(I)Z"))) {
+        result = (*env)->CallStaticBooleanMethod(env, JMODIFIER_TYPE, isAbstract, mod);
     }
     return result;
 }

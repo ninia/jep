@@ -85,10 +85,10 @@ public class Proxy extends java.lang.reflect.Proxy {
     }
 
     private static Object newProxyInstance(long tstate, long ltarget, Jep jep,
-            ClassLoader loader, String[] interfaces, boolean isDirect) {
+            ClassLoader loader, String[] interfaces, boolean functionalInterface) {
         InvocationHandler ih = null;
         try {
-            ih = new jep.InvocationHandler(tstate, ltarget, jep, isDirect);
+            ih = new jep.InvocationHandler(tstate, ltarget, jep, functionalInterface);
         } catch (JepException e) {
             throw new IllegalArgumentException(e);
         }

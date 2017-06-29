@@ -38,6 +38,7 @@ static jmethodID getName            = 0;
 static jmethodID getSimpleName      = 0;
 static jmethodID isArray            = 0;
 static jmethodID newInstance        = 0;
+static jmethodID isInterface        = 0;
 
 jclass java_lang_Class_getComponentType(JNIEnv* env, jclass this)
 {
@@ -151,6 +152,17 @@ jobject java_lang_Class_newInstance(JNIEnv* env, jclass this)
     if (JNI_METHOD(newInstance, env, JCLASS_TYPE, "newInstance",
                    "()Ljava/lang/Object;")) {
         result = (*env)->CallObjectMethod(env, this, newInstance);
+    }
+    Py_END_ALLOW_THREADS
+    return result;
+}
+
+jboolean java_lang_Class_isInterface(JNIEnv* env, jclass this)
+{
+    jboolean result = JNI_FALSE;
+    Py_BEGIN_ALLOW_THREADS
+    if (JNI_METHOD(isInterface, env, JCLASS_TYPE, "isInterface", "()Z")) {
+        result = (*env)->CallBooleanMethod(env, this, isInterface);
     }
     Py_END_ALLOW_THREADS
     return result;

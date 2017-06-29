@@ -31,5 +31,6 @@
 
 jboolean java_lang_reflect_Modifier_isPublic(JNIEnv*, jint);
 jboolean java_lang_reflect_Modifier_isStatic(JNIEnv*, jint);
+jboolean java_lang_reflect_Modifier_isAbstract(JNIEnv*, jint);
 
 #endif // ndef java_lang_reflect_Modifier
