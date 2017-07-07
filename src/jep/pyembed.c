@@ -215,7 +215,7 @@ void pyembed_preinit(jint noSiteFlag,
 
 }
 
-void pyembed_startup(void)
+void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
 {
     PyObject* sysModule       = NULL;
     PyObject* threadingModule = NULL;
@@ -255,6 +255,86 @@ void pyembed_startup(void)
 
     // save a pointer to the main PyThreadState object
     mainThreadState = PyThreadState_Get();
+
+    /*
+     * Workaround for shared modules sys.argv.  Set sys.argv on the main thread.
+     * See github issue #81.
+     */
+    if (sharedModulesArgv != NULL) {
+#if PY_MAJOR_VERSION == 2
+        char **argv = NULL;
+        jsize count = 0;
+        int i       = 0;
+
+        count = (*env)->GetArrayLength(env, sharedModulesArgv);
+        (*env)->PushLocalFrame(env, count * 2);
+        argv = (char**) malloc(count * sizeof(char*));
+        for (i = 0; i < count; i++) {
+            char* arg = NULL;
+
+            jstring jarg = (*env)->GetObjectArrayElement(env, sharedModulesArgv, i);
+            if(jarg == NULL) {
+               PyEval_ReleaseThread(mainThreadState);
+               (*env)->PopLocalFrame(env, NULL);
+               THROW_JEP(env, "Received null argv.");
+               return;
+            }
+            arg = (char*) (*env)->GetStringUTFChars(env, jarg, NULL);
+            argv[i] = arg;
+        }
+
+        PySys_SetArgvEx(count, argv, 0);
+
+        // free memory
+        for (i = 0; i < count; i++) {
+            jstring jarg = (*env)->GetObjectArrayElement(env, sharedModulesArgv, i);
+            (*env)->ReleaseStringUTFChars(env, jarg, argv[i]);
+        }
+        free(argv);
+        (*env)->PopLocalFrame(env, NULL);
+
+        process_py_exception(env);
+#else
+        wchar_t **argv = NULL;
+        jsize count = 0;
+        int i       = 0;
+
+        count = (*env)->GetArrayLength(env, sharedModulesArgv);
+        (*env)->PushLocalFrame(env, count * 2);
+        argv = (wchar_t**) malloc(count * sizeof(wchar_t*));
+        for (i = 0; i < count; i++) {
+            char* arg     = NULL;
+            wchar_t* argt = NULL;
+            size_t mbresult;
+
+            jstring jarg = (*env)->GetObjectArrayElement(env, sharedModulesArgv, i);
+            if(jarg == NULL) {
+               PyEval_ReleaseThread(mainThreadState);
+               (*env)->PopLocalFrame(env, NULL);
+               THROW_JEP(env, "Received null argv.");
+               return;
+            }
+            arg = (char*) (*env)->GetStringUTFChars(env, jarg, NULL);
+            argt = malloc((strlen(arg) + 1) * sizeof(wchar_t));
+            mbresult = mbstowcs(argt, arg, strlen(arg) + 1);
+            (*env)->ReleaseStringUTFChars(env, jarg, arg);
+            argv[i] = argt;
+        }
+
+        PySys_SetArgvEx(count, argv, 0);
+
+        // free memory
+        for (i = 0; i < count; i++) {
+            free(argv[i]);
+        }
+        free(argv);
+        (*env)->PopLocalFrame(env, NULL);
+
+        process_py_exception(env);
+
+#endif
+    }
+
     PyEval_ReleaseThread(mainThreadState);
 }
 

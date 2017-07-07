@@ -82,12 +82,12 @@ JNIEXPORT void JNICALL Java_jep_Jep_setInitParams
 /*
  * Class:     jep_Jep
  * Method:    initializePython
- * Signature: ()V
+ * Signature: ([Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_initializePython
-(JNIEnv *env, jclass class)
+(JNIEnv *env, jclass class, jobjectArray argv)
 {
-    pyembed_startup();
+    pyembed_startup(env, argv);
 }
 
 /*
