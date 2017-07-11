@@ -22,8 +22,8 @@ class TestNumpy(unittest.TestCase):
         Also checks that in Java, new NDArray(args) does not
         allow bad args through.
         """
-        from tests.jep_pipe import build_java_process_cmd
-        from tests.jep_pipe import jep_pipe
+        from jep_pipe import build_java_process_cmd
+        from jep_pipe import jep_pipe
 
         jep_pipe(build_java_process_cmd('jep.test.numpy.TestNumpy'))
 
