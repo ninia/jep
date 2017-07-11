@@ -2,8 +2,8 @@ import unittest
 import os
 import os.path
 
-from tests.jep_pipe import jep_pipe
-from tests.jep_pipe import build_java_process_cmd
+from jep_pipe import jep_pipe
+from jep_pipe import build_java_process_cmd
 
 
 class TestRunScript(unittest.TestCase):

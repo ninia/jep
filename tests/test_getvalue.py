@@ -1,7 +1,7 @@
 import unittest
 import sys
-from tests.jep_pipe import jep_pipe
-from tests.jep_pipe import build_java_process_cmd
+from jep_pipe import jep_pipe
+from jep_pipe import build_java_process_cmd
 
 
 @unittest.skipIf(sys.platform.startswith("win"), "subprocess complications on Windows")
