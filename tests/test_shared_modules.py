@@ -28,3 +28,6 @@ class TestSharedModules(unittest.TestCase):
         # to access topInterpreterModules
         with self.assertRaises(AttributeError):
             jep.topInterpreterModules
+    
+    def test_shared_argv(self):
+        jep_pipe(build_java_process_cmd('jep.test.TestSharedArgv'))

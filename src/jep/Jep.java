@@ -60,6 +60,8 @@ public final class Jep implements Closeable {
 
     private static TopInterpreter topInterpreter = null;
 
+    private static String[] sharedModulesArgv = null;
+
     private boolean closed = false;
 
     private long tstate = 0;
@@ -124,7 +126,7 @@ public final class Jep implements Closeable {
                 @Override
                 public void run() {
                     try {
-                        initializePython();
+                        initializePython(sharedModulesArgv);
                     } catch (Throwable t) {
                         error = t;
                     } finally {
@@ -226,12 +228,32 @@ public final class Jep implements Closeable {
                 config.hashRandomizationFlag);
     }
 
+    /**
+     * Sets the sys.argv values on the top interpreter. This is a workaround for
+     * issues with shared modules and should be considered experimental.
+     * 
+     * @param argv
+     *            the arguments to be set on Python's sys.argv for the top/main
+     *            interpreter
+     * @throws JepException
+     * 
+     * @since 3.7
+     */
+    public static void setSharedModulesArgv(String... argv)
+            throws JepException {
+        if (topInterpreter != null) {
+            throw new JepException(
+                    "Jep.setSharedModulesArgv called after initializing python interpreter.");
+        }
+        sharedModulesArgv = argv;
+    }
+
     private static native void setInitParams(int noSiteFlag,
             int noUserSiteDiretory, int ignoreEnvironmentFlag, int verboseFlag,
             int optimizeFlag, int dontWriteBytecodeFlag,
             int hashRandomizationFlag);
 
-    private static native void initializePython();
+    private static native void initializePython(String[] topInterpreterArgv);
 
     private static native void sharedImport(String module) throws JepException;
 
