@@ -91,14 +91,28 @@ int process_py_exception(JNIEnv *env)
                 /*
                  * If Python went through PyErr_NormalizeException(...), then
                  * it's possible a PyJObject pvalue was moved to
-                 * pvalue.message.
+                 * pvalue.message. PyErr_NormalizeException is called whenever
+                 * there is an except: block even if the error is not actually
+                 * caught.
                  */
-                PyObject *tmp = PyObject_GetAttrString(pvalue, "message");
-                if (tmp != NULL && PyJObject_Check(tmp)) {
+#if PY_MAJOR_VERSION < 3
+                PyObject *message = PyObject_GetAttrString(pvalue, "message");
+                if (message != NULL && PyJObject_Check(message)) {
                     Py_DECREF(pvalue);
-                    pvalue = tmp;
+                    pvalue = message;
                 }
+#else
+                PyObject *args = PyObject_GetAttrString(pvalue, "args");
+                if (args != NULL && PyTuple_Check(args) && PyTuple_Size(args) > 0) {
+                    PyObject *message = PyTuple_GetItem(args,0);
+                    Py_INCREF(message);
+                    Py_DECREF(pvalue);
+                    Py_DECREF(args);
+                    pvalue = message;
+                }
+#endif
             }
+
 
             if (PyJObject_Check(pvalue)) {
                 // it's a Java exception that came from process_java_exception(...)
