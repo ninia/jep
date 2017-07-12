@@ -305,7 +305,6 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
         for (i = 0; i < count; i++) {
             char* arg     = NULL;
             wchar_t* argt = NULL;
-            size_t mbresult;
 
             jstring jarg = (*env)->GetObjectArrayElement(env, sharedModulesArgv, i);
             if(jarg == NULL) {
@@ -316,7 +315,7 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
             }
             arg = (char*) (*env)->GetStringUTFChars(env, jarg, NULL);
             argt = malloc((strlen(arg) + 1) * sizeof(wchar_t));
-            mbresult = mbstowcs(argt, arg, strlen(arg) + 1);
+            mbstowcs(argt, arg, strlen(arg) + 1);
             (*env)->ReleaseStringUTFChars(env, jarg, arg);
             argv[i] = argt;
         }
