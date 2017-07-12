@@ -54,11 +54,17 @@ char isFunctionalInterfaceType(JNIEnv *env, jclass type) {
     jsize numMethods;
     jobject abstractMethod = NULL;
     jsize i;
+    jboolean isInterface;
     if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
         process_java_exception(env);
         return 0;
     }
-    if (!java_lang_Class_isInterface(env, type)) {
+    isInterface = java_lang_Class_isInterface(env, type);
+    if (process_java_exception(env)) {
+        (*env)->PopLocalFrame(env, NULL);
+        return 0;
+    }
+    if (!isInterface) {
         return 0; // It's not an interface, so it can't be functional
     }
     methods = java_lang_Class_getMethods(env, type);
@@ -70,11 +76,17 @@ char isFunctionalInterfaceType(JNIEnv *env, jclass type) {
     for (i = 0; i < numMethods; i++) {
         jobject method = (*env)->GetObjectArrayElement(env, methods, i);
         jint modifiers = java_lang_reflect_Member_getModifiers(env, method);
+        jboolean isAbstract;
         if (process_java_exception(env)) {
             (*env)->PopLocalFrame(env, NULL);
             return 0;
         }
-        if (java_lang_reflect_Modifier_isAbstract(env, modifiers)) {
+        isAbstract = java_lang_reflect_Modifier_isAbstract(env, modifiers);
+        if (process_java_exception(env)) {
+            (*env)->PopLocalFrame(env, NULL);
+            return 0;
+        }
+        if (isAbstract) {
             if (abstractMethod != NULL) {
                 // We found two different abstract methods, so we're not a functional interfaces
                 (*env)->PopLocalFrame(env, NULL);

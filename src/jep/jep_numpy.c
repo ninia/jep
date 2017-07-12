@@ -405,8 +405,7 @@ static int load_jdirectbuffer_classes(JNIEnv *env)
         return 1;
     }
     nativeByteOrder = (*env)->CallStaticObjectMethod(env, byteOrder, nativeOrder);
-    if (!nativeByteOrder) {
-        process_java_exception(env);
+    if (process_java_exception(env) || !nativeByteOrder) {
         (*env)->PopLocalFrame(env, NULL);
         return 1;
     }
@@ -466,8 +465,7 @@ PyObject* convert_jdirectbuffer_pyndarray(JNIEnv *env, jobject jo, int ndims,
     }
 
     jbyteorder = (*env)->CallObjectMethod(env, jo, getOrder);
-    if (!jbyteorder) {
-        process_java_exception(env);
+    if (process_java_exception(env) || !jbyteorder) {
         return NULL;
     }
 
