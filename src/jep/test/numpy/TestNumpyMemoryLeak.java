@@ -49,8 +49,8 @@ public class TestNumpyMemoryLeak {
 
         for (int i = 0; i < REPEAT; i++) {
             try (Jep jep = new Jep()) {
-                // jep.eval("import numpy");
-                jep.eval("import os");
+                jep.eval("import numpy");
+                // jep.eval("import os");
             }
         }
     }
