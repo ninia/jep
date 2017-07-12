@@ -1,7 +1,6 @@
 package jep.test.numpy;
 
 import jep.Jep;
-import jep.JepConfig;
 import jep.JepException;
 
 /**
@@ -9,14 +8,17 @@ import jep.JepException;
  * if you have a long running process (e.g. server process with 99.999% uptime)
  * then it will eventually show up.
  * 
- * To see it, use ps aux | grep TestNumpy repeatedly and watch the memory usage.
- * If you comment out the import numpy and instead import something else (in the
- * example below the os module), you can watch the memory rise but eventually it
- * will plateau. If you have an interpreter with only import numpy, you can
- * watch the memory rise and continue to rise indefinitely, albeit rather
- * slowly. Probably something in numpy needs a Py_DECREF or a free(struct).
+ * To see it with this test, use ps aux | grep TestNumpyMemoryLeak repeatedly
+ * and watch the memory usage. If you comment out the import numpy and instead
+ * import something else (in the example below the os module), you can watch the
+ * memory rise but eventually it will plateau. If you have an interpreter with
+ * only import numpy, you can watch the memory rise and continue to rise
+ * indefinitely, albeit rather slowly.
  * 
- * Created: Mon Apr 13 2015
+ * Note if you use the shared modules feature of Jep and make numpy a shared
+ * module, then the problem doesn't exist as numpy will not reinitialize.
+ * 
+ * Created: April 2015
  * 
  * @author Nate Jensen
  */
@@ -24,23 +26,31 @@ public class TestNumpyMemoryLeak {
 
     private static final int REPEAT = 100000;
 
-    /**
-     * @param args
-     */
-    public static void main(String[] args) {
-        Jep jep = null;        
-        for (int i = 0; i < REPEAT; i++) {
-            try {
-                //jep = new Jep(new JepConfig().addSharedModules("numpy"));
-                //jep.eval("import numpy");
-                jep = new Jep(new JepConfig());
-                //jep.eval("import os");
-            } catch (JepException e) {
-                e.printStackTrace();
-            } finally {
-                if (jep != null) {
-                    jep.close();
+    public static void main(String[] args) throws Exception {
+        Thread t = new Thread() {
+            public void run() {
+                /*
+                 * do not close jep0, otherwise the test may not work with some
+                 * versions of numpy
+                 */
+                Jep jep0 = null;
+                try {
+                    jep0 = new Jep();
+                    jep0.eval("import numpy");
+                } catch (JepException e) {
+                    e.printStackTrace();
                 }
+            }
+        };
+        t.start();
+
+        // give the first thread time to start
+        Thread.currentThread().sleep(2000);
+
+        for (int i = 0; i < REPEAT; i++) {
+            try (Jep jep = new Jep()) {
+                // jep.eval("import numpy");
+                jep.eval("import os");
             }
         }
     }

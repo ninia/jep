@@ -228,6 +228,7 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
                 } else if (PyJMethod_Check(cached)) {
                     PyObject* multimethod = PyJMultiMethod_New((PyObject*) pymethod, cached);
                     PyDict_SetItem(cachedAttrs, pymethod->pyMethodName, multimethod);
+                    Py_DECREF(multimethod);
                 } else if (PyJMultiMethod_Check(cached)) {
                     PyJMultiMethod_Append(cached, (PyObject*) pymethod);
                 }
