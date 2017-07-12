@@ -44,7 +44,7 @@ struct __JepThread {
     int            printStack;
     PyObject      *fqnToPyJAttrs; /* a dictionary of fully qualified Java
                                        classnames to PyJMethods and PyJFields */
-#if PY_MAJOR_VERSION == 2
+#if PY_MAJOR_VERSION < 3
     PyObject      *originalBuiltins;
 #endif
 };

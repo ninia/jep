@@ -261,7 +261,7 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
      * See github issue #81.
      */
     if (sharedModulesArgv != NULL) {
-#if PY_MAJOR_VERSION == 2
+#if PY_MAJOR_VERSION < 3
         char **argv = NULL;
         jsize count = 0;
         int i       = 0;
@@ -427,7 +427,7 @@ void pyembed_shared_import(JNIEnv *env, jstring module)
     PyEval_ReleaseThread(mainThreadState);
 }
 
-#if PY_MAJOR_VERSION == 2
+#if PY_MAJOR_VERSION < 3
 /*
  * In python 2.7 when a module is shared between threads it will be run in
  * restricted mode because the __builtins__ attribute of the module does not
@@ -525,7 +525,7 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller,
     }
 
     jepThread->tstate = Py_NewInterpreter();
-#if PY_MAJOR_VERSION == 2
+#if PY_MAJOR_VERSION < 3
     if (hasSharedModules) {
         shareBuiltins(jepThread);
     } else {
@@ -601,7 +601,7 @@ void pyembed_thread_close(JNIEnv *env, intptr_t _jepThread)
     }
 
     PyEval_AcquireThread(jepThread->tstate);
-#if PY_MAJOR_VERSION == 2
+#if PY_MAJOR_VERSION < 3
     if (jepThread->originalBuiltins) {
         unshareBuiltins(jepThread);
     }
