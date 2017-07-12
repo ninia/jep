@@ -1,6 +1,7 @@
 package jep.test.numpy;
 
 import jep.Jep;
+import jep.JepConfig;
 import jep.JepException;
 
 /**
@@ -21,18 +22,19 @@ import jep.JepException;
  */
 public class TestNumpyMemoryLeak {
 
-    private static final int REPEAT = 10000;
+    private static final int REPEAT = 100000;
 
     /**
      * @param args
      */
     public static void main(String[] args) {
-        Jep jep = null;
+        Jep jep = null;        
         for (int i = 0; i < REPEAT; i++) {
             try {
-                jep = new Jep(true);
-                jep.eval("import numpy");
-                // jep.eval("import os");
+                //jep = new Jep(new JepConfig().addSharedModules("numpy"));
+                //jep.eval("import numpy");
+                jep = new Jep(new JepConfig());
+                //jep.eval("import os");
             } catch (JepException e) {
                 e.printStackTrace();
             } finally {
@@ -41,7 +43,6 @@ public class TestNumpyMemoryLeak {
                 }
             }
         }
-
     }
 
 }
