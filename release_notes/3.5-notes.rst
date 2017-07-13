@@ -12,12 +12,6 @@ objects for faster performance overall.  The most notable speedups will be
 seen when there are a large number of Java method invocations from Python.
 
 
-Code cleanup
-~~~~~~~~~~~~
-Major components of Jep were modularized, cleaned up, and formatted to
-improve maintainability of the code and encourage more contributions.
-
-
 Improved import hook and ClassEnquirer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The jep import hook for importing Java classes into Python and the associated

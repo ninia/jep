@@ -30,7 +30,7 @@ import jep.JepException;
 /**
  * PyClass.java - encapsulates a pointer to a class object
  *
- * @author [mrjohnson0 at sourceforge.net] Mike Johnson
+ * @author Mike Johnson
  */
 public class PyClass extends PyObject {
 

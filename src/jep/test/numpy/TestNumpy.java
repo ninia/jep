@@ -161,7 +161,7 @@ public class TestNumpy {
     }
 
     /**
-     * Called from python to verify that a Java method's return type of NDArray
+     * Called from Python to verify that a Java method's return type of NDArray
      * can be auto-converted to a numpy ndarray.
      * 
      * @param array
@@ -178,7 +178,7 @@ public class TestNumpy {
     }
 
     /**
-     * Called from python to verify that a Java method's return type of
+     * Called from Python to verify that a Java method's return type of
      * DirectNDArray can be auto-converted to a numpy ndarray.
      * 
      * @param array
