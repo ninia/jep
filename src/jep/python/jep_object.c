@@ -1,8 +1,7 @@
-/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
 /* 
    jep - Java Embedded Python
 
-   Copyright (c) 2016 JEP AUTHORS.
+   Copyright (c) 2017 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 

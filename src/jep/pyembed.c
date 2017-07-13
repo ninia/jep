@@ -1,8 +1,7 @@
-/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2016 JEP AUTHORS.
+   Copyright (c) 2017 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -273,11 +272,11 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
             char* arg = NULL;
 
             jstring jarg = (*env)->GetObjectArrayElement(env, sharedModulesArgv, i);
-            if(jarg == NULL) {
-               PyEval_ReleaseThread(mainThreadState);
-               (*env)->PopLocalFrame(env, NULL);
-               THROW_JEP(env, "Received null argv.");
-               return;
+            if (jarg == NULL) {
+                PyEval_ReleaseThread(mainThreadState);
+                (*env)->PopLocalFrame(env, NULL);
+                THROW_JEP(env, "Received null argv.");
+                return;
             }
             arg = (char*) (*env)->GetStringUTFChars(env, jarg, NULL);
             argv[i] = arg;
@@ -307,11 +306,11 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
             wchar_t* argt = NULL;
 
             jstring jarg = (*env)->GetObjectArrayElement(env, sharedModulesArgv, i);
-            if(jarg == NULL) {
-               PyEval_ReleaseThread(mainThreadState);
-               (*env)->PopLocalFrame(env, NULL);
-               THROW_JEP(env, "Received null argv.");
-               return;
+            if (jarg == NULL) {
+                PyEval_ReleaseThread(mainThreadState);
+                (*env)->PopLocalFrame(env, NULL);
+                THROW_JEP(env, "Received null argv.");
+                return;
             }
             arg = (char*) (*env)->GetStringUTFChars(env, jarg, NULL);
             argt = malloc((strlen(arg) + 1) * sizeof(wchar_t));

@@ -1,8 +1,7 @@
-/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2016 JEP AUTHORS.
+   Copyright (c) 2017 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -49,7 +48,8 @@ static jmethodID arraylistIConstructor = 0;
     static jstring UTF8 = NULL;
 #endif
 
-char isFunctionalInterfaceType(JNIEnv *env, jclass type) {
+char isFunctionalInterfaceType(JNIEnv *env, jclass type)
+{
     jobjectArray methods;
     jsize numMethods;
     jobject abstractMethod = NULL;
@@ -621,7 +621,9 @@ static jobject pydict_as_jobject(JNIEnv *env, PyObject *pydict,
 }
 
 static jmethodID newDirectProxyInstance = 0;
-jobject PyCallable_as_functional_interface(JNIEnv *env, PyObject *callable, jclass expectedType) {
+jobject PyCallable_as_functional_interface(JNIEnv *env, PyObject *callable,
+        jclass expectedType)
+{
     jclass clazz;
     jobject proxy;
 
@@ -642,11 +644,11 @@ jobject PyCallable_as_functional_interface(JNIEnv *env, PyObject *callable, jcla
 
     if (newDirectProxyInstance == 0) {
         newDirectProxyInstance =
-                (*env)->GetStaticMethodID(
-                        env,
-                        clazz,
-                        "newDirectProxyInstance",
-                        "(JJLjep/Jep;Ljava/lang/ClassLoader;Ljava/lang/Class;)Ljava/lang/Object;");
+            (*env)->GetStaticMethodID(
+                env,
+                clazz,
+                "newDirectProxyInstance",
+                "(JJLjep/Jep;Ljava/lang/ClassLoader;Ljava/lang/Class;)Ljava/lang/Object;");
 
         if (process_java_exception(env) || !newDirectProxyInstance) {
             return NULL;

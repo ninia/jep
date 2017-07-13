@@ -1,8 +1,7 @@
-/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2016 JEP AUTHORS.
+   Copyright (c) 2017 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -104,7 +103,7 @@ int process_py_exception(JNIEnv *env)
 #else
                 PyObject *args = PyObject_GetAttrString(pvalue, "args");
                 if (args != NULL && PyTuple_Check(args) && PyTuple_Size(args) > 0) {
-                    PyObject *message = PyTuple_GetItem(args,0);
+                    PyObject *message = PyTuple_GetItem(args, 0);
                     Py_INCREF(message);
                     Py_DECREF(pvalue);
                     Py_DECREF(args);
@@ -166,7 +165,7 @@ int process_py_exception(JNIEnv *env)
                 // constructor JepException(String, long)
                 if (jepExcInitStrLong == 0) {
                     jepExcInitStrLong = (*env)->GetMethodID(env, JEP_EXC_TYPE,
-                                                        "<init>", "(Ljava/lang/String;J)V");
+                                                            "<init>", "(Ljava/lang/String;J)V");
                 }
                 jepException = (*env)->NewObject(env, JEP_EXC_TYPE,
                                                  jepExcInitStrLong, jmsg, (jlong) ptype);
@@ -576,11 +575,11 @@ static PyObject* pyerrtype_from_throwable(JNIEnv *env, jthrowable exception)
     if ((*env)->IsInstanceOf(env, exception, ASSERTION_EXC_TYPE)) {
         return PyExc_AssertionError;
     }
-    
+
     // Reuse the python type of the exception that caused the JepException if it is available
     if ((*env)->IsInstanceOf(env, exception, JEP_EXC_TYPE)) {
         PyObject* oldType = (PyObject*) jep_JepException_getPythonType(env, exception);
-        if(oldType){
+        if (oldType) {
             return oldType;
         }
     }
