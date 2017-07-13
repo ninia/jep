@@ -111,8 +111,7 @@ public class NamingConventionClassEnquirer implements ClassEnquirer {
                 javaNames.remove(restrictedPkg);
             }
         } else if (includeDefaults) {
-            javaNames = new HashSet<>(TOP_LEVEL.size());
-            javaNames.addAll(TOP_LEVEL);
+            javaNames = new HashSet<>(TOP_LEVEL);
         } else {
             javaNames = new HashSet<>();
         }

@@ -1,13 +1,11 @@
 package jep.test;
 
-import java.lang.IndexOutOfBoundsException;
-
 import jep.Jep;
 import jep.JepConfig;
 import jep.JepException;
 
 /**
- * Tests that a java excetion thrown while executing python is set as the cause
+ * Tests that a java exception thrown while executing Python is set as the cause
  * of the JepException.
  * 
  * Created: July 2017

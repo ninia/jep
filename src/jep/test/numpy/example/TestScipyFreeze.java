@@ -1,4 +1,4 @@
-package jep.test.numpy;
+package jep.test.numpy.example;
 
 import jep.Jep;
 import jep.JepException;
@@ -11,6 +11,7 @@ import jep.JepException;
  * THREAD WARNINGS and create two interpreters that coexist on the same thread
  * at the same time.
  * 
+ * This test is NOT run by the unittests.
  * 
  * Created: July 2015
  * 
@@ -18,9 +19,6 @@ import jep.JepException;
  */
 public class TestScipyFreeze {
 
-    /**
-     * @param args
-     */
     public static void main(String[] args) {
         Jep jep0 = null;
         Jep jep = null;

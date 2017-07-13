@@ -1,4 +1,4 @@
-package jep.test.numpy;
+package jep.test.numpy.example;
 
 import jep.Jep;
 import jep.JepException;
@@ -14,10 +14,12 @@ import jep.JepException;
  * THREAD WARNINGS and create two interpreters that coexist on the same thread
  * at the same time.
  * 
+ * This test is NOT run by the unittests.
  * 
  * Created: April 2015
  * 
  * @author Nate Jensen
+ * @see "https://github.com/numpy/numpy/issues/5856"
  */
 public class TestNumpyGILFreeze {
 
@@ -26,11 +28,7 @@ public class TestNumpyGILFreeze {
             + "   for i in xrange(10):\n" + "      a /= 10000\n"
             + "   print 'python method complete'\n";
 
-    /**
-     * Main() method to demonstrate the issue.
-     * 
-     * @param args
-     */
+
     public static void main(String[] args) {
         Jep jep = null;
         try {

@@ -15,9 +15,7 @@ import jep.JepConfig;
 public class TestGetTempValue {
 
     public static void main(String[] args) throws Exception {
-        Jep jep = null;
-        try {
-            jep = new Jep(new JepConfig().setIncludePath("."));
+        try (Jep jep = new Jep(new JepConfig().setIncludePath("."))) {
             jep.eval("import tempfile");
             jep.eval("import os.path");
             jep.eval("import os");
@@ -33,10 +31,6 @@ public class TestGetTempValue {
             jep.getValue("0.0");
             jep.getValue("''");
             jep.getValue("([0.0], {0:''})");
-        } finally {
-            if (jep != null) {
-                jep.close();
-            }
         }
     }
 

@@ -1,4 +1,4 @@
-package jep.test.numpy;
+package jep.test.numpy.example;
 
 import jep.Jep;
 import jep.JepConfig;
@@ -9,9 +9,12 @@ import jep.JepException;
  * sub-interpreter with numpy. Illustrates a problem where the reference to the
  * array_str() method is lost.
  * 
+ * This test is NOT run by the unittests.
+ * 
  * Created: October 2015
  * 
  * @author Ben Steffensmeier
+ * @see "https://github.com/numpy/numpy/issues/3961"
  */
 public class TestNumpyArrayToString {
 

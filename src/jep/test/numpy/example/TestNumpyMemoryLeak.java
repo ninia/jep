@@ -1,4 +1,4 @@
-package jep.test.numpy;
+package jep.test.numpy.example;
 
 import jep.Jep;
 import jep.JepException;
@@ -18,9 +18,12 @@ import jep.JepException;
  * Note if you use the shared modules feature of Jep and make numpy a shared
  * module, then the problem doesn't exist as numpy will not reinitialize.
  * 
+ * This test is NOT run by the unittests.
+ * 
  * Created: April 2015
  * 
  * @author Nate Jensen
+ * @see "https://github.com/numpy/numpy/issues/5857"
  */
 public class TestNumpyMemoryLeak {
 
@@ -28,6 +31,7 @@ public class TestNumpyMemoryLeak {
 
     public static void main(String[] args) throws Exception {
         Thread t = new Thread() {
+            @Override
             public void run() {
                 /*
                  * do not close jep0, otherwise the test may not work with some

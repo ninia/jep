@@ -1,14 +1,5 @@
-package jep.python;
-
-import jep.Jep;
-import jep.JepException;
-
-
 /**
- * <pre>
- * PyObject.java - encapsulates a pointer to a PyObject
- *
- * Copyright (c) 2016 JEP AUTHORS.
+ * Copyright (c) 2017 JEP AUTHORS.
  *
  * This file is licensed under the the zlib/libpng License.
  *
@@ -30,12 +21,16 @@ import jep.JepException;
  * 
  *     3. This notice may not be removed or altered from any source
  *     distribution.
+ */
+package jep.python;
+
+import jep.Jep;
+import jep.JepException;
+
+/**
+ * PyObject.java - encapsulates a pointer to a PyObject
  *
- * Created: Thu Sep 7 11:52:03 2006
- *
- * </pre>
- *
- * @author [mrjohnson0 at sourceforge.net] Mike Johnson
+ * @author Mike Johnson
  */
 public class PyObject {
     /**

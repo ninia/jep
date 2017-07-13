@@ -1,6 +1,7 @@
 package jep.test;
 
 import jep.Jep;
+import jep.JepConfig;
 import jep.PyConfig;
 
 /**
@@ -9,13 +10,15 @@ import jep.PyConfig;
  * This test exercises PyConfig options to match Python command line arguments
  * and checks the output against sys.flags.
  * 
- * https://github.com/mrj0/jep/issues/49
- * 
  * TODO: If you wanted to be extra-thorough you could write tests that don't
  * explicitly trust sys.flags, e.g. verify that when setting
  * Py_DontWriteBytecodeFlag that a .pyc or .pyo is not actually written out.
  * 
+ * Created: June 2016
+ * 
  * @author Nate Jensen
+ * @since 3.6
+ * @see "https://github.com/mrj0/jep/issues/49"
  */
 public class TestPreInitVariables {
 
@@ -33,7 +36,7 @@ public class TestPreInitVariables {
         pyConfig.setHashRandomizationFlag(1);
         try {
             Jep.setInitParams(pyConfig);
-            jep = new Jep(false, ".");
+            jep = new Jep(new JepConfig().addIncludePaths("."));
             jep.eval("import sys");
             assert 1 == ((Number) jep.getValue("sys.flags.ignore_environment"))
                     .intValue();

@@ -1,14 +1,5 @@
-package jep.python;
-
-import jep.Jep;
-import jep.JepException;
-
-
 /**
- * <pre>
- * PyClass.java - encapsulates a pointer to a class object
- *
- * Copyright (c) 2016 JEP AUTHORS.
+ * Copyright (c) 2017 JEP AUTHORS.
  *
  * This file is licensed under the the zlib/libpng License.
  *
@@ -30,23 +21,28 @@ import jep.JepException;
  * 
  *     3. This notice may not be removed or altered from any source
  *     distribution.
- *
- * Created: Sat Dec 16 08:19:33 2006
- *
- * </pre>
+ */
+package jep.python;
+
+import jep.Jep;
+import jep.JepException;
+
+/**
+ * PyClass.java - encapsulates a pointer to a class object
  *
  * @author [mrjohnson0 at sourceforge.net] Mike Johnson
  */
 public class PyClass extends PyObject {
 
-
     /**
      * Make a new PyClass
      * 
-     * @param tstate a <code>long</code> value
+     * @param tstate
+     *            a <code>long</code> value
      * @param obj
      * @param jep
-     * @exception JepException if an error occurs
+     * @exception JepException
+     *                if an error occurs
      */
     public PyClass(long tstate, long obj, Jep jep) throws JepException {
         super(tstate, obj, jep);
