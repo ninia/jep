@@ -89,11 +89,11 @@ public class PyObject {
      */
     public void decref() throws JepException {
         isValid();
-        this.decref(this.obj);
+        this.decref(this.tstate, this.obj);
     }
 
 
-    private native void decref(long ptr) throws JepException;
+    private native void decref(long tstate, long ptr) throws JepException;
 
 
     /**
@@ -103,11 +103,11 @@ public class PyObject {
      */
     public void incref() throws JepException {
         isValid();
-        this.incref(this.obj);
+        this.incref(this.tstate, this.obj);
     }
 
 
-    private native void incref(long ptr) throws JepException;
+    private native void incref(long tstate, long ptr) throws JepException;
 
 
     /**
@@ -123,7 +123,6 @@ public class PyObject {
         }
         catch(JepException e) {
             // shouldn't happen?
-            ;
         }
 
         this.obj = 0;
