@@ -1,4 +1,4 @@
-package jep.test.numpy.example;
+package jep.test.numpy;
 
 import jep.Jep;
 import jep.JepConfig;
@@ -6,10 +6,9 @@ import jep.JepException;
 
 /**
  * Tests closing a sub-interpreter with numpy and then trying to use a new
- * sub-interpreter with numpy. Illustrates a problem where the reference to the
- * array_str() method is lost.
- * 
- * This test is NOT run by the unittests.
+ * sub-interpreter with numpy. Before shared modules, this illustrated a problem
+ * where the reference to the array_str() method is lost and a 'NoneType' is not
+ * callable error. Now with shared modules the test should pass.
  * 
  * Created: October 2015
  * 

@@ -2,6 +2,7 @@ package jep.test.numpy.example;
 
 import jep.Jep;
 import jep.JepConfig;
+import jep.test.numpy.TestNumpyArrayToString;
 import jep.test.numpy.TestNumpyProdShared;
 
 /**
@@ -16,8 +17,8 @@ import jep.test.numpy.TestNumpyProdShared;
  * This does NOT make use of the shared modules feature.
  * 
  * This test is NOT run by the unittests. This test is related to
- * {@link TestNumpyArrayToString} for the problem and
- * {@link TestNumpyProdShared} for the solution.
+ * {@link TestNumpyArrayToString} and {@link TestNumpyProdShared} for the
+ * solution where shared modules fix the problem.
  * 
  * Created: October 2015
  * 
