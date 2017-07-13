@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 JEP AUTHORS.
+ * Copyright (c) 2017 JEP AUTHORS.
  *
  * This file is licensed under the the zlib/libpng License.
  *
@@ -26,12 +26,12 @@ package jep;
 
 /**
  * Interface to enquire if a name is available to be imported from Java. Used by
- * Jep's importer hook (see <a
- * href="https://www.python.org/dev/peps/pep-0302/">PEP 302</a>) to determine if
- * an attempt to import a module/package or class should be directed to the
+ * Jep's importer hook (see
+ * <a href="https://www.python.org/dev/peps/pep-0302/">PEP 302</a>) to determine
+ * if an attempt to import a module/package or class should be directed to the
  * Python importer or the Java <code>ClassLoader</code>.
  * 
- * @author [ndjensen at gmail.com] Nate Jensen
+ * @author Nate Jensen
  * 
  * @since 3.3
  */

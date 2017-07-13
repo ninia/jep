@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 JEP AUTHORS.
+ * Copyright (c) 2017 JEP AUTHORS.
  *
  * This file is licensed under the the zlib/libpng License.
  *
@@ -52,9 +52,11 @@ import jep.python.PyObject;
  * prevent memory leaks.
  * </p>
  * 
- * @author [mrjohnson0 at sourceforge.net] Mike Johnson
+ * @author Mike Johnson
  */
 public final class Jep implements Closeable {
+
+    // TODO switch to AutoCloseable
 
     private static final String THREAD_WARN = "JEP THREAD WARNING: ";
 
@@ -84,7 +86,7 @@ public final class Jep implements Closeable {
      * keep track of objects that we create. do this to prevent crashes in
      * userland if jep is closed.
      */
-    private final List<PyObject> pythonObjects = new ArrayList<PyObject>();
+    private final List<PyObject> pythonObjects = new ArrayList<>();
 
     /**
      * Tracks if this thread has been used for an interpreter before. Using
@@ -103,12 +105,18 @@ public final class Jep implements Closeable {
      * Initializes the main Python interpreter that all sub-interpreters will be
      * created from.
      */
-    private static class TopInterpreter implements Closeable {
+    private static class TopInterpreter implements AutoCloseable {
+        /*
+         * TODO: All this static-ness related to the top interpreter should be
+         * moved to its own class. This includes top interpreter initialization,
+         * shared modules argv, PyConfig init params, etc.
+         */
+
         Thread thread;
 
-        BlockingQueue<String> importQueue = new SynchronousQueue<String>();
+        BlockingQueue<String> importQueue = new SynchronousQueue<>();
 
-        BlockingQueue<Object> importResults = new SynchronousQueue<Object>();
+        BlockingQueue<Object> importResults = new SynchronousQueue<>();
 
         Throwable error;
 
@@ -195,7 +203,8 @@ public final class Jep implements Closeable {
                 importQueue.put(module);
                 Object result = importResults.take();
                 if (result instanceof JepException) {
-                    throw new JepException("Error importing shared module " + module,
+                    throw new JepException(
+                            "Error importing shared module " + module,
                             ((JepException) result));
                 }
             } catch (InterruptedException e) {
@@ -382,8 +391,7 @@ public final class Jep implements Closeable {
              */
             Thread current = Thread.currentThread();
             StringBuilder warning = new StringBuilder(THREAD_WARN)
-                    .append("Unsafe reuse of thread ")
-                    .append(current.getName())
+                    .append("Unsafe reuse of thread ").append(current.getName())
                     .append(" for another Python sub-interpreter.\n")
                     .append("Please close() the previous Jep instance to ensure stability.");
             System.err.println(warning.toString());
@@ -394,7 +402,8 @@ public final class Jep implements Closeable {
         else
             this.classLoader = config.classLoader;
 
-        boolean hasSharedModules = config.sharedModules != null && !config.sharedModules.isEmpty();
+        boolean hasSharedModules = config.sharedModules != null
+                && !config.sharedModules.isEmpty();
 
         this.interactive = config.interactive;
         this.tstate = init(this.classLoader, hasSharedModules);
@@ -440,7 +449,8 @@ public final class Jep implements Closeable {
         }
     }
 
-    private native long init(ClassLoader classloader, boolean hasSharedModules) throws JepException;
+    private native long init(ClassLoader classloader, boolean hasSharedModules)
+            throws JepException;
 
     /**
      * Checks if the current thread is valid for the method call. All calls must
@@ -575,36 +585,38 @@ public final class Jep implements Closeable {
 
         try {
             // trim windows \r\n
-            if (str != null)
+            if (str != null) {
                 str = str.replaceAll("\r", "");
+            }
 
             if (str == null || str.trim().equals("")) {
-                if (!this.interactive)
+                if (!this.interactive) {
                     return false;
-                if (this.evalLines == null)
+                }
+                if (this.evalLines == null) {
                     return true; // nothing to eval
+                }
 
                 // null means we send lines, whether or not it compiles.
                 eval(this.tstate, this.evalLines.toString());
                 this.evalLines = null;
                 return true;
-            } else {
-                // first check if it compiles by itself
-                if (!this.interactive
-                        || (this.evalLines == null && compileString(
-                                this.tstate, str) == 1)) {
-
-                    eval(this.tstate, str);
-                    return true;
-                }
-
-                // doesn't compile on it's own, append to eval
-                if (this.evalLines == null)
-                    this.evalLines = new StringBuilder();
-                else
-                    evalLines.append(LINE_SEP);
-                evalLines.append(str);
             }
+
+            // first check if it compiles by itself
+            if (!this.interactive || (this.evalLines == null
+                    && compileString(this.tstate, str) == 1)) {
+                eval(this.tstate, str);
+                return true;
+            }
+
+            // doesn't compile on it's own, append to eval
+            if (this.evalLines == null) {
+                this.evalLines = new StringBuilder();
+            } else {
+                evalLines.append(LINE_SEP);
+            }
+            evalLines.append(str);
 
             return false;
         } catch (JepException e) {
@@ -734,8 +746,8 @@ public final class Jep implements Closeable {
      *                if an error occurs
      */
     public PyModule createModule(String name) throws JepException {
-        return (PyModule) trackObject(new PyModule(this.tstate, createModule(
-                this.tstate, name), this));
+        return (PyModule) trackObject(new PyModule(this.tstate,
+                createModule(this.tstate, name), this));
     }
 
     private native long createModule(long tstate, String name)

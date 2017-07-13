@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 JEP AUTHORS.
+ * Copyright (c) 2017 JEP AUTHORS.
  *
  * This file is licensed under the the zlib/libpng License.
  *
@@ -32,7 +32,7 @@ import jep.python.PyObject;
 /**
  * Handle Proxy method calls.
  *
- * @author [mrjohnson0 at sourceforge.net] Mike Johnson
+ * @author Mike Johnson
  */
 public class InvocationHandler implements java.lang.reflect.InvocationHandler {
 

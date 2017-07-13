@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 JEP AUTHORS.
+ * Copyright (c) 2017 JEP AUTHORS.
  *
  * This file is licensed under the the zlib/libpng License.
  *
@@ -35,9 +35,8 @@ import java.util.Arrays;
  * >numpy.ndarray</a> in Java. If Jep was compiled with numpy support, this
  * object will <b>not</b> be wrapped as a PyJobject in the Python
  * sub-interpreter(s), it will instead be wrapped as a numpy.ndarray
- * automatically. The numpy.ndarray will reference the exact same memory as
- * the buffer so changes in either language will be immmediatly visible in
- * both.
+ * automatically. The numpy.ndarray will reference the exact same memory as the
+ * buffer so changes in either language will be immediately visible in both.
  *
  * <p>
  * DirectNDArrays only support direct buffers as the underlying type of data.
@@ -46,13 +45,14 @@ import java.util.Arrays;
  * </p>
  * 
  * 
- * @author [ben.steffensmeier at gmail.com] Ben Steffensmeier
+ * @author Ben Steffensmeier
  * @since 3.7
  */
-public class DirectNDArray<T extends Buffer> extends AbstractNDArray<T>{
+public class DirectNDArray<T extends Buffer> extends AbstractNDArray<T> {
 
     /**
-     * Constructor for a Java DirectNDArray. Presumes the data is one dimensional.
+     * Constructor for a Java DirectNDArray. Presumes the data is one
+     * dimensional.
      * 
      * @param data
      *            a direct Buffer
@@ -62,7 +62,8 @@ public class DirectNDArray<T extends Buffer> extends AbstractNDArray<T>{
     }
 
     /**
-     * Constructor for a Java DirectNDArray. Presumes the data is one dimensional.
+     * Constructor for a Java DirectNDArray. Presumes the data is one
+     * dimensional.
      * 
      * @param data
      *            a direct Buffer
@@ -86,7 +87,6 @@ public class DirectNDArray<T extends Buffer> extends AbstractNDArray<T>{
         super(data, dimensions);
     }
 
-
     /**
      * Constructor for a Java DirectNDArray.
      * 
@@ -103,18 +103,18 @@ public class DirectNDArray<T extends Buffer> extends AbstractNDArray<T>{
     }
 
     @Override
-    protected void validate(T data){
-        if (!data.isDirect()){
+    protected void validate(T data) {
+        if (!data.isDirect()) {
             throw new IllegalArgumentException(
                     "DirectNDArray only supports direct buffers.");
-        }else if(data instanceof CharBuffer){
+        } else if (data instanceof CharBuffer) {
             throw new IllegalArgumentException(
                     "DirectNDArray only supports numeric primitives, not CharBuffer");
         }
-     }
+    }
 
     @Override
-    public int getLength(T data){
+    public int getLength(T data) {
         return data.capacity();
     }
 
@@ -147,10 +147,10 @@ public class DirectNDArray<T extends Buffer> extends AbstractNDArray<T>{
         // compare the data
         if (other.data == null) {
             return false;
-        } else {
-            // neither has null, let's compare values
-            return data.equals(other.data);
         }
+
+        // neither has null, let's compare values
+        return data.equals(other.data);
     }
 
     @Override
@@ -162,7 +162,8 @@ public class DirectNDArray<T extends Buffer> extends AbstractNDArray<T>{
         } else {
             result = prime * result + data.hashCode();
         }
-        result = prime * result + Arrays.hashCode(dimensions) +  (unsigned ? 1 : 0);
+        result = prime * result + Arrays.hashCode(dimensions)
+                + (unsigned ? 1 : 0);
         return result;
     }
 

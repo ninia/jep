@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 JEP AUTHORS.
+ * Copyright (c) 2017 JEP AUTHORS.
  *
  * This file is licensed under the the zlib/libpng License.
  *
@@ -36,7 +36,7 @@ import java.util.Set;
  * compatible APIs between releases.
  * </p>
  * 
- * @author [ndjensen at gmail.com] Nate Jensen
+ * @author Nate Jensen
  * 
  * @since 3.5
  */
@@ -161,11 +161,11 @@ public class JepConfig {
         this.sharedModules = sharedModules;
         return this;
     }
-    
+
     /**
      * Adds module names to the set of shared modules
      * 
-     * @param sharedModules
+     * @param sharedModule
      *            a set of module names that should be shared
      * @return a reference to this JepConfig
      * @see #setSharedModules(Set)
@@ -174,7 +174,7 @@ public class JepConfig {
      */
     public JepConfig addSharedModules(String... sharedModule) {
         if (sharedModules == null) {
-            sharedModules = new HashSet<String>();
+            sharedModules = new HashSet<>();
         }
         for (String sm : sharedModule) {
             sharedModules.add(sm);

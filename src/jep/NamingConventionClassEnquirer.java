@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 JEP AUTHORS.
+ * Copyright (c) 2017 JEP AUTHORS.
  *
  * This file is licensed under the the zlib/libpng License.
  *
@@ -47,7 +47,7 @@ import java.util.Set;
  * <li>You don't have Python modules that resemble Java package names</li>
  * </ul>
  * 
- * @author [ndjensen at gmail.com] Nate Jensen
+ * @author Nate Jensen
  * 
  * @since 3.3
  */
@@ -96,8 +96,13 @@ public class NamingConventionClassEnquirer implements ClassEnquirer {
             boolean includeCountryCodes) {
         if (includeCountryCodes) {
             String[] codes = Locale.getISOCountries();
-            javaNames = new HashSet<String>(TOP_LEVEL.size() + codes.length);
-            javaNames.addAll(TOP_LEVEL);
+            if (includeDefaults) {
+                javaNames = new HashSet<>(codes.length + TOP_LEVEL.size());
+                javaNames.addAll(TOP_LEVEL);
+            } else {
+                javaNames = new HashSet<>(codes.length);
+            }
+
             for (String country : codes) {
                 javaNames.add(country.toLowerCase());
             }
@@ -105,9 +110,11 @@ public class NamingConventionClassEnquirer implements ClassEnquirer {
             for (String restrictedPkg : ClassEnquirer.RESTRICTED_PKG_NAMES) {
                 javaNames.remove(restrictedPkg);
             }
-        } else {
-            javaNames = new HashSet<String>(TOP_LEVEL.size());
+        } else if (includeDefaults) {
+            javaNames = new HashSet<>(TOP_LEVEL.size());
             javaNames.addAll(TOP_LEVEL);
+        } else {
+            javaNames = new HashSet<>();
         }
     }
 
@@ -130,12 +137,13 @@ public class NamingConventionClassEnquirer implements ClassEnquirer {
         }
         if (javaNames.contains(name)) {
             return true;
-        } else {
-            String[] split = name.split("\\.");
-            int len = split.length;
-            return (len > 0 && javaNames.contains(split[0]) && Character
-                    .isLowerCase(split[len - 1].charAt(0)));
         }
+
+        String[] split = name.split("\\.");
+        int len = split.length;
+        return (len > 0 && javaNames.contains(split[0])
+                && Character.isLowerCase(split[len - 1].charAt(0)));
+
     }
 
     @Override

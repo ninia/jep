@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 JEP AUTHORS.
+ * Copyright (c) 2017 JEP AUTHORS.
  *
  * This file is licensed under the the zlib/libpng License.
  *
@@ -29,7 +29,7 @@ import java.lang.reflect.InvocationHandler;
 /**
  * Extends java.lang.reflect.Proxy for callbacks.
  * 
- * @author [mrjohnson0 at sourceforge.net] Mike Johnson
+ * @author Mike Johnson
  */
 public class Proxy extends java.lang.reflect.Proxy {
 
@@ -45,6 +45,7 @@ public class Proxy extends java.lang.reflect.Proxy {
     protected Proxy(InvocationHandler h) {
         super(h);
     }
+
     private static Object newDirectProxyInstance(long tstate, long ltarget, Jep jep,
             ClassLoader loader, Class<?> targetInterface) {
         return newProxyInstance(tstate, ltarget, jep, loader, new String[] { targetInterface.getName() }, true);

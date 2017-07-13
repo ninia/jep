@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 JEP AUTHORS.
+ * Copyright (c) 2017 JEP AUTHORS.
  *
  * This file is licensed under the the zlib/libpng License.
  *
@@ -35,7 +35,7 @@ import javax.script.ScriptException;
 /**
  * Implements {@link javax.script.ScriptEngineFactory}
  * 
- * @author [mrjohnson0 at sourceforge.net] Mike Johnson
+ * @author Mike Johnson
  */
 public class JepScriptEngineFactory implements ScriptEngineFactory {
 
@@ -46,18 +46,18 @@ public class JepScriptEngineFactory implements ScriptEngineFactory {
     private static List<String> mimeTypes;
 
     static {
-        names = new ArrayList<String>(1);
+        names = new ArrayList<>(1);
         names.add("jep");
         names = Collections.unmodifiableList(names);
 
-        extensions = new ArrayList<String>(1);
+        extensions = new ArrayList<>(1);
         extensions.add("py");
         // TODO add support for running compiled scripts.
         // l.add("pyo");
         // l.add("pyc");
         extensions = Collections.unmodifiableList(extensions);
 
-        mimeTypes = new ArrayList<String>(0);
+        mimeTypes = new ArrayList<>(0);
         mimeTypes = Collections.unmodifiableList(mimeTypes);
     }
 

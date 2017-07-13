@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 JEP AUTHORS.
+ * Copyright (c) 2017 JEP AUTHORS.
  *
  * This file is licensed under the the zlib/libpng License.
  *
@@ -29,7 +29,7 @@ package jep;
  * Represents a <a href=
  * "http://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html"
  * >numpy.ndarray</a> in Java. If Jep was compiled with numpy support, this
- * object will <b>not</b> be wrapped as a PyJobject in the Python
+ * object will <b>not</b> be wrapped as a PyJObject in the Python
  * sub-interpreter(s), it will instead be transformed into a numpy.ndarray
  * automatically (and vice versa).
  *
@@ -134,9 +134,9 @@ abstract class AbstractNDArray<T> {
     }
 
     /**
-     * Validate that this data is usable as an NDArray. This will be called
-     * from the constuctor and should throw an IllegalArgumentException if the
-     * data object is not valid.
+     * Validate that this data is usable as an NDArray. This will be called from
+     * the constuctor and should throw an IllegalArgumentException if the data
+     * object is not valid.
      * 
      * @param data
      *            a data object

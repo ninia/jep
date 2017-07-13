@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 JEP AUTHORS.
+ * Copyright (c) 2017 JEP AUTHORS.
  *
  * This file is licensed under the the zlib/libpng License.
  *
@@ -46,11 +46,11 @@ import java.util.Arrays;
  * </p>
  * 
  * 
- * @author [ndjensen at gmail.com] Nate Jensen
+ * @author Nate Jensen
  * 
  * @since 3.3
  */
-public class NDArray<T extends Object> extends AbstractNDArray<T>{
+public class NDArray<T extends Object> extends AbstractNDArray<T> {
 
     /**
      * Constructor for a Java NDArray. Presumes the data is one dimensional.
@@ -103,7 +103,7 @@ public class NDArray<T extends Object> extends AbstractNDArray<T>{
     }
 
     @Override
-    protected void validate(T data){
+    protected void validate(T data) {
         /*
          * java generics don't give us a nice Class that all the primitive
          * arrays extend, so we must enforce the type safety at runtime instead
@@ -122,7 +122,7 @@ public class NDArray<T extends Object> extends AbstractNDArray<T>{
     }
 
     @Override
-    protected int getLength(T data){
+    protected int getLength(T data) {
         return Array.getLength(data);
     }
 
@@ -155,33 +155,34 @@ public class NDArray<T extends Object> extends AbstractNDArray<T>{
         // compare the data
         if (other.data == null) {
             return false;
-        } else {
-            // neither has null, let's compare values
-            if (!data.getClass().equals(other.data.getClass())) {
-                return false;
-            }
-            Class<?> clz = data.getClass().getComponentType();
-            if (clz == Boolean.TYPE) {
-                return Arrays.equals((boolean[]) data, (boolean[]) other.data);
-            } else if (clz == Byte.TYPE) {
-                return Arrays.equals((byte[]) data, (byte[]) other.data);
-            } else if (clz == Short.TYPE) {
-                return Arrays.equals((short[]) data, (short[]) other.data);
-            } else if (clz == Integer.TYPE) {
-                return Arrays.equals((int[]) data, (int[]) other.data);
-            } else if (clz == Long.TYPE) {
-                return Arrays.equals((long[]) data, (long[]) other.data);
-            } else if (clz == Float.TYPE) {
-                return Arrays.equals((float[]) data, (float[]) other.data);
-            } else if (clz == Double.TYPE) {
-                return Arrays.equals((double[]) data, (double[]) other.data);
-            } else {
-                // should be impossible to get here
-                throw new IllegalStateException(
-                        "NDArray only supports primitive arrays, received "
-                                + clz.getName());
-            }
         }
+
+        // neither has null, let's compare values
+        if (!data.getClass().equals(other.data.getClass())) {
+            return false;
+        }
+        Class<?> clz = data.getClass().getComponentType();
+        if (clz == Boolean.TYPE) {
+            return Arrays.equals((boolean[]) data, (boolean[]) other.data);
+        } else if (clz == Byte.TYPE) {
+            return Arrays.equals((byte[]) data, (byte[]) other.data);
+        } else if (clz == Short.TYPE) {
+            return Arrays.equals((short[]) data, (short[]) other.data);
+        } else if (clz == Integer.TYPE) {
+            return Arrays.equals((int[]) data, (int[]) other.data);
+        } else if (clz == Long.TYPE) {
+            return Arrays.equals((long[]) data, (long[]) other.data);
+        } else if (clz == Float.TYPE) {
+            return Arrays.equals((float[]) data, (float[]) other.data);
+        } else if (clz == Double.TYPE) {
+            return Arrays.equals((double[]) data, (double[]) other.data);
+        } else {
+            // should be impossible to get here
+            throw new IllegalStateException(
+                    "NDArray only supports primitive arrays, received "
+                            + clz.getName());
+        }
+
     }
 
     @Override

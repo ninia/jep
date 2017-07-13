@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 JEP AUTHORS.
+ * Copyright (c) 2017 JEP AUTHORS.
  *
  * This file is licensed under the the zlib/libpng License.
  *
@@ -45,17 +45,17 @@ import java.util.jar.JarFile;
  * is specified when constructing Jep instances. ClassList is also used by the
  * command line <code>jep</code> script.
  * 
- * @author [mrjohnson0 at sourceforge.net] Mike Johnson
+ * @author Mike Johnson
  */
 public class ClassList implements ClassEnquirer {
 
     private static ClassList inst;
 
     // storage for package, member classes
-    private Map<String, List<String>> packageToClassMap = new HashMap<String, List<String>>();
+    private Map<String, List<String>> packageToClassMap = new HashMap<>();
 
     // storage for package, sub-packages based on classes found
-    private Map<String, List<String>> packageToSubPackageMap = new HashMap<String, List<String>>();
+    private Map<String, List<String>> packageToSubPackageMap = new HashMap<>();
 
     private ClassList() throws JepException {
         loadClassPath();
@@ -80,16 +80,17 @@ public class ClassList implements ClassEnquirer {
         while (tok.hasMoreTokens()) {
             String el = tok.nextToken();
 
-            if (!el.toLowerCase().endsWith(".jar"))
-                continue; // ignore filesystem classpath
+            if (!el.toLowerCase().endsWith(".jar")) {
+                // ignore filesystem classpath
+                continue;
+            }
 
             // make sure it exists
             File file = new File(el);
             if (!file.exists() || !file.canRead())
                 continue;
 
-            try {
-                JarFile jfile = new JarFile(el, false);
+            try (JarFile jfile = new JarFile(el, false)) {
                 Enumeration<JarEntry> entries = jfile.entries();
                 while (entries.hasMoreElements()) {
                     String entry = entries.nextElement().getName();
@@ -114,8 +115,6 @@ public class ClassList implements ClassEnquirer {
 
                     addClass(pname, cname);
                 }
-
-                jfile.close();
             } catch (IOException e) {
                 // debugging only
                 e.printStackTrace();
@@ -197,8 +196,8 @@ public class ClassList implements ClassEnquirer {
             }
 
             if (in == null) {
-                throw new JepException("ClassList couldn't find resource "
-                        + rsc);
+                throw new JepException(
+                        "ClassList couldn't find resource " + rsc);
             }
 
             reader = new BufferedReader(new InputStreamReader(in));
@@ -239,7 +238,7 @@ public class ClassList implements ClassEnquirer {
     private void addClass(String pname, String cname) {
         List<String> el = packageToClassMap.get(pname);
         if (el == null) {
-            el = new ArrayList<String>();
+            el = new ArrayList<>();
             packageToClassMap.put(pname, el);
         }
 
@@ -264,7 +263,7 @@ public class ClassList implements ClassEnquirer {
             }
             List<String> pl = packageToSubPackageMap.get(pkgStart);
             if (pl == null) {
-                pl = new ArrayList<String>();
+                pl = new ArrayList<>();
                 packageToSubPackageMap.put(pkgStart, pl);
             }
             if (!pl.contains(subPkg)) {
