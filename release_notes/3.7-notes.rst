@@ -10,7 +10,7 @@ Shared NDArrays
 ~~~~~~~~~~~~~~~
 It is now possible to share memory between Python and Java using direct
 java.nio.Buffers and numpy ndarrays. The memory must be allocated by Java
-using ByteBuffer.allocatDirect(). The direct buffer must be placed in a
+using ByteBuffer.allocateDirect(). The direct buffer must be placed in a
 jep.DirectNDArray before passing it to Python. Jep will convert the
 DirectNDArray to a numpy ndarray referencing the same memory. If the numpy
 ndarray is passed back to Java then the original DirectNDArray is passed back
