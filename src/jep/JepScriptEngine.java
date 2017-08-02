@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 JEP AUTHORS.
+ * Copyright (c) 2017 JEP AUTHORS.
  *
  * This file is licensed under the the zlib/libpng License.
  *
@@ -41,9 +41,9 @@ import jep.python.PyModule;
 /**
  * Implements {@link javax.script.ScriptEngine}
  * 
- * @author [mrjohnson0 at sourceforge.net] Mike Johnson
+ * @author Mike Johnson
  */
-public class JepScriptEngine implements ScriptEngine {
+public class JepScriptEngine implements ScriptEngine, AutoCloseable {
     private Jep jep = null;
 
     private Bindings bindings = new SimpleBindings();
@@ -62,10 +62,10 @@ public class JepScriptEngine implements ScriptEngine {
      */
     public JepScriptEngine() throws ScriptException {
         try {
-            this.jep = new Jep(true); // make interactive because javax.script
-                                      // sucks
-            this.jep.setClassLoader(Thread.currentThread()
-                    .getContextClassLoader());
+            // make interactive because javax.script sucks
+            this.jep = new Jep(true);
+            this.jep.setClassLoader(
+                    Thread.currentThread().getContextClassLoader());
         } catch (JepException e) {
             throw (ScriptException) new ScriptException(e.getMessage())
                     .initCause(e);
@@ -97,15 +97,14 @@ public class JepScriptEngine implements ScriptEngine {
     // write temp file from Reader
     private File writeTemp(Reader reader) throws IOException {
         File temp = File.createTempFile("jep", ".py");
-        FileWriter fout = new FileWriter(temp);
+        try (FileWriter fout = new FileWriter(temp)) {
+            char[] buf = new char[1024];
+            int count;
 
-        char[] buf = new char[1024];
-        int count;
-
-        while ((count = reader.read(buf)) > 0)
-            fout.write(buf, 0, count);
-
-        fout.close();
+            while ((count = reader.read(buf)) > 0) {
+                fout.write(buf, 0, count);
+            }
+        }
         return temp;
     }
 
@@ -123,8 +122,8 @@ public class JepScriptEngine implements ScriptEngine {
             // okay sic jep on it
             this.jep.runScript(temp.getAbsolutePath());
         } catch (IOException e) {
-            throw new ScriptException("Error writing to file: "
-                    + e.getMessage());
+            throw new ScriptException(
+                    "Error writing to file: " + e.getMessage());
         } catch (JepException e) {
             throw (ScriptException) new ScriptException(e.getMessage())
                     .initCause(e);
@@ -192,7 +191,8 @@ public class JepScriptEngine implements ScriptEngine {
      *      javax.script.Bindings)
      */
     @Override
-    public Object eval(Reader reader, Bindings bindings) throws ScriptException {
+    public Object eval(Reader reader, Bindings bindings)
+            throws ScriptException {
         // spec says don't do this:
         // this.bindings = bindings;
         return eval(reader, this.context, bindings);
@@ -314,10 +314,11 @@ public class JepScriptEngine implements ScriptEngine {
                 }
             }
 
-            if (module == null)
+            if (module == null) {
                 return this.jep.getValue(name);
-            else
-                return module.getValue(tokens[tokens.length - 1]);
+            }
+
+            return module.getValue(tokens[tokens.length - 1]);
         } catch (JepException e) {
             // probably not found. javax.script wants use to just return null
             return null;
@@ -371,10 +372,11 @@ public class JepScriptEngine implements ScriptEngine {
      */
     @Override
     public Bindings getBindings(int scope) {
-        if (scope == ScriptContext.ENGINE_SCOPE)
+        if (scope == ScriptContext.ENGINE_SCOPE) {
             return this.bindings;
-        else
-            return this.globalBindings;
+        }
+
+        return this.globalBindings;
     }
 
     /**
@@ -387,10 +389,11 @@ public class JepScriptEngine implements ScriptEngine {
      */
     @Override
     public void setBindings(Bindings bindings, int scope) {
-        if (scope == ScriptContext.ENGINE_SCOPE)
+        if (scope == ScriptContext.ENGINE_SCOPE) {
             this.bindings = bindings;
-        else
-            this.globalBindings = bindings;
+        }
+
+        this.globalBindings = bindings;
     }
 
     /**
@@ -423,6 +426,7 @@ public class JepScriptEngine implements ScriptEngine {
      * You *must* close this
      * 
      */
+    @Override
     public void close() {
         this.jep.close();
     }

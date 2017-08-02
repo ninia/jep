@@ -1,6 +1,12 @@
 package jep.test.types;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 /**
+ * Created: August 2016
+ * 
  * @author Ben Steffensmeier
  */
 public class TestStaticMethodTypes {
@@ -119,6 +125,30 @@ public class TestStaticMethodTypes {
 
     public static Object object(Object o) {
         return o;
+    }
+
+    public static List<?> list(List<?> l) {
+        if (l != null && !List.class.isAssignableFrom(l.getClass())) {
+            throw new RuntimeException("List argument is actually an "
+                    + l.getClass().getName());
+        }
+        return l;
+    }
+
+    public static ArrayList<?> arrayList(ArrayList<?> l) {
+        if (l != null && l.getClass() != ArrayList.class) {
+            throw new RuntimeException("ArrayList argument is actually an "
+                    + l.getClass().getName());
+        }
+        return l;
+    }
+
+    public static Map<?,?> map(Map<?,?> m) {
+        if (m != null && !Map.class.isAssignableFrom(m.getClass())) {
+            throw new RuntimeException("Map argument is actually an "
+                    + m.getClass().getName());
+        }
+        return m;
     }
 
 }

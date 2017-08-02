@@ -1,8 +1,7 @@
-/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2016 JEP AUTHORS.
+   Copyright (c) 2017 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -42,10 +41,67 @@
 #define JCHAR_MAX   0xFFFF
 
 static jmethodID hashmapIConstructor   = 0;
-static jmethodID hashmapPut            = 0;
 static jmethodID arraylistIConstructor = 0;
-static jmethodID arraylistAdd          = 0;
-static jmethodID unmodifiableList      = 0;
+
+#if PY_MAJOR_VERSION < 3
+    static jmethodID stringDecodingConstructor = NULL;
+    static jstring UTF8 = NULL;
+#endif
+
+char isFunctionalInterfaceType(JNIEnv *env, jclass type)
+{
+    jobjectArray methods;
+    jsize numMethods;
+    jobject abstractMethod = NULL;
+    jsize i;
+    jboolean isInterface;
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
+        process_java_exception(env);
+        return 0;
+    }
+    isInterface = java_lang_Class_isInterface(env, type);
+    if (process_java_exception(env)) {
+        (*env)->PopLocalFrame(env, NULL);
+        return 0;
+    }
+    if (!isInterface) {
+        return 0; // It's not an interface, so it can't be functional
+    }
+    methods = java_lang_Class_getMethods(env, type);
+    if (process_java_exception(env)) {
+        (*env)->PopLocalFrame(env, NULL);
+        return 0;
+    }
+    numMethods = (*env)->GetArrayLength(env, methods);
+    for (i = 0; i < numMethods; i++) {
+        jobject method = (*env)->GetObjectArrayElement(env, methods, i);
+        jint modifiers = java_lang_reflect_Member_getModifiers(env, method);
+        jboolean isAbstract;
+        if (process_java_exception(env)) {
+            (*env)->PopLocalFrame(env, NULL);
+            return 0;
+        }
+        isAbstract = java_lang_reflect_Modifier_isAbstract(env, modifiers);
+        if (process_java_exception(env)) {
+            (*env)->PopLocalFrame(env, NULL);
+            return 0;
+        }
+        if (isAbstract) {
+            if (abstractMethod != NULL) {
+                // We found two different abstract methods, so we're not a functional interfaces
+                (*env)->PopLocalFrame(env, NULL);
+                return 0;
+            } else {
+                abstractMethod = method;
+            }
+        } else {
+            // it's a default method, so just ignore it
+            (*env)->DeleteLocalRef(env, method);
+        }
+    }
+    (*env)->PopLocalFrame(env, NULL);
+    return abstractMethod != NULL;
+}
 
 /*
  * When there is no way to convert a PyObject of a specific expected Java type
@@ -58,14 +114,14 @@ static void raiseTypeError(JNIEnv *env, PyObject *pyobject, jclass expectedType)
     jstring expTypeJavaName;
     const char *expTypeName, *actTypeName;
 
-    expTypeJavaName = (*env)->CallObjectMethod(env, expectedType, JCLASS_GET_NAME);
+    expTypeJavaName = java_lang_Class_getName(env, expectedType);
     if (process_java_exception(env)) {
         return;
     }
     expTypeName = (*env)->GetStringUTFChars(env, expTypeJavaName, 0);
-    if (pyjclass_check(pyobject)) {
+    if (PyJClass_Check(pyobject)) {
         actTypeName = "java.lang.Class";
-    } else if (pyjobject_check(pyobject)) {
+    } else if (PyJObject_Check(pyobject)) {
         actTypeName = PyString_AsString(((PyJObject*) pyobject)->javaClassName);
     } else {
         actTypeName = pyobject->ob_type->tp_name;
@@ -181,29 +237,152 @@ jdouble PyObject_As_jdouble(PyObject *pyfloat)
     return (jdouble) PyFloat_AsDouble(pyfloat);
 }
 
+static jchar pyunicode_as_jchar(PyObject *pyunicode)
+{
+#if PY_MAJOR_VERSION < 3
+    if (PyUnicode_Check(pyunicode) && PyUnicode_GET_SIZE(pyunicode) == 1) {
+        Py_UNICODE* data = PyUnicode_AS_UNICODE(pyunicode);
+        if (data[0] < JCHAR_MAX) {
+            return (jchar) data[0];
+        }
+    }
+#else
+    if (PyUnicode_Check(pyunicode)) {
+        if (PyUnicode_READY(pyunicode) != 0) {
+            return 0;
+        } else if (PyUnicode_GET_LENGTH(pyunicode) == 1) {
+            if (PyUnicode_KIND((pyunicode)) == PyUnicode_1BYTE_KIND) {
+                return (jchar) PyUnicode_1BYTE_DATA(pyunicode)[0];
+            } else if (PyUnicode_KIND((pyunicode)) == PyUnicode_2BYTE_KIND) {
+                return (jchar) PyUnicode_2BYTE_DATA(pyunicode)[0];
+            }
+        }
+    }
+#endif
+    PyErr_Format(PyExc_TypeError, "Expected char but received a %s.",
+                 pyunicode->ob_type->tp_name);
+    return 0;
+}
+
+
+static jstring pyunicode_as_jstring(JNIEnv *env, PyObject *pyunicode)
+{
+    PyObject* bytes = NULL;
+    jstring result  = NULL;
+#if PY_MAJOR_VERSION >= 3
+    if (PyUnicode_READY(pyunicode) != 0) {
+        return NULL;
+    } else if (PyUnicode_KIND((pyunicode)) == PyUnicode_2BYTE_KIND) {
+        Py_UCS2* data = PyUnicode_2BYTE_DATA(pyunicode);
+        Py_ssize_t length = PyUnicode_GET_LENGTH(pyunicode);
+        return (*env)->NewString(env, (jchar*) data, length);
+    }
+#endif
+    bytes = PyUnicode_AsUTF16String(pyunicode);
+    if (bytes == NULL) {
+        return NULL;
+    }
+    /* +2 is to strip the BOM */
+    result = (*env)->NewString(env, (jchar*) (PyBytes_AS_STRING(bytes) + 2),
+                               (jsize) (PyBytes_GET_SIZE(bytes) - 2) / 2);
+    Py_DECREF(bytes);
+    return result;
+}
+
+
+#if PY_MAJOR_VERSION < 3
 static jchar pystring_as_jchar(PyObject *pystring)
 {
-    if (PyString_Check(pystring) && PyString_Size(pystring) == 1) {
-        return (jchar) PyString_AsString(pystring)[0];
+    if (PyString_Check(pystring)) {
+        if (PyString_Size(pystring) == 1) {
+            return (unsigned char) PyString_AsString(pystring)[0];
+        } else if (PyString_Size(pystring) < 4) {
+            PyObject* pyunicode = PyUnicode_DecodeUTF8(PyString_AsString(pystring),
+                                  PyString_Size(pystring), NULL);
+            if (PyUnicode_GET_SIZE(pyunicode) == 1) {
+                Py_UNICODE* data = PyUnicode_AS_UNICODE(pyunicode);
+                if (data[0] < JCHAR_MAX) {
+                    jchar result = (jchar) data[0];
+                    Py_DECREF(pyunicode);
+                    return result;
+                }
+            }
+            Py_DECREF(pyunicode);
+        }
     }
     PyErr_Format(PyExc_TypeError, "Expected char but received a %s.",
                  pystring->ob_type->tp_name);
     return 0;
 }
 
-jchar PyObject_As_jchar(PyObject *pyobject)
-{
-    return pystring_as_jchar(pyobject);
-}
 
 static jstring pystring_as_jstring(JNIEnv *env, PyObject *pystring)
 {
-    const char *s = PyString_AsString(pystring);
-    if (s == NULL) {
+    // Do not use NewStringUTF because it does not expext true UTF-8 and fails
+    // for some unicode input
+    char*      cstr         = NULL;
+    Py_ssize_t length       = 0;
+    jbyteArray stringJbytes = NULL;
+    jstring result          = NULL;
+    if (!JNI_METHOD(stringDecodingConstructor, env, JSTRING_TYPE, "<init>",
+                    "([BLjava/lang/String;)V")) {
         return NULL;
     }
-    return (*env)->NewStringUTF(env, s);
+    if ( UTF8 == NULL) {
+        jobject local = (*env)->NewStringUTF(env, "UTF-8");
+        UTF8 = (*env)->NewGlobalRef(env, local);
+        (*env)->DeleteLocalRef(env, local);
+    }
+    cstr = PyString_AsString(pystring);
+    if (cstr == NULL) {
+        return NULL;
+    }
+
+    length = PyString_Size(pystring);
+    stringJbytes = (*env)->NewByteArray(env, (jsize) length);
+    if (process_java_exception(env)) {
+        return NULL;
+    }
+
+    (*env)->SetByteArrayRegion(env, stringJbytes, 0, (jsize) length, (jbyte*) cstr);
+    result = (*env)->NewObject(env, JSTRING_TYPE, stringDecodingConstructor,
+                               stringJbytes, UTF8);
+    (*env)->DeleteLocalRef(env, stringJbytes);
+    return result;
 }
+
+static jobject pystring_as_jobject(JNIEnv *env, PyObject *pyobject,
+                                   jclass expectedType)
+{
+    if ((*env)->IsAssignableFrom(env, JSTRING_TYPE, expectedType)) {
+        return (jobject) pystring_as_jstring(env, pyobject);
+    } else if ((*env)->IsAssignableFrom(env, JCHAR_OBJ_TYPE, expectedType)) {
+        jchar c = pystring_as_jchar(pyobject);
+        if (c == 0 && PyErr_Occurred()) {
+            return NULL;
+        }
+        return JBox_Char(env, c);
+    }
+    raiseTypeError(env, pyobject, expectedType);
+    return NULL;
+}
+#endif
+
+
+jchar PyObject_As_jchar(PyObject *pyobject)
+{
+#if PY_MAJOR_VERSION < 3
+    if (PyUnicode_Check(pyobject)) {
+        return pyunicode_as_jchar(pyobject);
+    } else {
+        return pystring_as_jchar(pyobject);
+    }
+#else
+    return pyunicode_as_jchar(pyobject);
+#endif
+}
+
+
 
 jstring PyObject_As_jstring(JNIEnv *env, PyObject *pyobject)
 {
@@ -211,7 +390,15 @@ jstring PyObject_As_jstring(JNIEnv *env, PyObject *pyobject)
     if (pystring == NULL) {
         return NULL;
     }
-    return pystring_as_jstring(env, pystring);
+#if PY_MAJOR_VERSION < 3
+    if (PyUnicode_Check(pystring)) {
+        return pyunicode_as_jstring(env, pystring);
+    } else {
+        return pystring_as_jstring(env, pystring);
+    }
+#else
+    return pyunicode_as_jstring(env, pystring);
+#endif
 }
 
 static jobject pybool_as_jobject(JNIEnv *env, PyObject *pyobject,
@@ -228,13 +415,13 @@ static jobject pybool_as_jobject(JNIEnv *env, PyObject *pyobject,
     return NULL;
 }
 
-static jobject pystring_as_jobject(JNIEnv *env, PyObject *pyobject,
-                                   jclass expectedType)
+static jobject pyunicode_as_jobject(JNIEnv *env, PyObject *pyobject,
+                                    jclass expectedType)
 {
     if ((*env)->IsAssignableFrom(env, JSTRING_TYPE, expectedType)) {
-        return (jobject) pystring_as_jstring(env, pyobject);
+        return (jobject) pyunicode_as_jstring(env, pyobject);
     } else if ((*env)->IsAssignableFrom(env, JCHAR_OBJ_TYPE, expectedType)) {
-        jchar c = pystring_as_jchar(pyobject);
+        jchar c = pyunicode_as_jchar(pyobject);
         if (c == 0 && PyErr_Occurred()) {
             return NULL;
         }
@@ -332,12 +519,6 @@ static jobject pyfastsequence_as_jobject(JNIEnv *env, PyObject *pyseq,
             process_java_exception(env);
             return NULL;
         }
-        if (!JNI_METHOD(arraylistAdd, env, JARRAYLIST_TYPE, "add",
-                        "(Ljava/lang/Object;)Z")) {
-            process_java_exception(env);
-            return NULL;
-        }
-
         size = PySequence_Fast_GET_SIZE(pyseq);
 
         if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
@@ -363,7 +544,7 @@ static jobject pyfastsequence_as_jobject(JNIEnv *env, PyObject *pyseq,
                  */
                 return (*env)->PopLocalFrame(env, NULL);
             }
-            (*env)->CallBooleanMethod(env, jlist, arraylistAdd, value);
+            java_util_List_add(env, jlist, value);
             (*env)->DeleteLocalRef(env, value);
             if (process_java_exception(env)) {
                 return (*env)->PopLocalFrame(env, NULL);
@@ -371,16 +552,7 @@ static jobject pyfastsequence_as_jobject(JNIEnv *env, PyObject *pyseq,
         }
 
         if (PyTuple_Check(pyseq)) {
-            if (!unmodifiableList) {
-                unmodifiableList = (*env)->GetStaticMethodID(env, JCOLLECTIONS_TYPE,
-                                   "unmodifiableList", "(Ljava/util/List;)Ljava/util/List;");
-                if (!unmodifiableList) {
-                    process_java_exception(env);
-                    return (*env)->PopLocalFrame(env, NULL);
-                }
-            }
-            jlist = (*env)->CallStaticObjectMethod(env, JCOLLECTIONS_TYPE,
-                                                   unmodifiableList, jlist);
+            jlist = java_util_Collections_unmodifiableList(env, jlist);
             if (process_java_exception(env)) {
                 return (*env)->PopLocalFrame(env, NULL);
             }
@@ -400,11 +572,6 @@ static jobject pydict_as_jobject(JNIEnv *env, PyObject *pydict,
         PyObject *key, *value;
 
         if (!JNI_METHOD(hashmapIConstructor, env, JHASHMAP_TYPE, "<init>", "(I)V")) {
-            process_java_exception(env);
-            return NULL;
-        }
-        if (!JNI_METHOD(hashmapPut, env, JHASHMAP_TYPE, "put",
-                        "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;")) {
             process_java_exception(env);
             return NULL;
         }
@@ -439,7 +606,7 @@ static jobject pydict_as_jobject(JNIEnv *env, PyObject *pydict,
                 return NULL;
             }
 
-            (*env)->CallObjectMethod(env, jmap, hashmapPut, jkey, jvalue);
+            java_util_Map_put(env, jmap, jkey, jvalue);
             (*env)->DeleteLocalRef(env, jkey);
             (*env)->DeleteLocalRef(env, jvalue);
             if (process_java_exception(env)) {
@@ -453,23 +620,78 @@ static jobject pydict_as_jobject(JNIEnv *env, PyObject *pydict,
     return NULL;
 }
 
+static jmethodID newDirectProxyInstance = 0;
+jobject PyCallable_as_functional_interface(JNIEnv *env, PyObject *callable,
+        jclass expectedType)
+{
+    jclass clazz;
+    jobject proxy;
+
+    JepThread *jepThread = pyembed_get_jepthread();
+    if (!jepThread) {
+        if (!PyErr_Occurred()) {
+            PyErr_SetString(PyExc_RuntimeError, "Invalid JepThread pointer.");
+        }
+        return NULL;
+    }
+
+    env = jepThread->env;
+
+    clazz = (*env)->FindClass(env, "jep/Proxy");
+    if (process_java_exception(env) || !clazz) {
+        return NULL;
+    }
+
+    if (newDirectProxyInstance == 0) {
+        newDirectProxyInstance =
+            (*env)->GetStaticMethodID(
+                env,
+                clazz,
+                "newDirectProxyInstance",
+                "(JJLjep/Jep;Ljava/lang/ClassLoader;Ljava/lang/Class;)Ljava/lang/Object;");
+
+        if (process_java_exception(env) || !newDirectProxyInstance) {
+            return NULL;
+        }
+    }
+    proxy = (*env)->CallStaticObjectMethod(env,
+                                           clazz,
+                                           newDirectProxyInstance,
+                                           (jlong) (intptr_t) jepThread,
+                                           (jlong) (intptr_t) callable,
+                                           jepThread->caller,
+                                           jepThread->classloader,
+                                           expectedType);
+    if (process_java_exception(env) || !proxy) {
+        return NULL;
+    }
+
+    // make sure target doesn't get garbage collected
+    Py_INCREF(callable);
+
+    return proxy;
+};
 
 jobject PyObject_As_jobject(JNIEnv *env, PyObject *pyobject,
                             jclass expectedType)
 {
     if (pyobject == Py_None) {
         return NULL;
-    } else if (pyjclass_check(pyobject)) {
+    } else if (PyJClass_Check(pyobject)) {
         if ((*env)->IsAssignableFrom(env, JCLASS_TYPE, expectedType)) {
             return (*env)->NewLocalRef(env, ((PyJObject *) pyobject)->clazz);
         }
-    } else if (pyjobject_check(pyobject)) {
+    } else if (PyJObject_Check(pyobject)) {
         PyJObject *pyjobject = (PyJObject*) pyobject;
         if ((*env)->IsAssignableFrom(env, pyjobject->clazz, expectedType)) {
             return (*env)->NewLocalRef(env, pyjobject->object);
         }
+#if PY_MAJOR_VERSION < 3
     } else if (PyString_Check(pyobject)) {
         return pystring_as_jobject(env, pyobject, expectedType);
+#endif
+    } else if (PyUnicode_Check(pyobject)) {
+        return pyunicode_as_jobject(env, pyobject, expectedType);
     } else if (PyBool_Check(pyobject)) {
         return pybool_as_jobject(env, pyobject, expectedType);
     } else if (PyLong_Check(pyobject)) {
@@ -490,13 +712,15 @@ jobject PyObject_As_jobject(JNIEnv *env, PyObject *pyobject,
         return pyfastsequence_as_jobject(env, pyobject, expectedType);
     } else if (PyDict_Check(pyobject)) {
         return pydict_as_jobject(env, pyobject, expectedType);
+    } else if (PyCallable_Check(pyobject)) {
+        if (isFunctionalInterfaceType(env, expectedType)) {
+            return PyCallable_as_functional_interface(env, pyobject, expectedType);
+        } else if (PyErr_Occurred()) {
+            return NULL;
+        }
 #if JEP_NUMPY_ENABLED
     } else if (npy_array_check(pyobject)) {
-        if ((*env)->IsAssignableFrom(env, JEP_NDARRAY_TYPE, expectedType)) {
-            return convert_pyndarray_jndarray(env, pyobject);
-        } else {
-            return convert_pyndarray_jprimitivearray(env, pyobject, expectedType);
-        }
+        return convert_pyndarray_jobject(env, pyobject, expectedType);
 #endif
     } else if ((*env)->IsAssignableFrom(env, JSTRING_TYPE, expectedType)) {
         return (jobject) PyObject_As_jstring(env, pyobject);

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 JEP AUTHORS.
+ * Copyright (c) 2017 JEP AUTHORS.
  *
  * This file is licensed under the the zlib/libpng License.
  *
@@ -27,7 +27,7 @@ package jep;
 /**
  * Utility functions
  * 
- * @author [mrjohnson0 at sourceforge.net] Mike Johnson
+ * @author Mike Johnson
  */
 public final class Util {
 
@@ -76,45 +76,58 @@ public final class Util {
      * @return an <code>int</code> one of the type _ID constants
      */
     public static final int getTypeId(Object obj) {
-        if (obj == null)
+        if (obj == null) {
             return -1;
+        }
 
-        if (obj instanceof Integer)
+        if (obj instanceof Integer) {
             return JINT_ID;
+        }
 
-        if (obj instanceof Short)
+        if (obj instanceof Short) {
             return JSHORT_ID;
+        }
 
-        if (obj instanceof Double)
+        if (obj instanceof Double) {
             return JDOUBLE_ID;
+        }
 
-        if (obj instanceof Float)
+        if (obj instanceof Float) {
             return JFLOAT_ID;
+        }
 
-        if (obj instanceof Boolean)
+        if (obj instanceof Boolean) {
             return JBOOLEAN_ID;
+        }
 
-        if (obj instanceof Long)
+        if (obj instanceof Long) {
             return JLONG_ID;
+        }
 
-        if (obj instanceof String)
+        if (obj instanceof String) {
             return JSTRING_ID;
+        }
 
-        if (obj instanceof Void)
+        if (obj instanceof Void) {
             return JVOID_ID;
+        }
 
-        if (obj instanceof Character)
+        if (obj instanceof Character) {
             return JCHAR_ID;
+        }
 
-        if (obj instanceof Byte)
+        if (obj instanceof Byte) {
             return JBYTE_ID;
+        }
 
-        if (obj instanceof Class)
+        if (obj instanceof Class) {
             return JCLASS_ID;
+        }
 
         Class<?> clazz = obj.getClass();
-        if (clazz.isArray())
+        if (clazz.isArray()) {
             return JARRAY_ID;
+        }
 
         return JOBJECT_ID;
     }
@@ -135,44 +148,57 @@ public final class Util {
      * @return an <code>int</code> one of the type _ID constants
      */
     public static final int getTypeId(Class<?> clazz) {
-        if (clazz == null)
+        if (clazz == null) {
             return -1;
+        }
 
-        if (clazz.isAssignableFrom(Integer.class))
+        if (clazz.isAssignableFrom(Integer.class)) {
             return JINT_ID;
+        }
 
-        if (clazz.isAssignableFrom(Short.class))
+        if (clazz.isAssignableFrom(Short.class)) {
             return JSHORT_ID;
+        }
 
-        if (clazz.isAssignableFrom(Double.class))
+        if (clazz.isAssignableFrom(Double.class)) {
             return JDOUBLE_ID;
+        }
 
-        if (clazz.isAssignableFrom(Float.class))
+        if (clazz.isAssignableFrom(Float.class)) {
             return JFLOAT_ID;
+        }
 
-        if (clazz.isAssignableFrom(Boolean.class))
+        if (clazz.isAssignableFrom(Boolean.class)) {
             return JBOOLEAN_ID;
+        }
 
-        if (clazz.isAssignableFrom(Long.class))
+        if (clazz.isAssignableFrom(Long.class)) {
             return JLONG_ID;
+        }
 
-        if (clazz.isAssignableFrom(String.class))
+        if (clazz.isAssignableFrom(String.class)) {
             return JSTRING_ID;
+        }
 
-        if (clazz.isAssignableFrom(Void.class))
+        if (clazz.isAssignableFrom(Void.class)) {
             return JVOID_ID;
+        }
 
-        if (clazz.isAssignableFrom(Character.class))
+        if (clazz.isAssignableFrom(Character.class)) {
             return JCHAR_ID;
+        }
 
-        if (clazz.isAssignableFrom(Byte.class))
+        if (clazz.isAssignableFrom(Byte.class)) {
             return JBYTE_ID;
+        }
 
-        if (clazz.isAssignableFrom(Class.class))
+        if (clazz.isAssignableFrom(Class.class)) {
             return JCLASS_ID;
+        }
 
-        if (clazz.isArray())
+        if (clazz.isArray()) {
             return JARRAY_ID;
+        }
 
         return JOBJECT_ID;
     }

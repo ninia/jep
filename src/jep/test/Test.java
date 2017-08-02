@@ -12,10 +12,9 @@ import jep.python.PyModule;
 /**
  * Test.java
  * 
+ * Created: April 2004
  * 
- * Created: Fri Apr 30 12:42:58 2004
- * 
- * @author [mrjohnson0 at sourceforge.net] Mike Johnson
+ * @author Mike Johnson
  */
 public class Test implements Runnable {
 

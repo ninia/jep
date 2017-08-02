@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import jep.Jep;
+import jep.JepConfig;
 
 /**
  * A test class for verifying that jep.getValue(String) is working well with
@@ -16,19 +17,13 @@ import jep.Jep;
 public class TestGetCollectionBoxing {
 
     public static void main(String[] args) {
-        Jep jep = null;
-        try {
-            jep = new Jep(false, ".");
+        try (Jep jep = new Jep(new JepConfig().addIncludePaths("."))) {
             testList(jep);
             testTuple(jep);
             testDictionary(jep);
         } catch (Throwable t) {
             t.printStackTrace();
             System.exit(1);
-        } finally {
-            if (jep != null) {
-                jep.close();
-            }
         }
         System.exit(0);
     }

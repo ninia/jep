@@ -1,37 +1,38 @@
 /**
- * Copyright (c) 2016 JEP AUTHORS.
+ * Copyright (c) 2017 JEP AUTHORS.
  *
  * This file is licensed under the the zlib/libpng License.
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any
  * damages arising from the use of this software.
- * 
+ *
  * Permission is granted to anyone to use this software for any
  * purpose, including commercial applications, and to alter it and
  * redistribute it freely, subject to the following restrictions:
- * 
+ *
  *     1. The origin of this software must not be misrepresented; you
  *     must not claim that you wrote the original software. If you use
  *     this software in a product, an acknowledgment in the product
  *     documentation would be appreciated but is not required.
- * 
+ *
  *     2. Altered source versions must be plainly marked as such, and
  *     must not be misrepresented as being the original software.
- * 
+ *
  *     3. This notice may not be removed or altered from any source
  *     distribution.
  */
 package jep;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 
 import jep.python.PyObject;
 
 /**
  * Handle Proxy method calls.
- * 
- * @author [mrjohnson0 at sourceforge.net] Mike Johnson
+ *
+ * @author Mike Johnson
  */
 public class InvocationHandler implements java.lang.reflect.InvocationHandler {
 
@@ -40,10 +41,11 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
     private long target;
 
     private Jep jep;
+    private final boolean functionalInterface;
 
     /**
      * Creates a new <code>InvocationHandler</code> instance.
-     * 
+     *
      * @param tstate
      *            the thread state id
      * @param ltarget
@@ -53,11 +55,12 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
      * @exception JepException
      *                if an error occurs
      */
-    public InvocationHandler(long tstate, long ltarget, Jep jep)
+    public InvocationHandler(long tstate, long ltarget, Jep jep, final boolean functionalInterface)
             throws JepException {
         this.tstate = tstate;
         this.target = ltarget;
         this.jep = jep;
+        this.functionalInterface = functionalInterface;
 
         // track target with jep.
 
@@ -74,7 +77,7 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
      * Processes a method invocation on a proxy instance and returns the result.
      * This method will be invoked on an invocation handler when a method is
      * invoked on a proxy instance that it is associated with.
-     * 
+     *
      * @param proxy
      *            the proxy instance that the method was invoked on
      * @param method
@@ -119,6 +122,12 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
             throws Throwable {
         this.jep.isValidThread();
 
+        /*
+         * If this is a functional interface but a non-abstract (default) interface method is called
+         * then invoke it normally instead treating it as a callable.
+         */  
+        boolean functionalInterface = this.functionalInterface  && (method.getModifiers() & Modifier.ABSTRACT) != 0;
+
         // java passes null args sometimes. *shrugs*
         if (args == null)
             args = new Object[0];
@@ -129,10 +138,11 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
         for (int i = 0; i < args.length; i++)
             types[i] = Util.getTypeId(args[i]);
 
+        // TODO this does not handle default methods.
         return invoke(method.getName(), this.tstate, this.target, args, types,
-                Util.getTypeId(method.getReturnType()));
+                Util.getTypeId(method.getReturnType()), functionalInterface);
     }
 
     private static native Object invoke(String name, long tstate, long target,
-            Object[] args, int[] types, int returnType);
+            Object[] args, int[] types, int returnType, boolean functionalInterface);
 }

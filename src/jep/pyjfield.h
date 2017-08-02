@@ -1,8 +1,7 @@
-/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2016 JEP AUTHORS.
+   Copyright (c) 2017 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -32,15 +31,13 @@
 #ifndef _Included_pyjfield
 #define _Included_pyjfield
 
-PyAPI_DATA(PyTypeObject) PyJField_Type;
+extern PyTypeObject PyJField_Type;
 
 /* Represents a java field on a java object and allows getting and setting values */
 typedef struct {
     PyObject_HEAD
     jfieldID          fieldId;             /* Resolved fieldid */
     jobject           rfield;              /* reflect/Field object */
-    PyJObject        *pyjobject;           /* parent, should point to
-                                              PyJObject_Object */
     jclass            fieldType;           /* field's type */
     int               fieldTypeId;         /* field's typeid */
     PyObject         *pyFieldName;         /* python name... :-) */
@@ -50,10 +47,10 @@ typedef struct {
 } PyJFieldObject;
 
 
-PyJFieldObject* pyjfield_new(JNIEnv*, jobject, PyJObject*);
-int pyjfield_check(PyObject*);
+PyJFieldObject* PyJField_New(JNIEnv*, jobject);
+int PyJField_Check(PyObject*);
 
-PyObject* pyjfield_get(PyJFieldObject*);
-int pyjfield_set(PyJFieldObject *self, PyObject *value);
+PyObject* pyjfield_get(PyJFieldObject*, PyJObject*);
+int pyjfield_set(PyJFieldObject*, PyJObject*, PyObject*);
 
 #endif // ndef pyjfield

@@ -1,6 +1,9 @@
-package jep.test.numpy;
+package jep.test.numpy.example;
 
 import jep.Jep;
+import jep.JepConfig;
+import jep.test.numpy.TestNumpyArrayToString;
+import jep.test.numpy.TestNumpyProdShared;
 
 /**
  * Tests closing a sub-interpreter with numpy and then trying to use a new
@@ -13,6 +16,9 @@ import jep.Jep;
  * 
  * This does NOT make use of the shared modules feature.
  * 
+ * This test is NOT run by the unittests. This test is related to
+ * {@link TestNumpyArrayToString} and {@link TestNumpyProdShared} for the
+ * solution where shared modules fix the problem.
  * 
  * Created: October 2015
  * 
@@ -23,7 +29,7 @@ public class TestNumpyProdLost {
     public static void main(String[] args) {
         Jep jep = null;
         try {
-            jep = new Jep(false, ".");
+            jep = new Jep(new JepConfig().addIncludePaths("."));
             jep.eval("import numpy");
             jep.eval("numpy.ndarray([1]).prod()");
             jep.close();

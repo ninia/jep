@@ -1,8 +1,7 @@
-/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2016 JEP AUTHORS.
+   Copyright (c) 2017 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -32,8 +31,6 @@
 */
 
 #include "Jep.h"
-
-jmethodID objectComponentType = 0;
 
 static void pyjarray_dealloc(PyJArrayObject *self);
 static int pyjarray_init(JNIEnv*, PyJArrayObject*, int, PyObject*);
@@ -99,7 +96,7 @@ PyObject* pyjarray_new_v(PyObject *isnull, PyObject *args)
 
     env = pyembed_get_env();
 
-    if (!PyArg_UnpackTuple(args, "ref", 1, 3, &one, &two, &three)) {
+    if (!PyArg_UnpackTuple(args, "ref", 2, 3, &one, &two, &three)) {
         return NULL;
     }
 
@@ -156,7 +153,7 @@ PyObject* pyjarray_new_v(PyObject *isnull, PyObject *args)
             } // switch
 
         } // if int(two)
-        else if (pyjobject_check(two)) {
+        else if (PyJObject_Check(two)) {
             PyJObject *pyjob = (PyJObject *) two;
             typeId = JOBJECT_ID;
 
@@ -230,15 +227,7 @@ static int pyjarray_init(JNIEnv *env,
     // ------------------------------ first, get the array's type
 
     if (pyarray->componentType < 0) { // may already know that
-        if (!JNI_METHOD(objectComponentType, env, JCLASS_TYPE, "getComponentType",
-                        "()Ljava/lang/Class;")) {
-            process_java_exception(env);
-            goto EXIT_ERROR;
-        }
-
-        compType = (*env)->CallObjectMethod(env,
-                                            pyarray->clazz,
-                                            objectComponentType);
+        compType = java_lang_Class_getComponentType(env, pyarray->clazz);
         if (process_java_exception(env) || !compType) {
             goto EXIT_ERROR;
         }
@@ -659,30 +648,13 @@ static int pyjarray_setitem(PyJArrayObject *self,
     }
 
     case JOBJECT_ID: {
-        jobject    obj = NULL;
-        PyJObject *pyjob;
-
-        if (newitem == Py_None)
-            ; // setting NULL
-        else {
-            if (!pyjobject_check(newitem)) {
-                PyErr_SetString(PyExc_TypeError, "Expected jobject.");
-                return -1;
-            }
-
-            pyjob = (PyJObject *) newitem;
-            obj = pyjob->object;
-
-            if (!obj) {
-                PyErr_SetString(PyExc_TypeError, "Expected instance, not class.");
-                return -1;
-            }
+        jobject obj = PyObject_As_jobject(env, newitem, self->componentClass);
+        if (!obj && PyErr_Occurred()) {
+            return -1;
         }
 
-        (*env)->SetObjectArrayElement(env,
-                                      self->object,
-                                      pos,
-                                      obj);
+        (*env)->SetObjectArrayElement(env, self->object, pos, obj);
+        (*env)->DeleteLocalRef(env, obj);
         if (process_java_exception(env)) {
             return -1;
         }
@@ -839,7 +811,6 @@ static PyObject* pyjarray_item(PyJArrayObject *self, Py_ssize_t pos)
 
     case JSTRING_ID: {
         jstring     jstr;
-        const char *str;
 
         jstr = (jstring) (*env)->GetObjectArrayElement(env,
                 self->object,
@@ -848,10 +819,8 @@ static PyObject* pyjarray_item(PyJArrayObject *self, Py_ssize_t pos)
         if (process_java_exception(env))
             ;
         else if (jstr != NULL) {
-            str = (*env)->GetStringUTFChars(env, jstr, 0);
-            ret = PyString_FromString((char *) str);
+            ret = jstring_To_PyObject(env, jstr);
 
-            (*env)->ReleaseStringUTFChars(env, jstr, str);
             (*env)->DeleteLocalRef(env, jstr);
         } else {
             // no error occurred, just return None
@@ -962,7 +931,6 @@ static int pyjarray_index(PyJArrayObject *self, PyObject *el)
         }
 
         for (i = 0; ret == 0 && i < self->length; i++) {
-            const char *val;
             PyObject   *t;
             jstring l = (*env)->GetObjectArrayElement(env,
                         self->object,
@@ -976,15 +944,13 @@ static int pyjarray_index(PyJArrayObject *self, PyObject *el)
                 continue;
             }
 
-            val = jstring2char(env, l);
-            t   = PyString_FromString((char *) val);
+            t   = jstring_To_PyObject(env, l);
 
             ret = PyObject_RichCompareBool(el,
                                            t,
                                            Py_EQ);
 
             Py_DECREF(t);
-            release_utf_char(env, l, val);
             (*env)->DeleteLocalRef(env, l);
 
             if (ret) {
@@ -1040,7 +1006,7 @@ static int pyjarray_index(PyJArrayObject *self, PyObject *el)
 
         JNIEnv *env = pyembed_get_env();
 
-        if (el != Py_None && !pyjobject_check(el)) {
+        if (el != Py_None && !PyJObject_Check(el)) {
             PyErr_SetString(PyExc_TypeError, "Expected jobject.");
             return -1;
         }

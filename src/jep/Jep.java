@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 JEP AUTHORS.
+ * Copyright (c) 2017 JEP AUTHORS.
  *
  * This file is licensed under the the zlib/libpng License.
  *
@@ -52,13 +52,17 @@ import jep.python.PyObject;
  * prevent memory leaks.
  * </p>
  * 
- * @author [mrjohnson0 at sourceforge.net] Mike Johnson
+ * @author Mike Johnson
  */
 public final class Jep implements Closeable {
+
+    // TODO switch to AutoCloseable
 
     private static final String THREAD_WARN = "JEP THREAD WARNING: ";
 
     private static TopInterpreter topInterpreter = null;
+
+    private static String[] sharedModulesArgv = null;
 
     private boolean closed = false;
 
@@ -82,7 +86,7 @@ public final class Jep implements Closeable {
      * keep track of objects that we create. do this to prevent crashes in
      * userland if jep is closed.
      */
-    private final List<PyObject> pythonObjects = new ArrayList<PyObject>();
+    private final List<PyObject> pythonObjects = new ArrayList<>();
 
     /**
      * Tracks if this thread has been used for an interpreter before. Using
@@ -101,12 +105,18 @@ public final class Jep implements Closeable {
      * Initializes the main Python interpreter that all sub-interpreters will be
      * created from.
      */
-    private static class TopInterpreter implements Closeable {
+    private static class TopInterpreter implements AutoCloseable {
+        /*
+         * TODO: All this static-ness related to the top interpreter should be
+         * moved to its own class. This includes top interpreter initialization,
+         * shared modules argv, PyConfig init params, etc.
+         */
+
         Thread thread;
 
-        BlockingQueue<String> importQueue = new SynchronousQueue<String>();
+        BlockingQueue<String> importQueue = new SynchronousQueue<>();
 
-        BlockingQueue<Object> importResults = new SynchronousQueue<Object>();
+        BlockingQueue<Object> importResults = new SynchronousQueue<>();
 
         Throwable error;
 
@@ -124,7 +134,7 @@ public final class Jep implements Closeable {
                 @Override
                 public void run() {
                     try {
-                        initializePython();
+                        initializePython(sharedModulesArgv);
                     } catch (Throwable t) {
                         error = t;
                     } finally {
@@ -194,7 +204,8 @@ public final class Jep implements Closeable {
                 Object result = importResults.take();
                 if (result instanceof JepException) {
                     throw new JepException(
-                            ((JepException) result).getLocalizedMessage());
+                            "Error importing shared module " + module,
+                            ((JepException) result));
                 }
             } catch (InterruptedException e) {
                 throw new JepException(e);
@@ -226,12 +237,32 @@ public final class Jep implements Closeable {
                 config.hashRandomizationFlag);
     }
 
+    /**
+     * Sets the sys.argv values on the top interpreter. This is a workaround for
+     * issues with shared modules and should be considered experimental.
+     * 
+     * @param argv
+     *            the arguments to be set on Python's sys.argv for the top/main
+     *            interpreter
+     * @throws JepException
+     * 
+     * @since 3.7
+     */
+    public static void setSharedModulesArgv(String... argv)
+            throws JepException {
+        if (topInterpreter != null) {
+            throw new JepException(
+                    "Jep.setSharedModulesArgv called after initializing python interpreter.");
+        }
+        sharedModulesArgv = argv;
+    }
+
     private static native void setInitParams(int noSiteFlag,
             int noUserSiteDiretory, int ignoreEnvironmentFlag, int verboseFlag,
             int optimizeFlag, int dontWriteBytecodeFlag,
             int hashRandomizationFlag);
 
-    private static native void initializePython();
+    private static native void initializePython(String[] topInterpreterArgv);
 
     private static native void sharedImport(String module) throws JepException;
 
@@ -360,8 +391,7 @@ public final class Jep implements Closeable {
              */
             Thread current = Thread.currentThread();
             StringBuilder warning = new StringBuilder(THREAD_WARN)
-                    .append("Unsafe reuse of thread ")
-                    .append(current.getName())
+                    .append("Unsafe reuse of thread ").append(current.getName())
                     .append(" for another Python sub-interpreter.\n")
                     .append("Please close() the previous Jep instance to ensure stability.");
             System.err.println(warning.toString());
@@ -372,8 +402,11 @@ public final class Jep implements Closeable {
         else
             this.classLoader = config.classLoader;
 
+        boolean hasSharedModules = config.sharedModules != null
+                && !config.sharedModules.isEmpty();
+
         this.interactive = config.interactive;
-        this.tstate = init(this.classLoader);
+        this.tstate = init(this.classLoader, hasSharedModules);
         threadUsed.set(true);
         this.thread = Thread.currentThread();
 
@@ -392,7 +425,7 @@ public final class Jep implements Closeable {
         }
 
         eval("import jep");
-        if (config.sharedModules != null && !config.sharedModules.isEmpty()) {
+        if (hasSharedModules) {
             set("sharedModules", config.sharedModules);
             set("sharedImporter", topInterpreter);
             eval("jep.shared_modules_hook.setupImporter(sharedModules,sharedImporter)");
@@ -416,7 +449,8 @@ public final class Jep implements Closeable {
         }
     }
 
-    private native long init(ClassLoader classloader) throws JepException;
+    private native long init(ClassLoader classloader, boolean hasSharedModules)
+            throws JepException;
 
     /**
      * Checks if the current thread is valid for the method call. All calls must
@@ -551,36 +585,38 @@ public final class Jep implements Closeable {
 
         try {
             // trim windows \r\n
-            if (str != null)
+            if (str != null) {
                 str = str.replaceAll("\r", "");
+            }
 
             if (str == null || str.trim().equals("")) {
-                if (!this.interactive)
+                if (!this.interactive) {
                     return false;
-                if (this.evalLines == null)
+                }
+                if (this.evalLines == null) {
                     return true; // nothing to eval
+                }
 
                 // null means we send lines, whether or not it compiles.
                 eval(this.tstate, this.evalLines.toString());
                 this.evalLines = null;
                 return true;
-            } else {
-                // first check if it compiles by itself
-                if (!this.interactive
-                        || (this.evalLines == null && compileString(
-                                this.tstate, str) == 1)) {
-
-                    eval(this.tstate, str);
-                    return true;
-                }
-
-                // doesn't compile on it's own, append to eval
-                if (this.evalLines == null)
-                    this.evalLines = new StringBuilder();
-                else
-                    evalLines.append(LINE_SEP);
-                evalLines.append(str);
             }
+
+            // first check if it compiles by itself
+            if (!this.interactive || (this.evalLines == null
+                    && compileString(this.tstate, str) == 1)) {
+                eval(this.tstate, str);
+                return true;
+            }
+
+            // doesn't compile on it's own, append to eval
+            if (this.evalLines == null) {
+                this.evalLines = new StringBuilder();
+            } else {
+                evalLines.append(LINE_SEP);
+            }
+            evalLines.append(str);
 
             return false;
         } catch (JepException e) {
@@ -710,8 +746,8 @@ public final class Jep implements Closeable {
      *                if an error occurs
      */
     public PyModule createModule(String name) throws JepException {
-        return (PyModule) trackObject(new PyModule(this.tstate, createModule(
-                this.tstate, name), this));
+        return (PyModule) trackObject(new PyModule(this.tstate,
+                createModule(this.tstate, name), this));
     }
 
     private native long createModule(long tstate, String name)
@@ -831,12 +867,13 @@ public final class Jep implements Closeable {
      *                if an error occurs
      */
     public void set(String name, boolean v) throws JepException {
-        // there's essentially no difference between int and bool...
-        if (v)
-            set(name, 1);
-        else
-            set(name, 0);
+        isValidThread();
+
+        set(tstate, name, v);
     }
+
+    private native void set(long tstate, String name, boolean v)
+            throws JepException;
 
     /**
      * Sets the Java int into the sub-interpreter's global scope with the

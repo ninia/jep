@@ -1,8 +1,7 @@
-/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2016 JEP AUTHORS.
+   Copyright (c) 2017 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -33,20 +32,28 @@
 
 #include "Jep.h"
 
-static void pyjfield_dealloc(PyJFieldObject *self);
 
-static jmethodID fieldGetName = 0;
-static jmethodID fieldGetType = 0;
-static jmethodID fieldGetMod  = 0;
-static jmethodID modIsStatic  = 0;
+static void pyjfield_dealloc(PyJFieldObject *self)
+{
+#if USE_DEALLOC
+    JNIEnv *env  = pyembed_get_env();
+    if (env) {
+        if (self->rfield) {
+            (*env)->DeleteGlobalRef(env, self->rfield);
+        }
+    }
 
-PyJFieldObject* pyjfield_new(JNIEnv *env,
-                             jobject rfield,
-                             PyJObject *pyjobject)
+    Py_CLEAR(self->pyFieldName);
+
+    PyObject_Del(self);
+#endif
+}
+
+
+PyJFieldObject* PyJField_New(JNIEnv *env, jobject rfield)
 {
     PyJFieldObject *pyf;
     jstring          jstr        = NULL;
-    const char      *fieldName   = NULL;
 
     if (PyType_Ready(&PyJField_Type) < 0) {
         return NULL;
@@ -54,7 +61,6 @@ PyJFieldObject* pyjfield_new(JNIEnv *env,
 
     pyf              = PyObject_NEW(PyJFieldObject, &PyJField_Type);
     pyf->rfield      = (*env)->NewGlobalRef(env, rfield);
-    pyf->pyjobject   = pyjobject;
     pyf->pyFieldName = NULL;
     pyf->fieldTypeId = -1;
     pyf->isStatic    = -1;
@@ -62,21 +68,13 @@ PyJFieldObject* pyjfield_new(JNIEnv *env,
 
     // ------------------------------ get field name
 
-    if (!JNI_METHOD(fieldGetName, env, JFIELD_TYPE, "getName",
-                    "()Ljava/lang/String;")) {
-        process_java_exception(env);
-        goto EXIT_ERROR;
-    }
-
-    jstr = (jstring) (*env)->CallObjectMethod(env, rfield, fieldGetName);
+    jstr = java_lang_reflect_Member_getName(env, rfield);
     if (process_java_exception(env) || !jstr) {
         goto EXIT_ERROR;
     }
 
-    fieldName        = (*env)->GetStringUTFChars(env, jstr, 0);
-    pyf->pyFieldName = PyString_FromString(fieldName);
+    pyf->pyFieldName = jstring_To_PyObject(env, jstr);
 
-    (*env)->ReleaseStringUTFChars(env, jstr, fieldName);
     (*env)->DeleteLocalRef(env, jstr);
 
 
@@ -107,14 +105,7 @@ static int pyjfield_init(JNIEnv *env, PyJFieldObject *self)
 
 
     // ------------------------------ get return type
-
-    if (!JNI_METHOD(fieldGetType, env, JFIELD_TYPE, "getType",
-                    "()Ljava/lang/Class;")) {
-        process_java_exception(env);
-        goto EXIT_ERROR;
-    }
-
-    self->fieldType = (*env)->CallObjectMethod(env, self->rfield, fieldGetType);
+    self->fieldType = java_lang_reflect_Field_getType(env, self->rfield);
     if (process_java_exception(env) || !self->fieldType) {
         goto EXIT_ERROR;
     }
@@ -127,37 +118,16 @@ static int pyjfield_init(JNIEnv *env, PyJFieldObject *self)
     // ------------------------------ get isStatic
 
     // call getModifers()
-    if (!JNI_METHOD(fieldGetMod, env, JFIELD_TYPE, "getModifiers", "()I")) {
-        process_java_exception(env);
-        goto EXIT_ERROR;
-    }
-    modifier = (*env)->CallIntMethod(env, self->rfield, fieldGetMod);
+    modifier = java_lang_reflect_Member_getModifiers(env, self->rfield);
     if (process_java_exception(env)) {
         goto EXIT_ERROR;
     }
 
-    if (modIsStatic == 0) {
-        modIsStatic = (*env)->GetStaticMethodID(env,
-                                                JMODIFIER_TYPE,
-                                                "isStatic",
-                                                "(I)Z");
-        if (process_java_exception(env) || !modIsStatic) {
-            goto EXIT_ERROR;
-        }
-    }
-
-    isStatic = (*env)->CallStaticBooleanMethod(env,
-               JMODIFIER_TYPE,
-               modIsStatic,
-               modifier);
+    isStatic = java_lang_reflect_Modifier_isStatic(env, modifier);
     if (process_java_exception(env)) {
         goto EXIT_ERROR;
     }
 
-    if (!self->pyjobject->object && !isStatic) {
-        PyErr_SetString(PyExc_TypeError, "Field is not static.");
-        goto EXIT_ERROR;
-    }
     if (isStatic == JNI_TRUE) {
         self->isStatic = 1;
     } else {
@@ -180,24 +150,7 @@ EXIT_ERROR:
 }
 
 
-static void pyjfield_dealloc(PyJFieldObject *self)
-{
-#if USE_DEALLOC
-    JNIEnv *env  = pyembed_get_env();
-    if (env) {
-        if (self->rfield) {
-            (*env)->DeleteGlobalRef(env, self->rfield);
-        }
-    }
-
-    Py_CLEAR(self->pyFieldName);
-
-    PyObject_Del(self);
-#endif
-}
-
-
-int pyjfield_check(PyObject *obj)
+int PyJField_Check(PyObject *obj)
 {
     if (PyObject_TypeCheck(obj, &PyJField_Type)) {
         return 1;
@@ -208,7 +161,7 @@ int pyjfield_check(PyObject *obj)
 
 // get value from java object field.
 // returns new reference.
-PyObject* pyjfield_get(PyJFieldObject *self)
+PyObject* pyjfield_get(PyJFieldObject *self, PyJObject* pyjobject)
 {
     PyObject *result = NULL;
     JNIEnv   *env;
@@ -226,20 +179,24 @@ PyObject* pyjfield_get(PyJFieldObject *self)
         }
     }
 
+    if (!pyjobject->object && !self->isStatic) {
+        PyErr_SetString(PyExc_TypeError, "Field is not static.");
+        return NULL;
+    }
+
     switch (self->fieldTypeId) {
 
     case JSTRING_ID: {
         jstring     jstr;
-        const char *str;
 
         if (self->isStatic)
             jstr = (jstring) (*env)->GetStaticObjectField(
                        env,
-                       self->pyjobject->clazz,
+                       pyjobject->clazz,
                        self->fieldId);
         else
             jstr = (jstring) (*env)->GetObjectField(env,
-                                                    self->pyjobject->object,
+                                                    pyjobject->object,
                                                     self->fieldId);
 
         if (process_java_exception(env)) {
@@ -250,10 +207,7 @@ PyObject* pyjfield_get(PyJFieldObject *self)
             Py_RETURN_NONE;
         }
 
-        str    = (*env)->GetStringUTFChars(env, jstr, 0);
-        result = PyString_FromString(str);
-
-        (*env)->ReleaseStringUTFChars(env, jstr, str);
+        result = jstring_To_PyObject(env, jstr);
         (*env)->DeleteLocalRef(env, jstr);
         break;
     }
@@ -263,11 +217,11 @@ PyObject* pyjfield_get(PyJFieldObject *self)
 
         if (self->isStatic)
             obj = (*env)->GetStaticObjectField(env,
-                                               self->pyjobject->clazz,
+                                               pyjobject->clazz,
                                                self->fieldId);
         else
             obj = (*env)->GetObjectField(env,
-                                         self->pyjobject->object,
+                                         pyjobject->object,
                                          self->fieldId);
 
         if (process_java_exception(env)) {
@@ -278,7 +232,7 @@ PyObject* pyjfield_get(PyJFieldObject *self)
             Py_RETURN_NONE;
         }
 
-        result = pyjobject_new_class(env, obj);
+        result = PyJObject_NewClass(env, obj);
         (*env)->DeleteLocalRef(env, obj);
         break;
     }
@@ -288,11 +242,11 @@ PyObject* pyjfield_get(PyJFieldObject *self)
 
         if (self->isStatic)
             obj = (*env)->GetStaticObjectField(env,
-                                               self->pyjobject->clazz,
+                                               pyjobject->clazz,
                                                self->fieldId);
         else
             obj = (*env)->GetObjectField(env,
-                                         self->pyjobject->object,
+                                         pyjobject->object,
                                          self->fieldId);
 
         if (process_java_exception(env)) {
@@ -313,11 +267,11 @@ PyObject* pyjfield_get(PyJFieldObject *self)
 
         if (self->isStatic)
             ret = (*env)->GetStaticIntField(env,
-                                            self->pyjobject->clazz,
+                                            pyjobject->clazz,
                                             self->fieldId);
         else
             ret = (*env)->GetIntField(env,
-                                      self->pyjobject->object,
+                                      pyjobject->object,
                                       self->fieldId);
 
         if (process_java_exception(env)) {
@@ -333,11 +287,11 @@ PyObject* pyjfield_get(PyJFieldObject *self)
 
         if (self->isStatic)
             ret = (*env)->GetStaticByteField(env,
-                                             self->pyjobject->clazz,
+                                             pyjobject->clazz,
                                              self->fieldId);
         else
             ret = (*env)->GetByteField(env,
-                                       self->pyjobject->object,
+                                       pyjobject->object,
                                        self->fieldId);
 
         if (process_java_exception(env)) {
@@ -350,24 +304,20 @@ PyObject* pyjfield_get(PyJFieldObject *self)
 
     case JCHAR_ID: {
         jchar ret;
-        char  val[2];
 
         if (self->isStatic)
             ret = (*env)->GetStaticCharField(env,
-                                             self->pyjobject->clazz,
+                                             pyjobject->clazz,
                                              self->fieldId);
         else
             ret = (*env)->GetCharField(env,
-                                       self->pyjobject->object,
+                                       pyjobject->object,
                                        self->fieldId);
 
         if (process_java_exception(env)) {
             return NULL;
         }
-
-        val[0] = (char) ret;
-        val[1] = '\0';
-        result = PyString_FromString(val);
+        result = jchar_To_PyObject(ret);
         break;
     }
 
@@ -376,11 +326,11 @@ PyObject* pyjfield_get(PyJFieldObject *self)
 
         if (self->isStatic)
             ret = (*env)->GetStaticShortField(env,
-                                              self->pyjobject->clazz,
+                                              pyjobject->clazz,
                                               self->fieldId);
         else
             ret = (*env)->GetShortField(env,
-                                        self->pyjobject->object,
+                                        pyjobject->object,
                                         self->fieldId);
 
         if (process_java_exception(env)) {
@@ -396,11 +346,11 @@ PyObject* pyjfield_get(PyJFieldObject *self)
 
         if (self->isStatic)
             ret = (*env)->GetStaticDoubleField(env,
-                                               self->pyjobject->clazz,
+                                               pyjobject->clazz,
                                                self->fieldId);
         else
             ret = (*env)->GetDoubleField(env,
-                                         self->pyjobject->object,
+                                         pyjobject->object,
                                          self->fieldId);
 
         if (process_java_exception(env)) {
@@ -416,11 +366,11 @@ PyObject* pyjfield_get(PyJFieldObject *self)
 
         if (self->isStatic)
             ret = (*env)->GetStaticFloatField(env,
-                                              self->pyjobject->clazz,
+                                              pyjobject->clazz,
                                               self->fieldId);
         else
             ret = (*env)->GetFloatField(env,
-                                        self->pyjobject->object,
+                                        pyjobject->object,
                                         self->fieldId);
 
         if (process_java_exception(env)) {
@@ -436,11 +386,11 @@ PyObject* pyjfield_get(PyJFieldObject *self)
 
         if (self->isStatic)
             ret = (*env)->GetStaticLongField(env,
-                                             self->pyjobject->clazz,
+                                             pyjobject->clazz,
                                              self->fieldId);
         else
             ret = (*env)->GetLongField(env,
-                                       self->pyjobject->object,
+                                       pyjobject->object,
                                        self->fieldId);
 
         if (process_java_exception(env)) {
@@ -457,18 +407,18 @@ PyObject* pyjfield_get(PyJFieldObject *self)
 
         if (self->isStatic)
             ret = (*env)->GetStaticBooleanField(env,
-                                                self->pyjobject->clazz,
+                                                pyjobject->clazz,
                                                 self->fieldId);
         else
             ret = (*env)->GetBooleanField(env,
-                                          self->pyjobject->object,
+                                          pyjobject->object,
                                           self->fieldId);
 
         if (process_java_exception(env)) {
             return NULL;
         }
 
-        result = Py_BuildValue("i", ret);
+        result = PyBool_FromLong(ret);
         break;
     }
 
@@ -488,7 +438,7 @@ PyObject* pyjfield_get(PyJFieldObject *self)
 }
 
 
-int pyjfield_set(PyJFieldObject *self, PyObject *value)
+int pyjfield_set(PyJFieldObject *self, PyJObject* pyjobject, PyObject *value)
 {
     JNIEnv *env = pyembed_get_env();
 
@@ -503,6 +453,11 @@ int pyjfield_set(PyJFieldObject *self, PyObject *value)
         }
     }
 
+    if (!pyjobject->object && !self->isStatic) {
+        PyErr_SetString(PyExc_TypeError, "Field is not static.");
+        return -1;
+    }
+
     switch (self->fieldTypeId) {
     case JSTRING_ID:
     case JCLASS_ID:
@@ -512,10 +467,10 @@ int pyjfield_set(PyJFieldObject *self, PyObject *value)
             return -1;
         }
         if (self->isStatic) {
-            (*env)->SetStaticObjectField(env, self->pyjobject->clazz,
+            (*env)->SetStaticObjectField(env, pyjobject->clazz,
                                          self->fieldId, obj);
         } else {
-            (*env)->SetObjectField(env, self->pyjobject->object,
+            (*env)->SetObjectField(env, pyjobject->object,
                                    self->fieldId, obj);
         }
         (*env)->DeleteLocalRef(env, obj);
@@ -527,10 +482,10 @@ int pyjfield_set(PyJFieldObject *self, PyObject *value)
             return -1;
         }
         if (self->isStatic) {
-            (*env)->SetStaticIntField(env, self->pyjobject->clazz,
+            (*env)->SetStaticIntField(env, pyjobject->clazz,
                                       self->fieldId, i);
         } else {
-            (*env)->SetIntField(env, self->pyjobject->object,
+            (*env)->SetIntField(env, pyjobject->object,
                                 self->fieldId, i);
         }
         return 0;
@@ -541,10 +496,10 @@ int pyjfield_set(PyJFieldObject *self, PyObject *value)
             return -1;
         }
         if (self->isStatic) {
-            (*env)->SetStaticCharField(env, self->pyjobject->clazz,
+            (*env)->SetStaticCharField(env, pyjobject->clazz,
                                        self->fieldId, c);
         } else {
-            (*env)->SetCharField(env, self->pyjobject->object,
+            (*env)->SetCharField(env, pyjobject->object,
                                  self->fieldId, c);
         }
         return 0;
@@ -555,10 +510,10 @@ int pyjfield_set(PyJFieldObject *self, PyObject *value)
             return -1;
         }
         if (self->isStatic) {
-            (*env)->SetStaticByteField(env, self->pyjobject->clazz,
+            (*env)->SetStaticByteField(env, pyjobject->clazz,
                                        self->fieldId, b);
         } else {
-            (*env)->SetByteField(env, self->pyjobject->object,
+            (*env)->SetByteField(env, pyjobject->object,
                                  self->fieldId, b);
         }
         return 0;
@@ -569,10 +524,10 @@ int pyjfield_set(PyJFieldObject *self, PyObject *value)
             return -1;
         }
         if (self->isStatic) {
-            (*env)->SetStaticShortField(env, self->pyjobject->clazz,
+            (*env)->SetStaticShortField(env, pyjobject->clazz,
                                         self->fieldId, s);
         } else {
-            (*env)->SetShortField(env, self->pyjobject->object,
+            (*env)->SetShortField(env, pyjobject->object,
                                   self->fieldId, s);
         }
         return 0;
@@ -583,10 +538,10 @@ int pyjfield_set(PyJFieldObject *self, PyObject *value)
             return -1;
         }
         if (self->isStatic) {
-            (*env)->SetStaticDoubleField(env, self->pyjobject->clazz,
+            (*env)->SetStaticDoubleField(env, pyjobject->clazz,
                                          self->fieldId, d);
         } else {
-            (*env)->SetDoubleField(env, self->pyjobject->object,
+            (*env)->SetDoubleField(env, pyjobject->object,
                                    self->fieldId, d);
         }
         return 0;
@@ -597,10 +552,10 @@ int pyjfield_set(PyJFieldObject *self, PyObject *value)
             return -1;
         }
         if (self->isStatic) {
-            (*env)->SetStaticFloatField(env, self->pyjobject->clazz,
+            (*env)->SetStaticFloatField(env, pyjobject->clazz,
                                         self->fieldId, f);
         } else {
-            (*env)->SetFloatField(env, self->pyjobject->object,
+            (*env)->SetFloatField(env, pyjobject->object,
                                   self->fieldId, f);
         }
         return 0;
@@ -611,10 +566,10 @@ int pyjfield_set(PyJFieldObject *self, PyObject *value)
             return -1;
         }
         if (self->isStatic) {
-            (*env)->SetStaticLongField(env, self->pyjobject->clazz,
+            (*env)->SetStaticLongField(env, pyjobject->clazz,
                                        self->fieldId, j);
         } else {
-            (*env)->SetLongField(env, self->pyjobject->object,
+            (*env)->SetLongField(env, pyjobject->object,
                                  self->fieldId, j);
         }
         return 0;
@@ -625,10 +580,10 @@ int pyjfield_set(PyJFieldObject *self, PyObject *value)
             return -1;
         }
         if (self->isStatic) {
-            (*env)->SetStaticBooleanField(env, self->pyjobject->clazz,
+            (*env)->SetStaticBooleanField(env, pyjobject->clazz,
                                           self->fieldId, z);
         } else {
-            (*env)->SetBooleanField(env, self->pyjobject->object,
+            (*env)->SetBooleanField(env, pyjobject->object,
                                     self->fieldId, z);
         }
         return 0;
@@ -637,11 +592,6 @@ int pyjfield_set(PyJFieldObject *self, PyObject *value)
     PyErr_Format(PyExc_RuntimeError, "Unknown field type %i.", self->fieldTypeId);
     return -1;
 }
-
-
-static PyMethodDef pyjfield_methods[] = {
-    {NULL, NULL, 0, NULL}
-};
 
 
 PyTypeObject PyJField_Type = {
@@ -672,7 +622,7 @@ PyTypeObject PyJField_Type = {
     0,                                        /* tp_weaklistoffset */
     0,                                        /* tp_iter */
     0,                                        /* tp_iternext */
-    pyjfield_methods,                         /* tp_methods */
+    0,                                        /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
     0,                                        /* tp_base */

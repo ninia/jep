@@ -6,12 +6,14 @@ import jep.JepException;
 
 /**
  * Tests closing a sub-interpreter with numpy and then trying to use a new
- * sub-interpreter with numpy. Illustrates a problem where the reference to the
- * array_str() method is lost.
+ * sub-interpreter with numpy. Before shared modules, this illustrated a problem
+ * where the reference to the array_str() method is lost and a 'NoneType' is not
+ * callable error. Now with shared modules the test should pass.
  * 
  * Created: October 2015
  * 
  * @author Ben Steffensmeier
+ * @see "https://github.com/numpy/numpy/issues/3961"
  */
 public class TestNumpyArrayToString {
 

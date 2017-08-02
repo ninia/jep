@@ -1,0 +1,88 @@
+Jep 3.7 Release Notes
+*********************
+This release emphasized consistency, new features, and improvements for the
+shared modules feature.  It is compatible with Python 2.7, 3.3, 3.4, 3.5,
+and 3.6.  Python 2.6 and 3.2 are no longer supported.  Java 1.6 is no longer
+supported.
+
+
+Shared NDArrays
+~~~~~~~~~~~~~~~
+It is now possible to share memory between Python and Java using direct
+java.nio.Buffers and numpy ndarrays. The memory must be allocated by Java
+using ByteBuffer.allocateDirect(). The direct buffer must be placed in a
+jep.DirectNDArray before passing it to Python. Jep will convert the
+DirectNDArray to a numpy ndarray referencing the same memory. If the numpy
+ndarray is passed back to Java then the original DirectNDArray is passed back
+and the memory remains shared. This provides faster data transfer between
+Java and Python since there is no need to copy the memory. This can also
+simplify any use cases that frequently transfer the same data between Java
+and Python.
+
+
+Improved unicode support
+~~~~~~~~~~~~~~~~~~~~~~~~
+Strings that represent the full range of unicode values will now be passed
+correctly between Java and Python. Previous versions of Jep had minor
+inconsistencies for characters outside the range of US-ASCII and major problems
+transforming characters outside of the Basic Multilingual Plane. The conversion 
+was also optimized to avoid unnecessary intermediary charset encodings. 
+Python 3 versions before 3.3 use a more complex unicode object than newer
+versions of Python 3 so these versions are no longer supported. Unicode objects
+are uncommon in Python 2 so Java Strings will be converted to UTF-8 encoded
+Python string objects.
+
+
+Added PyJAutoCloseable type
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PyJAutoCloseable has been created to enable developers to more closely match
+Python syntax when working with Java AutoCloseables.  The new type extends
+PyJObject to retain all previous functionality.  This enables Python's "with"
+keyword and ContextManagers to be used similarly to Java 7's try-with-resources.
+For example:
+::
+
+    from java.io import FileWriter
+    with FileWriter("/tmp/test.txt") as f:
+        f.write("abc")
+
+
+Synchronization on Java Objects within Python
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Since every Java Object has an intrinsic lock associated with it, you can now
+synchronize on Java Objects from within Python.  Every PyJObject has a
+synchronized() method attached to it to enter the lock.  Developers should
+always use Python's "with" keyword to ensure the lock is released when the
+block of code is exited.
+The Java code
+::
+
+    synchronized(obj) {
+        // code here
+    }
+
+can be expressed in Python as
+::
+
+    with obj.synchronized():
+        // code here
+
+where obj is a PyJObject.
+
+Python Callables can be converted to Java Functional Interfaces
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+A Python function (or any other callable) can be passed to a Java method which
+takes a functional interface (such as java.lang.Runnable). Similar to Java 8,
+the type is not required to have the FunctionalInterface annotation to be
+treated as a functional interface. Although the concept of functional
+interfaces was not introduced until Java 8, Jep will allow the conversion on
+all supported Java versions. Similar to other Jep Proxy objects, the new Java
+Object can only be used on the thread where it was created.
+For Example:
+::
+    def printOne():
+        print(1)
+    from java.util.concurrent import Executors
+    javaCallable = Executors.callable(printOne)
+    javaCallable.call()
+*Contributed by Techcable.*

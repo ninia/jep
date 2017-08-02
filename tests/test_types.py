@@ -20,23 +20,35 @@ class TestTypes(unittest.TestCase):
     def test_boolean(self):
         for b in (True, False):
             self.assertEqual(b, self.methods.primitiveBoolean(b))
+            self.assertIsInstance(self.methods.primitiveBoolean(b), bool)
             self.assertEqual(b, self.methods.objectBoolean(b))
+            self.assertIsInstance(self.methods.objectBoolean(b), bool)
             self.assertEqual(b, self.methods.object(b))
+            self.assertIsInstance(self.methods.object(b), bool)
             self.assertEqual(b, self.staticMethods.primitiveBoolean(b))
+            self.assertIsInstance(self.staticMethods.primitiveBoolean(b), bool)
             self.assertEqual(b, self.staticMethods.objectBoolean(b))
+            self.assertIsInstance(self.staticMethods.objectBoolean(b), bool)
             self.assertEqual(b, self.staticMethods.object(b))
+            self.assertIsInstance(self.staticMethods.object(b), bool)
             self.fields.primitiveBoolean = b
             self.assertEqual(b, self.fields.primitiveBoolean)
+            self.assertIsInstance(self.fields.primitiveBoolean, bool)
             self.fields.objectBoolean = b
             self.assertEqual(b, self.fields.objectBoolean)
+            self.assertIsInstance(self.fields.objectBoolean, bool)
             self.fields.object = b
             self.assertEqual(b, self.fields.object)
+            self.assertIsInstance(self.fields.object, bool)
             self.staticFields.primitiveBoolean = b
             self.assertEqual(b, self.staticFields.primitiveBoolean)
+            self.assertIsInstance(self.staticFields.primitiveBoolean, bool)
             self.staticFields.objectBoolean = b
             self.assertEqual(b, self.staticFields.objectBoolean)
+            self.assertIsInstance(self.staticFields.objectBoolean, bool)
             self.staticFields.object = b
             self.assertEqual(b, self.staticFields.object)
+            self.assertIsInstance(self.staticFields.object, bool)
             self.fields.verify()
             self.staticFields.verify()
 
@@ -218,31 +230,61 @@ class TestTypes(unittest.TestCase):
             with self.assertRaises(TypeError):
                 self.staticFields.objectShort = s
 
+    def convert_unicode_strings(self, in_strings):
+        '''
+           Generates test input and expected outcome for char and string tests.
+           This method takes a list of strings that should be tested and
+           generates a list of 2-tuples, each containing an input and an
+           expected output. Starting in Python 3 all strings are unicode so the
+           input and output should always be the same but in Python 2 it is more
+           complex. Python 2 has support for a unicode type, but it is more
+           common to use a string that contains UTF-8 encoded data. Java strings
+           and chars are converted to UTF-8 encoded strings in python. This
+           method expects the input list to contain a mix of unicode and string
+           objects. For each unicode input value there will be 2 test cases
+           generated, the first ensures that when a unicode object is passed
+           into java and then back to python that it comes back as a UTF-8
+           encoded string. The second test ensures that when a UTF-8 encoded
+           string is passed to java and back that it is the same.
+
+        '''
+        if sys.version_info.major == 2:
+            from types import UnicodeType
+            result = []
+            for string in in_strings:
+               if isinstance(string, UnicodeType):
+                  utf8 = string.encode('UTF-8')
+                  result.append((string, utf8))
+                  result.append((utf8, utf8))
+               else:
+                  result.append((string,string))
+            return result
+        else:
+            return [(string, string) for string in in_strings]
+            
+     
+
     def test_char(self):
-        for c in (' ', '\n', '\t', '1', 'A', 'a', '~'):
-            self.assertEqual(c, self.methods.primitiveChar(c))
-            self.assertEqual(c, self.methods.objectCharacter(c))
-            self.assertEqual(c, self.methods.object(c))
-            self.assertEqual(c, self.staticMethods.primitiveChar(c))
-            self.assertEqual(c, self.staticMethods.objectCharacter(c))
-            self.assertEqual(c, self.staticMethods.object(c))
+        chars = (' ', '\n', '\t', '1', 'A', 'a', '~', u'\u263A', '\0', '\xe9')
+        char_pairs = self.convert_unicode_strings(chars)
+        for c, e in char_pairs:
+            self.assertEqual(e, self.methods.primitiveChar(c))
+            self.assertEqual(e, self.methods.objectCharacter(c))
+            self.assertEqual(e, self.staticMethods.primitiveChar(c))
+            self.assertEqual(e, self.staticMethods.objectCharacter(c))
             self.fields.primitiveChar = c
-            self.assertEqual(c, self.fields.primitiveChar)
+            self.assertEqual(e, self.fields.primitiveChar)
             self.fields.objectCharacter = c
-            self.assertEqual(c, self.fields.objectCharacter)
-            self.fields.object = c
-            self.assertEqual(c, self.fields.object)
+            self.assertEqual(e, self.fields.objectCharacter)
             self.staticFields.primitiveChar = c
-            self.assertEqual(c, self.staticFields.primitiveChar)
+            self.assertEqual(e, self.staticFields.primitiveChar)
             self.staticFields.objectCharacter = c
-            self.assertEqual(c, self.staticFields.objectCharacter)
-            self.staticFields.object = c
-            self.assertEqual(c, self.staticFields.object)
+            self.assertEqual(e, self.staticFields.objectCharacter)
             self.fields.verify()
             self.staticFields.verify()
 
     def test_char_coercion(self):
-        for c in (1, 0.1, "string", [], {}):
+        for c in (1, 0.1, "string", [], {}, u'\U0001F604'):
             with self.assertRaises(TypeError):
                 self.methods.primitiveChar(c)
             with self.assertRaises(TypeError):
@@ -592,19 +634,21 @@ class TestTypes(unittest.TestCase):
                 self.staticFields.objectDouble = d
 
     def test_string(self):
-        for s in ('', 's', 'string'):
-            self.assertEqual(s, self.methods.objectString(s))
-            self.assertEqual(s, self.methods.object(s))
-            self.assertEqual(s, self.staticMethods.objectString(s))
-            self.assertEqual(s, self.staticMethods.object(s))
+        strings = ('', 's', 'string', u'test\u00e9', u'\u263A', u'\U0001F604', 'null\0char', None)
+        string_pairs = self.convert_unicode_strings(strings)
+        for s, e in string_pairs:
+            self.assertEqual(e, self.methods.objectString(s))
+            self.assertEqual(e, self.methods.object(s))
+            self.assertEqual(e, self.staticMethods.objectString(s))
+            self.assertEqual(e, self.staticMethods.object(s))
             self.fields.objectString = s
-            self.assertEqual(s, self.fields.objectString)
+            self.assertEqual(e, self.fields.objectString)
             self.fields.object = s
-            self.assertEqual(s, self.fields.object)
+            self.assertEqual(e, self.fields.object)
             self.staticFields.objectString = s
-            self.assertEqual(s, self.staticFields.objectString)
+            self.assertEqual(e, self.staticFields.objectString)
             self.staticFields.object = s
-            self.assertEqual(s, self.staticFields.object)
+            self.assertEqual(e, self.staticFields.object)
             self.fields.verify()
             self.staticFields.verify()
 
@@ -646,3 +690,82 @@ class TestTypes(unittest.TestCase):
                 self.fields.objectClass = c
             with self.assertRaises(TypeError):
                 self.staticFields.objectClass = c
+
+    def test_list(self):
+        for l in ([], (), [1, 2, 3], (1, 2, 3)):
+            self.assertSequenceEqual(l, self.methods.list(l))
+            self.assertSequenceEqual(l, self.methods.object(l))
+            self.assertSequenceEqual(l, self.staticMethods.list(l))
+            self.assertSequenceEqual(l, self.staticMethods.object(l))
+            self.fields.list = l
+            self.assertSequenceEqual(l, self.fields.list)
+            self.fields.object = l
+            self.assertSequenceEqual(l, self.fields.object)
+            self.staticFields.list = l
+            self.assertSequenceEqual(l, self.staticFields.list)
+            self.staticFields.object = l
+            self.assertSequenceEqual(l, self.staticFields.object)
+            self.fields.verify()
+            self.staticFields.verify()
+
+    def test_list_coercion(self):
+        for l in (False, True, 0, 1, 0.1, {}, 'string'):
+            with self.assertRaises(TypeError):
+                self.methods.list(l)
+            with self.assertRaises(TypeError):
+                self.staticMethods.list(l)
+            with self.assertRaises(TypeError):
+                self.fields.list = l
+            with self.assertRaises(TypeError):
+                self.staticFields.list = l
+
+    def test_arrayList(self):
+        for l in ([], [1, 2, 3]):
+            self.assertSequenceEqual(l, self.methods.arrayList(l))
+            self.assertSequenceEqual(l, self.staticMethods.arrayList(l))
+            self.fields.arrayList = l
+            self.assertSequenceEqual(l, self.fields.arrayList)
+            self.staticFields.arrayList = l
+            self.assertSequenceEqual(l, self.staticFields.arrayList)
+            self.fields.verify()
+            self.staticFields.verify()
+
+    def test_arrayList_coercion(self):
+        for l in ((), (1,2,3), False, True, 0, 1, 0.1, {}, 'string'):
+            with self.assertRaises(TypeError):
+                self.methods.arrayList(l)
+            with self.assertRaises(TypeError):
+                self.staticMethods.arrayList(l)
+            with self.assertRaises(TypeError):
+                self.fields.arrayList = l
+            with self.assertRaises(TypeError):
+                self.staticFields.arrayList = l
+
+    # disabled because a dict cannot be constructed from a pyjmap
+    def todo_test_map(self):
+        for m in ({}, {"a":"b", "c":"d"}):
+            self.assertEqual(m, dict(self.methods.map(m)))
+            self.assertEqual(m, dict(self.methods.object(m)))
+            self.assertEqual(m, dict(self.staticMethods.map(m)))
+            self.assertEqual(m, dict(self.staticMethods.object(m)))
+            self.fields.map = m
+            self.assertEqual(m, dict(self.fields.map))
+            self.fields.object = m
+            self.assertEqual(m, dict(self.fields.object))
+            self.staticFields.map = m
+            self.assertEqual(m, dict(self.staticFields.map))
+            self.staticFields.object = m
+            self.assertEqual(m, dict(self.staticFields.object))
+            self.fields.verify()
+            self.staticFields.verify()
+
+    def test_map_coercion(self):
+        for m in ((), [], False, True, 0, 1, 0.1, 'string'):
+            with self.assertRaises(TypeError):
+                self.methods.map(m)
+            with self.assertRaises(TypeError):
+                self.staticMethods.map(m)
+            with self.assertRaises(TypeError):
+                self.fields.map = m
+            with self.assertRaises(TypeError):
+                self.staticFields.map = m

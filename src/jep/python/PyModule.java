@@ -1,14 +1,5 @@
-package jep.python;
-
-import jep.Jep;
-import jep.JepException;
-
-
 /**
- * <pre>
- * PyModule.java - encapsulates a pointer to a PyModule
- *
- * Copyright (c) 2016 JEP AUTHORS.
+ * Copyright (c) 2017 JEP AUTHORS.
  *
  * This file is licensed under the the zlib/libpng License.
  *
@@ -30,46 +21,49 @@ import jep.JepException;
  * 
  *     3. This notice may not be removed or altered from any source
  *     distribution.
+ */
+package jep.python;
+
+import jep.Jep;
+import jep.JepException;
+
+/**
+ * PyModule.java - encapsulates a pointer to a PyModule
  *
- * Created: Thu Sep 7 11:52:03 2006
- *
- * </pre>
- *
- * @author [mrjohnson0 at sourceforge.net] Mike Johnson
+ * @author Mike Johnson
  */
 public class PyModule extends PyObject {
     /**
      * Creates a new <code>PyModule</code> instance.
      *
-     * @param tstate a <code>long</code> value
-     * @param obj a <code>long</code> value
-     * @param jep a <code>Jep</code> value
-     * @exception JepException if an error occurs
+     * @param tstate
+     *            a <code>long</code> value
+     * @param obj
+     *            a <code>long</code> value
+     * @param jep
+     *            a <code>Jep</code> value
+     * @exception JepException
+     *                if an error occurs
      */
     public PyModule(long tstate, long obj, Jep jep) throws JepException {
         super(tstate, obj, jep);
     }
 
-
     /**
-     * Create a python module on the interpreter. If the given name is
-     * valid, imported module, this method will return that module.
+     * Create a python module on the interpreter. If the given name is valid,
+     * imported module, this method will return that module.
      *
-     * @param name a <code>String</code> value
+     * @param name
+     *            a <code>String</code> value
      * @return a <code>PyModule</code> value
-     * @exception JepException if an error occurs
+     * @exception JepException
+     *                if an error occurs
      */
     public PyModule createModule(String name) throws JepException {
         super.isValid();
-        return (PyModule) jep.trackObject(new PyModule(
-                                              super.tstate,
-                                              super.createModule(
-                                                  super.tstate,
-                                                  super.obj,
-                                                  name),
-                                              super.jep));
+        return (PyModule) jep.trackObject(new PyModule(super.tstate,
+                super.createModule(super.tstate, super.obj, name), super.jep));
     }
-
 
     /**
      * <pre>
@@ -82,9 +76,11 @@ public class PyModule extends PyObject {
      * will work.
      * </pre>
      *
-     * @param str a <code>String</code> value
+     * @param str
+     *            a <code>String</code> value
      * @return an <code>Object</code> value
-     * @exception JepException if an error occurs
+     * @exception JepException
+     *                if an error occurs
      */
     public Object getValue(String str) throws JepException {
         super.isValid();

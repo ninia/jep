@@ -1,8 +1,7 @@
-/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2016 JEP AUTHORS.
+   Copyright (c) 2017 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -29,22 +28,14 @@
 #include "Jep.h"
 
 
-jmethodID iterator = 0;
-
-/*
- * News up a pyjiterable, which is just a pyjobject that supports iteration.
- * This should only be called from pyjobject_new().
- */
-PyJIterableObject* pyjiterable_new()
+PyJObject* PyJIterable_New()
 {
-    // pyjobject will have already initialized PyJIterable_Type
-    return PyObject_NEW(PyJIterableObject, &PyJIterable_Type);
+    // PyJObject will have already initialized PyJIterable_Type
+    return (PyJObject*) PyObject_NEW(PyJIterableObject, &PyJIterable_Type);
 }
 
-/*
- * Checks if the object is a pyjiterable.
- */
-int pyjiterable_check(PyObject *obj)
+
+int PyJIterable_Check(PyObject *obj)
 {
     if (PyObject_TypeCheck(obj, &PyJIterable_Type)) {
         return 1;
@@ -55,24 +46,19 @@ int pyjiterable_check(PyObject *obj)
 /*
  * Gets the iterator for the object.
  */
-PyObject* pyjiterable_getiter(PyObject* obj)
+static PyObject* pyjiterable_getiter(PyObject* obj)
 {
     jobject       iter     = NULL;
     PyJObject    *pyjob    = (PyJObject*) obj;
     JNIEnv       *env      = pyembed_get_env();
     PyObject     *result   = NULL;
 
-    if (!JNI_METHOD(iterator, env, JITERABLE_TYPE, "iterator",
-                    "()Ljava/util/Iterator;")) {
-        process_java_exception(env);
-        return NULL;
-    }
     if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
         process_java_exception(env);
         return NULL;
     }
 
-    iter = (*env)->CallObjectMethod(env, pyjob->object, iterator);
+    iter = java_lang_Iterable_iterator(env, pyjob->object);
     if (process_java_exception(env)) {
         goto FINALLY;
     } else if (!iter) {
@@ -80,16 +66,11 @@ PyObject* pyjiterable_getiter(PyObject* obj)
                         "java.util.Iterable returned a null value from iterator()");
         goto FINALLY;
     }
-    result = pyjobject_new(env, iter);
+    result = PyJObject_New(env, iter);
 FINALLY:
     (*env)->PopLocalFrame(env, NULL);
     return result;
 }
-
-
-static PyMethodDef pyjiterable_methods[] = {
-    {NULL, NULL, 0, NULL}
-};
 
 
 /*
@@ -124,7 +105,7 @@ PyTypeObject PyJIterable_Type = {
     0,                                        /* tp_weaklistoffset */
     (getiterfunc) pyjiterable_getiter,        /* tp_iter */
     0,                                        /* tp_iternext */
-    pyjiterable_methods,                      /* tp_methods */
+    0,                                        /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
     0, // &PyJObject_Type                     /* tp_base */

@@ -1,8 +1,7 @@
-/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2016 JEP AUTHORS.
+   Copyright (c) 2017 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -32,7 +31,7 @@
 #define _Included_pyjobject
 
 
-PyAPI_DATA(PyTypeObject) PyJObject_Type;
+extern PyTypeObject PyJObject_Type;
 
 // c storage for our stuff, managed by python interpreter.
 // doesn't need much, just a dictionary for attributes and
@@ -41,25 +40,15 @@ typedef struct {
     PyObject_HEAD
     jobject          object;      /* the jni object */
     jclass           clazz;       /* java class object */
-    PyObject        *attr;        /* list of tuples for get/set attr */
-    PyObject        *methods;     /* list of method names */
-    PyObject        *fields;      /* list of field names */
-    int              finishAttr;  /* true if object attributes are finished */
+    PyObject        *attr;        /* dict for get/set attr */
     PyObject        *javaClassName; /* string of the fully-qualified name of
                                        the object's Java clazz */
 } PyJObject;
 
-PyObject* pyjobject_new(JNIEnv*, jobject);
-PyObject* pyjobject_new_class(JNIEnv*, jclass);
-int pyjobject_check(PyObject *obj);
+PyObject* PyJObject_New(JNIEnv*, jobject);
+PyObject* PyJObject_NewClass(JNIEnv*, jclass);
+int PyJObject_Check(PyObject*);
 
-// this method needs to be available to pyjclass
-void pyjobject_addfield(PyJObject*, PyObject*);
-
-// these methods need to be available to pyjlist
-int pyjobject_setattr(PyJObject*, char*, PyObject*);
-PyObject* pyjobject_getattr(PyJObject*, char*);
 void pyjobject_dealloc(PyJObject*);
-PyObject* pyjobject_str(PyJObject*);
 
 #endif // ndef pyjobject

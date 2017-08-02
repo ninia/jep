@@ -1,8 +1,7 @@
-/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2016 JEP AUTHORS.
+   Copyright (c) 2017 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -28,7 +27,7 @@
 
 /*
  * A PyJIteratorObject is a PyJObject that has tp_iter and tp_iternext
- * implemented. It exists to support PyJIterableObject.
+ * implemented to support iteration. It exists primarily to support PyJIterableObject.
  */
 
 #include "jep_platform.h"
@@ -37,17 +36,22 @@
 #ifndef _Included_pyjiterator
 #define _Included_pyjiterator
 
-PyAPI_DATA(PyTypeObject) PyJIterator_Type;
+extern PyTypeObject PyJIterator_Type;
 
 typedef struct {
     PyJObject obj; /* magic inheritance */
 } PyJIteratorObject;
 
 
-PyJIteratorObject* pyjiterator_new(void);
-int pyjiterator_check(PyObject*);
-PyObject* pyjiterator_getiter(PyObject*);
-PyObject* pyjiterator_next(PyObject*);
+/*
+ * Returns a new PyJIterator, which is a PyJObject for iterators.
+ */
+PyJObject* PyJIterator_New(void);
+
+/*
+ * Returns true if the object is a PyJIterator.
+ */
+int PyJIterator_Check(PyObject*);
 
 
 #endif // ndef pyjiterator

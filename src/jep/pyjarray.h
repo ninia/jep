@@ -1,7 +1,7 @@
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2016 JEP AUTHORS.
+   Copyright (c) 2017 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -31,7 +31,7 @@
 #define _Included_pyjarray
 
 
-PyAPI_DATA(PyTypeObject) PyJArray_Type;
+extern PyTypeObject PyJArray_Type;
 
 // c storage for our stuff, managed by python interpreter.
 typedef struct {

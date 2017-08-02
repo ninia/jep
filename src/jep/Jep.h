@@ -1,8 +1,7 @@
-/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2016 JEP AUTHORS.
+   Copyright (c) 2017 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -51,6 +50,29 @@
 #include "pyjconstructor.h"
 #include "pyjmultimethod.h"
 #include "pyjnumber.h"
+#include "pyjautocloseable.h"
+#include "pyjmonitor.h"
 #include "pyjobject.h"
 #include "jbox.h"
 #include "convert_p2j.h"
+#include "java_access/AutoCloseable.h"
+#include "java_access/Boolean.h"
+#include "java_access/Character.h"
+#include "java_access/Class.h"
+#include "java_access/Collection.h"
+#include "java_access/Collections.h"
+#include "java_access/Comparable.h"
+#include "java_access/Constructor.h"
+#include "java_access/Field.h"
+#include "java_access/Iterable.h"
+#include "java_access/Iterator.h"
+#include "java_access/JepException.h"
+#include "java_access/List.h"
+#include "java_access/Map.h"
+#include "java_access/Member.h"
+#include "java_access/Method.h"
+#include "java_access/Modifier.h"
+#include "java_access/Number.h"
+#include "java_access/Object.h"
+#include "java_access/String.h"
+#include "java_access/Throwable.h"

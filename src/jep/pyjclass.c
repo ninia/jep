@@ -1,8 +1,7 @@
-/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2016 JEP AUTHORS.
+   Copyright (c) 2017 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -28,35 +27,6 @@
 
 #include "Jep.h"
 
-static PyObject* pyjclass_add_inner_classes(JNIEnv*, PyJObject*);
-
-static jmethodID classGetConstructors    = 0;
-static jmethodID classGetDeclaredClasses = 0;
-static jmethodID classGetModifiers       = 0;
-static jmethodID classGetSimpleName      = 0;
-static jmethodID modifierIsPublic        = 0;
-
-int pyjclass_init(JNIEnv *env, PyObject *pyjob)
-{
-    ((PyJClassObject*) pyjob)->constructor = NULL;
-
-    /*
-     * attempt to add public inner classes as attributes since lots of people
-     * code with public enum.  Note this will not allow the inner class to be
-     * imported separately, it must be accessed through the enclosing class.
-     */
-    if (!pyjclass_add_inner_classes(env, (PyJObject*) pyjob)) {
-        /*
-         * let's just print the error to stderr and continue on without
-         * inner class support, it's not the end of the world
-         */
-        if (PyErr_Occurred()) {
-            PyErr_PrintEx(0);
-        }
-    }
-
-    return 1;
-}
 
 /*
  * Adds a single inner class as attributes to the pyjclass. This will check if
@@ -76,24 +46,11 @@ static PyObject* pyjclass_add_inner_class(JNIEnv *env, PyJObject *topClz,
     jboolean  public;
 
     // setup to verify this inner class should be available
-    if (!JNI_METHOD(classGetModifiers, env, JCLASS_TYPE, "getModifiers", "()I")) {
-        process_java_exception(env);
-        return NULL;
-    }
-    mods = (*env)->CallIntMethod(env, innerClz, classGetModifiers);
+    mods = java_lang_Class_getModifiers(env, innerClz);
     if (process_java_exception(env)) {
         return NULL;
     }
-    if (modifierIsPublic == 0) {
-        modifierIsPublic = (*env)->GetStaticMethodID(env, JMODIFIER_TYPE, "isPublic",
-                           "(I)Z");
-        if (!modifierIsPublic) {
-            process_java_exception(env);
-            return NULL;
-        }
-    }
-    public = (*env)->CallStaticBooleanMethod(env, JMODIFIER_TYPE, modifierIsPublic,
-             mods);
+    public = java_lang_reflect_Modifier_isPublic(env, mods);
     if (process_java_exception(env)) {
         return NULL;
     }
@@ -103,27 +60,20 @@ static PyObject* pyjclass_add_inner_class(JNIEnv *env, PyJObject *topClz,
         jstring          shortName  = NULL;
         const char      *charName   = NULL;
 
-        attrClz = pyjobject_new_class(env, innerClz);
+        attrClz = PyJObject_NewClass(env, innerClz);
         if (!attrClz) {
             return NULL;
         }
-        if (!JNI_METHOD(classGetSimpleName, env, JCLASS_TYPE, "getSimpleName",
-                        "()Ljava/lang/String;")) {
-            process_java_exception(env);
-            return NULL;
-        }
-
-        shortName = (*env)->CallObjectMethod(env, innerClz, classGetSimpleName);
+        shortName = java_lang_Class_getSimpleName(env, innerClz);
         if (process_java_exception(env) || !shortName) {
             return NULL;
         }
         charName = jstring2char(env, shortName);
 
-        if (PyObject_SetAttrString((PyObject*) topClz, charName, attrClz) == -1) {
+        if (PyDict_SetItemString(topClz->attr, charName, attrClz) != 0) {
             printf("Error adding inner class %s\n", charName);
         } else {
             PyObject *pyname = PyString_FromString(charName);
-            pyjobject_addfield((PyJObject*) topClz, pyname);
             Py_DECREF(pyname);
         }
         Py_DECREF(attrClz); // parent class will hold the reference
@@ -131,6 +81,7 @@ static PyObject* pyjclass_add_inner_class(JNIEnv *env, PyJObject *topClz,
     }
     return (PyObject*) topClz;
 }
+
 
 /*
  * Adds a Java class's public inner classes as attributes to the pyjclass.
@@ -146,14 +97,7 @@ static PyObject* pyjclass_add_inner_classes(JNIEnv *env,
     jobjectArray      innerArray    = NULL;
     jsize             innerSize     = 0;
 
-    if (!JNI_METHOD(classGetDeclaredClasses, env, JCLASS_TYPE, "getDeclaredClasses",
-                    "()[Ljava/lang/Class;")) {
-        process_java_exception(env);
-        return NULL;
-    }
-
-    innerArray = (*env)->CallObjectMethod(env, topClz->clazz,
-                                          classGetDeclaredClasses);
+    innerArray = java_lang_Class_getDeclaredClasses(env, topClz->clazz);
     if (process_java_exception(env) || !innerArray) {
         return NULL;
     }
@@ -190,7 +134,31 @@ static PyObject* pyjclass_add_inner_classes(JNIEnv *env,
     return (PyObject*) topClz;
 }
 
-int pyjclass_check(PyObject *obj)
+
+int pyjclass_init(JNIEnv *env, PyObject *pyjob)
+{
+    ((PyJClassObject*) pyjob)->constructor = NULL;
+
+    /*
+     * attempt to add public inner classes as attributes since lots of people
+     * code with public enum.  Note this will not allow the inner class to be
+     * imported separately, it must be accessed through the enclosing class.
+     */
+    if (!pyjclass_add_inner_classes(env, (PyJObject*) pyjob)) {
+        /*
+         * let's just print the error to stderr and continue on without
+         * inner class support, it's not the end of the world
+         */
+        if (PyErr_Occurred()) {
+            PyErr_PrintEx(0);
+        }
+    }
+
+    return 1;
+}
+
+
+int PyJClass_Check(PyObject *obj)
 {
     if (PyObject_TypeCheck(obj, &PyJClass_Type)) {
         return 1;
@@ -212,7 +180,7 @@ static void pyjclass_dealloc(PyJClassObject *self)
  *
  * @return 1 on successful initialization, -1 on error.
  */
-int pyjclass_init_constructors(PyJClassObject *pyc)
+static int pyjclass_init_constructors(PyJClassObject *pyc)
 {
     jclass        clazz       = NULL;
     JNIEnv       *env         = NULL;
@@ -229,14 +197,7 @@ int pyjclass_init_constructors(PyJClassObject *pyc)
         return -1;
     }
 
-    if (!JNI_METHOD(classGetConstructors, env, JCLASS_TYPE, "getConstructors",
-                    "()[Ljava/lang/reflect/Constructor;")) {
-        process_java_exception(env);
-        goto EXIT_ERROR;
-    }
-
-    initArray = (jobjectArray) (*env)->CallObjectMethod(env, clazz,
-                classGetConstructors);
+    initArray = java_lang_Class_getConstructors(env, clazz);
     if (process_java_exception(env) || !initArray) {
         goto EXIT_ERROR;
     }
@@ -291,9 +252,9 @@ EXIT_ERROR:
 }
 
 // call constructor as a method and return pyjobject.
-PyObject* pyjclass_call(PyJClassObject *self,
-                        PyObject *args,
-                        PyObject *keywords)
+static PyObject* pyjclass_call(PyJClassObject *self,
+                               PyObject *args,
+                               PyObject *keywords)
 {
     PyObject *boundConstructor = NULL;
     PyObject *result           = NULL;
@@ -320,11 +281,6 @@ PyObject* pyjclass_call(PyJClassObject *self,
     Py_DECREF(boundConstructor);
     return result;
 }
-
-
-static PyMethodDef pyjclass_methods[] = {
-    {NULL, NULL, 0, NULL}
-};
 
 
 PyTypeObject PyJClass_Type = {
@@ -355,7 +311,7 @@ PyTypeObject PyJClass_Type = {
     0,                                        /* tp_weaklistoffset */
     0,                                        /* tp_iter */
     0,                                        /* tp_iternext */
-    pyjclass_methods,                         /* tp_methods */
+    0,                                        /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
     0, // &PyJObject_Type                     /* tp_base */

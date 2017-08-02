@@ -1,14 +1,10 @@
 import unittest
 import sys
-import tests.jep_pipe
-from tests.jep_pipe import jep_pipe
-from tests.jep_pipe import build_python_process_cmd
+from jep_pipe import jep_pipe
+from jep_pipe import build_python_process_cmd
 
 
 class TestIterators(unittest.TestCase):
-
-    def setUp(self):
-        pass
 
     def test_iteration(self):
         from java.util import ArrayList

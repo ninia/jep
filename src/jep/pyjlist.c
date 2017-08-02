@@ -1,9 +1,8 @@
 
-/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2016 JEP AUTHORS.
+   Copyright (c) 2017 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -29,14 +28,6 @@
 
 #include "Jep.h"
 
-jmethodID classNewInstance = 0;
-jmethodID listAddAll       = 0;
-jmethodID listGet          = 0;
-jmethodID listSubList      = 0;
-jmethodID listSet          = 0;
-jmethodID listClear        = 0;
-jmethodID listRemove       = 0;
-
 static PyObject* pyjlist_add(PyObject*, PyObject*);
 static PyObject* pyjlist_fill(PyObject*, Py_ssize_t);
 static PyObject* pyjlist_getitem(PyObject*, Py_ssize_t);
@@ -47,21 +38,17 @@ static PyObject* pyjlist_inplace_add(PyObject*, PyObject*);
 static PyObject* pyjlist_inplace_fill(PyObject*, Py_ssize_t);
 
 
-/*
- * News up a pyjlist, which is just a pyjobject with some sequence methods
- * attached to it.  This should only be called from pyjobject_new().
- */
-PyJListObject* pyjlist_new()
+PyJObject* PyJList_New()
 {
-    // pyjobject will have already initialized PyJList_Type
-    return PyObject_NEW(PyJListObject, &PyJList_Type);
+    // PyJObject will have already initialized PyJList_Type
+    return (PyJObject*) PyObject_NEW(PyJListObject, &PyJList_Type);
 }
 
 /*
  * Convenience method to copy a list's items into a new java.util.List of the
  * same type.
  */
-PyObject* pyjlist_new_copy(PyObject *toCopy)
+static PyObject* pyjlist_new_copy(PyObject *toCopy)
 {
     jobject       newList     = NULL;
     PyJObject    *obj         = (PyJObject*) toCopy;
@@ -69,46 +56,34 @@ PyObject* pyjlist_new_copy(PyObject *toCopy)
     PyObject     *result      = NULL;
 
 
-    if (!pyjlist_check(toCopy)) {
+    if (!PyJList_Check(toCopy)) {
         PyErr_Format(PyExc_RuntimeError, "pyjlist_new_copy() must receive a PyJList");
         return NULL;
     }
 
-    if (!JNI_METHOD(classNewInstance, env, JCLASS_TYPE, "newInstance",
-                    "()Ljava/lang/Object;")) {
-        process_java_exception(env);
-        return NULL;
-    }
-    if (!JNI_METHOD(listAddAll, env, JLIST_TYPE, "addAll",
-                    "(Ljava/util/Collection;)Z")) {
-        process_java_exception(env);
-        return NULL;
-    }
     if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
         process_java_exception(env);
         return NULL;
     }
 
-    newList = (*env)->CallObjectMethod(env, obj->clazz, classNewInstance);
+    newList = java_lang_Class_newInstance(env, obj->clazz);
     if (process_java_exception(env) || !newList) {
         goto FINALLY;
     }
 
-    (*env)->CallBooleanMethod(env, newList, listAddAll, obj->object);
+    java_util_List_addAll(env, newList, obj->object);
     if (process_java_exception(env)) {
         goto FINALLY;
     }
 
-    result = pyjobject_new(env, newList);
+    result = PyJObject_New(env, newList);
 FINALLY:
     (*env)->PopLocalFrame(env, NULL);
     return result;
 }
 
-/*
- * Checks if the object is a pyjlist.
- */
-int pyjlist_check(PyObject *obj)
+
+int PyJList_Check(PyObject *obj)
 {
     if (PyObject_TypeCheck(obj, &PyJList_Type)) {
         return 1;
@@ -168,11 +143,6 @@ static PyObject* pyjlist_getitem(PyObject *o, Py_ssize_t i)
     PyJObject    *obj  = (PyJObject*) o;
     JNIEnv       *env  = pyembed_get_env();
 
-    if (!JNI_METHOD(listGet, env, JLIST_TYPE, "get", "(I)Ljava/lang/Object;")) {
-        process_java_exception(env);
-        return NULL;
-    }
-
     size = PyObject_Size(o);
     if ((i > size - 1) || (i < 0)) {
         PyErr_Format(PyExc_IndexError, "list index %i out of range, size %i", (int) i,
@@ -185,7 +155,7 @@ static PyObject* pyjlist_getitem(PyObject *o, Py_ssize_t i)
         return NULL;
     }
 
-    val = (*env)->CallObjectMethod(env, obj->object, listGet, (jint) i);
+    val = java_util_List_get(env, obj->object, (jint) i);
     if (process_java_exception(env)) {
         (*env)->PopLocalFrame(env, NULL);
         return NULL;
@@ -212,23 +182,17 @@ static PyObject* pyjlist_getslice(PyObject *o, Py_ssize_t i1, Py_ssize_t i2)
     JNIEnv       *env     = pyembed_get_env();
     PyObject     *pyres   = NULL;
 
-    if (!JNI_METHOD(listSubList, env, JLIST_TYPE, "subList",
-                    "(II)Ljava/util/List;")) {
-        process_java_exception(env);
-        return NULL;
-    }
     if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
         process_java_exception(env);
         return NULL;
     }
 
-    result = (*env)->CallObjectMethod(env, obj->object, listSubList, (jint) i1,
-                                      (jint) i2);
+    result = java_util_List_subList(env, obj->object, (jint) i1, (jint) i2);
     if (process_java_exception(env)) {
         goto FINALLY;
     }
 
-    pyres = pyjobject_new(env, result);
+    pyres = PyJObject_New(env, result);
 FINALLY:
     (*env)->PopLocalFrame(env, NULL);
     return pyres;
@@ -247,13 +211,8 @@ static int pyjlist_setitem(PyObject *o, Py_ssize_t i, PyObject *v)
 
     if (v == NULL) {
         // this is a del PyJList[index] statement
-        if (!JNI_METHOD(listRemove, env, JLIST_TYPE,
-                        "remove", "(I)Ljava/lang/Object;")) {
-            process_java_exception(env);
-            return -1;
-        }
 
-        (*env)->CallObjectMethod(env, obj->object, listRemove, (jint) i);
+        java_util_List_remove(env, obj->object, (jint) i);
         if (process_java_exception(env)) {
             return -1;
         }
@@ -262,11 +221,6 @@ static int pyjlist_setitem(PyObject *o, Py_ssize_t i, PyObject *v)
         return 0;
     }
 
-    if (!JNI_METHOD(listSet, env, JLIST_TYPE, "set",
-                    "(ILjava/lang/Object;)Ljava/lang/Object;")) {
-        process_java_exception(env);
-        return -1;
-    }
     if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
         process_java_exception(env);
         return -1;
@@ -278,7 +232,7 @@ static int pyjlist_setitem(PyObject *o, Py_ssize_t i, PyObject *v)
     }
 
 
-    (*env)->CallObjectMethod(env, obj->object, listSet, (jint) i, value);
+    java_util_List_set(env, obj->object, (jint) i, value);
     if (process_java_exception(env)) {
         goto FINALLY;
     }
@@ -391,13 +345,7 @@ static PyObject* pyjlist_inplace_add(PyObject *o1, PyObject *o2)
      * it's a Collection so we need to simulate a python + and combine the
      * two collections
      */
-    if (!JNI_METHOD(listAddAll, env, JLIST_TYPE, "addAll",
-                    "(Ljava/util/Collection;)Z")) {
-        process_java_exception(env);
-        goto FINALLY;
-    }
-
-    (*env)->CallBooleanMethod(env, self->object, listAddAll, value);
+    java_util_List_addAll(env, self->object, value);
     if (process_java_exception(env)) {
         goto FINALLY;
     }
@@ -419,12 +367,8 @@ static PyObject* pyjlist_inplace_fill(PyObject *o, Py_ssize_t count)
     JNIEnv         *env     = pyembed_get_env();
 
     if (count < 1) {
-        if (!JNI_METHOD(listClear, env, JLIST_TYPE, "clear", "()V")) {
-            process_java_exception(env);
-            return NULL;
-        }
 
-        (*env)->CallVoidMethod(env, self->object, listClear);
+        java_util_List_clear(env, self->object);
         if (process_java_exception(env)) {
             return NULL;
         }
@@ -564,9 +508,6 @@ static int pyjlist_set_subscript(PyObject* self, PyObject* item,
 
 }
 
-static PyMethodDef pyjlist_methods[] = {
-    {NULL, NULL, 0, NULL}
-};
 
 static PySequenceMethods pyjlist_seq_methods = {
     0, // inherited       /* sq_length */
@@ -580,6 +521,7 @@ static PySequenceMethods pyjlist_seq_methods = {
     pyjlist_inplace_add,  /* sq_inplace_concat */
     pyjlist_inplace_fill, /* sq_inplace_repeat */
 };
+
 
 static PyMappingMethods pyjlist_map_methods = {
     0,                                        /* mp_length */
@@ -619,7 +561,7 @@ PyTypeObject PyJList_Type = {
     0,                                        /* tp_weaklistoffset */
     0, // inherited                           /* tp_iter */
     0,                                        /* tp_iternext */
-    pyjlist_methods,                          /* tp_methods */
+    0,                                        /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
     0, // &PyJCollection_Type                 /* tp_base */

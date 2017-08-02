@@ -1,8 +1,7 @@
-/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
 /*
    jep - Java Embedded Python
 
-   Copyright (c) JEP AUTHORS.
+   Copyright (c) 2017 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -45,13 +44,16 @@
 #if JEP_NUMPY_ENABLED
 
     extern jclass JEP_NDARRAY_TYPE;
+    extern jclass JEP_DNDARRAY_TYPE;
 
     /* methods to support numpy <-> java conversion */
     int npy_array_check(PyObject*);
     int jndarray_check(JNIEnv*, jobject);
-    jobject convert_pyndarray_jndarray(JNIEnv*, PyObject*);
+    jobject convert_pyndarray_jobject(JNIEnv*, PyObject*, jclass);
     PyObject* convert_jndarray_pyndarray(JNIEnv*, jobject);
-    jarray convert_pyndarray_jprimitivearray(JNIEnv*, PyObject*, jclass);
+
+    int jdndarray_check(JNIEnv*, jobject);
+    PyObject* convert_jdndarray_pyndarray(JNIEnv*, PyObject*);
 
 #endif // if numpy is enabled
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 JEP AUTHORS.
+ * Copyright (c) 2017 JEP AUTHORS.
  *
  * This file is licensed under the the zlib/libpng License.
  *
@@ -29,7 +29,7 @@ import java.lang.reflect.InvocationHandler;
 /**
  * Extends java.lang.reflect.Proxy for callbacks.
  * 
- * @author [mrjohnson0 at sourceforge.net] Mike Johnson
+ * @author Mike Johnson
  */
 public class Proxy extends java.lang.reflect.Proxy {
 
@@ -44,6 +44,11 @@ public class Proxy extends java.lang.reflect.Proxy {
      */
     protected Proxy(InvocationHandler h) {
         super(h);
+    }
+
+    private static Object newDirectProxyInstance(long tstate, long ltarget, Jep jep,
+            ClassLoader loader, Class<?> targetInterface) {
+        return newProxyInstance(tstate, ltarget, jep, loader, new String[] { targetInterface.getName() }, true);
     }
 
     /**
@@ -76,12 +81,15 @@ public class Proxy extends java.lang.reflect.Proxy {
      *                if an error occurs
      */
     public static Object newProxyInstance(long tstate, long ltarget, Jep jep,
-            ClassLoader loader, String[] interfaces)
-            throws IllegalArgumentException {
+            ClassLoader loader, String[] interfaces) {
+        return newProxyInstance(tstate, ltarget, jep, loader, interfaces, false);
+    }
 
+    private static Object newProxyInstance(long tstate, long ltarget, Jep jep,
+            ClassLoader loader, String[] interfaces, boolean functionalInterface) {
         InvocationHandler ih = null;
         try {
-            ih = new jep.InvocationHandler(tstate, ltarget, jep);
+            ih = new jep.InvocationHandler(tstate, ltarget, jep, functionalInterface);
         } catch (JepException e) {
             throw new IllegalArgumentException(e);
         }

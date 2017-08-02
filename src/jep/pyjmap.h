@@ -1,8 +1,7 @@
-/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2016 JEP AUTHORS.
+   Copyright (c) 2017 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -28,7 +27,7 @@
 
 /*
  * A PyJMapObject is a PyJObject with some extra methods attached to meet
- * the python Mapping protocol/interface.  It should only be used where the
+ * the Python Mapping protocol/interface.  It should only be used where the
  * underlying jobject of the PyJObject is an implementation of java.util.Map.
  */
 
@@ -38,15 +37,23 @@
 #ifndef _Included_pyjmap
 #define _Included_pyjmap
 
-PyAPI_DATA(PyTypeObject) PyJMap_Type;
+extern PyTypeObject PyJMap_Type;
 
 typedef struct {
     PyJObject obj; /* magic inheritance */
 } PyJMapObject;
 
 
-PyJMapObject* pyjmap_new(void);
-int pyjmap_check(PyObject*);
+/*
+ * Returns a new PyJMap, which is a PyJObject with some mapping methods
+ * attached to it.
+ */
+PyJObject* PyJMap_New(void);
+
+/*
+ * Returns true if the object is a PyJMap.
+ */
+int PyJMap_Check(PyObject*);
 
 
 #endif // ndef pyjmap

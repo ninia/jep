@@ -1,8 +1,7 @@
-/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2016 JEP AUTHORS.
+   Copyright (c) 2017 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -64,6 +63,7 @@ static PyThreadState *mainThreadState = NULL;
 
 /* Saved for cross thread access to shared modules. */
 static PyObject* mainThreadModules = NULL;
+static PyObject* mainThreadModulesLock = NULL;
 
 int pyembed_version_unsafe(void);
 
@@ -143,7 +143,7 @@ static struct PyModuleDef jep_module_def = {
 };
 #endif
 
-static PyObject* initjep(void)
+static PyObject* initjep(jboolean hasSharedModules)
 {
     PyObject *modjep;
 
@@ -171,8 +171,12 @@ static PyObject* initjep(void)
         PyModule_AddIntConstant(modjep, "JCHAR_ID", JCHAR_ID);
         PyModule_AddIntConstant(modjep, "JBYTE_ID", JBYTE_ID);
         PyModule_AddIntConstant(modjep, "JEP_NUMPY_ENABLED", JEP_NUMPY_ENABLED);
-        Py_INCREF(mainThreadModules);
-        PyModule_AddObject(modjep, "topInterpreterModules", mainThreadModules);
+        if (hasSharedModules) {
+            Py_INCREF(mainThreadModules);
+            PyModule_AddObject(modjep, "topInterpreterModules", mainThreadModules);
+            Py_INCREF(mainThreadModulesLock);
+            PyModule_AddObject(modjep, "topInterpreterModulesLock", mainThreadModulesLock);
+        }
     }
 
     return modjep;
@@ -210,9 +214,11 @@ void pyembed_preinit(jint noSiteFlag,
 
 }
 
-void pyembed_startup(void)
+void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
 {
-    PyObject* sysModule = NULL;
+    PyObject* sysModule       = NULL;
+    PyObject* threadingModule = NULL;
+    PyObject* lockCreator     = NULL;
 #ifdef __APPLE__
 #ifndef WITH_NEXT_FRAMEWORK
 // workaround for
@@ -240,9 +246,93 @@ void pyembed_startup(void)
     sysModule = PyImport_ImportModule("sys");
     mainThreadModules = PyObject_GetAttrString(sysModule, "modules");
     Py_DECREF(sysModule);
+    threadingModule = PyImport_ImportModule("threading");
+    lockCreator = PyObject_GetAttrString(threadingModule, "Lock");
+    mainThreadModulesLock = PyObject_CallObject(lockCreator, NULL);
+    Py_DECREF(threadingModule);
+    Py_DECREF(lockCreator);
 
     // save a pointer to the main PyThreadState object
     mainThreadState = PyThreadState_Get();
+
+    /*
+     * Workaround for shared modules sys.argv.  Set sys.argv on the main thread.
+     * See github issue #81.
+     */
+    if (sharedModulesArgv != NULL) {
+#if PY_MAJOR_VERSION < 3
+        char **argv = NULL;
+        jsize count = 0;
+        int i       = 0;
+
+        count = (*env)->GetArrayLength(env, sharedModulesArgv);
+        (*env)->PushLocalFrame(env, count * 2);
+        argv = (char**) malloc(count * sizeof(char*));
+        for (i = 0; i < count; i++) {
+            char* arg = NULL;
+
+            jstring jarg = (*env)->GetObjectArrayElement(env, sharedModulesArgv, i);
+            if (jarg == NULL) {
+                PyEval_ReleaseThread(mainThreadState);
+                (*env)->PopLocalFrame(env, NULL);
+                THROW_JEP(env, "Received null argv.");
+                return;
+            }
+            arg = (char*) (*env)->GetStringUTFChars(env, jarg, NULL);
+            argv[i] = arg;
+        }
+
+        PySys_SetArgvEx(count, argv, 0);
+
+        // free memory
+        for (i = 0; i < count; i++) {
+            jstring jarg = (*env)->GetObjectArrayElement(env, sharedModulesArgv, i);
+            (*env)->ReleaseStringUTFChars(env, jarg, argv[i]);
+        }
+        free(argv);
+        (*env)->PopLocalFrame(env, NULL);
+
+        process_py_exception(env);
+#else
+        wchar_t **argv = NULL;
+        jsize count = 0;
+        int i       = 0;
+
+        count = (*env)->GetArrayLength(env, sharedModulesArgv);
+        (*env)->PushLocalFrame(env, count * 2);
+        argv = (wchar_t**) malloc(count * sizeof(wchar_t*));
+        for (i = 0; i < count; i++) {
+            char* arg     = NULL;
+            wchar_t* argt = NULL;
+
+            jstring jarg = (*env)->GetObjectArrayElement(env, sharedModulesArgv, i);
+            if (jarg == NULL) {
+                PyEval_ReleaseThread(mainThreadState);
+                (*env)->PopLocalFrame(env, NULL);
+                THROW_JEP(env, "Received null argv.");
+                return;
+            }
+            arg = (char*) (*env)->GetStringUTFChars(env, jarg, NULL);
+            argt = malloc((strlen(arg) + 1) * sizeof(wchar_t));
+            mbstowcs(argt, arg, strlen(arg) + 1);
+            (*env)->ReleaseStringUTFChars(env, jarg, arg);
+            argv[i] = argt;
+        }
+
+        PySys_SetArgvEx(count, argv, 0);
+
+        // free memory
+        for (i = 0; i < count; i++) {
+            free(argv[i]);
+        }
+        free(argv);
+        (*env)->PopLocalFrame(env, NULL);
+
+        process_py_exception(env);
+
+#endif
+    }
+
     PyEval_ReleaseThread(mainThreadState);
 }
 
@@ -330,21 +420,87 @@ void pyembed_shared_import(JNIEnv *env, jstring module)
     if (pymodule) {
         Py_DECREF(pymodule);
     } else {
-        PyObject *ptype, *pvalue, *pvaluestr, *ptrace;
-        PyErr_Fetch(&ptype, &pvalue, &ptrace);
-        Py_DECREF(ptype);
-        Py_XDECREF(ptrace);
-        pvaluestr = PyObject_Str(pvalue);
-        Py_DECREF(pvalue);
-        THROW_JEP(env, PyString_AsString(pvaluestr));
-        Py_DECREF(pvaluestr);
+        process_py_exception(env);
     }
-
     (*env)->ReleaseStringUTFChars(env, module, moduleName);
     PyEval_ReleaseThread(mainThreadState);
 }
 
-intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller)
+#if PY_MAJOR_VERSION < 3
+/*
+ * In python 2.7 when a module is shared between threads it will be run in
+ * restricted mode because the __builtins__ attribute of the module does not
+ * match the running interpreter. This causes some functionality to break.
+ * To get around this limitation the builtins module is shared between all the
+ * interpreters that are using shared modules.
+ *
+ * This is not necessary in python 3 because restricted mode was removed.
+ */
+
+void assignBuiltins(PyObject* modules, PyObject* builtins)
+{
+    PyObject *key, *value;
+    Py_ssize_t pos = 0;
+
+    while (PyDict_Next(modules, &pos, &key, &value)) {
+        PyObject* moddict = PyModule_GetDict(value);
+        if (moddict) {
+            PyDict_SetItemString(moddict, "__builtins__", builtins);
+        }
+    }
+}
+
+void shareBuiltins(JepThread *jepThread)
+{
+    PyInterpreterState* interp = jepThread->tstate->interp;
+
+    PyObject* sharedBuiltinModule = PyDict_GetItemString(mainThreadModules,
+                                    "__builtin__");
+    PyObject* sharedBuiltinDict   = PyModule_GetDict(sharedBuiltinModule);
+
+    PyObject* originalBuiltinModule = PyDict_GetItemString(interp->modules,
+                                      "__builtin__");
+    PyObject* originalBuiltinDict   = interp->builtins;
+
+    Py_INCREF(sharedBuiltinDict);
+    interp->builtins = sharedBuiltinDict;
+    Py_DECREF(originalBuiltinDict);
+
+    // Incref to make sure this isn't collected when it is replaced, it
+    // will be restored when the itnterpreter is closed.
+    Py_INCREF(originalBuiltinModule);
+
+    PyDict_SetItemString(interp->modules, "__builtin__", sharedBuiltinModule);
+    assignBuiltins(interp->modules, sharedBuiltinDict);
+
+    jepThread->originalBuiltins = originalBuiltinModule;
+}
+
+void unshareBuiltins(JepThread *jepThread)
+{
+    PyInterpreterState* interp = jepThread->tstate->interp;
+
+    PyObject* originalBuiltinModule = jepThread->originalBuiltins;
+    PyObject* originalBuiltinDict   = PyModule_GetDict(originalBuiltinModule);
+
+    PyObject* sharedBuiltinDict   = interp->builtins;
+
+    Py_INCREF(originalBuiltinDict);
+    interp->builtins = originalBuiltinDict;
+    Py_DECREF(sharedBuiltinDict);
+
+    PyDict_SetItemString(interp->modules, "__builtin__", originalBuiltinModule);
+
+    assignBuiltins(interp->modules, originalBuiltinDict);
+
+    jepThread->originalBuiltins = NULL;
+    Py_DECREF(originalBuiltinModule);
+}
+
+#endif
+
+intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller,
+                             jboolean hasSharedModules)
 {
     JepThread *jepThread;
     PyObject  *tdict, *mod_main, *globals;
@@ -368,6 +524,14 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller)
     }
 
     jepThread->tstate = Py_NewInterpreter();
+#if PY_MAJOR_VERSION < 3
+    if (hasSharedModules) {
+        shareBuiltins(jepThread);
+    } else {
+        jepThread->originalBuiltins = NULL;
+    }
+#endif
+
     /*
      * Py_NewInterpreter() seems to take the thread state, but we're going to
      * save/release and reacquire it since that doesn't seem documented
@@ -395,13 +559,13 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller)
     Py_INCREF(globals);
 
     // init static module
-    jepThread->modjep          = initjep();
+    jepThread->modjep          = initjep(hasSharedModules);
     jepThread->globals         = globals;
     jepThread->env             = env;
     jepThread->classloader     = (*env)->NewGlobalRef(env, cl);
     jepThread->caller          = (*env)->NewGlobalRef(env, caller);
     jepThread->printStack      = 0;
-    jepThread->fqnToPyJmethods = NULL;
+    jepThread->fqnToPyJAttrs = NULL;
 
     if ((tdict = PyThreadState_GetDict()) != NULL) {
         PyObject *key, *t;
@@ -436,6 +600,11 @@ void pyembed_thread_close(JNIEnv *env, intptr_t _jepThread)
     }
 
     PyEval_AcquireThread(jepThread->tstate);
+#if PY_MAJOR_VERSION < 3
+    if (jepThread->originalBuiltins) {
+        unshareBuiltins(jepThread);
+    }
+#endif
 
     key = PyString_FromString(DICT_KEY);
     if ((tdict = PyThreadState_GetDict()) != NULL && key != NULL) {
@@ -444,7 +613,7 @@ void pyembed_thread_close(JNIEnv *env, intptr_t _jepThread)
     Py_DECREF(key);
 
     Py_CLEAR(jepThread->globals);
-    Py_CLEAR(jepThread->fqnToPyJmethods);
+    Py_CLEAR(jepThread->fqnToPyJAttrs);
     Py_CLEAR(jepThread->modjep);
 
     if (jepThread->classloader) {
@@ -467,7 +636,14 @@ JNIEnv* pyembed_get_env(void)
     JNIEnv *env;
 
     JNI_GetCreatedJavaVMs(&jvm, 1, NULL);
-    (*jvm)->AttachCurrentThread(jvm, (void**) &env, NULL);
+    /*
+     * If the thread is already part of the JVM, the daemon status is not
+     * changed. If this is a new thread, started by Python then this tells
+     * Java to allow the process to exit even if the thread is still attached.
+     * Since there are no hooks to detach the thread later daemon is the only
+     * way to let the process exit normally.
+     */
+    (*jvm)->AttachCurrentThreadAsDaemon(jvm, (void**) &env, NULL);
 
     return env;
 }
@@ -492,8 +668,11 @@ JepThread* pyembed_get_jepthread(void)
 #endif
         }
     }
-
-    Py_DECREF(key);
+    Py_XDECREF(key);
+    if (!ret && !PyErr_Occurred()) {
+        PyErr_SetString(PyExc_RuntimeError,
+                        "No Jep instance available on current thread.");
+    }
     return ret;
 }
 
@@ -620,7 +799,7 @@ static PyObject* pyembed_jproxy(PyObject *self, PyObject *args)
     // make sure target doesn't get garbage collected
     Py_INCREF(pytarget);
 
-    return pyjobject_new(env, proxy);
+    return PyJObject_New(env, proxy);
 }
 
 
@@ -647,8 +826,7 @@ static PyObject* pyembed_set_print_stack(PyObject *self, PyObject *args)
         jepThread->printStack = 1;
     }
 
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 
@@ -692,7 +870,7 @@ static PyObject* pyembed_forname(PyObject *self, PyObject *args)
     if (process_java_exception(env) || !objclazz) {
         return NULL;
     }
-    result = (PyObject *) pyjobject_new_class(env, objclazz);
+    result = (PyObject *) PyJObject_NewClass(env, objclazz);
     (*env)->DeleteLocalRef(env, objclazz);
     return result;
 }
@@ -733,7 +911,7 @@ static PyObject* pyembed_findclass(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    result = (PyObject *) pyjobject_new_class(env, clazz);
+    result = (PyObject *) PyJObject_NewClass(env, clazz);
     (*env)->DeleteLocalRef(env, clazz);
     return result;
 }
@@ -764,7 +942,7 @@ jobject pyembed_invoke_method(JNIEnv *env,
         THROW_JEP(env, "Object was not found in the global dictionary.");
         goto EXIT;
     }
-    if (process_py_exception(env, 0)) {
+    if (process_py_exception(env)) {
         goto EXIT;
     }
 
@@ -831,14 +1009,14 @@ jobject pyembed_invoke(JNIEnv *env,
     } // for(iarg = 0; iarg < arglen; iarg++)
 
     pyret = PyObject_CallObject(callable, pyargs);
-    if (process_py_exception(env, 0) || !pyret) {
+    if (process_py_exception(env) || !pyret) {
         goto EXIT;
     }
 
     // handles errors
     ret = PyObject_As_jobject(env, pyret, JOBJECT_TYPE);
     if (!ret) {
-        process_py_exception(env, 0);
+        process_py_exception(env);
     }
 
 EXIT:
@@ -877,7 +1055,7 @@ void pyembed_eval(JNIEnv *env,
         goto EXIT;
     }
 
-    if (process_py_exception(env, 1)) {
+    if (process_py_exception(env)) {
         goto EXIT;
     }
 
@@ -890,7 +1068,7 @@ void pyembed_eval(JNIEnv *env,
     fflush(stdout);
     fflush(stderr);
 
-    process_py_exception(env, 1);
+    process_py_exception(env);
 
     Py_XDECREF(result);
 
@@ -929,7 +1107,7 @@ int pyembed_compile_string(JNIEnv *env,
         PyErr_Clear();
         ret = 0;
     } else {
-        process_py_exception(env, 0);
+        process_py_exception(env);
     }
 
     PyEval_ReleaseThread(jepThread->tstate);
@@ -960,7 +1138,7 @@ intptr_t pyembed_create_module(JNIEnv *env,
 
     PyEval_AcquireThread(jepThread->tstate);
 
-    if (PyImport_AddModule(str) == NULL || process_py_exception(env, 1)) {
+    if (PyImport_AddModule(str) == NULL || process_py_exception(env)) {
         goto EXIT;
     }
 
@@ -978,7 +1156,7 @@ intptr_t pyembed_create_module(JNIEnv *env,
     Py_DECREF(key);
     Py_DECREF(module);
 
-    if (process_py_exception(env, 0) || module == NULL) {
+    if (process_py_exception(env) || module == NULL) {
         ret = 0;
     } else {
         ret = (intptr_t) module;
@@ -1026,7 +1204,7 @@ intptr_t pyembed_create_module_on(JNIEnv *env,
     globals = PyModule_GetDict(onModule);
     Py_INCREF(globals);
 
-    if (PyImport_AddModule(str) == NULL || process_py_exception(env, 1)) {
+    if (PyImport_AddModule(str) == NULL || process_py_exception(env)) {
         goto EXIT;
     }
 
@@ -1040,7 +1218,7 @@ intptr_t pyembed_create_module_on(JNIEnv *env,
     Py_DECREF(key);
     Py_DECREF(module);
 
-    if (process_py_exception(env, 0) || module == NULL) {
+    if (process_py_exception(env) || module == NULL) {
         ret = 0;
     } else {
         ret = (intptr_t) module;
@@ -1067,7 +1245,7 @@ void pyembed_setloader(JNIEnv *env, intptr_t _jepThread, jobject cl)
     }
 
     PyEval_AcquireThread(jepThread->tstate);
-    Py_CLEAR(jepThread->fqnToPyJmethods);
+    Py_CLEAR(jepThread->fqnToPyJAttrs);
 
     oldLoader = jepThread->classloader;
     if (oldLoader) {
@@ -1100,7 +1278,7 @@ jobject pyembed_getvalue_on(JNIEnv *env,
 
     PyEval_AcquireThread(jepThread->tstate);
 
-    if (process_py_exception(env, 1)) {
+    if (process_py_exception(env)) {
         goto EXIT;
     }
 
@@ -1115,7 +1293,7 @@ jobject pyembed_getvalue_on(JNIEnv *env,
 
     result = PyRun_String(str, Py_eval_input, dict, dict);      /* new ref */
 
-    process_py_exception(env, 1);
+    process_py_exception(env);
     Py_DECREF(dict);
 
     if (result == NULL) {
@@ -1128,7 +1306,7 @@ jobject pyembed_getvalue_on(JNIEnv *env,
     // convert results to jobject
     ret = PyObject_As_jobject(env, result, JOBJECT_TYPE);
     if (!ret) {
-        process_py_exception(env, 1);
+        process_py_exception(env);
     }
 
 EXIT:
@@ -1158,7 +1336,7 @@ jobject pyembed_getvalue(JNIEnv *env, intptr_t _jepThread, char *str)
 
     PyEval_AcquireThread(jepThread->tstate);
 
-    if (process_py_exception(env, 1)) {
+    if (process_py_exception(env)) {
         goto EXIT;
     }
 
@@ -1167,7 +1345,7 @@ jobject pyembed_getvalue(JNIEnv *env, intptr_t _jepThread, char *str)
                           jepThread->globals,
                           jepThread->globals);
 
-    process_py_exception(env, 1);
+    process_py_exception(env);
 
     if (result == NULL || result == Py_None) {
         goto EXIT;    /* don't return, need to release GIL */
@@ -1176,7 +1354,7 @@ jobject pyembed_getvalue(JNIEnv *env, intptr_t _jepThread, char *str)
     // convert results to jobject
     ret = PyObject_As_jobject(env, result, JOBJECT_TYPE);
     if (!ret) {
-        process_py_exception(env, 1);
+        process_py_exception(env);
     }
 
 EXIT:
@@ -1207,7 +1385,7 @@ jobject pyembed_getvalue_array(JNIEnv *env, intptr_t _jepThread, char *str)
 
     PyEval_AcquireThread(jepThread->tstate);
 
-    if (process_py_exception(env, 1)) {
+    if (process_py_exception(env)) {
         goto EXIT;
     }
 
@@ -1216,7 +1394,7 @@ jobject pyembed_getvalue_array(JNIEnv *env, intptr_t _jepThread, char *str)
                           jepThread->globals,
                           jepThread->globals);
 
-    process_py_exception(env, 1);
+    process_py_exception(env);
 
     if (result == NULL || result == Py_None) {
         goto EXIT;    /* don't return, need to release GIL */
@@ -1225,7 +1403,7 @@ jobject pyembed_getvalue_array(JNIEnv *env, intptr_t _jepThread, char *str)
 #if PY_MAJOR_VERSION >= 3
     if (PyBytes_Check(result) == 0) {
         PyObject *temp = PyBytes_FromObject(result);
-        if (process_py_exception(env, 1) || result == NULL) {
+        if (process_py_exception(env) || result == NULL) {
             goto EXIT;
         } else {
             Py_DECREF(result);
@@ -1306,7 +1484,7 @@ void pyembed_run(JNIEnv *env,
         fflush(stderr);
 
         fclose(script);
-        process_py_exception(env, 1);
+        process_py_exception(env);
     }
 
 EXIT:
@@ -1433,12 +1611,7 @@ void pyembed_setparameter_object(JNIEnv *env,
     // does common things
     GET_COMMON;
 
-    if (value == NULL) {
-        Py_INCREF(Py_None);
-        pyjob = Py_None;
-    } else {
-        pyjob = pyjobject_new(env, value);
-    }
+    pyjob = convert_jobject_pyobject(env, value);
 
     if (pyjob) {
         if (pymodule == NULL) {
@@ -1515,7 +1688,7 @@ void pyembed_setparameter_class(JNIEnv *env,
         Py_INCREF(Py_None);
         pyjob = Py_None;
     } else {
-        pyjob = pyjobject_new_class(env, value);
+        pyjob = PyJObject_NewClass(env, value);
     }
 
     if (pyjob) {
@@ -1574,6 +1747,39 @@ void pyembed_setparameter_string(JNIEnv *env,
     return;
 }
 
+void pyembed_setparameter_bool(JNIEnv *env,
+                               intptr_t _jepThread,
+                               intptr_t module,
+                               const char *name,
+                               jboolean value)
+{
+    PyObject      *pyvalue;
+    PyObject      *pymodule;
+
+    // does common things
+    GET_COMMON;
+
+    if ((pyvalue = PyBool_FromLong(value)) == NULL) {
+        PyErr_SetString(PyExc_MemoryError, "Out of memory.");
+        return;
+    }
+
+    if (pymodule == NULL) {
+        PyObject *key = PyString_FromString(name);
+        PyDict_SetItem(jepThread->globals,
+                       key,
+                       pyvalue); /* ownership */
+        Py_DECREF(key);
+        Py_DECREF(pyvalue);
+    } else {
+        PyModule_AddObject(pymodule,
+                           (char *) name,
+                           pyvalue); // steals reference
+    }
+
+    PyEval_ReleaseThread(jepThread->tstate);
+    return;
+}
 
 void pyembed_setparameter_int(JNIEnv *env,
                               intptr_t _jepThread,

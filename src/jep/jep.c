@@ -1,8 +1,7 @@
-/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2016 JEP AUTHORS.
+   Copyright (c) 2017 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -82,12 +81,12 @@ JNIEXPORT void JNICALL Java_jep_Jep_setInitParams
 /*
  * Class:     jep_Jep
  * Method:    initializePython
- * Signature: ()V
+ * Signature: ([Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_initializePython
-(JNIEnv *env, jclass class)
+(JNIEnv *env, jclass class, jobjectArray argv)
 {
-    pyembed_startup();
+    pyembed_startup(env, argv);
 }
 
 /*
@@ -104,12 +103,12 @@ JNIEXPORT void JNICALL Java_jep_Jep_sharedImport
 /*
  * Class:     jep_Jep
  * Method:    init
- * Signature: (Ljava/lang/ClassLoader;)I
+ * Signature: (Ljava/lang/ClassLoader;Z)I
  */
 JNIEXPORT jlong JNICALL Java_jep_Jep_init
-(JNIEnv *env, jobject obj, jobject cl)
+(JNIEnv *env, jobject obj, jobject cl, jboolean hasSharedModules)
 {
-    return pyembed_thread_init(env, cl, obj);
+    return pyembed_thread_init(env, cl, obj, hasSharedModules);
 }
 
 
@@ -318,6 +317,21 @@ JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2Ljava_lang_String_2
     release_utf_char(env, jval, value);
 }
 
+
+/*
+ * Class:     jep_Jep
+ * Method:    set
+ * Signature: (ILjava/lang/String;Z)V
+ */
+JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2Z
+(JNIEnv *env, jobject obj, jlong tstate, jstring jname, jboolean jval)
+{
+    const char *name;
+
+    name = jstring2char(env, jname);
+    pyembed_setparameter_bool(env, (intptr_t) tstate, 0, name, jval);
+    release_utf_char(env, jname, name);
+}
 
 /*
  * Class:     jep_Jep

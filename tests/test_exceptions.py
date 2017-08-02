@@ -2,6 +2,8 @@ from traceback import print_exc
 import unittest
 import jep
 from java.lang import Integer, String
+import sys
+from jep_pipe import jep_pipe, build_java_process_cmd
 from java.io import FileInputStream
 
 
@@ -76,6 +78,10 @@ class TestExceptions(unittest.TestCase):
             x = d.divide(zero)
         except ArithmeticError as ex:
             pass
+
+    @unittest.skipIf(sys.platform.startswith("win"), "subprocess complications on Windows")
+    def test_exception_cause(self):
+        jep_pipe(build_java_process_cmd('jep.test.TestExceptionCause'))
 
     # TODO come up with a way to test MemoryError and AssertionError given
     # I coded support for that.

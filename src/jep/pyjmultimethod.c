@@ -1,8 +1,7 @@
-/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2016 JEP AUTHORS.
+   Copyright (c) 2017 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -27,6 +26,7 @@
 */
 
 #include "Jep.h"
+
 
 PyObject* PyJMultiMethod_New(PyObject* method1, PyObject* method2)
 {
@@ -175,7 +175,7 @@ static PyObject* pyjmultimethod_call(PyObject *multimethod,
 }
 
 /* returns internal list as tuple since its not safe to modify the list*/
-PyObject* pyjmultimethod_getmethods(PyObject* multimethod)
+static PyObject* pyjmultimethod_getmethods(PyObject* multimethod)
 {
     PyJMultiMethodObject* mm         = NULL;
     if (!PyJMultiMethod_Check(multimethod)) {

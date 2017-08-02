@@ -1,8 +1,7 @@
-/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2016 JEP AUTHORS.
+   Copyright (c) 2017 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -39,15 +38,23 @@
 #ifndef _Included_pyjcollection
 #define _Included_pyjcollection
 
-PyAPI_DATA(PyTypeObject) PyJCollection_Type;
+extern PyTypeObject PyJCollection_Type;
 
 typedef struct {
     PyJIterableObject obj; /* magic inheritance */
 } PyJCollectionObject;
 
 
-PyJCollectionObject* pyjcollection_new(void);
-int pyjcollection_check(PyObject*);
+/*
+ * Returns a new PyJCollection, which is a PyJIterable with a few more methods
+ * attached to it.
+ */
+PyJObject* PyJCollection_New(void);
+
+/*
+ * Returns true if the object is a PyJCollection.
+ */
+int PyJCollection_Check(PyObject*);
 
 
 #endif // ndef pyjcollection

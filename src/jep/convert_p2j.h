@@ -1,8 +1,7 @@
-/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
 /*
    jep - Java Embedded Python
 
-   Copyright (c) JEP AUTHORS.
+   Copyright (c) 2017 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -38,7 +37,7 @@
 #ifndef _Included_convert_p2j
 #define _Included_convert_p2j
 
-PyAPI_FUNC(jboolean) PyObject_As_jboolean(PyObject*);
+jboolean PyObject_As_jboolean(PyObject*);
 
 /*
  * These four methods use the PyNumber_Index protocol from PEP 357 to convert
@@ -50,10 +49,10 @@ PyAPI_FUNC(jboolean) PyObject_As_jboolean(PyObject*);
  *
  * -1 will be returned if an error occurs.
  */
-PyAPI_FUNC(jbyte)    PyObject_As_jbyte(PyObject*);
-PyAPI_FUNC(jshort)   PyObject_As_jshort(PyObject*);
-PyAPI_FUNC(jint)     PyObject_As_jint(PyObject*);
-PyAPI_FUNC(jlong)    PyObject_As_jlong(PyObject*);
+jbyte    PyObject_As_jbyte(PyObject*);
+jshort   PyObject_As_jshort(PyObject*);
+jint     PyObject_As_jint(PyObject*);
+jlong    PyObject_As_jlong(PyObject*);
 
 /*
  * These two methods have behavior matching PyFloat_AsDouble.
@@ -63,33 +62,33 @@ PyAPI_FUNC(jlong)    PyObject_As_jlong(PyObject*);
  *
  * -1.0 will be returned if an error occurs.
  */
-PyAPI_FUNC(jfloat)   PyObject_As_jfloat(PyObject*);
-PyAPI_FUNC(jdouble)  PyObject_As_jdouble(PyObject*);
+jfloat   PyObject_As_jfloat(PyObject*);
+jdouble  PyObject_As_jdouble(PyObject*);
 
 /*
  * This works with PyUnicode in python 3 and PyString in python 2.
  *
  * 0 will be returned if an error occurs.
  */
-PyAPI_FUNC(jchar)    PyObject_As_jchar(PyObject*);
+jchar    PyObject_As_jchar(PyObject*);
 
 /*
  * Very similar to PyObject_Str but also converts result to a jstring.
  *
  * NULL will be returned if an error occurs
  */
-PyAPI_FUNC(jstring)  PyObject_As_jstring(JNIEnv*, PyObject*);
+jstring  PyObject_As_jstring(JNIEnv*, PyObject*);
 
 /*
  * NULL will be returned if an error occurs, but may also be returned if
  * PyObject* is None so use PyErr_Occurred() to check for errors if NULL
  * is returned.
  */
-PyAPI_FUNC(jobject)  PyObject_As_jobject(JNIEnv*, PyObject*, jclass);
+jobject  PyObject_As_jobject(JNIEnv*, PyObject*, jclass);
 
 /*
  * Use PyErr_Occurred() after this to check for errors
  */
-PyAPI_FUNC(jvalue)   PyObject_As_jvalue(JNIEnv*, PyObject*, jclass);
+jvalue   PyObject_As_jvalue(JNIEnv*, PyObject*, jclass);
 
 #endif // ifndef _Included_convert_py2j

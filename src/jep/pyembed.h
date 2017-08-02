@@ -1,8 +1,7 @@
-/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2016 JEP AUTHORS.
+   Copyright (c) 2017 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -42,18 +41,21 @@ struct __JepThread {
     jobject        classloader;
     jobject        caller;      /* Jep instance that called us. */
     int            printStack;
-    PyObject      *fqnToPyJmethods; /* a dictionary of fully qualified Java
-                                       classnames to PyJMethods on the class */
+    PyObject      *fqnToPyJAttrs; /* a dictionary of fully qualified Java
+                                       classnames to PyJMethods and PyJFields */
+#if PY_MAJOR_VERSION < 3
+    PyObject      *originalBuiltins;
+#endif
 };
 typedef struct __JepThread JepThread;
 
 
 void pyembed_preinit(jint, jint, jint, jint, jint, jint, jint);
-void pyembed_startup(void);
+void pyembed_startup(JNIEnv*, jobjectArray);
 void pyembed_shutdown(JavaVM*);
 void pyembed_shared_import(JNIEnv*, jstring);
 
-intptr_t pyembed_thread_init(JNIEnv*, jobject, jobject);
+intptr_t pyembed_thread_init(JNIEnv*, jobject, jobject, jboolean);
 void pyembed_thread_close(JNIEnv*, intptr_t);
 
 void pyembed_close(void);
@@ -84,6 +86,8 @@ void pyembed_setparameter_class(JNIEnv *, intptr_t, intptr_t, const char*,
                                 jclass);
 void pyembed_setparameter_string(JNIEnv*, intptr_t, intptr_t, const char*,
                                  const char*);
+void pyembed_setparameter_bool(JNIEnv*, intptr_t, intptr_t, const char*,
+                               jboolean);
 void pyembed_setparameter_int(JNIEnv*, intptr_t, intptr_t, const char*, int);
 void pyembed_setparameter_long(JNIEnv*, intptr_t, intptr_t, const char*,
                                PY_LONG_LONG);

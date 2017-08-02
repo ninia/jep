@@ -1,8 +1,7 @@
-/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2016 JEP AUTHORS.
+   Copyright (c) 2017 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -28,15 +27,41 @@
 
 #include "Jep.h"
 
-static int pyjconstructor_init(JNIEnv*, PyJMethodObject*);
-
-static jmethodID constructorGetParamTypes = 0;
 
 /*
  * All constructors are named <init> so keep a single PyString around to use
  * as the methodName
  */
 static PyObject* initMethodName = NULL;
+
+
+static int pyjconstructor_init(JNIEnv *env, PyJMethodObject *self)
+{
+    jobjectArray paramArray = NULL;
+
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
+        process_java_exception(env);
+        return 0;
+    }
+
+    self->methodId = (*env)->FromReflectedMethod(env, self->rmethod);
+
+    paramArray = java_lang_reflect_Constructor_getParameterTypes(env,
+                 self->rmethod);
+    if (process_java_exception(env) || !paramArray) {
+        goto EXIT_ERROR;
+    }
+
+    self->parameters    = (*env)->NewGlobalRef(env, paramArray);
+    self->lenParameters = (*env)->GetArrayLength(env, paramArray);
+    (*env)->PopLocalFrame(env, NULL);
+    return 1;
+
+EXIT_ERROR:
+    (*env)->PopLocalFrame(env, NULL);
+    return 0;
+}
+
 
 PyObject* PyJConstructor_New(JNIEnv *env, jobject constructor)
 {
@@ -84,43 +109,6 @@ int PyJConstructor_Check(PyObject* object)
     return PyObject_TypeCheck(object, &PyJConstructor_Type);
 }
 
-static int pyjconstructor_init(JNIEnv *env, PyJMethodObject *self)
-{
-    jobjectArray paramArray = NULL;
-
-    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
-        process_java_exception(env);
-        return 0;
-    }
-
-    self->methodId = (*env)->FromReflectedMethod(env, self->rmethod);
-
-    if (constructorGetParamTypes == 0) {
-        jclass initClass = (*env)->GetObjectClass(env, self->rmethod);
-        constructorGetParamTypes = (*env)->GetMethodID(env, initClass,
-                                   "getParameterTypes", "()[Ljava/lang/Class;");
-        if (!constructorGetParamTypes) {
-            process_java_exception(env);
-            goto EXIT_ERROR;
-        }
-        (*env)->DeleteLocalRef(env, initClass);
-    }
-
-    paramArray = (jobjectArray) (*env)->CallObjectMethod(env, self->rmethod,
-                 constructorGetParamTypes);
-    if (process_java_exception(env) || !paramArray) {
-        goto EXIT_ERROR;
-    }
-
-    self->parameters    = (*env)->NewGlobalRef(env, paramArray);
-    self->lenParameters = (*env)->GetArrayLength(env, paramArray);
-    (*env)->PopLocalFrame(env, NULL);
-    return 1;
-
-EXIT_ERROR:
-    (*env)->PopLocalFrame(env, NULL);
-    return 0;
-}
 
 static PyObject* pyjconstructor_call(PyJMethodObject *self, PyObject *args,
                                      PyObject *keywords)
@@ -148,7 +136,7 @@ static PyObject* pyjconstructor_call(PyJMethodObject *self, PyObject *args,
     }
 
     firstArg = PyTuple_GetItem(args, 0);
-    if (!pyjclass_check(firstArg)) {
+    if (!PyJClass_Check(firstArg)) {
         PyErr_SetString(PyExc_RuntimeError,
                         "First argument to a java constructor must be a java class.");
         return NULL;
@@ -201,7 +189,7 @@ static PyObject* pyjconstructor_call(PyJMethodObject *self, PyObject *args,
     }
 
     // finally, make pyjobject and return
-    pobj = pyjobject_new(env, obj);
+    pobj = PyJObject_New(env, obj);
 
     // we already closed the local frame, so make
     // sure to delete this local ref.

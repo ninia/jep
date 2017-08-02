@@ -1,8 +1,7 @@
-/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2016 JEP AUTHORS.
+   Copyright (c) 2017 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -37,7 +36,7 @@
 #ifndef _Included_pyjclass
 #define _Included_pyjclass
 
-PyAPI_DATA(PyTypeObject) PyJClass_Type;
+extern PyTypeObject PyJClass_Type;
 
 typedef struct {
     PyJObject  obj;            /* magic inheritance */
@@ -49,7 +48,10 @@ typedef struct {
 } PyJClassObject;
 
 int pyjclass_init(JNIEnv*, PyObject*);
-PyObject* pyjclass_call(PyJClassObject*, PyObject*, PyObject*);
-int pyjclass_check(PyObject*);
+
+/*
+ * Returns true if the object is a PyJClass.
+ */
+int PyJClass_Check(PyObject*);
 
 #endif // ndef pyjclass

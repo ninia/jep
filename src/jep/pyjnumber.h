@@ -1,8 +1,7 @@
-/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2016 JEP AUTHORS.
+   Copyright (c) 2017 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -28,7 +27,7 @@
 
 /*
  * A PyJNumberObject is a PyJObject with some extra methods attached to meet
- * the python Number protocol/interface.  It should only be used where the
+ * the Python Number protocol/interface.  It should only be used where the
  * underlying jobject of the PyJObject is an implementation of java.lang.Number.
  */
 
@@ -38,15 +37,23 @@
 #ifndef _Included_pyjnumber
 #define _Included_pyjnumber
 
-PyAPI_DATA(PyTypeObject) PyJNumber_Type;
+extern PyTypeObject PyJNumber_Type;
 
 typedef struct {
     PyJObject obj; /* magic inheritance */
 } PyJNumberObject;
 
 
-PyJNumberObject* pyjnumber_new(void);
-int pyjnumber_check(PyObject*);
+/*
+ * Returns a new PyJNumber, which is a PyJObject with some number methods
+ * attached to it.
+ */
+PyJObject* PyJNumber_New(void);
+
+/*
+ * Returns true if the object is a PyJNumber.
+ */
+int PyJNumber_Check(PyObject*);
 
 
 #endif // ndef pyjnumber

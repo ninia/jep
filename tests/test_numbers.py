@@ -2,6 +2,8 @@ import unittest
 import sys
 
 from java.lang import Integer, Long, Double
+from java.util.concurrent.atomic import AtomicInteger
+from java.util import ArrayList
 
 
 class TestNumbers(unittest.TestCase):
@@ -147,3 +149,15 @@ class TestNumbers(unittest.TestCase):
         self.assertFalse(jfive != pfive)
         self.assertFalse(ptwosix != jtwosix)
         self.assertFalse(jtwosix != ptwosix)
+    
+    def test_number_transform(self):        
+        a = AtomicInteger(0)
+        b = AtomicInteger(1)
+        c = AtomicInteger(2)
+        x = ArrayList()
+        x.add(a)
+        x.add(b)
+        x.add(c)
+        self.assertEqual(x.get(0).get(), 0)
+        self.assertEqual(x.get(1).get(), 1)
+        self.assertEqual(x.get(2).get(), 2)

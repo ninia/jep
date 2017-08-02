@@ -6,7 +6,6 @@ Boolean = jep.findClass('java.lang.Boolean')
 StringBuilder = jep.findClass('java.lang.StringBuilder')
 ArrayList = jep.findClass('java.util.ArrayList')
 
-
 class TestTypes(unittest.TestCase):
 
     def setUp(self):
@@ -89,3 +88,31 @@ class TestTypes(unittest.TestCase):
         list.add("Three")
         list.remove(1)
         self.assertEqual(list.size(), 2)
+
+    def test_callback(self):
+        expected = ArrayList([1, 2, 3, 4, 5])
+        actual = ArrayList()
+        try:
+            expected.forEach(actual.add)
+            self.assertTrue(expected == actual)
+        except AttributeError:
+            self.skipTest("Test is only applicable on Java 8")
+
+    def test_stream_callbacks(self):
+        try:
+            from java.util.stream import LongStream
+        except ImportError:
+            self.skipTest("Test is only applicable on Java 8")
+        result = LongStream.range(1, 1000)\
+            .filter(lambda i: i % 2 == 0)\
+            .reduce(lambda first, second: first + second)\
+            .getAsLong()
+        self.assertTrue(result == sum(range(2, 1000, 2)))
+
+    def test_observer(self):
+        from java.util.concurrent import Executors
+        a = list()
+        def runTask():
+            a.append(1)
+        Executors.callable(runTask).call()
+        self.assertEquals(len(a), 1)

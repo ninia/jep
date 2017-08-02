@@ -1,8 +1,7 @@
-/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2016 JEP AUTHORS.
+   Copyright (c) 2017 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -28,29 +27,15 @@
 
 #include "Jep.h"
 
-jmethodID collectionSize     = 0;
-jmethodID collectionContains = 0;
 
-
-static Py_ssize_t pyjcollection_len(PyObject*);
-static int pyjcollection_contains(PyObject*, PyObject*);
-
-
-/*
- * News up a pyjcollection, which is just a pyjiterable with a few methods
- * attached to it.  This should only be called from pyjobject_new().
- */
-PyJCollectionObject* pyjcollection_new()
+PyJObject* PyJCollection_New()
 {
-    // pyjobject will have already initialized PyJCollection_Type
-    return PyObject_NEW(PyJCollectionObject, &PyJCollection_Type);
+    // PyJObject will have already initialized PyJCollection_Type
+    return (PyJObject*) PyObject_NEW(PyJCollectionObject, &PyJCollection_Type);
 }
 
 
-/*
- * Checks if the object is a pyjcollection.
- */
-int pyjcollection_check(PyObject *obj)
+int PyJCollection_Check(PyObject *obj)
 {
     if (PyObject_TypeCheck(obj, &PyJCollection_Type)) {
         return 1;
@@ -67,12 +52,7 @@ static Py_ssize_t pyjcollection_len(PyObject* self)
     PyJObject    *pyjob = (PyJObject*) self;
     JNIEnv       *env   = pyembed_get_env();
 
-    if (!JNI_METHOD(collectionSize, env, JCOLLECTION_TYPE, "size", "()I")) {
-        process_java_exception(env);
-        return -1;
-    }
-
-    len = (*env)->CallIntMethod(env, pyjob->object, collectionSize);
+    len = java_util_Collection_size(env, pyjob->object);
     if (process_java_exception(env)) {
         return -1;
     }
@@ -92,12 +72,6 @@ static int pyjcollection_contains(PyObject *o, PyObject *v)
     JNIEnv       *env      = pyembed_get_env();
     jobject       value    = NULL;
 
-    if (!JNI_METHOD(collectionContains, env, JCOLLECTION_TYPE, "contains",
-                    "(Ljava/lang/Object;)Z")) {
-        process_java_exception(env);
-        return -1;
-    }
-
     if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
         process_java_exception(env);
         return -1;
@@ -107,8 +81,7 @@ static int pyjcollection_contains(PyObject *o, PyObject *v)
         goto FINALLY;
     }
 
-    jresult = (*env)->CallBooleanMethod(env, obj->object, collectionContains,
-                                        value);
+    jresult = java_util_Collection_contains(env, obj->object, value);
     if (process_java_exception(env)) {
         goto FINALLY;
     }
@@ -123,10 +96,6 @@ FINALLY:
     return result;
 }
 
-
-static PyMethodDef pyjcollection_methods[] = {
-    {NULL, NULL, 0, NULL}
-};
 
 static PySequenceMethods pyjcollection_seq_methods = {
     pyjcollection_len,      /* sq_length */
@@ -174,7 +143,7 @@ PyTypeObject PyJCollection_Type = {
     0,                                        /* tp_weaklistoffset */
     0, // inherited                           /* tp_iter */
     0,                                        /* tp_iternext */
-    pyjcollection_methods,                    /* tp_methods */
+    0,                                        /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
     0, // &PyJIterable_Type                   /* tp_base */

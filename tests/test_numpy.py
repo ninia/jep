@@ -22,8 +22,8 @@ class TestNumpy(unittest.TestCase):
         Also checks that in Java, new NDArray(args) does not
         allow bad args through.
         """
-        from tests.jep_pipe import build_java_process_cmd
-        from tests.jep_pipe import jep_pipe
+        from jep_pipe import build_java_process_cmd
+        from jep_pipe import jep_pipe
 
         jep_pipe(build_java_process_cmd('jep.test.numpy.TestNumpy'))
 
@@ -108,3 +108,105 @@ class TestNumpy(unittest.TestCase):
         NDArray = jep.findClass("jep.NDArray")
         with self.assertRaises(ValueError):
             NDArray(jep.jarray(4, jep.JCHAR_ID))
+
+    def createNdarrayFromBuffer(self, buffer):
+        DirectNDArray = jep.findClass("jep.DirectNDArray")
+        from java.util import ArrayList
+        # Start off with a pyjobject which is a DirectNDArray
+        dndarray = DirectNDArray(buffer)
+        from java.util import ArrayList
+        a = ArrayList()
+        a.add(dndarray)
+        # Getting the same object from a java method triggers the automatic
+        # conversion to an ndarray.
+        return a.get(0)
+
+    def testDirectArgReturn(self):
+        """
+        Tests making a python ndarray from a java DirectNDArray.
+        It should be possible to pass to java and back and still
+        reference the same memory. It should also be possible to
+        pass it to java methods that expect an NDArray or a primitive
+        array in which case the memory is copied.
+        """
+        from java.nio import ByteBuffer, ByteOrder
+
+        buffer = ByteBuffer.allocateDirect(48)
+        ndarray = self.createNdarrayFromBuffer(buffer.asIntBuffer())
+        ndarray2 = self.test.testDirectArgAndReturn(ndarray)
+        ndarray[0] = 1
+        self.assertEquals(1, ndarray2[0])
+        ndarray2[0] = 2
+        self.assertEquals(2, ndarray[0])
+
+        ndarray2 = self.test.testArgAndReturn(ndarray)
+        self.assertEquals(ndarray[0] + 5, ndarray2[0])
+
+        self.assertTrue(self.test.callIntMethod(ndarray))
+
+    def assertIntDirect(self, buffer): 
+        """
+        Tests that changes to a buffer are reflected in an ndarray created from
+        the buffer. This works with integer types(byte, short, int long)
+        """
+        ndarray = self.createNdarrayFromBuffer(buffer)
+        ndarray[0] = 1
+        self.assertEquals(1, buffer.get(0))
+        buffer.put(0,2)
+        self.assertEquals(2, ndarray[0])
+
+    def assertFloatDirect(self, buffer): 
+        """
+        Tests that changes to a buffer are reflected in an ndarray created from
+        the buffer. This works with float types(float, double)
+        """
+        ndarray = self.createNdarrayFromBuffer(buffer)
+        ndarray[0] = 1.5
+        self.assertEquals(1.5, buffer.get(0))
+        buffer.put(0,2.5)
+        self.assertEquals(2.5, ndarray[0])
+
+    def testDirect(self):
+        from java.nio import ByteBuffer
+
+        buffer = ByteBuffer.allocateDirect(48)
+        self.assertIntDirect(buffer)
+        self.assertIntDirect(buffer.asShortBuffer())
+        self.assertIntDirect(buffer.asIntBuffer())
+        self.assertIntDirect(buffer.asLongBuffer())
+        self.assertFloatDirect(buffer.asFloatBuffer())
+        self.assertFloatDirect(buffer.asDoubleBuffer())
+        with self.assertRaises(ValueError):
+            self.createNdarrayFromBuffer(buffer.asCharBuffer())
+
+    def testDirectNative(self):
+        from java.nio import ByteBuffer, ByteOrder
+
+        buffer = ByteBuffer.allocateDirect(48).order(ByteOrder.nativeOrder())
+        self.assertIntDirect(buffer)
+        self.assertIntDirect(buffer.asShortBuffer())
+        self.assertIntDirect(buffer.asIntBuffer())
+        self.assertIntDirect(buffer.asLongBuffer())
+        self.assertFloatDirect(buffer.asFloatBuffer())
+        self.assertFloatDirect(buffer.asDoubleBuffer())
+
+    def testPassingDirect(self):
+        """
+        Test that when a numpy ndarray created from a java direct buffer is
+        passed to java that it still uses the exact same direct buffer. The
+        simplest way to test that is to copy it back to python and ensure
+        modifications are visible in both numpy ndarrays
+        """
+        from java.nio import ByteBuffer
+
+        buffer = ByteBuffer.allocateDirect(48)
+        ndarray = self.createNdarrayFromBuffer(buffer)
+
+        from java.util import ArrayList
+        a = ArrayList()
+        a.add(ndarray)
+        ndarray2 = a.get(0)
+        ndarray[0] = 1
+        self.assertEquals(1, ndarray2[0])
+        ndarray2[0] = 2
+        self.assertEquals(2, ndarray[0])

@@ -1,8 +1,7 @@
-/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
 /* 
    jep - Java Embedded Python
 
-   Copyright (c) 2016 JEP AUTHORS.
+   Copyright (c) 2017 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -35,14 +34,18 @@
  * Signature: (J)V
  */
 JNIEXPORT void JNICALL Java_jep_python_PyObject_decref
-(JNIEnv *env, jobject jobj, jlong ptr) {
-    PyObject *o = (PyObject *) (intptr_t) jobj;
+(JNIEnv *env, jobject jobj, jlong tstate, jlong ptr) {
+    PyObject *o = (PyObject *) ptr;
+    JepThread* jepThread = (JepThread *) tstate; 
 
     if(ptr == 0) {
         THROW_JEP(env, "jep_object: Invalid object");
-    }
-    else
+    } else {
+        PyEval_AcquireThread(jepThread->tstate);
         Py_DECREF(o);
+        process_py_exception(env);
+        PyEval_ReleaseThread(jepThread->tstate);
+    }
 }
 
 
@@ -52,14 +55,17 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_decref
  * Signature: (J)V
  */
 JNIEXPORT void JNICALL Java_jep_python_PyObject_incref
-(JNIEnv *env, jobject jobj, jlong ptr) {
-    PyObject *o = (PyObject *) (intptr_t) jobj;
+(JNIEnv *env, jobject jobj, jlong tstate, jlong ptr) {
+    PyObject *o = (PyObject *) ptr;
+    JepThread* jepThread = (JepThread *) tstate; 
 
     if(ptr == 0) {
         THROW_JEP(env, "jep_object: Invalid object");
-    }
-    else
+    } else {
+        PyEval_AcquireThread(jepThread->tstate);
         Py_INCREF(o);
+        PyEval_ReleaseThread(jepThread->tstate);
+    }
 }
 
 

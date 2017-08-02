@@ -1,8 +1,7 @@
-/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2016 JEP AUTHORS.
+   Copyright (c) 2017 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -27,8 +26,8 @@
 */
 
 /*
- * A PyJListObject is a PyJCollection with some extra methods attached to meet
- * the python Sequence protocol/interface.  It should only be used where the
+ * A PyJListObject is a PyJCollectionObject with some extra methods attached to meet
+ * the Python Sequence protocol/interface.  It should only be used where the
  * underlying jobject of the PyJObject is an implementation of java.util.List.
  */
 
@@ -38,16 +37,23 @@
 #ifndef _Included_pyjlist
 #define _Included_pyjlist
 
-PyAPI_DATA(PyTypeObject) PyJList_Type;
+extern PyTypeObject PyJList_Type;
 
 typedef struct {
     PyJCollectionObject obj; /* magic inheritance */
 } PyJListObject;
 
 
-PyJListObject* pyjlist_new(void);
-PyObject* pyjlist_new_copy(PyObject*);
-int pyjlist_check(PyObject*);
+/*
+ * Returns a new PyJList, which is a PyJCollection with some sequence methods
+ * attached to it.
+ */
+PyJObject* PyJList_New(void);
+
+/*
+ * Returns true if the object is a PyJList.
+ */
+int PyJList_Check(PyObject*);
 
 
 #endif // ndef pyjlist

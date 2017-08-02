@@ -1,8 +1,7 @@
-/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 4 c-style: "K&R" -*- */
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2016 JEP AUTHORS.
+   Copyright (c) 2017 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -28,33 +27,15 @@
 
 #include "Jep.h"
 
-jmethodID itrHasNext = 0;
-jmethodID itrNext    = 0;
 
-/*
- * News up a pyjiterator, which is just a pyjobject for iterators.
- */
-PyJIteratorObject* pyjiterator_new()
+PyJObject* PyJIterator_New()
 {
-    /*
-     * MSVC requires tp_base to be set here
-     * See https://docs.python.org/2/extending/newtypes.html
-     */
-    if (!PyJIterator_Type.tp_base) {
-        PyJIterator_Type.tp_base = &PyJObject_Type;
-    }
-
-    if (PyType_Ready(&PyJIterator_Type) < 0) {
-        return NULL;
-    }
-
-    return PyObject_NEW(PyJIteratorObject, &PyJIterator_Type);
+    // PyJObject will have already initialized PyJIterator_Type
+    return (PyJObject*) PyObject_NEW(PyJIteratorObject, &PyJIterator_Type);
 }
 
-/*
- * Checks if the object is a pyjiterator.
- */
-int pyjiterator_check(PyObject *obj)
+
+int PyJIterator_Check(PyObject *obj)
 {
     if (PyObject_TypeCheck(obj, &PyJIterator_Type)) {
         return 1;
@@ -62,18 +43,13 @@ int pyjiterator_check(PyObject *obj)
     return 0;
 }
 
-PyObject* pyjiterator_next(PyObject* self)
+static PyObject* pyjiterator_next(PyObject* self)
 {
     jboolean      nextAvail = JNI_FALSE;
     PyJObject    *pyjob     = (PyJObject*) self;
     JNIEnv       *env       = pyembed_get_env();
 
-    if (!JNI_METHOD(itrHasNext, env, JITERATOR_TYPE, "hasNext", "()Z")) {
-        process_java_exception(env);
-        return NULL;
-    }
-
-    nextAvail = (*env)->CallBooleanMethod(env, pyjob->object, itrHasNext);
+    nextAvail = java_util_Iterator_hasNext(env, pyjob->object);
     if (process_java_exception(env)) {
         return NULL;
     }
@@ -82,15 +58,11 @@ PyObject* pyjiterator_next(PyObject* self)
         jobject   nextItem;
         PyObject* result;
 
-        if (!JNI_METHOD(itrNext, env, JITERATOR_TYPE, "next", "()Ljava/lang/Object;")) {
-            process_java_exception(env);
-            return NULL;
-        }
         if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
             process_java_exception(env);
             return NULL;
         }
-        nextItem = (*env)->CallObjectMethod(env, pyjob->object, itrNext);
+        nextItem = java_util_Iterator_next(env, pyjob->object);
         if (process_java_exception(env)) {
             (*env)->PopLocalFrame(env, NULL);
             return NULL;
@@ -103,11 +75,6 @@ PyObject* pyjiterator_next(PyObject* self)
 
     return NULL;
 }
-
-
-static PyMethodDef pyjiterator_methods[] = {
-    {NULL, NULL, 0, NULL}
-};
 
 
 /*
@@ -141,7 +108,7 @@ PyTypeObject PyJIterator_Type = {
     0,                                        /* tp_weaklistoffset */
     PyObject_SelfIter,                        /* tp_iter */
     (iternextfunc) pyjiterator_next,          /* tp_iternext */
-    pyjiterator_methods,                      /* tp_methods */
+    0,                                        /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
     0, // &PyJObject_Type                     /* tp_base */

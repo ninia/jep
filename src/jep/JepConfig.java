@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 JEP AUTHORS.
+ * Copyright (c) 2017 JEP AUTHORS.
  *
  * This file is licensed under the the zlib/libpng License.
  *
@@ -36,7 +36,7 @@ import java.util.Set;
  * compatible APIs between releases.
  * </p>
  * 
- * @author [ndjensen at gmail.com] Nate Jensen
+ * @author Nate Jensen
  * 
  * @since 3.5
  */
@@ -163,31 +163,9 @@ public class JepConfig {
     }
 
     /**
-     * Add a module name to the set of shared modules
-     * 
-     * @deprecated This method will be removed in a future release. Use
-     *             #addSharedModules(String...) instead.
-     * 
-     * @param sharedModule
-     *            a module name that should be shared
-     * @return a reference to this JepConfig
-     * @see #setSharedModules(Set)
-     * 
-     * @since 3.6
-     */
-    @Deprecated
-    public JepConfig addSharedModule(String sharedModule) {
-        if (sharedModules == null) {
-            sharedModules = new HashSet<String>();
-        }
-        sharedModules.add(sharedModule);
-        return this;
-    }
-    
-    /**
      * Adds module names to the set of shared modules
      * 
-     * @param sharedModules
+     * @param sharedModule
      *            a set of module names that should be shared
      * @return a reference to this JepConfig
      * @see #setSharedModules(Set)
@@ -196,7 +174,7 @@ public class JepConfig {
      */
     public JepConfig addSharedModules(String... sharedModule) {
         if (sharedModules == null) {
-            sharedModules = new HashSet<String>();
+            sharedModules = new HashSet<>();
         }
         for (String sm : sharedModule) {
             sharedModules.add(sm);
