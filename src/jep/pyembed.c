@@ -634,8 +634,10 @@ JNIEnv* pyembed_get_env(void)
 {
     JavaVM *jvm;
     JNIEnv *env;
+    jsize nVMs;
 
-    JNI_GetCreatedJavaVMs(&jvm, 1, NULL);
+
+    JNI_GetCreatedJavaVMs(&jvm, 1, &nVMs);
     /*
      * If the thread is already part of the JVM, the daemon status is not
      * changed. If this is a new thread, started by Python then this tells
