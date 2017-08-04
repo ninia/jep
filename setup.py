@@ -73,7 +73,7 @@ if __name__ == '__main__':
           long_description=read_file('README.rst'),
           author='Jep Developers',
           author_email='jep-project@googlegroups.com',
-          url='https://github.com/mrj0/jep',
+          url='https://github.com/ninia/jep',
           packages=['jep'],
           scripts=['src/scripts/jep'],
           keywords='java',
