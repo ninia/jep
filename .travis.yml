@@ -4,31 +4,31 @@ matrix:
  include:
   - os: linux
     python: 2.7
-    env: JAVA_HOME=/usr/lib/jvm/java-7-oracle
+    env: JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
   - os: linux
     python: 2.7
     env: JAVA_HOME=/usr/lib/jvm/java-8-oracle
   - os: linux
     python: 3.3
-    env: JAVA_HOME=/usr/lib/jvm/java-7-oracle
+    env: JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
   - os: linux
     python: 3.3
     env: JAVA_HOME=/usr/lib/jvm/java-8-oracle
   - os: linux
     python: 3.4
-    env: JAVA_HOME=/usr/lib/jvm/java-7-oracle
+    env: JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
   - os: linux
     python: 3.4
     env: JAVA_HOME=/usr/lib/jvm/java-8-oracle
   - os: linux
     python: 3.5
-    env: JAVA_HOME=/usr/lib/jvm/java-7-oracle
+    env: JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
   - os: linux
     python: 3.5
     env: JAVA_HOME=/usr/lib/jvm/java-8-oracle
   - os: linux
     python: 3.6
-    env: JAVA_HOME=/usr/lib/jvm/java-7-oracle
+    env: JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
   - os: linux
     python: 3.6
     env: JAVA_HOME=/usr/lib/jvm/java-8-oracle
@@ -45,5 +45,6 @@ addons:
  apt:
   packages:
    - oracle-java8-installer
+   - openjdk-7-jdk
 
 script: ./setup.py test
