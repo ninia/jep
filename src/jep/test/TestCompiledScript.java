@@ -10,7 +10,7 @@ import jep.JepException;
  * Created: May 2017
  * 
  * @author Ben Steffensmeier
- * @see "https://github.com/mrj0/jep/issues/77"
+ * @see "https://github.com/ninia/jep/issues/77"
  */
 public class TestCompiledScript {
 

@@ -18,7 +18,7 @@ import jep.PyConfig;
  * 
  * @author Nate Jensen
  * @since 3.6
- * @see "https://github.com/mrj0/jep/issues/49"
+ * @see "https://github.com/ninia/jep/issues/49"
  */
 public class TestPreInitVariables {
 

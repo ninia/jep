@@ -13,7 +13,7 @@ import jep.JepException;
  * Created: July 2017
  * 
  * @author Nate Jensen
- * @see "https://github.com/mrj0/jep/issues/81"
+ * @see "https://github.com/ninia/jep/issues/81"
  */
 public class TestSharedArgv {
 

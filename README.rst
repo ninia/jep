@@ -8,7 +8,7 @@
     :target: https://pypie.python.org/pypi/jep
 	
 .. image:: https://img.shields.io/badge/docs-wiki-orange.svg
-    :target: https://github.com/mrj0/jep/wiki
+    :target: https://github.com/ninia/jep/wiki
 
 
 Jep - Java Embedded Python
@@ -55,10 +55,10 @@ Notable features
 
 Help
 ----
-* Documentation: https://github.com/mrj0/jep/wiki
+* Documentation: https://github.com/ninia/jep/wiki
 * Mailing List: https://groups.google.com/d/forum/jep-project
-* Known Issues: https://github.com/mrj0/jep/issues
-* Project Page: https://github.com/mrj0/jep
+* Known Issues: https://github.com/ninia/jep/issues
+* Project Page: https://github.com/ninia/jep
 
 We welcome comments, contributions, bug reports, wiki documentation, etc.
 
