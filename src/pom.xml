@@ -17,6 +17,15 @@
 
   <build>
    <sourceDirectory>.</sourceDirectory>
+    <resources>
+      <resource>
+        <directory>jep</directory>
+        <includes>
+          <include>*.txt</include>
+        </includes>
+        <targetPath>jep</targetPath>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -39,6 +48,19 @@
           </execution>
         </executions>
       </plugin>
+      <!--
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.0.2</version>
+        <configuration>
+          <includes>
+            <include>**/*.class</include>
+            <include>**/jep/*.txt</include>
+          </includes>
+        </configuration>
+      </plugin>
+      -->
     </plugins>
   </build>
 
