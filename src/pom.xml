@@ -16,7 +16,7 @@
 
 
   <build>
-   <sourceDirectory>.</sourceDirectory>
+    <sourceDirectory>.</sourceDirectory>
     <resources>
       <resource>
         <directory>jep</directory>
@@ -32,6 +32,9 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.6.2</version>
         <configuration>
+          <excludes>
+            <exclude>jep/test/**/*.java</exclude>
+          </excludes>
           <source>1.7</source>
           <target>1.7</target>
         </configuration>
