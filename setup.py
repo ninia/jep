@@ -24,7 +24,7 @@ from commands.util import is_windows
 from commands.build_ext import build_ext
 
 VERSION = None  # shut up pycharm
-with open('jep/version.py') as f:
+with open('src/main/python/jep/version.py') as f:
    exec(f.read())
 
 numpy_include = []
@@ -75,7 +75,8 @@ if __name__ == '__main__':
           author_email='jep-project@googlegroups.com',
           url='https://github.com/ninia/jep',
           packages=['jep'],
-          scripts=['src/scripts/jep'],
+          package_dir={'': 'src/main/python'},
+          scripts=['src/main/resources/scripts/jep'],
           keywords='java',
           license='zlib/libpng',
           classifiers=[
@@ -102,15 +103,14 @@ if __name__ == '__main__':
                   libraries=get_java_libraries() + get_python_libs(),
                   library_dirs=get_java_lib_folders(),
                   extra_link_args=get_java_linker_args() + get_python_linker_args(),
-                  include_dirs=get_java_include() + ['src/jep', 'build/include'] + numpy_include,
+                  include_dirs=get_java_include() + ['src/main/c/Include', 'build/include',] + numpy_include,
               )
           ],
 
           # my hacks to compile java files
           java_files=get_files('.java'),
-          extra_jar_files=['src/jep/classlist_6.txt',
-                           'src/jep/classlist_7.txt',
-                           'src/jep/classlist_8.txt'],
+          extra_jar_files=['src/main/resources/classlist/classlist_7.txt',
+                           'src/main/resources/classlist/classlist_8.txt'],
           javah_files=[   # tuple containing class and the header file to output
               ('jep.Jep', 'jep.h'),
               ('jep.python.PyObject', 'jep_object.h'),

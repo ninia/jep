@@ -4,7 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 
 
-for major_version in (6, 7, 8,):
+for major_version in (7, 8,):
     r = requests.get('http://docs.oracle.com/javase/{}/docs/api/allclasses-frame.html'.format(major_version))
     r.raise_for_status()
     soup = BeautifulSoup(r.content)
