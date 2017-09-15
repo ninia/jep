@@ -19,4 +19,4 @@ class TestIterators(unittest.TestCase):
     @unittest.skipIf(sys.platform.startswith("win"), "subprocess complications on Windows")
     def test_iter_itr_crash(self):
         jep_pipe(build_python_process_cmd(
-            'tests/subprocess/iter_itr_crash.py'))
+            'src/test/python/subprocess/iter_itr_crash.py'))

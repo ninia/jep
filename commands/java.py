@@ -242,8 +242,8 @@ class build_java(Command):
         self.java_files = self.distribution.java_files
 
     def build(self, *jclasses):
-        jep = [x for x in list(*jclasses) if not x.startswith('src{0}jep{0}test{0}'.format(os.sep))]
-        tests = [x for x in list(*jclasses) if x.startswith('src{0}jep{0}test{0}'.format(os.sep))]
+        jep = [x for x in list(*jclasses) if not x.startswith('src{0}test{0}java{0}'.format(os.sep))]
+        tests = [x for x in list(*jclasses) if x.startswith('src{0}test{0}java{0}'.format(os.sep))]
         spawn([self.javac, '-deprecation', '-d', build_java.outdir, '-classpath', 'src'] + jep)
         spawn([self.javac, '-deprecation', '-d', build_java.testoutdir, '-classpath', '{0}{1}src'.format(build_java.outdir, os.pathsep)] + tests)
         # Copy the source files over to the build directory to make src.jar's.
@@ -292,17 +292,17 @@ class build_jar(Command):
 
     def build(self):
         for src in self.extra_jar_files:
-            dest = os.path.join(*['build/java'] + src.split('/')[1:])
+            dest = os.path.join(*['build/java/jep'])
             dest_dir = os.path.dirname(dest)
             print('copying {0} to {1}'.format(src, dest))
             if not os.path.exists(dest_dir):
                 os.makedirs(dest_dir)
             shutil.copy(src, dest)
 
-        spawn([self.jar, '-cf', 'build/java/jep-{0}-sources.jar'.format(self.version), '-C', 'build/java/jep.src', 'jep'])
-        spawn([self.jar, '-cfe', 'build/java/jep-{0}.jar'.format(self.version), 'jep.Run', '-C', 'build/java/', 'jep'])
-        spawn([self.jar, '-cf', 'build/java/jep-{0}-test-sources.jar'.format(self.version), '-C', 'build/java/jep.test.src', 'jep'])
-        spawn([self.jar, '-cfe', 'build/java/jep-{0}-test.jar'.format(self.version), 'test.jep.Test', '-C', 'build/java/test/', 'jep'])
+        spawn([self.jar, '-cf', 'build/java/jep-{0}-sources.jar'.format(self.version), '-C', 'build/java/jep.src/main/java', 'jep'])
+        spawn([self.jar, '-cfe', 'build/java/jep-{0}.jar'.format(self.version), 'jep.Run', '-C', 'build/java', 'jep'])
+        spawn([self.jar, '-cf', 'build/java/jep-{0}-test-sources.jar'.format(self.version), '-C', 'build/java/jep.test.src/test/java', 'jep'])
+        spawn([self.jar, '-cfe', 'build/java/jep-{0}-test.jar'.format(self.version), 'test.jep.Test', '-C', 'build/java/test', 'jep'])
 
     def run(self):
         if not skip_java_build(self):

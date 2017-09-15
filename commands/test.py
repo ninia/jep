@@ -64,6 +64,8 @@ class test(Command):
         else:
             environment['PATH'] = java_path + os.pathsep + os.environ['PATH']
 
+        environment['PYTHONPATH'] = 'src/main/python'
+
         # find the jep library and makes sure it's named correctly
         build_ext = self.get_finalized_command('build_ext')
         jep_lib = build_ext.get_outputs()[0]
@@ -75,7 +77,7 @@ class test(Command):
         args = [os.path.join(java_path, 'java'),
                 '-classpath', '{0}'.format(classpath),
                 '-Djava.library.path={0}'.format(built_dir),
-                'jep.Run', 'tests/runtests.py']
+                'jep.Run', 'src/test/python/runtests.py']
         p = subprocess.Popen(args, env=environment)
         rc = p.wait()
         if rc != 0:
