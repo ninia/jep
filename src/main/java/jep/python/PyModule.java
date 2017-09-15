@@ -66,15 +66,13 @@ public class PyModule extends PyObject {
     }
 
     /**
-     * <pre>
      * Retrieves a value from python. If the result is not a java object,
      * the implementation currently returns a String.
      *
      * Python is pretty picky about what it excepts here. The general syntax:
-     * <blockquote>eval("a = 5")
-     *String a = (String) getValue("a")</blockquote>
+     * <blockquote><pre>eval("a = 5")
+     *String a = (String) getValue("a")</pre></blockquote>
      * will work.
-     * </pre>
      *
      * @param str
      *            a <code>String</code> value

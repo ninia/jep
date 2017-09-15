@@ -52,6 +52,8 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
      *            the python object's id
      * @param jep
      *            the jep interpreter
+     * @param functionalInterface
+     *            whether the target is a python callable that should be invoked directly
      * @exception JepException
      *                if an error occurs
      */

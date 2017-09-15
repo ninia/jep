@@ -148,6 +148,7 @@ abstract class AbstractNDArray<T> {
      *
      * @param data
      *            a data object
+     * @return the total length of the data object
      */
     protected abstract int getLength(T data);
 

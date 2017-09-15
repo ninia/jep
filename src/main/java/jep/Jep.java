@@ -224,6 +224,7 @@ public final class Jep implements Closeable {
      * @param config
      *            the python configuration to use.
      * 
+     * @throws JepException if an error occurs
      * @since 3.6
      */
     public static void setInitParams(PyConfig config) throws JepException {
@@ -244,7 +245,7 @@ public final class Jep implements Closeable {
      * @param argv
      *            the arguments to be set on Python's sys.argv for the top/main
      *            interpreter
-     * @throws JepException
+     * @throws JepException if an error occurs
      * 
      * @since 3.7
      */

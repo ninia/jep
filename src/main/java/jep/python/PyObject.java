@@ -56,8 +56,8 @@ public class PyObject {
      * Make a new PyObject
      * 
      * @param tstate a <code>long</code> value
-     * @param obj
-     * @param jep
+     * @param obj the address of the python object
+     * @param jep the instance of jep that created this object
      * @exception JepException if an error occurs
      */
     public PyObject(long tstate, long obj, Jep jep) throws JepException {
@@ -73,7 +73,7 @@ public class PyObject {
     /**
      * Check if PyObject is valid
      * 
-     * @throws JepException
+     * @throws JepException if an error occurs
      */
     public void isValid() throws JepException {
         if(obj == 0)

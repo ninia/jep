@@ -39,8 +39,8 @@ public class PyClass extends PyObject {
      * 
      * @param tstate
      *            a <code>long</code> value
-     * @param obj
-     * @param jep
+     * @param obj the address of the python class
+     * @param jep the jep instance which created this
      * @exception JepException
      *                if an error occurs
      */
