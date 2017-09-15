@@ -10,7 +10,7 @@
   <packaging>jar</packaging>
 
   <name>Java Embedded Python</name>
-  <description>Jep embeds CPython in Java through JNI and is safe to use in a heavily threaded environment.</description>
+  <description>Jep embeds CPython in Java through JNI.</description>
   <url>https://github.com/ninia/jep</url>
 
   <licenses>
@@ -38,7 +38,7 @@
   <scm>
     <connection>scm:git:git://github.com/ninia/jep.git</connection>
     <developerConnection>scm:git:ssh://github.com:ninia/jep.git</developerConnection>
-    <url>https://github.com/ninia/jep/tree/v3.7.0</url>
+    <url>https://github.com/ninia/jep/tree/dev_3.8</url>
    </scm>
 
 </project>

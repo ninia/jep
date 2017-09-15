@@ -14,8 +14,7 @@
 Jep - Java Embedded Python
 ===========================
 
-Jep embeds CPython in Java through JNI and is safe to use in a heavily
-threaded environment. 
+Jep embeds CPython in Java through JNI.
 
 Some benefits of embedding CPython in a JVM:
 
