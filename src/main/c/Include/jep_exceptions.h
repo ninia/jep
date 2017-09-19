@@ -51,16 +51,4 @@ int process_java_exception(JNIEnv*);
 // true (1) if an exception was processed.
 int process_import_exception(JNIEnv *env);
 
-
-// exception cached types
-extern jclass CLASSNOTFOUND_EXC_TYPE;
-extern jclass INDEX_EXC_TYPE;
-extern jclass IO_EXC_TYPE;
-extern jclass CLASSCAST_EXC_TYPE;
-extern jclass ILLEGALARG_EXC_TYPE;
-extern jclass ARITHMETIC_EXC_TYPE;
-extern jclass OUTOFMEMORY_EXC_TYPE;
-extern jclass ASSERTION_EXC_TYPE;
-extern jclass JEP_EXC_TYPE;
-
 #endif // ifndef _Included_jep_exceptions

@@ -92,8 +92,6 @@ jvalue convert_pyarg_jvalue(JNIEnv*, PyObject*, jclass, int, int);
 
 extern jclass JINT_TYPE;
 extern jclass JLONG_TYPE;
-extern jclass JOBJECT_TYPE;
-extern jclass JSTRING_TYPE;
 extern jclass JBOOLEAN_TYPE;
 extern jclass JVOID_TYPE;
 extern jclass JDOUBLE_TYPE;
@@ -101,7 +99,6 @@ extern jclass JSHORT_TYPE;
 extern jclass JFLOAT_TYPE;
 extern jclass JCHAR_TYPE;
 extern jclass JBYTE_TYPE;
-extern jclass JCLASS_TYPE;
 
 // cache primitive array types
 extern jclass JBOOLEAN_ARRAY_TYPE;
@@ -113,36 +110,63 @@ extern jclass JLONG_ARRAY_TYPE;
 extern jclass JFLOAT_ARRAY_TYPE;
 extern jclass JDOUBLE_ARRAY_TYPE;
 
-// cache some frequently looked up interfaces
-extern jclass JLIST_TYPE;
-extern jclass JMAP_TYPE;
-extern jclass JITERABLE_TYPE;
-extern jclass JITERATOR_TYPE;
-extern jclass JCOLLECTION_TYPE;
-extern jclass JCOMPARABLE_TYPE;
-extern jclass JAUTOCLOSEABLE_TYPE;
+/*
+ * CLASS_TABLE contains the definition for all the classes that we cache for
+ * easy access. Tyically a macro is passed to CLASS_TABLE macro and it will be
+ * evaluated for all cached classes. This is based off the X macro pattern
+ * except a macro is passed in rather than redifining X for each use.
+ */
+#define CLASS_TABLE(F) \
+    F(JOBJECT_TYPE, "java/lang/Object") \
+    F(JSTRING_TYPE, "java/lang/String") \
+    F(JCLASS_TYPE, "java/lang/Class") \
+    F(JLIST_TYPE, "java/util/List") \
+    F(JMAP_TYPE, "java/util/Map") \
+    F(JITERABLE_TYPE, "java/lang/Iterable") \
+    F(JITERATOR_TYPE, "java/util/Iterator") \
+    F(JCOLLECTION_TYPE, "java/util/Collection") \
+    F(JCOMPARABLE_TYPE, "java/lang/Comparable") \
+    F(JAUTOCLOSEABLE_TYPE, "java/lang/AutoCloseable") \
+    F(JBOOL_OBJ_TYPE, "java/lang/Boolean") \
+    F(JBYTE_OBJ_TYPE, "java/lang/Byte") \
+    F(JSHORT_OBJ_TYPE, "java/lang/Short") \
+    F(JINT_OBJ_TYPE, "java/lang/Integer") \
+    F(JLONG_OBJ_TYPE, "java/lang/Long") \
+    F(JDOUBLE_OBJ_TYPE, "java/lang/Double") \
+    F(JFLOAT_OBJ_TYPE, "java/lang/Float") \
+    F(JCHAR_OBJ_TYPE, "java/lang/Character") \
+    F(JNUMBER_TYPE, "java/lang/Number") \
+    F(JMEMBER_TYPE, "java/lang/reflect/Member") \
+    F(JMETHOD_TYPE, "java/lang/reflect/Method") \
+    F(JFIELD_TYPE, "java/lang/reflect/Field") \
+    F(JCONSTRUCTOR_TYPE, "java/lang/reflect/Constructor") \
+    F(JTHROWABLE_TYPE, "java/lang/Throwable") \
+    F(JMODIFIER_TYPE, "java/lang/reflect/Modifier") \
+    F(JARRAYLIST_TYPE, "java/util/ArrayList") \
+    F(JHASHMAP_TYPE, "java/util/HashMap") \
+    F(JCOLLECTIONS_TYPE, "java/util/Collections") \
+    F(CLASSNOTFOUND_EXC_TYPE, "java/lang/ClassNotFoundException") \
+    F(INDEX_EXC_TYPE, "java/lang/IndexOutOfBoundsException") \
+    F(IO_EXC_TYPE, "java/io/IOException") \
+    F(CLASSCAST_EXC_TYPE, "java/lang/ClassCastException") \
+    F(ILLEGALARG_EXC_TYPE, "java/lang/IllegalArgumentException") \
+    F(ARITHMETIC_EXC_TYPE, "java/lang/ArithmeticException") \
+    F(OUTOFMEMORY_EXC_TYPE, "java/lang/OutOfMemoryError") \
+    F(ASSERTION_EXC_TYPE, "java/lang/AssertionError") \
+    F(JEP_EXC_TYPE, "jep/JepException") \
+    NUMPY_CLASS_TABLE(F)
 
-// cache some frequently looked up classes
-extern jclass JBOOL_OBJ_TYPE;
-extern jclass JBYTE_OBJ_TYPE;
-extern jclass JSHORT_OBJ_TYPE;
-extern jclass JINT_OBJ_TYPE;
-extern jclass JLONG_OBJ_TYPE;
-extern jclass JFLOAT_OBJ_TYPE;
-extern jclass JDOUBLE_OBJ_TYPE;
-extern jclass JCHAR_OBJ_TYPE;
+#if JEP_NUMPY_ENABLED
+#define NUMPY_CLASS_TABLE(F) \
+    F(JEP_NDARRAY_TYPE, "jep/NDArray") \
+    F(JEP_DNDARRAY_TYPE, "jep/DirectNDArray")
+#else
+#define NUMPY_CLASS_TABLE(F)
+#endif
 
-extern jclass JMEMBER_TYPE;
-extern jclass JMETHOD_TYPE;
-extern jclass JFIELD_TYPE;
-extern jclass JCONSTRUCTOR_TYPE;
-extern jclass JNUMBER_TYPE;
-extern jclass JTHROWABLE_TYPE;
-extern jclass JMODIFIER_TYPE;
-extern jclass JARRAYLIST_TYPE;
-extern jclass JHASHMAP_TYPE;
-extern jclass JCOLLECTIONS_TYPE;
+// Define an extern variable for everything in the class table
+#define DEFINE_CLASS_GLOBAL(var, name) extern jclass var;
+CLASS_TABLE(DEFINE_CLASS_GLOBAL)
 
-// cache frequently used method
-extern jmethodID JCLASS_GET_NAME;
+
 #endif // ifndef _Included_jep_util

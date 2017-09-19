@@ -43,9 +43,6 @@
 /* this whole file is a no-op if numpy support is disabled */
 #if JEP_NUMPY_ENABLED
 
-    extern jclass JEP_NDARRAY_TYPE;
-    extern jclass JEP_DNDARRAY_TYPE;
-
     /* methods to support numpy <-> java conversion */
     int npy_array_check(PyObject*);
     int jndarray_check(JNIEnv*, jobject);

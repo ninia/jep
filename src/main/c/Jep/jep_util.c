@@ -36,8 +36,6 @@
 // primitive class types
 jclass JINT_TYPE     = NULL;
 jclass JLONG_TYPE    = NULL;
-jclass JOBJECT_TYPE  = NULL;
-jclass JSTRING_TYPE  = NULL;
 jclass JBOOLEAN_TYPE = NULL;
 jclass JVOID_TYPE    = NULL;
 jclass JDOUBLE_TYPE  = NULL;
@@ -45,63 +43,20 @@ jclass JSHORT_TYPE   = NULL;
 jclass JFLOAT_TYPE   = NULL;
 jclass JCHAR_TYPE    = NULL;
 jclass JBYTE_TYPE    = NULL;
-jclass JCLASS_TYPE   = NULL;
 
 // cached types for primitive arrays
 jclass JBOOLEAN_ARRAY_TYPE = NULL;
 jclass JBYTE_ARRAY_TYPE    = NULL;
-jclass JCHAR_ARRAY_TYPE   = NULL;
+jclass JCHAR_ARRAY_TYPE    = NULL;
 jclass JSHORT_ARRAY_TYPE   = NULL;
 jclass JINT_ARRAY_TYPE     = NULL;
 jclass JLONG_ARRAY_TYPE    = NULL;
 jclass JFLOAT_ARRAY_TYPE   = NULL;
 jclass JDOUBLE_ARRAY_TYPE  = NULL;
 
-// cached types for interfaces
-jclass JLIST_TYPE          = NULL;
-jclass JMAP_TYPE           = NULL;
-jclass JITERABLE_TYPE      = NULL;
-jclass JITERATOR_TYPE      = NULL;
-jclass JCOLLECTION_TYPE    = NULL;
-jclass JCOMPARABLE_TYPE    = NULL;
-jclass JAUTOCLOSEABLE_TYPE = NULL;
+#define DEFINE_CLASS_VAR(var, name) jclass var = NULL;
+CLASS_TABLE(DEFINE_CLASS_VAR)
 
-// cached types for Object equivalents of primitives
-jclass JBOOL_OBJ_TYPE   = NULL;
-jclass JBYTE_OBJ_TYPE   = NULL;
-jclass JSHORT_OBJ_TYPE  = NULL;
-jclass JINT_OBJ_TYPE    = NULL;
-jclass JLONG_OBJ_TYPE   = NULL;
-jclass JDOUBLE_OBJ_TYPE = NULL;
-jclass JFLOAT_OBJ_TYPE  = NULL;
-jclass JCHAR_OBJ_TYPE   = NULL;
-
-// cached types for frequently used classes
-jclass JNUMBER_TYPE      = NULL;
-jclass JMEMBER_TYPE      = NULL;
-jclass JMETHOD_TYPE      = NULL;
-jclass JFIELD_TYPE       = NULL;
-jclass JCONSTRUCTOR_TYPE = NULL;
-jclass JTHROWABLE_TYPE   = NULL;
-jclass JMODIFIER_TYPE    = NULL;
-jclass JARRAYLIST_TYPE   = NULL;
-jclass JHASHMAP_TYPE     = NULL;
-jclass JCOLLECTIONS_TYPE = NULL;
-#if JEP_NUMPY_ENABLED
-    jclass JEP_NDARRAY_TYPE = NULL;
-    jclass JEP_DNDARRAY_TYPE = NULL;
-#endif
-
-// exception cached types
-jclass CLASSNOTFOUND_EXC_TYPE;
-jclass INDEX_EXC_TYPE;
-jclass IO_EXC_TYPE;
-jclass CLASSCAST_EXC_TYPE;
-jclass ILLEGALARG_EXC_TYPE;
-jclass ARITHMETIC_EXC_TYPE;
-jclass OUTOFMEMORY_EXC_TYPE;
-jclass ASSERTION_EXC_TYPE;
-jclass JEP_EXC_TYPE;
 
 #if PY_MAJOR_VERSION < 3
     static jstring UTF8 = NULL;
@@ -177,7 +132,7 @@ void release_utf_char(JNIEnv *env, jstring str, const char *v)
         (*env)->DeleteLocalRef(env, clazz);\
     }\
 
-#define UNCACHE_CLASS(var)\
+#define UNCACHE_CLASS(var, name)\
     if(var != NULL) {\
         (*env)->DeleteGlobalRef(env, var);\
         var = NULL;\
@@ -274,22 +229,22 @@ int cache_primitive_classes(JNIEnv *env)
  */
 void unref_cache_primitive_classes(JNIEnv *env)
 {
-    UNCACHE_CLASS(JBOOLEAN_TYPE);
-    UNCACHE_CLASS(JBYTE_TYPE);
-    UNCACHE_CLASS(JSHORT_TYPE);
-    UNCACHE_CLASS(JINT_TYPE);
-    UNCACHE_CLASS(JLONG_TYPE);
-    UNCACHE_CLASS(JFLOAT_TYPE);
-    UNCACHE_CLASS(JDOUBLE_TYPE);
+    UNCACHE_CLASS(JBOOLEAN_TYPE,);
+    UNCACHE_CLASS(JBYTE_TYPE,);
+    UNCACHE_CLASS(JSHORT_TYPE,);
+    UNCACHE_CLASS(JINT_TYPE,);
+    UNCACHE_CLASS(JLONG_TYPE,);
+    UNCACHE_CLASS(JFLOAT_TYPE,);
+    UNCACHE_CLASS(JDOUBLE_TYPE,);
 
     // release the primitive array types
-    UNCACHE_CLASS(JBOOLEAN_ARRAY_TYPE);
-    UNCACHE_CLASS(JBYTE_ARRAY_TYPE);
-    UNCACHE_CLASS(JSHORT_ARRAY_TYPE);
-    UNCACHE_CLASS(JINT_ARRAY_TYPE);
-    UNCACHE_CLASS(JLONG_ARRAY_TYPE);
-    UNCACHE_CLASS(JFLOAT_ARRAY_TYPE);
-    UNCACHE_CLASS(JDOUBLE_ARRAY_TYPE);
+    UNCACHE_CLASS(JBOOLEAN_ARRAY_TYPE,);
+    UNCACHE_CLASS(JBYTE_ARRAY_TYPE,);
+    UNCACHE_CLASS(JSHORT_ARRAY_TYPE,);
+    UNCACHE_CLASS(JINT_ARRAY_TYPE,);
+    UNCACHE_CLASS(JLONG_ARRAY_TYPE,);
+    UNCACHE_CLASS(JFLOAT_ARRAY_TYPE,);
+    UNCACHE_CLASS(JDOUBLE_ARRAY_TYPE,);
 }
 
 
@@ -307,51 +262,7 @@ int cache_frequent_classes(JNIEnv *env)
 {
     jclass clazz;
 
-    CACHE_CLASS(JOBJECT_TYPE, "java/lang/Object");
-    CACHE_CLASS(JSTRING_TYPE, "java/lang/String");
-    CACHE_CLASS(JCLASS_TYPE, "java/lang/Class");
-
-    CACHE_CLASS(JLIST_TYPE, "java/util/List");
-    CACHE_CLASS(JMAP_TYPE, "java/util/Map");
-    CACHE_CLASS(JITERABLE_TYPE, "java/lang/Iterable");
-    CACHE_CLASS(JITERATOR_TYPE, "java/util/Iterator");
-    CACHE_CLASS(JCOLLECTION_TYPE, "java/util/Collection");
-    CACHE_CLASS(JCOMPARABLE_TYPE, "java/lang/Comparable");
-    CACHE_CLASS(JAUTOCLOSEABLE_TYPE, "java/lang/AutoCloseable");
-    CACHE_CLASS(JBOOL_OBJ_TYPE, "java/lang/Boolean");
-    CACHE_CLASS(JBYTE_OBJ_TYPE, "java/lang/Byte");
-    CACHE_CLASS(JSHORT_OBJ_TYPE, "java/lang/Short");
-    CACHE_CLASS(JINT_OBJ_TYPE, "java/lang/Integer");
-    CACHE_CLASS(JLONG_OBJ_TYPE, "java/lang/Long");
-    CACHE_CLASS(JDOUBLE_OBJ_TYPE, "java/lang/Double");
-    CACHE_CLASS(JFLOAT_OBJ_TYPE, "java/lang/Float");
-    CACHE_CLASS(JCHAR_OBJ_TYPE, "java/lang/Character");
-    CACHE_CLASS(JNUMBER_TYPE, "java/lang/Number");
-    CACHE_CLASS(JMEMBER_TYPE, "java/lang/reflect/Member");
-    CACHE_CLASS(JMETHOD_TYPE, "java/lang/reflect/Method");
-    CACHE_CLASS(JFIELD_TYPE, "java/lang/reflect/Field");
-    CACHE_CLASS(JCONSTRUCTOR_TYPE, "java/lang/reflect/Constructor");
-    CACHE_CLASS(JTHROWABLE_TYPE, "java/lang/Throwable");
-    CACHE_CLASS(JMODIFIER_TYPE, "java/lang/reflect/Modifier");
-    CACHE_CLASS(JARRAYLIST_TYPE, "java/util/ArrayList");
-    CACHE_CLASS(JHASHMAP_TYPE, "java/util/HashMap");
-    CACHE_CLASS(JCOLLECTIONS_TYPE, "java/util/Collections");
-
-#if JEP_NUMPY_ENABLED
-    CACHE_CLASS(JEP_NDARRAY_TYPE, "jep/NDArray");
-    CACHE_CLASS(JEP_DNDARRAY_TYPE, "jep/DirectNDArray");
-#endif
-
-    // find and cache exception types we check for
-    CACHE_CLASS(CLASSNOTFOUND_EXC_TYPE, "java/lang/ClassNotFoundException");
-    CACHE_CLASS(INDEX_EXC_TYPE, "java/lang/IndexOutOfBoundsException");
-    CACHE_CLASS(IO_EXC_TYPE, "java/io/IOException");
-    CACHE_CLASS(CLASSCAST_EXC_TYPE, "java/lang/ClassCastException");
-    CACHE_CLASS(ILLEGALARG_EXC_TYPE, "java/lang/IllegalArgumentException");
-    CACHE_CLASS(ARITHMETIC_EXC_TYPE, "java/lang/ArithmeticException");
-    CACHE_CLASS(OUTOFMEMORY_EXC_TYPE, "java/lang/OutOfMemoryError");
-    CACHE_CLASS(ASSERTION_EXC_TYPE, "java/lang/AssertionError");
-    CACHE_CLASS(JEP_EXC_TYPE, "jep/JepException");
+    CLASS_TABLE(CACHE_CLASS)
 
     return 1;
 }
@@ -362,50 +273,7 @@ int cache_frequent_classes(JNIEnv *env)
  */
 void unref_cache_frequent_classes(JNIEnv *env)
 {
-    UNCACHE_CLASS(JOBJECT_TYPE);
-    UNCACHE_CLASS(JSTRING_TYPE);
-    UNCACHE_CLASS(JCLASS_TYPE);
-
-    UNCACHE_CLASS(JLIST_TYPE);
-    UNCACHE_CLASS(JMAP_TYPE);
-    UNCACHE_CLASS(JITERABLE_TYPE);
-    UNCACHE_CLASS(JITERATOR_TYPE);
-    UNCACHE_CLASS(JCOLLECTION_TYPE);
-    UNCACHE_CLASS(JCOMPARABLE_TYPE);
-    UNCACHE_CLASS(JAUTOCLOSEABLE_TYPE);
-    UNCACHE_CLASS(JBOOL_OBJ_TYPE);
-    UNCACHE_CLASS(JBYTE_OBJ_TYPE);
-    UNCACHE_CLASS(JSHORT_OBJ_TYPE);
-    UNCACHE_CLASS(JINT_OBJ_TYPE);
-    UNCACHE_CLASS(JLONG_OBJ_TYPE);
-    UNCACHE_CLASS(JDOUBLE_OBJ_TYPE);
-    UNCACHE_CLASS(JFLOAT_OBJ_TYPE);
-    UNCACHE_CLASS(JCHAR_OBJ_TYPE);
-    UNCACHE_CLASS(JNUMBER_TYPE);
-    UNCACHE_CLASS(JMEMBER_TYPE);
-    UNCACHE_CLASS(JMETHOD_TYPE);
-    UNCACHE_CLASS(JFIELD_TYPE);
-    UNCACHE_CLASS(JCONSTRUCTOR_TYPE);
-    UNCACHE_CLASS(JTHROWABLE_TYPE);
-    UNCACHE_CLASS(JMODIFIER_TYPE);
-    UNCACHE_CLASS(JARRAYLIST_TYPE);
-    UNCACHE_CLASS(JHASHMAP_TYPE);
-    UNCACHE_CLASS(JCOLLECTIONS_TYPE);
-
-#if JEP_NUMPY_ENABLED
-    UNCACHE_CLASS(JEP_NDARRAY_TYPE);
-#endif
-
-    // release exception types we check for
-    UNCACHE_CLASS(CLASSNOTFOUND_EXC_TYPE);
-    UNCACHE_CLASS(INDEX_EXC_TYPE);
-    UNCACHE_CLASS(IO_EXC_TYPE);
-    UNCACHE_CLASS(CLASSCAST_EXC_TYPE);
-    UNCACHE_CLASS(ILLEGALARG_EXC_TYPE);
-    UNCACHE_CLASS(ARITHMETIC_EXC_TYPE);
-    UNCACHE_CLASS(OUTOFMEMORY_EXC_TYPE);
-    UNCACHE_CLASS(ASSERTION_EXC_TYPE);
-    UNCACHE_CLASS(JEP_EXC_TYPE);
+    CLASS_TABLE(UNCACHE_CLASS)
 }
 
 
