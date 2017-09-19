@@ -57,7 +57,6 @@ jclass JDOUBLE_ARRAY_TYPE  = NULL;
 #define DEFINE_CLASS_VAR(var, name) jclass var = NULL;
 CLASS_TABLE(DEFINE_CLASS_VAR)
 
-
 #if PY_MAJOR_VERSION < 3
     static jstring UTF8 = NULL;
 #endif

@@ -25,10 +25,18 @@
    distribution.
 */
 
-#ifndef _Included_java_lang_Boolean
-#define _Included_java_lang_Boolean
+#include "Jep.h"
 
-jobject java_lang_Boolean_new_Z(JNIEnv*, jboolean);
-jboolean java_lang_Boolean_booleanValue(JNIEnv*, jobject);
+static jmethodID init_I = 0;
 
-#endif // ndef java_lang_Boolean
+jobject java_util_ArrayList_new_I(JNIEnv* env, jint size)
+{
+    jobject result = NULL;
+    Py_BEGIN_ALLOW_THREADS
+    if (JNI_METHOD(init_I, env, JARRAYLIST_TYPE, "<init>", "(I)V")) {
+        result = (*env)->NewObject(env, JARRAYLIST_TYPE, init_I, size);
+    }
+    Py_END_ALLOW_THREADS
+    return result;
+}
+

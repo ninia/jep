@@ -27,7 +27,16 @@
 
 #include "Jep.h"
 
+static jmethodID init_Z       = 0;
 static jmethodID booleanValue = 0;
+
+jobject java_lang_Boolean_new_Z(JNIEnv* env, jboolean z)
+{
+    if (!JNI_METHOD(init_Z, env, JBOOL_OBJ_TYPE, "<init>", "(Z)V")) {
+        return NULL;
+    }
+    return (*env)->NewObject(env, JBOOL_OBJ_TYPE, init_Z, z);
+}
 
 jboolean java_lang_Boolean_booleanValue(JNIEnv* env, jobject this)
 {

@@ -27,7 +27,17 @@
 
 #include "Jep.h"
 
+static jmethodID init_C = 0;
 static jmethodID charValue = 0;
+
+
+jobject java_lang_Character_new_C(JNIEnv* env, jchar c)
+{
+    if (!JNI_METHOD(init_C, env, JCHAR_OBJ_TYPE, "<init>", "(C)V")) {
+        return NULL;
+    }
+    return (*env)->NewObject(env, JCHAR_OBJ_TYPE, init_C, c);
+}
 
 jchar java_lang_Character_charValue(JNIEnv* env, jobject this)
 {

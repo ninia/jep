@@ -25,10 +25,9 @@
    distribution.
 */
 
-#ifndef _Included_java_lang_Boolean
-#define _Included_java_lang_Boolean
+#ifndef _Included_java_lang_Byte
+#define _Included_java_lang_Byte
 
-jobject java_lang_Boolean_new_Z(JNIEnv*, jboolean);
-jboolean java_lang_Boolean_booleanValue(JNIEnv*, jobject);
+jobject java_lang_Byte_new_B(JNIEnv*, jbyte);
 
-#endif // ndef java_lang_Boolean
+#endif // ndef java_lang_Byte

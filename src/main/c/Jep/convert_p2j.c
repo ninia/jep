@@ -40,11 +40,7 @@
 
 #define JCHAR_MAX   0xFFFF
 
-static jmethodID hashmapIConstructor   = 0;
-static jmethodID arraylistIConstructor = 0;
-
 #if PY_MAJOR_VERSION < 3
-    static jmethodID stringDecodingConstructor = NULL;
     static jstring UTF8 = NULL;
 #endif
 
@@ -324,10 +320,6 @@ static jstring pystring_as_jstring(JNIEnv *env, PyObject *pystring)
     Py_ssize_t length       = 0;
     jbyteArray stringJbytes = NULL;
     jstring result          = NULL;
-    if (!JNI_METHOD(stringDecodingConstructor, env, JSTRING_TYPE, "<init>",
-                    "([BLjava/lang/String;)V")) {
-        return NULL;
-    }
     if ( UTF8 == NULL) {
         jobject local = (*env)->NewStringUTF(env, "UTF-8");
         UTF8 = (*env)->NewGlobalRef(env, local);
@@ -345,8 +337,10 @@ static jstring pystring_as_jstring(JNIEnv *env, PyObject *pystring)
     }
 
     (*env)->SetByteArrayRegion(env, stringJbytes, 0, (jsize) length, (jbyte*) cstr);
-    result = (*env)->NewObject(env, JSTRING_TYPE, stringDecodingConstructor,
-                               stringJbytes, UTF8);
+    result = java_lang_String_new_BArray_String(env, stringJbytes, UTF8);
+    if (process_java_exception(env)) {
+        return NULL;
+    }
     (*env)->DeleteLocalRef(env, stringJbytes);
     return result;
 }
@@ -357,11 +351,18 @@ static jobject pystring_as_jobject(JNIEnv *env, PyObject *pyobject,
     if ((*env)->IsAssignableFrom(env, JSTRING_TYPE, expectedType)) {
         return (jobject) pystring_as_jstring(env, pyobject);
     } else if ((*env)->IsAssignableFrom(env, JCHAR_OBJ_TYPE, expectedType)) {
+        jobject result;
         jchar c = pystring_as_jchar(pyobject);
         if (c == 0 && PyErr_Occurred()) {
             return NULL;
         }
-        return JBox_Char(env, c);
+        result = java_lang_Character_new_C(env, c);
+        if (!result) {
+            process_java_exception(env);
+            return NULL;
+        }
+        return result;
+
     }
     raiseTypeError(env, pyobject, expectedType);
     return NULL;
@@ -405,11 +406,17 @@ static jobject pybool_as_jobject(JNIEnv *env, PyObject *pyobject,
                                  jclass expectedType)
 {
     if ((*env)->IsAssignableFrom(env, JBOOL_OBJ_TYPE, expectedType)) {
+        jobject result;
         jboolean z = PyObject_As_jboolean(pyobject);
         if (PyErr_Occurred()) {
             return NULL;
         }
-        return JBox_Boolean(env, z);
+        result = java_lang_Boolean_new_Z(env, z);
+        if (!result) {
+            process_java_exception(env);
+            return NULL;
+        }
+        return result;
     }
     raiseTypeError(env, pyobject, expectedType);
     return NULL;
@@ -421,11 +428,17 @@ static jobject pyunicode_as_jobject(JNIEnv *env, PyObject *pyobject,
     if ((*env)->IsAssignableFrom(env, JSTRING_TYPE, expectedType)) {
         return (jobject) pyunicode_as_jstring(env, pyobject);
     } else if ((*env)->IsAssignableFrom(env, JCHAR_OBJ_TYPE, expectedType)) {
+        jobject result;
         jchar c = pyunicode_as_jchar(pyobject);
         if (c == 0 && PyErr_Occurred()) {
             return NULL;
         }
-        return JBox_Char(env, c);
+        result = java_lang_Character_new_C(env, c);
+        if (!result) {
+            process_java_exception(env);
+            return NULL;
+        }
+        return result;
     }
     raiseTypeError(env, pyobject, expectedType);
     return NULL;
@@ -435,29 +448,53 @@ static jobject pylong_as_jobject(JNIEnv *env, PyObject *pyobject,
                                  jclass expectedType)
 {
     if ((*env)->IsAssignableFrom(env, JLONG_OBJ_TYPE, expectedType)) {
+        jobject result;
         jlong j = PyObject_As_jlong(pyobject);
         if (j == -1 && PyErr_Occurred()) {
             return NULL;
         }
-        return JBox_Long(env, j);
+        result = java_lang_Long_new_J(env, j);
+        if (!result) {
+            process_java_exception(env);
+            return NULL;
+        }
+        return result;
     } else if ((*env)->IsAssignableFrom(env, JINT_OBJ_TYPE, expectedType)) {
+        jobject result;
         jint i = PyObject_As_jint(pyobject);
         if (i == -1 && PyErr_Occurred()) {
             return NULL;
         }
-        return JBox_Int(env, i);
+        result = java_lang_Integer_new_I(env, i);
+        if (!result) {
+            process_java_exception(env);
+            return NULL;
+        }
+        return result;
     } else if ((*env)->IsAssignableFrom(env, JBYTE_OBJ_TYPE, expectedType)) {
+        jobject result;
         jbyte b = PyObject_As_jbyte(pyobject);
         if (b == -1 && PyErr_Occurred()) {
             return NULL;
         }
-        return JBox_Byte(env, b);
+        result = java_lang_Byte_new_B(env, b);
+        if (!result) {
+            process_java_exception(env);
+            return NULL;
+        }
+        return result;
     } else if ((*env)->IsAssignableFrom(env, JSHORT_OBJ_TYPE, expectedType)) {
+        jobject result;
         jshort s = PyObject_As_jshort(pyobject);
         if (s == -1 && PyErr_Occurred()) {
             return NULL;
         }
-        return JBox_Short(env, s);
+        result = java_lang_Short_new_S(env, s);
+        if (!result) {
+            process_java_exception(env);
+            return NULL;
+        }
+        return result;
     }
     raiseTypeError(env, pyobject, expectedType);
     return NULL;
@@ -468,6 +505,7 @@ static jobject pyint_as_jobject(JNIEnv *env, PyObject *pyobject,
                                 jclass expectedType)
 {
     if ((*env)->IsAssignableFrom(env, JINT_OBJ_TYPE, expectedType)) {
+        jobject result;
         jint i = PyObject_As_jint(pyobject);
         if (i == -1 && PyErr_Occurred()) {
             if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
@@ -478,7 +516,12 @@ static jobject pyint_as_jobject(JNIEnv *env, PyObject *pyobject,
                 return NULL;
             }
         }
-        return JBox_Int(env, i);
+        result = java_lang_Integer_new_I(env, i);
+        if (!result) {
+            process_java_exception(env);
+            return NULL;
+        }
+        return result;
     }
     return pylong_as_jobject(env, pyobject, expectedType);
 }
@@ -488,17 +531,29 @@ static jobject pyfloat_as_jobject(JNIEnv *env, PyObject *pyobject,
                                   jclass expectedType)
 {
     if ((*env)->IsAssignableFrom(env, JDOUBLE_OBJ_TYPE, expectedType)) {
+        jobject result;
         jdouble d = PyObject_As_jdouble(pyobject);
         if (d == -1.0 && PyErr_Occurred()) {
             return NULL;
         }
-        return JBox_Double(env, d);
+        result = java_lang_Double_new_D(env, d);
+        if (!result) {
+            process_java_exception(env);
+            return NULL;
+        }
+        return result;
     } else if ((*env)->IsAssignableFrom(env, JFLOAT_OBJ_TYPE, expectedType)) {
+        jobject result;
         jfloat f = PyObject_As_jfloat(pyobject);
         if (f == -1.0 && PyErr_Occurred()) {
             return NULL;
         }
-        return JBox_Float(env, f);
+        result = java_lang_Float_new_F(env, f);
+        if (!result) {
+            process_java_exception(env);
+            return NULL;
+        }
+        return result;
     }
     raiseTypeError(env, pyobject, expectedType);
     return NULL;
@@ -514,11 +569,6 @@ static jobject pyfastsequence_as_jobject(JNIEnv *env, PyObject *pyseq,
         jobject jlist;
         Py_ssize_t size, i;
 
-        if (!JNI_METHOD(arraylistIConstructor, env, JARRAYLIST_TYPE, "<init>",
-                        "(I)V")) {
-            process_java_exception(env);
-            return NULL;
-        }
         size = PySequence_Fast_GET_SIZE(pyseq);
 
         if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
@@ -526,8 +576,7 @@ static jobject pyfastsequence_as_jobject(JNIEnv *env, PyObject *pyseq,
             return NULL;
         }
 
-        jlist = (*env)->NewObject(env, JARRAYLIST_TYPE, arraylistIConstructor,
-                                  (int) size);
+        jlist = java_util_ArrayList_new_I(env, (jint) size);
         if (!jlist) {
             process_java_exception(env);
             return (*env)->PopLocalFrame(env, NULL);
@@ -571,11 +620,6 @@ static jobject pydict_as_jobject(JNIEnv *env, PyObject *pydict,
         Py_ssize_t size, pos;
         PyObject *key, *value;
 
-        if (!JNI_METHOD(hashmapIConstructor, env, JHASHMAP_TYPE, "<init>", "(I)V")) {
-            process_java_exception(env);
-            return NULL;
-        }
-
         size = PyDict_Size(pydict);
         /* Account for default load factor */
         size = (Py_ssize_t) ((size / 0.75) + 1);
@@ -585,7 +629,7 @@ static jobject pydict_as_jobject(JNIEnv *env, PyObject *pydict,
             return NULL;
         }
 
-        jmap = (*env)->NewObject(env, JHASHMAP_TYPE, hashmapIConstructor, (jint) size);
+        jmap = java_util_HashMap_new_I(env, (jint) size);
         if (!jmap) {
             process_java_exception(env);
             (*env)->PopLocalFrame(env, NULL);
@@ -620,7 +664,6 @@ static jobject pydict_as_jobject(JNIEnv *env, PyObject *pydict,
     return NULL;
 }
 
-static jmethodID newDirectProxyInstance = 0;
 jobject PyCallable_as_functional_interface(JNIEnv *env, PyObject *callable,
         jclass expectedType)
 {
@@ -642,21 +685,7 @@ jobject PyCallable_as_functional_interface(JNIEnv *env, PyObject *callable,
         return NULL;
     }
 
-    if (newDirectProxyInstance == 0) {
-        newDirectProxyInstance =
-            (*env)->GetStaticMethodID(
-                env,
-                clazz,
-                "newDirectProxyInstance",
-                "(JJLjep/Jep;Ljava/lang/ClassLoader;Ljava/lang/Class;)Ljava/lang/Object;");
-
-        if (process_java_exception(env) || !newDirectProxyInstance) {
-            return NULL;
-        }
-    }
-    proxy = (*env)->CallStaticObjectMethod(env,
-                                           clazz,
-                                           newDirectProxyInstance,
+    proxy = jep_Proxy_newDirectProxyInstance(env,
                                            (jlong) (intptr_t) jepThread,
                                            (jlong) (intptr_t) callable,
                                            jepThread->caller,

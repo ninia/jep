@@ -146,6 +146,8 @@ extern jclass JDOUBLE_ARRAY_TYPE;
     F(JARRAYLIST_TYPE, "java/util/ArrayList") \
     F(JHASHMAP_TYPE, "java/util/HashMap") \
     F(JCOLLECTIONS_TYPE, "java/util/Collections") \
+    F(JCLASSLOADER_TYPE, "java/lang/ClassLoader") \
+    F(JPROXY_TYPE, "jep/Proxy") \
     F(CLASSNOTFOUND_EXC_TYPE, "java/lang/ClassNotFoundException") \
     F(INDEX_EXC_TYPE, "java/lang/IndexOutOfBoundsException") \
     F(IO_EXC_TYPE, "java/io/IOException") \
@@ -168,6 +170,5 @@ extern jclass JDOUBLE_ARRAY_TYPE;
 // Define an extern variable for everything in the class table
 #define DEFINE_CLASS_GLOBAL(var, name) extern jclass var;
 CLASS_TABLE(DEFINE_CLASS_GLOBAL)
-
 
 #endif // ifndef _Included_jep_util

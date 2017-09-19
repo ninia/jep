@@ -28,6 +28,7 @@
 #ifndef _Included_java_lang_String
 #define _Included_java_lang_String
 
+jstring    java_lang_String_new_BArray_String(JNIEnv*, jbyteArray, jstring);
 jbyteArray java_lang_String_getBytes(JNIEnv*, jobject, jobject);
 
 #endif // ndef java_lang_String

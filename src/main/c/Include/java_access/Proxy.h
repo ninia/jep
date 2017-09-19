@@ -25,22 +25,12 @@
    distribution.
 */
 
-/*
- * Contains functions for converting java primitives to java boxed primitives
- */
+#ifndef _Included_jep_Proxy
+#define _Included_jep_Proxy
 
-#include "jep_platform.h"
+jobject jep_Proxy_newProxyInstance(JNIEnv*, jlong, jlong, jobject,
+                                   jobject, jobjectArray);
+jobject jep_Proxy_newDirectProxyInstance(JNIEnv*, jlong, jlong, jobject,
+                                         jobject, jclass);
 
-#ifndef _Included_jbox
-#define _Included_jbox
-
-jobject JBox_Boolean(JNIEnv*, jboolean);
-jobject JBox_Byte(JNIEnv*, jbyte);
-jobject JBox_Short(JNIEnv*, jshort);
-jobject JBox_Int(JNIEnv*, jint);
-jobject JBox_Long(JNIEnv*, jlong);
-jobject JBox_Float(JNIEnv*, jfloat);
-jobject JBox_Double(JNIEnv*, jdouble);
-jobject JBox_Char(JNIEnv*, jchar);
-
-#endif // ifndef _Included_jbox
+#endif // ndef jep_Proxy

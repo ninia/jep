@@ -25,10 +25,9 @@
    distribution.
 */
 
-#ifndef _Included_java_lang_Boolean
-#define _Included_java_lang_Boolean
+#ifndef _Included_java_lang_Integer
+#define _Included_java_lang_Integer
 
-jobject java_lang_Boolean_new_Z(JNIEnv*, jboolean);
-jboolean java_lang_Boolean_booleanValue(JNIEnv*, jobject);
+jobject java_lang_Integer_new_I(JNIEnv*, jint);
 
-#endif // ndef java_lang_Boolean
+#endif // ndef java_lang_Integer

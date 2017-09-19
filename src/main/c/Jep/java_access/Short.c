@@ -25,10 +25,14 @@
    distribution.
 */
 
-#ifndef _Included_java_lang_Boolean
-#define _Included_java_lang_Boolean
+#include "Jep.h"
 
-jobject java_lang_Boolean_new_Z(JNIEnv*, jboolean);
-jboolean java_lang_Boolean_booleanValue(JNIEnv*, jobject);
+static jmethodID init_S = 0;
 
-#endif // ndef java_lang_Boolean
+jobject java_lang_Short_new_S(JNIEnv* env, jshort s)
+{
+    if (!JNI_METHOD(init_S, env, JSHORT_OBJ_TYPE, "<init>", "(S)V")) {
+        return NULL;
+    }
+    return (*env)->NewObject(env, JSHORT_OBJ_TYPE, init_S, s);
+}

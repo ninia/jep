@@ -75,13 +75,6 @@ static PyObject* pyembed_jproxy(PyObject*, PyObject*);
 static int maybe_pyc_file(FILE*, const char*, const char*, int);
 static void pyembed_run_pyc(JepThread *jepThread, FILE *);
 
-
-// ClassLoader.loadClass
-static jmethodID loadClassMethod = 0;
-
-// jep.Proxy.newProxyInstance
-static jmethodID newProxyMethod = 0;
-
 static struct PyMethodDef jep_methods[] = {
     {
         "findClass",
@@ -678,41 +671,12 @@ JepThread* pyembed_get_jepthread(void)
     return ret;
 }
 
-
-// used by _forname
-#define LOAD_CLASS_METHOD(env, cl)                                          \
-{                                                                           \
-    if(loadClassMethod == 0) {                                              \
-        jobject clazz;                                                      \
-                                                                            \
-        clazz = (*env)->GetObjectClass(env, cl);                            \
-        if(process_java_exception(env) || !clazz)                           \
-            return NULL;                                                    \
-                                                                            \
-        loadClassMethod =                                                   \
-            (*env)->GetMethodID(env,                                        \
-                                clazz,                                      \
-                                "loadClass",                                \
-                                "(Ljava/lang/String;)Ljava/lang/Class;");   \
-                                                                            \
-        if(process_java_exception(env) || !loadClassMethod) {               \
-            (*env)->DeleteLocalRef(env, clazz);                             \
-            return NULL;                                                    \
-        }                                                                   \
-                                                                            \
-        (*env)->DeleteLocalRef(env, clazz);                                 \
-    }                                                                       \
-}
-
-
 static PyObject* pyembed_jproxy(PyObject *self, PyObject *args)
 {
-    PyThreadState *_save;
     JepThread     *jepThread;
     JNIEnv        *env = NULL;
     PyObject      *pytarget;
     PyObject      *interfaces;
-    jclass         clazz;
     jobject        cl;
     jobject        classes;
     Py_ssize_t     inum, i;
@@ -735,26 +699,6 @@ static PyObject* pyembed_jproxy(PyObject *self, PyObject *args)
 
     env = jepThread->env;
     cl  = jepThread->classloader;
-
-    Py_UNBLOCK_THREADS;
-    clazz = (*env)->FindClass(env, "jep/Proxy");
-    Py_BLOCK_THREADS;
-    if (process_java_exception(env) || !clazz) {
-        return NULL;
-    }
-
-    if (newProxyMethod == 0) {
-        newProxyMethod =
-            (*env)->GetStaticMethodID(
-                env,
-                clazz,
-                "newProxyInstance",
-                "(JJLjep/Jep;Ljava/lang/ClassLoader;[Ljava/lang/String;)Ljava/lang/Object;");
-
-        if (process_java_exception(env) || !newProxyMethod) {
-            return NULL;
-        }
-    }
 
     inum = (int) PyList_GET_SIZE(interfaces);
     if (inum < 1) {
@@ -786,9 +730,7 @@ static PyObject* pyembed_jproxy(PyObject *self, PyObject *args)
     }
 
     // do the deed
-    proxy = (*env)->CallStaticObjectMethod(env,
-                                           clazz,
-                                           newProxyMethod,
+    proxy = jep_Proxy_newProxyInstance(env,
                                            (jlong) (intptr_t) jepThread,
                                            (jlong) (intptr_t) pytarget,
                                            jepThread->caller,
@@ -857,17 +799,12 @@ static PyObject* pyembed_forname(PyObject *self, PyObject *args)
     env = jepThread->env;
     cl  = jepThread->classloader;
 
-    LOAD_CLASS_METHOD(env, cl);
-
     jstr = (*env)->NewStringUTF(env, (const char *) name);
     if (process_java_exception(env) || !jstr) {
         return NULL;
     }
 
-    objclazz = (jclass) (*env)->CallObjectMethod(env,
-               cl,
-               loadClassMethod,
-               jstr);
+    objclazz = java_lang_ClassLoader_loadClass(env, cl, jstr);
     (*env)->DeleteLocalRef(env, jstr);
     if (process_java_exception(env) || !objclazz) {
         return NULL;

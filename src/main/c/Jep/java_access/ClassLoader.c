@@ -25,10 +25,19 @@
    distribution.
 */
 
-#ifndef _Included_java_lang_Boolean
-#define _Included_java_lang_Boolean
+#include "Jep.h"
 
-jobject java_lang_Boolean_new_Z(JNIEnv*, jboolean);
-jboolean java_lang_Boolean_booleanValue(JNIEnv*, jobject);
+static jmethodID loadClass = 0;
 
-#endif // ndef java_lang_Boolean
+jclass java_lang_ClassLoader_loadClass(JNIEnv* env, jobject this, jstring name)
+{
+    jclass result = NULL;
+    Py_BEGIN_ALLOW_THREADS
+    if (JNI_METHOD(loadClass, env, JCLASSLOADER_TYPE, "loadClass",
+                   "(Ljava/lang/String;)Ljava/lang/Class;")) {
+        result = (jclass) (*env)->CallObjectMethod(env, this, loadClass, name);
+    }
+    Py_END_ALLOW_THREADS
+    return result;
+}
+

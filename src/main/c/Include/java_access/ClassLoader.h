@@ -25,10 +25,9 @@
    distribution.
 */
 
-#ifndef _Included_java_lang_Boolean
-#define _Included_java_lang_Boolean
+#ifndef _Included_java_lang_ClassLoader
+#define _Included_java_lang_ClassLoader
 
-jobject java_lang_Boolean_new_Z(JNIEnv*, jboolean);
-jboolean java_lang_Boolean_booleanValue(JNIEnv*, jobject);
+jclass       java_lang_ClassLoader_loadClass(JNIEnv*, jobject, jstring);
 
-#endif // ndef java_lang_Boolean
+#endif // ndef java_lang_ClassLoader

@@ -28,6 +28,7 @@
 #ifndef _Included_java_lang_Character
 #define _Included_java_lang_Character
 
-jchar java_lang_Character_charValue(JNIEnv*, jobject);
+jobject java_lang_Character_new_C(JNIEnv*, jchar);
+jchar   java_lang_Character_charValue(JNIEnv*, jobject);
 
 #endif // ndef java_lang_Character
