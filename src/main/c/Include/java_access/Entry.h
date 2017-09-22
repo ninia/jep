@@ -25,15 +25,10 @@
    distribution.
 */
 
-#ifndef _Included_java_util_Map
-#define _Included_java_util_Map
+#ifndef _Included_java_util_Map_Entry
+#define _Included_java_util_Map_Entry
 
-jboolean java_util_Map_containsKey(JNIEnv*, jobject, jobject);
-jobject  java_util_Map_get(JNIEnv*, jobject, jobject);
-jobject  java_util_Map_keySet(JNIEnv*, jobject);
-jobject  java_util_Map_put(JNIEnv*, jobject, jobject, jobject);
-jobject  java_util_Map_remove(JNIEnv*, jobject, jobject);
-jint     java_util_Map_size(JNIEnv*, jobject);
-jobject  java_util_Map_entrySet(JNIEnv*, jobject);
+jobject java_util_Map_Entry_getKey(JNIEnv*, jobject);
+jobject java_util_Map_Entry_getValue(JNIEnv*, jobject);
 
-#endif // ndef java_util_Map
+#endif // ndef java_util_Map_Entry

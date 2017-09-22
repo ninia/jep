@@ -122,6 +122,7 @@ extern jclass JDOUBLE_ARRAY_TYPE;
     F(JCLASS_TYPE, "java/lang/Class") \
     F(JLIST_TYPE, "java/util/List") \
     F(JMAP_TYPE, "java/util/Map") \
+    F(JENTRY_TYPE, "java/util/Map$Entry") \
     F(JITERABLE_TYPE, "java/lang/Iterable") \
     F(JITERATOR_TYPE, "java/util/Iterator") \
     F(JCOLLECTION_TYPE, "java/util/Collection") \
