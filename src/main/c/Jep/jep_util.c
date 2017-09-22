@@ -126,7 +126,7 @@ void release_utf_char(JNIEnv *env, jstring str, const char *v)
 #define CACHE_CLASS(var, name)\
     if(var == NULL) {\
         clazz = (*env)->FindClass(env, name);\
-        if((*env)->ExceptionOccurred(env))\
+        if((*env)->ExceptionCheck(env))\
             return 0;\
         var = (*env)->NewGlobalRef(env, clazz);\
         (*env)->DeleteLocalRef(env, clazz);\
@@ -142,7 +142,7 @@ void release_utf_char(JNIEnv *env, jstring str, const char *v)
     if(primitive == NULL) {\
         if(array == NULL) {\
             clazz = (*env)->FindClass(env, name);\
-            if((*env)->ExceptionOccurred(env))\
+            if((*env)->ExceptionCheck(env))\
                 return 0;\
             array = (*env)->NewGlobalRef(env, clazz);\
             (*env)->DeleteLocalRef(env, clazz);\
@@ -196,7 +196,7 @@ int cache_primitive_classes(JNIEnv *env)
 
     if (JVOID_TYPE == NULL) {
         clazz = (*env)->FindClass(env, "java/lang/Void");
-        if ((*env)->ExceptionOccurred(env)) {
+        if ((*env)->ExceptionCheck(env)) {
             return 0;
         }
 
@@ -204,14 +204,14 @@ int cache_primitive_classes(JNIEnv *env)
                                            clazz,
                                            "TYPE",
                                            "Ljava/lang/Class;");
-        if ((*env)->ExceptionOccurred(env)) {
+        if ((*env)->ExceptionCheck(env)) {
             return 0;
         }
 
         tmpclazz = (jclass) (*env)->GetStaticObjectField(env,
                    clazz,
                    fieldId);
-        if ((*env)->ExceptionOccurred(env)) {
+        if ((*env)->ExceptionCheck(env)) {
             return 0;
         }
 
@@ -760,7 +760,7 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
 
     case JBOOLEAN_ID: {
         jboolean b = java_lang_Boolean_booleanValue(env, val);
-        if ((*env)->ExceptionOccurred(env)) {
+        if ((*env)->ExceptionCheck(env)) {
             return NULL;
         }
 
@@ -774,7 +774,7 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
     case JSHORT_ID:             /* pass through */
     case JINT_ID: {
         jint b = java_lang_Number_intValue(env, val);
-        if ((*env)->ExceptionOccurred(env)) {
+        if ((*env)->ExceptionCheck(env)) {
             return NULL;
         }
 
@@ -783,7 +783,7 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
 
     case JLONG_ID: {
         jlong b = java_lang_Number_longValue(env, val);
-        if ((*env)->ExceptionOccurred(env)) {
+        if ((*env)->ExceptionCheck(env)) {
             return NULL;
         }
 
@@ -792,7 +792,7 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
 
     case JDOUBLE_ID: {
         jdouble b = java_lang_Number_doubleValue(env, val);
-        if ((*env)->ExceptionOccurred(env)) {
+        if ((*env)->ExceptionCheck(env)) {
             return NULL;
         }
 
@@ -801,7 +801,7 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
 
     case JFLOAT_ID: {
         jfloat b = java_lang_Number_floatValue(env, val);
-        if ((*env)->ExceptionOccurred(env)) {
+        if ((*env)->ExceptionCheck(env)) {
             return NULL;
         }
 
@@ -811,7 +811,7 @@ PyObject* convert_jobject(JNIEnv *env, jobject val, int typeid)
 
     case JCHAR_ID: {
         jchar c = java_lang_Character_charValue(env, val);
-        if ((*env)->ExceptionOccurred(env)) {
+        if ((*env)->ExceptionCheck(env)) {
             return NULL;
         }
 

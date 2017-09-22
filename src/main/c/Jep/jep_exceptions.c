@@ -62,7 +62,7 @@ int process_py_exception(JNIEnv *env)
         return 0;
     }
 
-    if ((*env)->ExceptionOccurred(env)) {
+    if ((*env)->ExceptionCheck(env)) {
         /*
          * There's a bug in Jep somewhere, hopefully this printout will help
          * diagnose it.  Then clear the error so the code can attempt to
