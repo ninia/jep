@@ -919,98 +919,134 @@ static PyObject* pyembed_findclass(PyObject *self, PyObject *args)
 }
 
 
-jobject pyembed_invoke_method(JNIEnv *env,
-                              intptr_t _jepThread,
-                              const char *cname,
-                              jobjectArray args,
-                              jintArray types)
-{
-    PyObject         *callable;
-    JepThread        *jepThread;
-    jobject           ret;
-
-    ret = NULL;
-
-    jepThread = (JepThread *) _jepThread;
-    if (!jepThread) {
-        THROW_JEP(env, "Couldn't get thread objects.");
-        return ret;
-    }
-
-    PyEval_AcquireThread(jepThread->tstate);
-
-    callable = PyDict_GetItemString(jepThread->globals, (char *) cname);
-    if (!callable) {
-        THROW_JEP(env, "Object was not found in the global dictionary.");
-        goto EXIT;
-    }
-    if (process_py_exception(env)) {
-        goto EXIT;
-    }
-
-    ret = pyembed_invoke(env, callable, args, types);
-
-EXIT:
-    PyEval_ReleaseThread(jepThread->tstate);
-
-    return ret;
-}
-
-
-// invoke object callable
-// **** hold lock before calling ****
+/*
+ * Invoke callable object.  Hold the thread state lock before calling.
+ */
 jobject pyembed_invoke(JNIEnv *env,
                        PyObject *callable,
                        jobjectArray args,
-                       jintArray _types)
+                       jobject kwargs)
 {
-    jobject        ret;
-    int            iarg, arglen;
-    jint          *types;       /* pinned primitive array */
-    jboolean       isCopy;
-    PyObject      *pyargs;      /* a tuple */
-    PyObject      *pyret;
-
-    types    = NULL;
-    ret      = NULL;
-    pyret    = NULL;
+    jobject        ret      = NULL;
+    PyObject      *pyargs   = NULL;    /* a tuple */
+    PyObject      *pykwargs = NULL;    /* a dictionary */
+    PyObject      *pyret    = NULL;
+    int            arglen   = 0;
+    Py_ssize_t     i        = 0;
 
     if (!PyCallable_Check(callable)) {
         THROW_JEP(env, "pyembed:invoke Invalid callable.");
         return NULL;
     }
 
-    // pin primitive array so we can get to it
-    types = (*env)->GetIntArrayElements(env, _types, &isCopy);
+    if (args != NULL) {
+        arglen = (*env)->GetArrayLength(env, args);
+        pyargs = PyTuple_New(arglen);
+    } else {
+        // pyargs should be a Tuple of size 0 if no args
+        pyargs = PyTuple_New(arglen);
+    }
 
-    // first thing to do, convert java arguments to a python tuple
-    arglen = (*env)->GetArrayLength(env, args);
-    pyargs = PyTuple_New(arglen);
-    for (iarg = 0; iarg < arglen; iarg++) {
+    // convert Java arguments to a Python tuple
+    for (i = 0; i < arglen; i++) {
         jobject   val;
-        int       typeid;
         PyObject *pyval;
 
-        val = (*env)->GetObjectArrayElement(env, args, iarg);
+        val = (*env)->GetObjectArrayElement(env, args, i);
         if ((*env)->ExceptionCheck(env)) { /* careful, NULL is okay */
             goto EXIT;
         }
 
-        typeid = (int) types[iarg];
-
-        // now we know the type, convert and add to pyargs.  we know
-        pyval = convert_jobject(env, val, typeid);
-        if ((*env)->ExceptionOccurred(env)) {
+        pyval = convert_jobject_pyobject(env, val);
+        if ((*env)->ExceptionCheck(env)) {
             goto EXIT;
         }
 
-        PyTuple_SET_ITEM(pyargs, iarg, pyval); /* steals */
+        PyTuple_SET_ITEM(pyargs, i, pyval); /* steals */
         if (val) {
             (*env)->DeleteLocalRef(env, val);
         }
-    } // for(iarg = 0; iarg < arglen; iarg++)
+    }
 
-    pyret = PyObject_CallObject(callable, pyargs);
+    // convert Java arguments to a Python dictionary
+    if (kwargs != NULL) {
+        jobject entrySet;
+        jobject itr;
+
+        pykwargs = PyDict_New();
+        entrySet = java_util_Map_entrySet(env, kwargs);
+        if ((*env)->ExceptionCheck(env)) {
+            goto EXIT;
+        }
+        itr = java_lang_Iterable_iterator(env, entrySet);
+        if ((*env)->ExceptionCheck(env)) {
+            goto EXIT;
+        }
+
+        while (java_util_Iterator_hasNext(env, itr)) {
+            jobject  next;
+            jobject  key;
+            jobject  value;
+            PyObject *pykey;
+            PyObject *pyval;
+
+            next = java_util_Iterator_next(env, itr);
+            if (!next) {
+                if (!(*env)->ExceptionCheck(env)) {
+                    THROW_JEP(env, "Map.entrySet().iterator().next() returned null");
+                }
+                goto EXIT;
+            }
+
+            // convert Map.Entry's key to a PyObject*
+            key = java_util_Map_Entry_getKey(env, next);
+            if ((*env)->ExceptionCheck(env)) {
+                goto EXIT;
+            }
+            pykey = convert_jobject_pyobject(env, key);
+            if (!pykey || (*env)->ExceptionCheck(env)) {
+                Py_XDECREF(pykey);
+                goto EXIT;
+            }
+
+            // convert Map.Entry's value to a PyObject*
+            value = java_util_Map_Entry_getValue(env, next);
+            if ((*env)->ExceptionCheck(env)) {
+                Py_XDECREF(pykey);
+                goto EXIT;
+            }
+            pyval = convert_jobject_pyobject(env, value);
+            if (!pyval || (*env)->ExceptionCheck(env)) {
+                Py_XDECREF(pykey);
+                Py_XDECREF(pyval);
+                goto EXIT;
+            }
+
+            if (PyDict_SetItem(pykwargs, pykey, pyval)) {
+                process_py_exception(env);
+                Py_DECREF(pykey);
+                Py_DECREF(pyval);
+                goto EXIT;
+            }
+            Py_DECREF(pykey);
+            Py_DECREF(pyval);
+
+            (*env)->DeleteLocalRef(env, next);
+            if (key) {
+                (*env)->DeleteLocalRef(env, key);
+            }
+            if (value) {
+                (*env)->DeleteLocalRef(env, value);
+            }
+        }
+    } // end of while loop
+
+    // if hasNext() threw an exception
+    if ((*env)->ExceptionCheck(env)) {
+        goto EXIT;
+    }
+
+    pyret = PyObject_Call(callable, pyargs, pykwargs);
     if (process_py_exception(env) || !pyret) {
         goto EXIT;
     }
@@ -1022,17 +1058,47 @@ jobject pyembed_invoke(JNIEnv *env,
     }
 
 EXIT:
-    Py_XDECREF(pyargs);
+    Py_CLEAR(pyargs);
+    Py_CLEAR(pykwargs);
     Py_XDECREF(pyret);
 
-    if (types) {
-        (*env)->ReleaseIntArrayElements(env,
-                                        _types,
-                                        types,
-                                        JNI_ABORT);
+    return ret;
+}
 
-        (*env)->DeleteLocalRef(env, _types);
+
+jobject pyembed_invoke_method(JNIEnv *env,
+                              intptr_t _jepThread,
+                              const char *cname,
+                              jobjectArray args,
+                              jobject kwargs)
+{
+    PyObject         *callable;
+    JepThread        *jepThread;
+    jobject           ret = NULL;
+
+    jepThread = (JepThread *) _jepThread;
+    if (!jepThread) {
+        THROW_JEP(env, "Couldn't get thread objects.");
+        return ret;
     }
+
+    PyEval_AcquireThread(jepThread->tstate);
+
+    callable = PyDict_GetItemString(jepThread->globals, (char *) cname);
+    if (!callable) {
+        char strBuf[128];
+        snprintf(strBuf, 128, "Unable to find object with name: %s", cname);
+        THROW_JEP(env, strBuf);
+        goto EXIT;
+    }
+    if (process_py_exception(env)) {
+        goto EXIT;
+    }
+
+    ret = pyembed_invoke(env, callable, args, kwargs);
+
+EXIT:
+    PyEval_ReleaseThread(jepThread->tstate);
 
     return ret;
 }

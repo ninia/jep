@@ -25,15 +25,34 @@
    distribution.
 */
 
-#ifndef _Included_java_util_Map
-#define _Included_java_util_Map
+#include "Jep.h"
 
-jboolean java_util_Map_containsKey(JNIEnv*, jobject, jobject);
-jobject  java_util_Map_get(JNIEnv*, jobject, jobject);
-jobject  java_util_Map_keySet(JNIEnv*, jobject);
-jobject  java_util_Map_put(JNIEnv*, jobject, jobject, jobject);
-jobject  java_util_Map_remove(JNIEnv*, jobject, jobject);
-jint     java_util_Map_size(JNIEnv*, jobject);
-jobject  java_util_Map_entrySet(JNIEnv*, jobject);
+static jmethodID getKey   = 0;
+static jmethodID getValue = 0;
 
-#endif // ndef java_util_Map
+
+jobject java_util_Map_Entry_getKey(JNIEnv* env, jobject this)
+{
+    jobject result = NULL;
+    Py_BEGIN_ALLOW_THREADS
+    if (JNI_METHOD(getKey, env, JENTRY_TYPE, "getKey",
+                   "()Ljava/lang/Object;")) {
+        result = (*env)->CallObjectMethod(env, this, getKey);
+    }
+    Py_END_ALLOW_THREADS
+    return result;
+}
+
+
+jobject java_util_Map_Entry_getValue(JNIEnv* env, jobject this)
+{
+    jobject result = NULL;
+    Py_BEGIN_ALLOW_THREADS
+    if (JNI_METHOD(getValue, env, JENTRY_TYPE, "getValue",
+                   "()Ljava/lang/Object;")) {
+        result = (*env)->CallObjectMethod(env, this, getValue);
+    }
+    Py_END_ALLOW_THREADS
+    return result;
+}
+

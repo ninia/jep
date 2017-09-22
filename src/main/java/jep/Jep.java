@@ -28,6 +28,7 @@ import java.io.Closeable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.SynchronousQueue;
 
@@ -224,7 +225,8 @@ public final class Jep implements Closeable {
      * @param config
      *            the python configuration to use.
      * 
-     * @throws JepException if an error occurs
+     * @throws JepException
+     *             if an error occurs
      * @since 3.6
      */
     public static void setInitParams(PyConfig config) throws JepException {
@@ -245,7 +247,8 @@ public final class Jep implements Closeable {
      * @param argv
      *            the arguments to be set on Python's sys.argv for the top/main
      *            interpreter
-     * @throws JepException if an error occurs
+     * @throws JepException
+     *             if an error occurs
      * 
      * @since 3.7
      */
@@ -521,19 +524,57 @@ public final class Jep implements Closeable {
      *                if an error occurs
      */
     public Object invoke(String name, Object... args) throws JepException {
-        if (name == null || name.trim().equals(""))
+        if (name == null || name.trim().equals("")) {
             throw new JepException("Invalid function name.");
+        }
 
-        int[] types = new int[args.length];
+        return invoke(this.tstate, name, args, null);
+    }
 
-        for (int i = 0; i < args.length; i++)
-            types[i] = Util.getTypeId(args[i]);
+    /**
+     * Invokes a Python function.
+     * 
+     * @param name
+     *            must be a valid Python function name in globals dict
+     * @param kwargs
+     *            a Map of keyword args
+     * @return an <Object> value
+     * @throws JepException
+     * @since 3.8
+     */
+    public Object invoke(String name, Map<String, Object> kwargs)
+            throws JepException {
+        if (name == null || name.trim().equals("")) {
+            throw new JepException("Invalid function name.");
+        }
 
-        return invoke(this.tstate, name, args, types);
+        return invoke(this.tstate, name, null, kwargs);
+    }
+
+    /**
+     * Invokes a Python function.
+     * 
+     * @param name
+     *            must be a valid Python function name in globals dict
+     * @param args
+     *            args to pass to the function in order
+     * @param kwargs
+     *            a Map of keyword args
+     * @return an <Object> value
+     * @throws JepException
+     * @since 3.8
+     */
+    public Object invoke(String name, Object[] args, Map<String, Object> kwargs)
+            throws JepException {
+        if (name == null || name.trim().equals("")) {
+            throw new JepException("Invalid function name.");
+        }
+
+        return invoke(this.tstate, name, args, kwargs);
     }
 
     private native Object invoke(long tstate, String name, Object[] args,
-            int[] types);
+            Map<String, Object> kwargs);
 
     /**
      * <p>

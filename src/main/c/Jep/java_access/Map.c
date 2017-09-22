@@ -33,6 +33,7 @@ static jmethodID keySet      = 0;
 static jmethodID put         = 0;
 static jmethodID map_remove  = 0;
 static jmethodID size        = 0;
+static jmethodID entrySet    = 0;
 
 jboolean java_util_Map_containsKey(JNIEnv* env, jobject this, jobject key)
 {
@@ -99,6 +100,17 @@ jint java_util_Map_size(JNIEnv* env, jobject this)
     Py_BEGIN_ALLOW_THREADS
     if (JNI_METHOD(size, env, JMAP_TYPE, "size", "()I")) {
         result = (*env)->CallIntMethod(env, this, size);
+    }
+    Py_END_ALLOW_THREADS
+    return result;
+}
+
+jobject java_util_Map_entrySet(JNIEnv* env, jobject this)
+{
+    jobject result = NULL;
+    Py_BEGIN_ALLOW_THREADS
+    if (JNI_METHOD(entrySet, env, JMAP_TYPE, "entrySet", "()Ljava/util/Set;")) {
+        result = (*env)->CallObjectMethod(env, this, entrySet);
     }
     Py_END_ALLOW_THREADS
     return result;

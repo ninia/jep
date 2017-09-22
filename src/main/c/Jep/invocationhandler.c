@@ -82,7 +82,7 @@ JNIEXPORT jobject JNICALL Java_jep_InvocationHandler_invoke
         goto EXIT;
     }
 
-    ret = pyembed_invoke(env, callable, args, types);
+    ret = pyembed_invoke(env, callable, args, NULL);
 
 EXIT:
     PyEval_ReleaseThread(jepThread->tstate);

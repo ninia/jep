@@ -63,6 +63,7 @@
 #include "java_access/Collections.h"
 #include "java_access/Comparable.h"
 #include "java_access/Constructor.h"
+#include "java_access/Entry.h"
 #include "java_access/Field.h"
 #include "java_access/Iterable.h"
 #include "java_access/Iterator.h"
