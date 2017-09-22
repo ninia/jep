@@ -1,0 +1,17 @@
+Jep 3.8 Release Notes
+*********************
+This release emphasized...
+It is compatible with Python 2.7, 3.3, 3.4, 3.5, and 3.6.  
+
+
+Maven layout
+~~~~~~~~~~~~
+The Jep source code and test code now follow a typical layout of Maven
+projects.  The C code is organized following CPython's layout as a guideline.
+
+
+Invoke using keyword args
+~~~~~~~~~~~~~~~~~~~~~~~~~
+Jep.invoke() now supports keyword arguments when invoking Python functions.
+It continues to support varargs arguments and also supports a combination
+of varargs and keyword args.
