@@ -14,4 +14,4 @@ Invoke using keyword args
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 Jep.invoke() now supports keyword arguments when invoking Python functions.
 It continues to support varargs arguments and also supports a combination
-of varargs and keyword args.
+of positional arguments and keyword arguments.
