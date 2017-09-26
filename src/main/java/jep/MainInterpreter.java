@@ -63,14 +63,13 @@ import java.util.concurrent.SynchronousQueue;
  */
 public final class MainInterpreter implements AutoCloseable {
 
-    static {
-        System.loadLibrary("jep");
-    }
 
     private static MainInterpreter instance = null;
 
+    private static PyConfig pyConfig = null;
+    
     private static String[] sharedModulesArgv = null;
-
+    
     private Thread thread;
 
     private BlockingQueue<String> importQueue = new SynchronousQueue<>();
@@ -117,6 +116,21 @@ public final class MainInterpreter implements AutoCloseable {
      * @throws Error
      */
     protected void initialize() throws Error {
+        try {
+            System.loadLibrary("jep");
+        } catch (UnsatisfiedLinkError e) {
+            if (!LibraryLocator.findJepLibrary(pyConfig)) {
+                throw e;
+            }
+        }
+
+        if (pyConfig != null) {
+            setInitParams(pyConfig.noSiteFlag, pyConfig.noUserSiteDirectory,
+                    pyConfig.ignoreEnvironmentFlag, pyConfig.verboseFlag,
+                    pyConfig.optimizeFlag, pyConfig.dontWriteBytecodeFlag,
+                    pyConfig.hashRandomizationFlag);
+        }
+
         thread = new Thread(new Runnable() {
 
             @Override
@@ -215,10 +229,7 @@ public final class MainInterpreter implements AutoCloseable {
             throw new JepException(
                     "Jep.setInitParams(PyConfig) called after initializing python interpreter.");
         }
-        setInitParams(config.noSiteFlag, config.noUserSiteDirectory,
-                config.ignoreEnvironmentFlag, config.verboseFlag,
-                config.optimizeFlag, config.dontWriteBytecodeFlag,
-                config.hashRandomizationFlag);
+        pyConfig = config;
     }
 
     /**

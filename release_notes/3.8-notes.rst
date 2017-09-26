@@ -15,3 +15,18 @@ Invoke using keyword args
 Jep.invoke() now supports keyword arguments when invoking Python functions.
 It continues to support varargs arguments and also supports a combination
 of positional arguments and keyword arguments.
+
+Smarter library loading
+~~~~~~~~~~~~~~~~~~~~~~~
+Jep will try harder to find both the Jep library and the Python library so
+LD_PRELOAD, LD_LIBRARY_PATH and jni.library.path are not needed in many
+environments. There are 2 different changes that help with this:
+1. Jep will now try to load the Python library globally which is required by some
+   python modules. Previously this global loading was forced using LD_PRELOAD
+   which is no longer necessary.
+2. If the Jep Library is not found, then Jep will attempt to find it in the jep
+   module. To find the Jep module it looks in the locations in the PYTHONPATH 
+   environmental variable and also in the site-packages directory which is found
+   relative to the PYTHONHOME environmental variable. If the Jep Library can be
+   found in one of those locations then it is no longer necessary to set the 
+   LD_LIBRARY_PATH and/or jni.library.path to the location of the Jep library.

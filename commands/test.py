@@ -41,9 +41,6 @@ class test(Command):
 
         # setup environment variables
         environment = {}
-        if not is_osx() and not is_windows():
-            environment['LD_LIBRARY_PATH'] = sysconfig.get_config_var('LIBDIR')
-
         # http://bugs.python.org/issue20614
         if is_windows():
             environment['SYSTEMROOT'] = os.environ['SYSTEMROOT']
@@ -58,19 +55,19 @@ class test(Command):
         else:
             environment['PATH'] = java_path + os.pathsep + os.environ['PATH']
 
-        environment['PYTHONPATH'] = 'src/main/python'
 
         # find the jep library and makes sure it's named correctly
         build_ext = self.get_finalized_command('build_ext')
         jep_lib = build_ext.get_outputs()[0]
         built_dir = os.path.dirname(jep_lib)
         link_native_lib(built_dir, jep_lib)
+        
+        environment['PYTHONPATH'] = self.get_finalized_command('build').build_lib
 
         # actually kick off the tests
         import subprocess
         args = [os.path.join(java_path, 'java'),
                 '-classpath', '{0}'.format(classpath),
-                '-Djava.library.path={0}'.format(built_dir),
                 'jep.Run', 'src/test/python/runtests.py']
         p = subprocess.Popen(args, env=environment)
         rc = p.wait()
