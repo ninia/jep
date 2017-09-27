@@ -240,6 +240,16 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
     mainThreadModules = PyObject_GetAttrString(sysModule, "modules");
     Py_DECREF(sysModule);
     threadingModule = PyImport_ImportModule("threading");
+    if (threadingModule == NULL) {
+        jclass excClass = (*env)->FindClass(env, "java/lang/IllegalStateException");
+        if (PyErr_Occurred()) {
+            PyErr_Print();
+        }
+        if (excClass != NULL) {
+            (*env)->ThrowNew(env, excClass, "Failed to load threading module.");
+        }
+        return;
+    }
     lockCreator = PyObject_GetAttrString(threadingModule, "Lock");
     mainThreadModulesLock = PyObject_CallObject(lockCreator, NULL);
     Py_DECREF(threadingModule);
