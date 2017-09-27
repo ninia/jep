@@ -177,10 +177,8 @@ public class ClassList implements ClassEnquirer {
         String rsc = "jep/classlist_";
         if (version.startsWith("1.8")) {
             rsc += "8";
-        } else if (version.startsWith("1.7")) {
-            rsc += "7";
         } else {
-            rsc += "6";
+            rsc += "7";
         }
         rsc += ".txt";
 
