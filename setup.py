@@ -115,6 +115,7 @@ if __name__ == '__main__':
               ('jep.Jep', 'jep.h'),
               ('jep.python.PyObject', 'jep_object.h'),
               ('jep.InvocationHandler', 'invocationhandler.h'),
+              ('jep.MainInterpreter', 'maininterpreter.h'),
           ],
           distclass=JepDistribution,
           cmdclass={

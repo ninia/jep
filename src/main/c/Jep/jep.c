@@ -60,48 +60,6 @@ JNI_OnUnload(JavaVM *vm, void *reserved)
 
 /*
  * Class:     jep_Jep
- * Method:    setInitParams
- * Signature: (IIIIIII)V
- */
-JNIEXPORT void JNICALL Java_jep_Jep_setInitParams
-(JNIEnv *env,
- jclass class,
- jint noSiteFlag,
- jint noUserSiteDirectory,
- jint ignoreEnvironmentFlag,
- jint verboseFlag,
- jint optimizeFlag,
- jint dontWriteBytecodeFlag,
- jint hashRandomizationFlag)
-{
-    pyembed_preinit(noSiteFlag, noUserSiteDirectory, ignoreEnvironmentFlag,
-                    verboseFlag, optimizeFlag, dontWriteBytecodeFlag, hashRandomizationFlag);
-}
-
-/*
- * Class:     jep_Jep
- * Method:    initializePython
- * Signature: ([Ljava/lang/String;)V
- */
-JNIEXPORT void JNICALL Java_jep_Jep_initializePython
-(JNIEnv *env, jclass class, jobjectArray argv)
-{
-    pyembed_startup(env, argv);
-}
-
-/*
- * Class:     jep_Jep
- * Method:    sharedImport
- * Signature: (Ljava/lang/String;)V
- */
-JNIEXPORT void JNICALL Java_jep_Jep_sharedImport
-(JNIEnv *env, jclass class, jstring module)
-{
-    pyembed_shared_import(env, module);
-}
-
-/*
- * Class:     jep_Jep
  * Method:    init
  * Signature: (Ljava/lang/ClassLoader;Z)I
  */

@@ -29,8 +29,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.SynchronousQueue;
 
 import jep.python.PyModule;
 import jep.python.PyObject;
@@ -60,10 +58,6 @@ public final class Jep implements Closeable {
     // TODO switch to AutoCloseable
 
     private static final String THREAD_WARN = "JEP THREAD WARNING: ";
-
-    private static TopInterpreter topInterpreter = null;
-
-    private static String[] sharedModulesArgv = null;
 
     private boolean closed = false;
 
@@ -103,122 +97,6 @@ public final class Jep implements Closeable {
     };
 
     /**
-     * Initializes the main Python interpreter that all sub-interpreters will be
-     * created from.
-     */
-    private static class TopInterpreter implements AutoCloseable {
-        /*
-         * TODO: All this static-ness related to the top interpreter should be
-         * moved to its own class. This includes top interpreter initialization,
-         * shared modules argv, PyConfig init params, etc.
-         */
-
-        Thread thread;
-
-        BlockingQueue<String> importQueue = new SynchronousQueue<>();
-
-        BlockingQueue<Object> importResults = new SynchronousQueue<>();
-
-        Throwable error;
-
-        /**
-         * Initializes CPython, by calling a native function in the jep module,
-         * and ultimately Py_Initialize(). We load on a separate thread to try
-         * and avoid GIL issues that come about from a sub-interpreter being on
-         * the same thread as the top/main interpreter.
-         * 
-         * @throws Error
-         */
-        private void initialize() throws Error {
-            thread = new Thread(new Runnable() {
-
-                @Override
-                public void run() {
-                    try {
-                        initializePython(sharedModulesArgv);
-                    } catch (Throwable t) {
-                        error = t;
-                    } finally {
-                        synchronized (TopInterpreter.this) {
-                            TopInterpreter.this.notify();
-                        }
-                    }
-                    /*
-                     * We need to keep this top interpreter thread around. It
-                     * might be used for importing shared modules. Even if it is
-                     * not used it must remain running because if its thread
-                     * shuts down while another thread is in python, then the
-                     * thread state can get messed up leading to stability/GIL
-                     * issues.
-                     */
-                    try {
-                        while (true) {
-                            String nextImport = importQueue.take();
-                            Object result = nextImport;
-                            try {
-                                Jep.sharedImport(nextImport);
-                            } catch (JepException e) {
-                                result = e;
-                            }
-                            importResults.put(result);
-                        }
-                    } catch (InterruptedException e) {
-                        // ignore
-                    }
-                }
-            });
-            thread.setDaemon(true);
-            synchronized (this) {
-                thread.start();
-                try {
-                    this.wait();
-                } catch (InterruptedException e) {
-                    if (error != null) {
-                        error = e;
-                    }
-                }
-            }
-            if (error != null) {
-                throw new Error(error);
-            }
-        }
-
-        /**
-         * Stop the interpreter thread.
-         */
-        @Override
-        public void close() {
-            thread.interrupt();
-        }
-
-        /**
-         * Import a module into the top interpreter on the correct thread for
-         * that interpreter. This is called from the python shared modules
-         * import hook to create a module needed by a jep interpreter.
-         * 
-         * @param module
-         *            the name of the module to import
-         */
-        public void sharedImport(String module) throws JepException {
-            try {
-                importQueue.put(module);
-                Object result = importResults.take();
-                if (result instanceof JepException) {
-                    throw new JepException(
-                            "Error importing shared module " + module,
-                            ((JepException) result));
-                }
-            } catch (InterruptedException e) {
-                throw new JepException(e);
-            }
-        }
-    }
-
-    static {
-        System.loadLibrary("jep");
-    }
-
-    /**
      * Sets interpreter settings for the top Python interpreter. This method
      * must be called before the first Jep instance is created in the process.
      * 
@@ -227,17 +105,13 @@ public final class Jep implements Closeable {
      * 
      * @throws JepException
      *             if an error occurs
+     * @deprecated Please use {@link #MainInterpreter.setInitParams(PyConfig)}
+     *             instead.
      * @since 3.6
      */
+    @Deprecated
     public static void setInitParams(PyConfig config) throws JepException {
-        if (null != topInterpreter) {
-            throw new JepException(
-                    "Jep.setInitParams called after initializing python interpreter.");
-        }
-        setInitParams(config.noSiteFlag, config.noUserSiteDirectory,
-                config.ignoreEnvironmentFlag, config.verboseFlag,
-                config.optimizeFlag, config.dontWriteBytecodeFlag,
-                config.hashRandomizationFlag);
+        MainInterpreter.setInitParams(config);
     }
 
     /**
@@ -249,48 +123,16 @@ public final class Jep implements Closeable {
      *            interpreter
      * @throws JepException
      *             if an error occurs
+     * @deprecated Please use
+     *             {@link #MainInterpreter.setSharedModulesArgv(String...)}
+     *             instead.
      * 
      * @since 3.7
      */
+    @Deprecated
     public static void setSharedModulesArgv(String... argv)
             throws JepException {
-        if (topInterpreter != null) {
-            throw new JepException(
-                    "Jep.setSharedModulesArgv called after initializing python interpreter.");
-        }
-        sharedModulesArgv = argv;
-    }
-
-    private static native void setInitParams(int noSiteFlag,
-            int noUserSiteDiretory, int ignoreEnvironmentFlag, int verboseFlag,
-            int optimizeFlag, int dontWriteBytecodeFlag,
-            int hashRandomizationFlag);
-
-    private static native void initializePython(String[] topInterpreterArgv);
-
-    private static native void sharedImport(String module) throws JepException;
-
-    /**
-     * Creates the TopInterpreter instance that will be used by Jep. This should
-     * be called from all Jep constructors to ensure the native module has been
-     * loaded and initialized before a valid Jep instance is produced.
-     * 
-     * @throws Error
-     */
-    private synchronized static void createTopInterpreter() throws Error {
-        if (null == topInterpreter) {
-            try {
-                topInterpreter = new TopInterpreter();
-                topInterpreter.initialize();
-            } catch (Error e) {
-                topInterpreter.close();
-                throw e;
-            }
-        } else if (null != topInterpreter.error) {
-            throw new Error(
-                    "The main python interpreter previously failed to initialize.",
-                    topInterpreter.error);
-        }
+        MainInterpreter.setSharedModulesArgv(argv);
     }
 
     // -------------------------------------------------- constructors
@@ -383,7 +225,7 @@ public final class Jep implements Closeable {
     }
 
     public Jep(JepConfig config) throws JepException {
-        createTopInterpreter();
+        MainInterpreter mainInterpreter = MainInterpreter.getMainInterpreter();
         if (threadUsed.get()) {
             /*
              * TODO: Throw a JepException if this is detected. This is
@@ -431,7 +273,7 @@ public final class Jep implements Closeable {
         eval("import jep");
         if (hasSharedModules) {
             set("sharedModules", config.sharedModules);
-            set("sharedImporter", topInterpreter);
+            set("sharedImporter", mainInterpreter);
             eval("jep.shared_modules_hook.setupImporter(sharedModules,sharedImporter)");
             eval("del sharedModules");
             eval("del sharedImporter");
