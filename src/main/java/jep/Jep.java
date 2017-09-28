@@ -24,7 +24,6 @@
  */
 package jep;
 
-import java.io.Closeable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,9 +52,7 @@ import jep.python.PyObject;
  * 
  * @author Mike Johnson
  */
-public final class Jep implements Closeable {
-
-    // TODO switch to AutoCloseable
+public final class Jep implements AutoCloseable {
 
     private static final String THREAD_WARN = "JEP THREAD WARNING: ";
 
@@ -145,7 +142,7 @@ public final class Jep implements Closeable {
      *                if an error occurs
      */
     public Jep() throws JepException {
-        this(false, null, null);
+        this(new JepConfig());
     }
 
     /**
@@ -157,7 +154,9 @@ public final class Jep implements Closeable {
      *            behavior of potentially waiting for multiple statements
      * @exception JepException
      *                if an error occurs
+     * @deprecated Please use {@link #Jep(JepConfig)} instead.
      */
+    @Deprecated
     public Jep(boolean interactive) throws JepException {
         this(interactive, null, null);
     }
@@ -174,7 +173,9 @@ public final class Jep implements Closeable {
      *            will be appended to the sub-intepreter's <code>sys.path</code>
      * @exception JepException
      *                if an error occurs
+     * @deprecated Please use {@link #Jep(JepConfig)} instead.
      */
+    @Deprecated
     public Jep(boolean interactive, String includePath) throws JepException {
         this(interactive, includePath, null);
     }
@@ -193,7 +194,9 @@ public final class Jep implements Closeable {
      *            the ClassLoader to use when importing Java classes from Python
      * @exception JepException
      *                if an error occurs
+     * @deprecated Please use {@link #Jep(JepConfig)} instead.
      */
+    @Deprecated
     public Jep(boolean interactive, String includePath, ClassLoader cl)
             throws JepException {
         this(interactive, includePath, cl, null);
@@ -216,7 +219,9 @@ public final class Jep implements Closeable {
      *            Python vs Java, or null for the default {@link ClassList}
      * @exception JepException
      *                if an error occurs
+     * @deprecated Please use {@link #Jep(JepConfig)} instead.
      */
+    @Deprecated
     public Jep(boolean interactive, String includePath, ClassLoader cl,
             ClassEnquirer ce) throws JepException {
         this(new JepConfig().setInteractive(interactive)
@@ -227,26 +232,19 @@ public final class Jep implements Closeable {
     public Jep(JepConfig config) throws JepException {
         MainInterpreter mainInterpreter = MainInterpreter.getMainInterpreter();
         if (threadUsed.get()) {
-            /*
-             * TODO: Throw a JepException if this is detected. This is
-             * inherently unsafe, the thread state information inside Python can
-             * get screwed up if there's more than one started/open Jep on the
-             * same thread at any given time. This remains a warning for the
-             * time being to provide time for applications to be updated to
-             * avoid this scenario.
-             */
             Thread current = Thread.currentThread();
             StringBuilder warning = new StringBuilder(THREAD_WARN)
                     .append("Unsafe reuse of thread ").append(current.getName())
                     .append(" for another Python sub-interpreter.\n")
                     .append("Please close() the previous Jep instance to ensure stability.");
-            System.err.println(warning.toString());
+            throw new JepException(warning.toString());
         }
 
-        if (config.classLoader == null)
+        if (config.classLoader == null) {
             this.classLoader = this.getClass().getClassLoader();
-        else
+        } else {
             this.classLoader = config.classLoader;
+        }
 
         boolean hasSharedModules = config.sharedModules != null
                 && !config.sharedModules.isEmpty();
@@ -1057,38 +1055,36 @@ public final class Jep implements Closeable {
      * 
      */
     @Override
-    public synchronized void close() {
+    public synchronized void close() throws JepException {
         if (this.closed)
             return;
 
         if (!Thread.currentThread().equals(thread)) {
             /*
-             * TODO: Possibly throw a JepException if this is detected. This is
-             * inherently unsafe, the thread state information inside Python can
-             * get screwed up if a sub-interpreter is closed from a different
-             * thread. Py_EndInterpreter is assuming that the interpreter is
-             * being ended from the same thread. If close() is called from a
-             * different thread, at best you will lose a little bit of memory,
-             * at worst you will screw up Python's internal tracking of thread
-             * state, which could lead to freezes or crashes.
-             * 
-             * This remains a warning for the time being to provide time for
-             * applications to be updated to avoid this scenario.
+             * This is inherently unsafe, the thread state information inside
+             * Python can get screwed up if a sub-interpreter is closed from a
+             * different thread. Py_EndInterpreter is assuming that the
+             * interpreter is being ended from the same thread. If close() is
+             * called from a different thread, at best you will lose a little
+             * bit of memory, at worst you will screw up Python's internal
+             * tracking of thread state, which could lead to deadlocks or
+             * crashes.
              */
             Thread current = Thread.currentThread();
             StringBuilder warning = new StringBuilder(THREAD_WARN)
                     .append("Unsafe close() of Python sub-interpreter by thread ")
                     .append(current.getName())
                     .append(".\nPlease close() from the creating thread to ensure stability.");
-            System.err.println(warning);
+            throw new JepException(warning.toString());
         }
 
         // don't attempt close twice if something goes wrong
         this.closed = true;
 
         // close all the PyObjects we created
-        for (int i = 0; i < this.pythonObjects.size(); i++)
+        for (int i = 0; i < this.pythonObjects.size(); i++) {
             pythonObjects.get(i).close();
+        }
 
         try {
             eval(this.tstate, "import jep");

@@ -181,4 +181,16 @@ public class JepConfig {
         }
         return this;
     }
+
+    /**
+     * Creates a new Jep instance and its associated sub-interpreter with this
+     * JepConfig.
+     * 
+     * @return a new Jep instance
+     * @throws JepException
+     * @since 3.8
+     */
+    public Jep createJep() throws JepException {
+        return new Jep(this);
+    }
 }
