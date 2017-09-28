@@ -1,6 +1,7 @@
 package jep.test.numpy.example;
 
 import jep.Jep;
+import jep.JepConfig;
 import jep.JepException;
 
 /**
@@ -29,11 +30,12 @@ public class TestNumpyGILFreeze {
             + "   print 'python method complete'\n";
 
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws JepException {
+        JepConfig cfg = new JepConfig().setInteractive(true);
         Jep jep = null;
         try {
-            Jep jep0 = new Jep(true);
-            jep = new Jep(true);
+            Jep jep0 = new Jep(cfg);
+            jep = new Jep(cfg);
             jep0.close();
             jep.eval("import numpy");
             /*

@@ -63,7 +63,7 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable {
     public JepScriptEngine() throws ScriptException {
         try {
             // make interactive because javax.script sucks
-            this.jep = new Jep(true);
+            this.jep = new Jep(new JepConfig().setInteractive(true));
             this.jep.setClassLoader(
                     Thread.currentThread().getContextClassLoader());
         } catch (JepException e) {
@@ -428,6 +428,10 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable {
      */
     @Override
     public void close() {
-        this.jep.close();
+        try {
+            this.jep.close();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

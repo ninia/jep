@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.util.ArrayList;
 
 import jep.Jep;
+import jep.JepConfig;
 import jep.JepException;
 import jep.python.PyModule;
 
@@ -53,7 +54,8 @@ public class Test implements Runnable {
             try {
                 File pwd = new File(".");
 
-                this.jep = new Jep(this.testEval, pwd.getAbsolutePath());
+                this.jep = new Jep(new JepConfig().setInteractive(this.testEval)
+                        .addIncludePaths(pwd.getAbsolutePath()));
                 jep.set("testo", this);
                 jep.set("test", "value from java.");
                 jep.set("testi", i);
@@ -157,8 +159,13 @@ public class Test implements Runnable {
                 break;
             } finally {
                 System.out.println("**** close me");
-                if (jep != null)
-                    jep.close();
+                if (jep != null) {
+                    try {
+                        jep.close();
+                    } catch (JepException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         }
     }
@@ -266,13 +273,20 @@ public class Test implements Runnable {
             public void run() {
                 Jep jep = null;
                 try {
-                    jep = new Jep(true, "", restrictedClassLoader);
+                    JepConfig cfg = new JepConfig().setInteractive(true)
+                            .setClassLoader(restrictedClassLoader);
+                    jep = new Jep(cfg);
                     jep.eval("from java.io import File");
                 } catch (Throwable th) {
                     t[0] = th;
                 } finally {
                     if (jep != null) {
-                        jep.close();
+                        try {
+                            jep.close();
+                        } catch (JepException e) {
+                            throw new RuntimeException(
+                                    "Error closing Jep instance", e);
+                        }
                     }
                     synchronized (Test.class) {
                         Test.class.notify();

@@ -1,6 +1,7 @@
 package jep.test.numpy.example;
 
 import jep.Jep;
+import jep.JepConfig;
 import jep.JepException;
 
 /**
@@ -20,11 +21,8 @@ import jep.JepException;
 public class TestScipyFreeze {
 
     public static void main(String[] args) {
-        Jep jep0 = null;
-        Jep jep = null;
-        try {
-            jep0 = new Jep(true);
-            jep = new Jep(true);
+        try (Jep jep0 = new Jep(new JepConfig().setInteractive(true));
+                Jep jep = new Jep(new JepConfig().setInteractive(true))) {
             jep0.eval("from scipy.special import erf");
 
             // this line will freeze
@@ -32,15 +30,6 @@ public class TestScipyFreeze {
             System.out.println("returned from python interpreters");
         } catch (JepException e) {
             e.printStackTrace();
-        } finally {
-            if (jep != null) {
-                System.out.println("closing jep interpreter");
-                jep.close();
-            }
-            if (jep0 != null) {
-                System.out.println("closing jep0 interpreter");
-                jep0.close();
-            }
         }
         System.out.println("java main() finished");
     }

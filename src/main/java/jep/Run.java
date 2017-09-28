@@ -47,9 +47,10 @@ public class Run {
 
     public static int run(boolean eventDispatch) {
         Jep jep = null;
+        JepConfig cfg = new JepConfig().addIncludePaths(".");
 
         try {
-            jep = new Jep(false, ".");
+            jep = new Jep(cfg);
 
             // Windows file system compatibility
             if (scriptArgv.contains("\\")) {
@@ -75,17 +76,28 @@ public class Run {
         } catch (Throwable t) {
             t.printStackTrace();
             if (jep != null)
-                jep.close();
+                try {
+                    jep.close();
+                } catch (JepException e) {
+                    e.printStackTrace();
+                    return 1;
+                }
 
             return 1;
         }
 
         // if we're the event dispatch thread, we should quit now.
         // don't close jep.
-        if (eventDispatch)
+        if (eventDispatch) {
             return 0;
+        }
 
-        jep.close();
+        try {
+            jep.close();
+        } catch (JepException e) {
+            e.printStackTrace();
+            return 1;
+        }
         return 0;
     }
 

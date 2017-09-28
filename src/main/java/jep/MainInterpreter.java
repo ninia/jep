@@ -57,7 +57,8 @@ import java.util.concurrent.SynchronousQueue;
  * bugs and caveats</a>.
  * 
  * 
- * @author Nate Jensen, Ben Steffensmeier
+ * @author Nate Jensen
+ * @author Ben Steffensmeier
  * @since 3.8
  */
 public final class MainInterpreter implements AutoCloseable {

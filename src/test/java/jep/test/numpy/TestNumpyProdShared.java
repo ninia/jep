@@ -2,6 +2,7 @@ package jep.test.numpy;
 
 import jep.Jep;
 import jep.JepConfig;
+import jep.JepException;
 
 /**
  * Tests closing a sub-interpreter with numpy shared and then trying to use a
@@ -16,7 +17,7 @@ public class TestNumpyProdShared {
 
     private static final int N_JEPS = 1;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws JepException {
         Jep jep = null;
         try {
             JepConfig config = new JepConfig().addIncludePaths(".")

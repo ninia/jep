@@ -35,11 +35,20 @@ public class TestNumpyArrayToString {
                         jep1.eval("import numpy");
                     } catch (JepException e) {
                         e.printStackTrace();
-                        jep1.close();
+                        try {
+                            jep1.close();
+                        } catch (JepException e1) {
+                            e1.printStackTrace();
+                        }
                         System.exit(1);
                     } finally {
                         if (jep1 != null) {
-                            jep1.close();
+                            try {
+                                jep1.close();
+                            } catch (JepException e) {
+                                e.printStackTrace();
+                                System.exit(1);
+                            }
                         }
                     }
                 }
@@ -53,11 +62,20 @@ public class TestNumpyArrayToString {
             jep0.eval("str(numpy.ndarray([1]))");
         } catch (JepException e) {
             e.printStackTrace();
-            jep0.close();
+            try {
+                jep0.close();
+            } catch (JepException e1) {
+                e.printStackTrace();
+            }
             System.exit(1);
         } finally {
             if (jep0 != null) {
-                jep0.close();
+                try {
+                    jep0.close();
+                } catch (JepException e) {
+                    e.printStackTrace();
+                    System.exit(1);
+                }
             }
         }
         System.exit(0);

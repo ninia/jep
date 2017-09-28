@@ -2,8 +2,7 @@ package jep.test.numpy.example;
 
 import jep.Jep;
 import jep.JepConfig;
-import jep.test.numpy.TestNumpyArrayToString;
-import jep.test.numpy.TestNumpyProdShared;
+import jep.JepException;
 
 /**
  * Tests closing a sub-interpreter with numpy and then trying to use a new
@@ -17,8 +16,9 @@ import jep.test.numpy.TestNumpyProdShared;
  * This does NOT make use of the shared modules feature.
  * 
  * This test is NOT run by the unittests. This test is related to
- * {@link TestNumpyArrayToString} and {@link TestNumpyProdShared} for the
- * solution where shared modules fix the problem.
+ * {@link jep.test.numpy.TestNumpyArrayToString} and
+ * {@link jep.test.numpy.TestNumpyProdShared} for the solution where shared
+ * modules fix the problem.
  * 
  * Created: October 2015
  * 
@@ -34,7 +34,7 @@ public class TestNumpyProdLost {
             jep.eval("numpy.ndarray([1]).prod()");
             jep.close();
 
-            jep = new Jep(false, ".");
+            jep = new Jep(new JepConfig().addIncludePaths("."));
             jep.eval("import numpy");
 
             // this line will fail and throw an exception
@@ -45,11 +45,20 @@ public class TestNumpyProdLost {
              * we expected a failure, usually it is 'NoneType' object is not
              * callable
              */
-            jep.close();
+            try {
+                jep.close();
+            } catch (JepException e1) {
+                e.printStackTrace();
+            }
             System.exit(0);
         } finally {
             if (jep != null) {
-                jep.close();
+                try {
+                    jep.close();
+                } catch (JepException e) {
+                    e.printStackTrace();
+                    System.exit(1);
+                }
             }
         }
         System.err.println("numpy mysteriously worked with sub-interpreters");

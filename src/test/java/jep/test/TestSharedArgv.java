@@ -5,6 +5,7 @@ import java.util.List;
 import jep.Jep;
 import jep.JepConfig;
 import jep.JepException;
+import jep.MainInterpreter;
 
 /**
  * Tests that shared modules can have sys.argv set before they are imported as
@@ -22,7 +23,7 @@ public class TestSharedArgv {
 
         final String[] argv = new String[] { "", "-h", "other" };
 
-        Jep.setSharedModulesArgv(argv);
+        MainInterpreter.setSharedModulesArgv(argv);
         JepConfig cfg = new JepConfig();
         cfg.addSharedModules("logging");
         cfg.addIncludePaths(".");
