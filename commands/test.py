@@ -44,12 +44,6 @@ class test(Command):
         if not is_osx() and not is_windows():
             environment['LD_LIBRARY_PATH'] = sysconfig.get_config_var('LIBDIR')
 
-            # set the LD_PRELOAD environment variable if we can locate the
-            # libpython<version>.so library.
-            lib_python = get_libpython()
-            if lib_python:
-                environment['LD_PRELOAD'] = lib_python
-
         # http://bugs.python.org/issue20614
         if is_windows():
             environment['SYSTEMROOT'] = os.environ['SYSTEMROOT']

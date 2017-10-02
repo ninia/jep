@@ -5,6 +5,8 @@ import codecs
 
 import os
 
+import sysconfig
+
 from distutils.core import setup, Extension
 # if you want to build wheels, use setuptools instead of distutils
 # otherwise stick with distutils to avoid extra dependencies
@@ -62,6 +64,9 @@ if __name__ == '__main__':
               ('JEP_NUMPY_ENABLED', numpy_found),
               ('VERSION', '"{0}"'.format(VERSION)),
           ]
+    ldlib = sysconfig.get_config_var('LDLIBRARY')
+    if ldlib:
+        defines.append(('PYTHON_LDLIBRARY', '"' + ldlib + '"'))
     if is_windows():
         defines.append(('WIN32', 1))
         #Disable warnings about Secure CRT Functions in util.c and pyembed.c.

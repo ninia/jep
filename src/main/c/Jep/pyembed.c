@@ -49,6 +49,12 @@
  */
 #include "marshal.h"
 
+#ifdef __unix__
+    #ifdef PYTHON_LDLIBRARY
+        /* see comments near dlopen() in pyembed_startup */
+        #include <dlfcn.h>
+    #endif
+#endif
 
 #ifdef __APPLE__
     #ifndef WITH_NEXT_FRAMEWORK
@@ -212,6 +218,39 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
     PyObject* sysModule       = NULL;
     PyObject* threadingModule = NULL;
     PyObject* lockCreator     = NULL;
+
+#ifdef _DLFCN_H
+    /* 
+     * In some linux distros, python modules are compiled without a dependency
+     * on libpython, instead they rely on the python symbols to be available
+     * globally. Unfortunatly JNI does not load the libraries globally so the
+     * symbols are not available which causes those python modules to fail to
+     * load. To get around this dlopen is used to promote libpython into the
+     * global namespace.
+     *
+     * This is most notably a problem on ubuntu which statically links libpython
+     * into the python executable which means that all modules rely on python 
+     * symbols being available globally.
+     *
+     * An alternative mechanism on linux to get the libpython symbols globally
+     * is to use LD_PRELOAD to laod libpython, this still might be necessary
+     * if dlopen fails for some reason.
+     */
+    void* dlresult = dlopen(PYTHON_LDLIBRARY, 
+                            RTLD_LAZY | RTLD_NOLOAD | RTLD_GLOBAL);
+    if (dlresult){
+        // The dynamic linker maintains reference counts so closing it is a no-op.
+        dlclose(dlresult);
+    } else {
+        /* 
+         * Ignore errors and hope that the library is loaded globally or the
+         * extensions are linked. If developers need to debug the cause they 
+         * should print the result of dlerror. 
+         */
+        dlerror();
+    }
+#endif
+
 #ifdef __APPLE__
 #ifndef WITH_NEXT_FRAMEWORK
 // workaround for
@@ -219,6 +258,7 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
     environ = *_NSGetEnviron();
 #endif
 #endif
+
 
     if (mainThreadState != NULL) {
         // this shouldn't happen but to be safe, don't initialize twice
