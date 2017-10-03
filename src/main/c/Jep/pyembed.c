@@ -220,7 +220,7 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
     PyObject* lockCreator     = NULL;
 
 #ifdef _DLFCN_H
-    /* 
+    /*
      * In some Linux distros, Python modules are compiled without a dependency
      * on libpython, instead they rely on the Python symbols to be available
      * globally. Unfortunatly JNI does not load the libraries globally so the
@@ -229,23 +229,23 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
      * global namespace.
      *
      * This is most notably a problem on Ubuntu which statically links libpython
-     * into the python executable which means that all modules rely on Python 
+     * into the python executable which means that all modules rely on Python
      * symbols being available globally.
      *
      * An alternative mechanism on Linux to get the libpython symbols globally
      * is to use LD_PRELOAD to load libpython, this still might be necessary
      * if dlopen fails for some reason.
      */
-    void* dlresult = dlopen(PYTHON_LDLIBRARY, 
+    void* dlresult = dlopen(PYTHON_LDLIBRARY,
                             RTLD_LAZY | RTLD_NOLOAD | RTLD_GLOBAL);
-    if (dlresult){
+    if (dlresult) {
         // The dynamic linker maintains reference counts so closing it is a no-op.
         dlclose(dlresult);
     } else {
-        /* 
+        /*
          * Ignore errors and hope that the library is loaded globally or the
-         * extensions are linked. If developers need to debug the cause they 
-         * should print the result of dlerror. 
+         * extensions are linked. If developers need to debug the cause they
+         * should print the result of dlerror.
          */
         dlerror();
     }
@@ -781,11 +781,11 @@ static PyObject* pyembed_jproxy(PyObject *self, PyObject *args)
 
     // do the deed
     proxy = jep_Proxy_newProxyInstance(env,
-                                           (jlong) (intptr_t) jepThread,
-                                           (jlong) (intptr_t) pytarget,
-                                           jepThread->caller,
-                                           cl,
-                                           classes);
+                                       (jlong) (intptr_t) jepThread,
+                                       (jlong) (intptr_t) pytarget,
+                                       jepThread->caller,
+                                       cl,
+                                       classes);
     if (process_java_exception(env) || !proxy) {
         return NULL;
     }
@@ -1670,11 +1670,9 @@ void pyembed_setparameter_object(JNIEnv *env,
 
     if (pyjob) {
         if (pymodule == NULL) {
-            PyObject *key = PyString_FromString(name);
-            PyDict_SetItem(jepThread->globals,
-                           key,
-                           pyjob); /* ownership */
-            Py_DECREF(key);
+            PyDict_SetItemString(jepThread->globals,
+                                 name,
+                                 pyjob); /* ownership */
             Py_DECREF(pyjob);
         } else {
             PyModule_AddObject(pymodule,
@@ -1682,6 +1680,7 @@ void pyembed_setparameter_object(JNIEnv *env,
                                pyjob); // steals reference
         }
     }
+    process_py_exception(env);
 
     PyEval_ReleaseThread(jepThread->tstate);
     return;
@@ -1709,11 +1708,9 @@ void pyembed_setparameter_array(JNIEnv *env,
 
     if (pyjob) {
         if (pymodule == NULL) {
-            PyObject *key = PyString_FromString(name);
-            PyDict_SetItem(jepThread->globals,
-                           key,
-                           pyjob); /* ownership */
-            Py_DECREF(key);
+            PyDict_SetItemString(jepThread->globals,
+                                 name,
+                                 pyjob); /* ownership */
             Py_DECREF(pyjob);
         } else {
             PyModule_AddObject(pymodule,
@@ -1721,6 +1718,7 @@ void pyembed_setparameter_array(JNIEnv *env,
                                pyjob); // steals reference
         }
     }
+    process_py_exception(env);
 
     PyEval_ReleaseThread(jepThread->tstate);
     return;
@@ -1748,11 +1746,9 @@ void pyembed_setparameter_class(JNIEnv *env,
 
     if (pyjob) {
         if (pymodule == NULL) {
-            PyObject *key = PyString_FromString(name);
-            PyDict_SetItem(jepThread->globals,
-                           key,
-                           pyjob); /* ownership */
-            Py_DECREF(key);
+            PyDict_SetItemString(jepThread->globals,
+                                 name,
+                                 pyjob); /* ownership */
             Py_DECREF(pyjob);
         } else {
             PyModule_AddObject(pymodule,
@@ -1760,6 +1756,7 @@ void pyembed_setparameter_class(JNIEnv *env,
                                pyjob); // steals reference
         }
     }
+    process_py_exception(env);
 
     PyEval_ReleaseThread(jepThread->tstate);
     return;
@@ -1785,18 +1782,19 @@ void pyembed_setparameter_string(JNIEnv *env,
         pyvalue = PyString_FromString(value);
     }
 
-    if (pymodule == NULL) {
-        PyObject *key = PyString_FromString(name);
-        PyDict_SetItem(jepThread->globals,
-                       key,
-                       pyvalue); /* ownership */
-        Py_DECREF(key);
-        Py_DECREF(pyvalue);
-    } else {
-        PyModule_AddObject(pymodule,
-                           (char *) name,
-                           pyvalue); // steals reference
+    if (pyvalue) {
+        if (pymodule == NULL) {
+            PyDict_SetItemString(jepThread->globals,
+                                 name,
+                                 pyvalue); /* ownership */
+            Py_DECREF(pyvalue);
+        } else {
+            PyModule_AddObject(pymodule,
+                               (char *) name,
+                               pyvalue); // steals reference
+        }
     }
+    process_py_exception(env);
 
     PyEval_ReleaseThread(jepThread->tstate);
     return;
@@ -1814,23 +1812,21 @@ void pyembed_setparameter_bool(JNIEnv *env,
     // does common things
     GET_COMMON;
 
-    if ((pyvalue = PyBool_FromLong(value)) == NULL) {
-        PyErr_SetString(PyExc_MemoryError, "Out of memory.");
-        return;
-    }
+    pyvalue = PyBool_FromLong(value);
 
-    if (pymodule == NULL) {
-        PyObject *key = PyString_FromString(name);
-        PyDict_SetItem(jepThread->globals,
-                       key,
-                       pyvalue); /* ownership */
-        Py_DECREF(key);
-        Py_DECREF(pyvalue);
-    } else {
-        PyModule_AddObject(pymodule,
-                           (char *) name,
-                           pyvalue); // steals reference
+    if (pyvalue) {
+        if (pymodule == NULL) {
+            PyDict_SetItemString(jepThread->globals,
+                                 name,
+                                 pyvalue); /* ownership */
+            Py_DECREF(pyvalue);
+        } else {
+            PyModule_AddObject(pymodule,
+                               (char *) name,
+                               pyvalue); // steals reference
+        }
     }
+    process_py_exception(env);
 
     PyEval_ReleaseThread(jepThread->tstate);
     return;
@@ -1848,23 +1844,21 @@ void pyembed_setparameter_int(JNIEnv *env,
     // does common things
     GET_COMMON;
 
-    if ((pyvalue = Py_BuildValue("i", value)) == NULL) {
-        PyErr_SetString(PyExc_MemoryError, "Out of memory.");
-        return;
-    }
+    pyvalue = Py_BuildValue("i", value);
 
-    if (pymodule == NULL) {
-        PyObject *key = PyString_FromString(name);
-        PyDict_SetItem(jepThread->globals,
-                       key,
-                       pyvalue); /* ownership */
-        Py_DECREF(key);
-        Py_DECREF(pyvalue);
-    } else {
-        PyModule_AddObject(pymodule,
-                           (char *) name,
-                           pyvalue); // steals reference
+    if (pyvalue) {
+        if (pymodule == NULL) {
+            PyDict_SetItemString(jepThread->globals,
+                                 name,
+                                 pyvalue); /* ownership */
+            Py_DECREF(pyvalue);
+        } else {
+            PyModule_AddObject(pymodule,
+                               (char *) name,
+                               pyvalue); // steals reference
+        }
     }
+    process_py_exception(env);
 
     PyEval_ReleaseThread(jepThread->tstate);
     return;
@@ -1883,23 +1877,21 @@ void pyembed_setparameter_long(JNIEnv *env,
     // does common things
     GET_COMMON;
 
-    if ((pyvalue = PyLong_FromLongLong(value)) == NULL) {
-        PyErr_SetString(PyExc_MemoryError, "Out of memory.");
-        return;
-    }
+    pyvalue = PyLong_FromLongLong(value);
 
-    if (pymodule == NULL) {
-        PyObject *key = PyString_FromString(name);
-        PyDict_SetItem(jepThread->globals,
-                       key,
-                       pyvalue); /* ownership */
-        Py_DECREF(key);
-        Py_DECREF(pyvalue);
-    } else {
-        PyModule_AddObject(pymodule,
-                           (char *) name,
-                           pyvalue); // steals reference
+    if (pyvalue) {
+        if (pymodule == NULL) {
+            PyDict_SetItemString(jepThread->globals,
+                                 name,
+                                 pyvalue); /* ownership */
+            Py_DECREF(pyvalue);
+        } else {
+            PyModule_AddObject(pymodule,
+                               (char *) name,
+                               pyvalue); // steals reference
+        }
     }
+    process_py_exception(env);
 
     PyEval_ReleaseThread(jepThread->tstate);
     return;
@@ -1918,23 +1910,21 @@ void pyembed_setparameter_double(JNIEnv *env,
     // does common things
     GET_COMMON;
 
-    if ((pyvalue = PyFloat_FromDouble(value)) == NULL) {
-        PyErr_SetString(PyExc_MemoryError, "Out of memory.");
-        return;
-    }
+    pyvalue = PyFloat_FromDouble(value);
 
-    if (pymodule == NULL) {
-        PyObject *key = PyString_FromString(name);
-        PyDict_SetItem(jepThread->globals,
-                       key,
-                       pyvalue); /* ownership */
-        Py_DECREF(key);
-        Py_DECREF(pyvalue);
-    } else {
-        PyModule_AddObject(pymodule,
-                           (char *) name,
-                           pyvalue); // steals reference
+    if (pyvalue) {
+        if (pymodule == NULL) {
+            PyDict_SetItemString(jepThread->globals,
+                                 name,
+                                 pyvalue); /* ownership */
+            Py_DECREF(pyvalue);
+        } else {
+            PyModule_AddObject(pymodule,
+                               (char *) name,
+                               pyvalue); // steals reference
+        }
     }
+    process_py_exception(env);
 
     PyEval_ReleaseThread(jepThread->tstate);
     return;
@@ -1953,23 +1943,21 @@ void pyembed_setparameter_float(JNIEnv *env,
     // does common things
     GET_COMMON;
 
-    if ((pyvalue = PyFloat_FromDouble((double) value)) == NULL) {
-        PyErr_SetString(PyExc_MemoryError, "Out of memory.");
-        return;
-    }
+    pyvalue = PyFloat_FromDouble((double) value);
 
-    if (pymodule == NULL) {
-        PyObject *key = PyString_FromString(name);
-        PyDict_SetItem(jepThread->globals,
-                       key,
-                       pyvalue); /* ownership */
-        Py_DECREF(key);
-        Py_DECREF(pyvalue);
-    } else {
-        PyModule_AddObject(pymodule,
-                           (char *) name,
-                           pyvalue); // steals reference
+    if (pyvalue) {
+        if (pymodule == NULL) {
+            PyDict_SetItemString(jepThread->globals,
+                                 name,
+                                 pyvalue); /* ownership */
+            Py_DECREF(pyvalue);
+        } else {
+            PyModule_AddObject(pymodule,
+                               (char *) name,
+                               pyvalue); // steals reference
+        }
     }
+    process_py_exception(env);
 
     PyEval_ReleaseThread(jepThread->tstate);
     return;
