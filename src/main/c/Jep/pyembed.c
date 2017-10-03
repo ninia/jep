@@ -221,19 +221,19 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
 
 #ifdef _DLFCN_H
     /* 
-     * In some linux distros, python modules are compiled without a dependency
-     * on libpython, instead they rely on the python symbols to be available
+     * In some Linux distros, Python modules are compiled without a dependency
+     * on libpython, instead they rely on the Python symbols to be available
      * globally. Unfortunatly JNI does not load the libraries globally so the
-     * symbols are not available which causes those python modules to fail to
+     * symbols are not available which causes those Python modules to fail to
      * load. To get around this dlopen is used to promote libpython into the
      * global namespace.
      *
-     * This is most notably a problem on ubuntu which statically links libpython
-     * into the python executable which means that all modules rely on python 
+     * This is most notably a problem on Ubuntu which statically links libpython
+     * into the python executable which means that all modules rely on Python 
      * symbols being available globally.
      *
-     * An alternative mechanism on linux to get the libpython symbols globally
-     * is to use LD_PRELOAD to laod libpython, this still might be necessary
+     * An alternative mechanism on Linux to get the libpython symbols globally
+     * is to use LD_PRELOAD to load libpython, this still might be necessary
      * if dlopen fails for some reason.
      */
     void* dlresult = dlopen(PYTHON_LDLIBRARY, 
