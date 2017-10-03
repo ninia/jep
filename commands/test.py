@@ -41,6 +41,8 @@ class test(Command):
 
         # setup environment variables
         environment = {}
+        if not is_osx() and not is_windows():
+            environment['LD_LIBRARY_PATH'] = sysconfig.get_config_var('LIBDIR')
         # http://bugs.python.org/issue20614
         if is_windows():
             environment['SYSTEMROOT'] = os.environ['SYSTEMROOT']
