@@ -16,17 +16,53 @@ Jep.invoke() now supports keyword arguments when invoking Python functions.
 It continues to support varargs arguments and also supports a combination
 of positional arguments and keyword arguments.
 
+
 Smarter library loading
 ~~~~~~~~~~~~~~~~~~~~~~~
-Jep will try harder to find both the Jep library and the Python library so
+Jep will try harder to find both the native Jep library and the Python library so
 LD_PRELOAD, LD_LIBRARY_PATH and java.library.path are not needed in many
 environments. There are 2 different changes that help with this:
 1. Jep will now try to load the Python library globally which is required by some
-   python modules. Previously this global loading was forced using LD_PRELOAD
-   which is no longer necessary.
-2. If the Jep Library is not found, then Jep will attempt to find it in the jep
-   module. To find the Jep module it looks in the locations in the PYTHONPATH 
-   environmental variable and also in the site-packages directory which is found
-   relative to the PYTHONHOME environmental variable. If the Jep Library can be
-   found in one of those locations then it is no longer necessary to set the 
-   LD_LIBRARY_PATH and/or java.library.path to the location of the Jep library.
+   Python modules. Previously this global loading could be forced on Unix by using
+   LD_PRELOAD.
+2. If the native Jep Library is not found, then Jep will attempt to find it in
+   the jep module. To find the Jep module it looks in the locations in the
+   PYTHONPATH environmental variable and also in the site-packages directory
+   which is found relative to the PYTHONHOME environmental variable. If the Jep
+   Library can be found in one of those locations then it is no longer necessary
+   to set the LD_LIBRARY_PATH and/or java.library.path to the location of the
+   Jep library.
+
+
+Compatibility Notes
+*******************
+
+Jep constructor now throws JepException if invalid thread state is detected
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Previously the Jep constructor(s) would print a warning to System.err when
+a thread was reused for two active Jep instances.  Jep will now throw a
+JepException when this state is detected to ensure stability.
+
+
+Jep extends AutoCloseable and close() now throws JepException
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Jep now extends AutoCloseable instead of Closeable.  Along with this change,
+Jep will throw a JepException if you try to close a Jep instance from a thread
+other than the thread that constructed it.  This helps ensure stability.
+
+
+Jep Constructors deprecated
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Some of the Jep constructors have been deprecated in favor of using the
+constructor Jep(JepConfig).  JepConfig also has a new method .createJep() for
+an alternative method of creating Jep instances.
+
+
+Jep pre-inits deprecated
+~~~~~~~~~~~~~~~~~~~~~~~~
+Using Jep.setInitParams(PyConfig) and Jep.setSharedModulesArgv(String...) have
+been deprecated in favor of using the same methods on the new class
+MainInterpreter.  As before, these methods must be called before instantiating
+a Jep instance for them to take effect.  This is only an API change, the
+functionality remains the same.
+
