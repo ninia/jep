@@ -35,15 +35,7 @@
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include "numpy/arrayobject.h"
 
-
-/* this is ugly but the method signature of import_array() changes in Python 3 */
 static int numpyInitialized = 0;
-#if PY_MAJOR_VERSION >= 3
-    static PyObject* init_numpy(void);
-#else
-    static void init_numpy(void);
-#endif
-
 
 /* internal method */
 static PyObject* convert_jprimitivearray_pyndarray(JNIEnv*, jobject, int,
@@ -82,28 +74,35 @@ static jmethodID doubleBuffer_getOrder = NULL;
  * it needs to have a different return type in Python 2 vs Python 3.
  */
 #if PY_MAJOR_VERSION >= 3
-static PyObject* init_numpy(void)
+static PyObject* _init_numpy(void)
 {
-    if (!numpyInitialized) {
-        numpyInitialized = 1;
-        import_array();
-    }
-    return NULL;
+    import_array();
 }
 #else
-static void init_numpy(void)
+static void _init_numpy(void)
 {
-    if (!numpyInitialized) {
-        import_array();
-        numpyInitialized = 1;
-    }
+    import_array();
 }
 #endif // Python 3 compatibility
+
+static int init_numpy(void)
+{
+    if (!numpyInitialized) {
+        _init_numpy();
+        if (!PyErr_Occurred()) {
+            numpyInitialized = 1;
+        }
+    }
+    return numpyInitialized;
+}
 
 
 int npy_array_check(PyObject *obj)
 {
-    init_numpy();
+    if (!init_numpy()) {
+        PyErr_Clear();
+        return 0;
+    }
     return PyArray_Check(obj);
 }
 
@@ -500,7 +499,9 @@ PyObject* convert_jdndarray_pyndarray(JNIEnv *env, PyObject* pyobj)
     jboolean   usigned = 0;
     int        i;
 
-    init_numpy();
+    if (!init_numpy()) {
+        return NULL;
+    }
     if (!JNI_METHOD(dndarrayGetDims, env, JEP_NDARRAY_TYPE, "getDimensions",
                     "()[I")) {
         process_java_exception(env);
@@ -649,7 +650,9 @@ PyObject* convert_jndarray_pyndarray(JNIEnv *env, jobject obj)
     jboolean   usigned = 0;
     int        i;
 
-    init_numpy();
+    if (!init_numpy()) {
+        return NULL;
+    }
 
     if (!JNI_METHOD(ndarrayGetDims, env, JEP_NDARRAY_TYPE, "getDimensions",
                     "()[I")) {
@@ -718,7 +721,9 @@ PyObject* convert_jndarray_pyndarray(JNIEnv *env, jobject obj)
 jobject convert_pyndarray_jobject(JNIEnv* env, PyObject* pyobject,
                                   jclass expectedType)
 {
-    init_numpy();
+    if (!init_numpy()) {
+        return NULL;
+    }
     if ((*env)->IsAssignableFrom(env, JEP_DNDARRAY_TYPE, expectedType)) {
         jobject result = get_base_jdndarray_from_pyndarray(env, pyobject);
         if (result != NULL) {

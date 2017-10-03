@@ -210,7 +210,9 @@ public final class MainInterpreter implements AutoCloseable {
      */
     @Override
     public void close() {
-        thread.interrupt();
+        if(thread != null){
+            thread.interrupt();
+        }
     }
 
     /**
