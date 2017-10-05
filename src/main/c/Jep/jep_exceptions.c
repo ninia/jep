@@ -425,10 +425,6 @@ int process_import_exception(JNIEnv *env)
         return 1;
     }
 
-    if (jepThread->printStack) {
-        (*env)->ExceptionDescribe(env);
-    }
-
     // we're already processing this one, clear the old
     (*env)->ExceptionClear(env);
 
@@ -488,10 +484,6 @@ int process_java_exception(JNIEnv *env)
         printf("Error while processing a Java exception, "
                "invalid JepThread.\n");
         return 1;
-    }
-
-    if (jepThread->printStack) {
-        (*env)->ExceptionDescribe(env);
     }
 
     // we're already processing this one, clear the old

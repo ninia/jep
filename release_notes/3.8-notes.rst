@@ -66,3 +66,12 @@ MainInterpreter.  As before, these methods must be called before instantiating
 a Jep instance for them to take effect.  This is only an API change, the
 functionality remains the same.
 
+
+Jep printStack(bool) removed
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The Python method jep.printStack(bool) has been removed.  This could be used to
+enable the printing of stacktraces to stdout when Java exceptions occur in
+Python.  JepException has supported stacktraces since Jep 3.3 so the
+printStack(bool) function was no longer as useful as it originally was and
+hence it has been removed.
+

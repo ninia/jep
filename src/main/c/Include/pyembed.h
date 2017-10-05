@@ -40,7 +40,6 @@ struct __JepThread {
     JNIEnv        *env;
     jobject        classloader;
     jobject        caller;      /* Jep instance that called us. */
-    int            printStack;
     PyObject      *fqnToPyJAttrs; /* a dictionary of fully qualified Java
                                        classnames to PyJMethods and PyJFields */
 #if PY_MAJOR_VERSION < 3

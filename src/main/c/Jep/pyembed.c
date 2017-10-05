@@ -75,7 +75,6 @@ int pyembed_version_unsafe(void);
 
 static PyObject* pyembed_findclass(PyObject*, PyObject*);
 static PyObject* pyembed_forname(PyObject*, PyObject*);
-static PyObject* pyembed_set_print_stack(PyObject*, PyObject*);
 static PyObject* pyembed_jproxy(PyObject*, PyObject*);
 
 static int maybe_pyc_file(FILE*, const char*, const char*, int);
@@ -107,13 +106,6 @@ static struct PyMethodDef jep_methods[] = {
         "(size, jobject) || "
         "(size, str) || "
         "(size, jarray)"
-    },
-
-    {
-        "printStack",
-        pyembed_set_print_stack,
-        METH_VARARGS,
-        "Turn on printing of stack traces (True|False)"
     },
 
     {
@@ -607,7 +599,6 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller,
     jepThread->env             = env;
     jepThread->classloader     = (*env)->NewGlobalRef(env, cl);
     jepThread->caller          = (*env)->NewGlobalRef(env, caller);
-    jepThread->printStack      = 0;
     jepThread->fqnToPyJAttrs = NULL;
 
     if ((tdict = PyThreadState_GetDict()) != NULL) {
@@ -794,33 +785,6 @@ static PyObject* pyembed_jproxy(PyObject *self, PyObject *args)
     Py_INCREF(pytarget);
 
     return PyJObject_New(env, proxy);
-}
-
-
-static PyObject* pyembed_set_print_stack(PyObject *self, PyObject *args)
-{
-    JepThread *jepThread;
-    char      *print = 0;
-
-    if (!PyArg_ParseTuple(args, "b:setPrintStack", &print)) {
-        return NULL;
-    }
-
-    jepThread = pyembed_get_jepthread();
-    if (!jepThread) {
-        if (!PyErr_Occurred()) {
-            PyErr_SetString(PyExc_RuntimeError, "Invalid JepThread pointer.");
-        }
-        return NULL;
-    }
-
-    if (print == 0) {
-        jepThread->printStack = 0;
-    } else {
-        jepThread->printStack = 1;
-    }
-
-    Py_RETURN_NONE;
 }
 
 
