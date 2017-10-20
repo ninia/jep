@@ -35,8 +35,12 @@ import javax.script.ScriptException;
 /**
  * Implements {@link javax.script.ScriptEngineFactory}
  * 
+ * @deprecated This class is not actively used by the community and will be
+ *             removed in a future release.
+ * 
  * @author Mike Johnson
  */
+@Deprecated
 public class JepScriptEngineFactory implements ScriptEngineFactory {
 
     private static List<String> names;

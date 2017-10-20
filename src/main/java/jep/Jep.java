@@ -621,12 +621,14 @@ public final class Jep implements AutoCloseable {
      * Create a Python module on the interpreter. If the given name is valid,
      * imported module, this method will return that module.
      * 
+     * @deprecated This will be removed in a future release.
      * @param name
      *            a <code>String</code> value
      * @return a <code>PyModule</code> value
      * @exception JepException
      *                if an error occurs
      */
+    @Deprecated
     public PyModule createModule(String name) throws JepException {
         return (PyModule) trackObject(new PyModule(this.tstate,
                 createModule(this.tstate, name), this));

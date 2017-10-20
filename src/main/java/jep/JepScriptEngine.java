@@ -41,8 +41,13 @@ import jep.python.PyModule;
 /**
  * Implements {@link javax.script.ScriptEngine}
  * 
+ * @deprecated This class is not actively used by the community and will be
+ *             removed in a future release.
+ * 
  * @author Mike Johnson
+ * 
  */
+@Deprecated
 public class JepScriptEngine implements ScriptEngine, AutoCloseable {
     private Jep jep = null;
 
