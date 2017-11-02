@@ -112,8 +112,9 @@ public class ClassList implements ClassEnquirer {
                     String pname = entry.substring(0, end).replace('/', '.');
 
                     String cname = stripClassExt(entry.substring(end + 1));
-
-                    addClass(pname, cname);
+                    if (!cname.contains("$")) {
+                        addClass(pname, cname);
+                    }
                 }
             } catch (IOException e) {
                 // debugging only
