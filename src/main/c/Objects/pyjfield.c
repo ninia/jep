@@ -262,6 +262,30 @@ PyObject* pyjfield_get(PyJFieldObject *self, PyJObject* pyjobject)
         break;
     }
 
+    case JARRAY_ID: {
+        jobject obj;
+
+        if (self->isStatic)
+            obj = (*env)->GetStaticObjectField(env,
+                                               pyjobject->clazz,
+                                               self->fieldId);
+        else
+            obj = (*env)->GetObjectField(env,
+                                         pyjobject->object,
+                                         self->fieldId);
+
+        if (process_java_exception(env)) {
+            return NULL;
+        }
+
+        if (obj == NULL) {
+            Py_RETURN_NONE;
+        }
+
+        result = pyjarray_new(env, obj);
+        (*env)->DeleteLocalRef(env, obj);
+        break;
+    }
     case JINT_ID: {
         jint ret;
 
@@ -461,6 +485,7 @@ int pyjfield_set(PyJFieldObject *self, PyJObject* pyjobject, PyObject *value)
     switch (self->fieldTypeId) {
     case JSTRING_ID:
     case JCLASS_ID:
+    case JARRAY_ID:
     case JOBJECT_ID: {
         jobject obj = PyObject_As_jobject(env, value, self->fieldType);
         if (!obj && PyErr_Occurred()) {

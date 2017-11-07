@@ -151,4 +151,20 @@ public class TestMethodTypes {
         return m;
     }
 
+    public String[] stringArray(String[] a) {
+        if (a != null && a.getClass() != String[].class) {
+            throw new RuntimeException("String[] argument is actually an "
+                    + a.getClass().getName());
+        }
+        return a;
+    }
+
+    public int[] intArray(int[] a) {
+        if (a != null && a.getClass() != int[].class) {
+            throw new RuntimeException("int[] argument is actually an "
+                    + a.getClass().getName());
+        }
+        return a;
+    }
+
 }

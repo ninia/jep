@@ -55,6 +55,10 @@ public class TestStaticFieldTypes {
 
     public static Map<?,?> map;
 
+    public static String[] stringArray;
+
+    public static int[] intArray;
+
     /**
      * Some implementation of JNI will allow native code to assign a field using
      * an Object of the wrong type. This is always a bad idea and can result in
@@ -107,6 +111,12 @@ public class TestStaticFieldTypes {
         } else if (map != null && !Map.class.isAssignableFrom(map.getClass())) {
             throw new RuntimeException("Map field is actually a "
                     + map.getClass().getName());
+        } else if (stringArray != null && !String[].class.isAssignableFrom(stringArray.getClass())) {
+            throw new RuntimeException("String[] field is actually a "
+                    + stringArray.getClass().getName());
+        } else if (intArray != null && !int[].class.isAssignableFrom(intArray.getClass())) {
+            throw new RuntimeException("int[] field is actually a "
+                    + intArray.getClass().getName());
         }
     }
 

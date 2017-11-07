@@ -17,6 +17,13 @@ It continues to support varargs arguments and also supports a combination
 of positional arguments and keyword arguments.
 
 
+Python lists and tuples are converted to Java arrays
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+It is now possible to pass a Python list or tuple to a Java method that is
+expecting an array. A new array is created and each object in the Python
+sequence is converted to a Java object and placed in the array.
+
+
 Smarter library loading
 ~~~~~~~~~~~~~~~~~~~~~~~
 Jep will try harder to find both the native Jep library and the Python library so

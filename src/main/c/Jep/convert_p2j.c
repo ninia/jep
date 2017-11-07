@@ -559,10 +559,41 @@ static jobject pyfloat_as_jobject(JNIEnv *env, PyObject *pyobject,
     return NULL;
 }
 
+/*
+ * This macro is intended only for use within pyfastsequence_as_jobject. It
+ * contains all the redundant code for converting a fast sequence into a java
+ * array of primitives. See the JNI documentation for
+ * Set<PrimitiveType>ArrayRegion for more information on the arguments passed,
+ * jytpe corresponds to the NativeType and Type corresponds to <PrimitiveType>.
+ */
+#define pyfastsequence_as_primitive_array(jtype, Type) \
+    jtype *buf = malloc(size*sizeof(jtype));\
+    jtype##Array jarray = (*env)->New##Type##Array(env, size);\
+    if (jarray == NULL) {\
+        free(buf);\
+        process_java_exception(env);\
+        return (*env)->PopLocalFrame(env, NULL);\
+    }\
+    for (i = 0; i < size; i++) {\
+        PyObject *item = PySequence_Fast_GET_ITEM(pyseq, i);\
+        buf[i] = PyObject_As_##jtype(item);\
+        if (PyErr_Occurred()){\
+            free(buf);\
+            return (*env)->PopLocalFrame(env, NULL);\
+        }\
+    }\
+    (*env)->Set##Type##ArrayRegion(env, jarray,0, size, buf);\
+    free(buf);\
+    if (process_java_exception(env)){\
+        return (*env)->PopLocalFrame(env, NULL);\
+    }\
+    return (*env)->PopLocalFrame(env, jarray);
+
 /* Convert a list or tuple to an ArrayList */
 static jobject pyfastsequence_as_jobject(JNIEnv *env, PyObject *pyseq,
         jclass expectedType)
 {
+    jboolean isArray;
     if ((*env)->IsAssignableFrom(env, JLIST_TYPE, expectedType)
             || (PyList_Check(pyseq)
                 && (*env)->IsAssignableFrom(env, JARRAYLIST_TYPE, expectedType))) {
@@ -607,6 +638,68 @@ static jobject pyfastsequence_as_jobject(JNIEnv *env, PyObject *pyseq,
             }
         }
         return (*env)->PopLocalFrame(env, jlist);
+    }
+    isArray = java_lang_Class_isArray(env, expectedType);
+    if (process_java_exception(env)) {
+        return NULL;
+    }
+    if ( isArray ) {
+        jclass componentType;
+        Py_ssize_t size, i;
+        size = PySequence_Fast_GET_SIZE(pyseq);
+
+        if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
+            process_java_exception(env);
+            return NULL;
+        }
+
+        componentType = java_lang_Class_getComponentType(env, expectedType);
+        if (componentType == NULL) {
+            process_java_exception(env);
+            return (*env)->PopLocalFrame(env, NULL);
+        }
+
+        if ((*env)->IsAssignableFrom(env, componentType, JOBJECT_TYPE)) {
+            jobjectArray jarray = (*env)->NewObjectArray(env, size, componentType, NULL);
+            if (!jarray) {
+                process_java_exception(env);
+                return (*env)->PopLocalFrame(env, NULL);
+            }
+            for (i = 0; i < size; i++) {
+                jobject value;
+                PyObject *item = PySequence_Fast_GET_ITEM(pyseq, i);
+                value = PyObject_As_jobject(env, item, componentType);
+                if (value == NULL && PyErr_Occurred()) {
+                    /*
+                     * java exceptions will have been transformed to python
+                     * exceptions by this point
+                     */
+                    return (*env)->PopLocalFrame(env, NULL);
+                }
+                (*env)->SetObjectArrayElement(env, jarray, i, value);
+                (*env)->DeleteLocalRef(env, value);
+                if (process_java_exception(env)) {
+                    return (*env)->PopLocalFrame(env, NULL);
+                }
+            }
+            return (*env)->PopLocalFrame(env, jarray);
+        } else if ((*env)->IsSameObject(env, componentType, JINT_TYPE)) {
+            pyfastsequence_as_primitive_array(jint, Int);
+        } else if ((*env)->IsSameObject(env, componentType, JFLOAT_TYPE)) {
+            pyfastsequence_as_primitive_array(jfloat, Float);
+        } else if ((*env)->IsSameObject(env, componentType, JDOUBLE_TYPE)) {
+            pyfastsequence_as_primitive_array(jdouble, Double);
+        } else if ((*env)->IsSameObject(env, componentType, JLONG_TYPE)) {
+            pyfastsequence_as_primitive_array(jlong, Long);
+        } else if ((*env)->IsSameObject(env, componentType, JBOOLEAN_TYPE)) {
+            pyfastsequence_as_primitive_array(jboolean, Boolean);
+        } else if ((*env)->IsSameObject(env, componentType, JCHAR_TYPE)) {
+            pyfastsequence_as_primitive_array(jchar, Char);
+        } else if ((*env)->IsSameObject(env, componentType, JBYTE_TYPE)) {
+            pyfastsequence_as_primitive_array(jbyte, Byte);
+        } else if ((*env)->IsSameObject(env, componentType, JSHORT_TYPE)) {
+            pyfastsequence_as_primitive_array(jshort, Short);
+        }
     }
     raiseTypeError(env, pyseq, expectedType);
     return NULL;
@@ -686,11 +779,11 @@ jobject PyCallable_as_functional_interface(JNIEnv *env, PyObject *callable,
     }
 
     proxy = jep_Proxy_newDirectProxyInstance(env,
-                                           (jlong) (intptr_t) jepThread,
-                                           (jlong) (intptr_t) callable,
-                                           jepThread->caller,
-                                           jepThread->classloader,
-                                           expectedType);
+            (jlong) (intptr_t) jepThread,
+            (jlong) (intptr_t) callable,
+            jepThread->caller,
+            jepThread->classloader,
+            expectedType);
     if (process_java_exception(env) || !proxy) {
         return NULL;
     }

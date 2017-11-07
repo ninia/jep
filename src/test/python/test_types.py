@@ -769,3 +769,47 @@ class TestTypes(unittest.TestCase):
                 self.fields.map = m
             with self.assertRaises(TypeError):
                 self.staticFields.map = m
+
+    def test_string_array(self):
+        for l in ([], (), ["1", "2", "3"], ("1", "2", "3")):
+            self.assertSequenceEqual(l, self.methods.stringArray(l))
+            self.assertSequenceEqual(l, self.staticMethods.stringArray(l))
+            self.fields.stringArray = l
+            self.assertSequenceEqual(l, self.fields.stringArray)
+            self.staticFields.stringArray = l
+            self.assertSequenceEqual(l, self.staticFields.stringArray)
+            self.fields.verify()
+            self.staticFields.verify()
+
+    def test_string_array_coercion(self):
+        for l in ([1, 2, 3], (1, 2, 3)):
+            with self.assertRaises(TypeError):
+                self.methods.stringArray(l)
+            with self.assertRaises(TypeError):
+                self.staticMethods.stringArray(l)
+            with self.assertRaises(TypeError):
+                self.fields.stringArray = l
+            with self.assertRaises(TypeError):
+                self.staticFields.stringArray = l
+
+    def test_int_array(self):
+        for l in ([], (), [1, 2, 3], (1, 2, 3)):
+            self.assertSequenceEqual(l, self.methods.intArray(l))
+            self.assertSequenceEqual(l, self.staticMethods.intArray(l))
+            self.fields.intArray = l
+            self.assertSequenceEqual(l, self.fields.intArray)
+            self.staticFields.intArray = l
+            self.assertSequenceEqual(l, self.staticFields.intArray)
+            self.fields.verify()
+            self.staticFields.verify()
+
+    def test_int_array_coercion(self):
+        for l in (["1", "2", "3"], ("1", "2", "3")):
+            with self.assertRaises(TypeError):
+                self.methods.intArray(l)
+            with self.assertRaises(TypeError):
+                self.staticMethods.intArray(l)
+            with self.assertRaises(TypeError):
+                self.fields.intArray = l
+            with self.assertRaises(TypeError):
+                self.staticFields.intArray = l
