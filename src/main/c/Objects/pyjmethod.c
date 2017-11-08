@@ -253,13 +253,14 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
         return NULL;
     }
 
-    jargs = (jvalue *) PyMem_Malloc(sizeof(jvalue) * self->lenParameters);
-
-    // ------------------------------ build jargs off python values
-
     if ((*env)->PushLocalFrame(env, JLOCAL_REFS + self->lenParameters) != 0) {
         process_java_exception(env);
         return NULL;
+    }
+
+    jargs = (jvalue *) PyMem_Malloc(sizeof(jvalue) * self->lenParameters);
+    if (jargs == NULL) {
+        return PyErr_NoMemory();
     }
     for (pos = 0; pos < self->lenParameters; pos++) {
         PyObject *param = NULL;
