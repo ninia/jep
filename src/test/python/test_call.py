@@ -116,3 +116,10 @@ class TestTypes(unittest.TestCase):
             a.append(1)
         Executors.callable(runTask).call()
         self.assertEquals(len(a), 1)
+
+    def test_vararg(self):
+        from java.util import Arrays
+        self.assertSequenceEqual((), Arrays.asList())
+        self.assertSequenceEqual(("1"), Arrays.asList("1"))
+        self.assertSequenceEqual(("1","2"), Arrays.asList("1","2"))
+        self.assertSequenceEqual(("1","2"), Arrays.asList(("1","2")))

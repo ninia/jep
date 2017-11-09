@@ -29,6 +29,7 @@
 
 static jmethodID getParameterTypes = 0;
 static jmethodID getReturnType     = 0;
+static jmethodID isVarArgs         = 0;
 
 jobjectArray java_lang_reflect_Method_getParameterTypes(JNIEnv* env,
         jobject this)
@@ -47,6 +48,15 @@ jclass java_lang_reflect_Method_getReturnType(JNIEnv* env, jobject this)
     if (JNI_METHOD(getReturnType, env, JMETHOD_TYPE, "getReturnType",
                    "()Ljava/lang/Class;")) {
         result = (jclass) (*env)->CallObjectMethod(env, this, getReturnType);
+    }
+    return result;
+}
+
+jboolean java_lang_reflect_Method_isVarArgs(JNIEnv* env, jobject this)
+{
+    jboolean result = NULL;
+    if (JNI_METHOD(isVarArgs, env, JMETHOD_TYPE, "isVarArgs", "()Z")) {
+        result = (*env)->CallBooleanMethod(env, this, isVarArgs);
     }
     return result;
 }

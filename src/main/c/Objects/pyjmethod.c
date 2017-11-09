@@ -212,28 +212,41 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
                                 PyObject *args,
                                 PyObject *keywords)
 {
-    JNIEnv        *env         = NULL;
-    PyObject      *firstArg    = NULL;
-    PyJObject     *instance    = NULL;
-    PyObject      *result      = NULL;
-    int            pos         = 0;
-    jvalue        *jargs       = NULL;
-    int            foundArray  = 0;   /* if params includes pyjarray instance */
-    PyThreadState *_save       = NULL;
+    JNIEnv        *env          = NULL;
+    int            lenNonVarArg = 0;
+    int            lenArgs      = 0;
+    PyObject      *firstArg     = NULL;
+    PyJObject     *instance     = NULL;
+    PyObject      *result       = NULL;
+    int            pos          = 0;
+    jvalue        *jargs        = NULL;
+    int            foundArray   = 0;   /* if params includes pyjarray instance */
+    PyThreadState *_save        = NULL;
 
     if (keywords != NULL) {
         PyErr_Format(PyExc_RuntimeError, "Keywords are not supported.");
         return NULL;
     }
+    lenArgs = PyTuple_Size(args);
 
     env = pyembed_get_env();
-
-    if (PyJMethod_GetParameterCount(self, env) != (PyTuple_Size(args) - 1)) {
-        PyErr_Format(PyExc_RuntimeError,
-                     "Invalid number of arguments: %i, expected %i.",
-                     (int) PyTuple_GET_SIZE(args),
-                     self->lenParameters + 1);
+    lenNonVarArg = PyJMethod_GetParameterCount(self, env);
+    if (lenNonVarArg == -1) {
         return NULL;
+    }
+    if (lenNonVarArg != lenArgs - 1) {
+        jboolean varargs = java_lang_reflect_Method_isVarArgs(env, self->rmethod);
+        if (process_java_exception(env)) {
+            return NULL;
+        }
+        if (!varargs || lenNonVarArg > lenArgs) {
+            PyErr_Format(PyExc_RuntimeError,
+                         "Invalid number of arguments: %i, expected %i.",
+                         lenArgs,
+                         lenNonVarArg + 1);
+            return NULL;
+        }
+        lenNonVarArg -= 1;
     }
 
     firstArg = PyTuple_GetItem(args, 0);
@@ -260,15 +273,16 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
     jargs = (jvalue *) PyMem_Malloc(sizeof(jvalue) * self->lenParameters);
     if (jargs == NULL) {
+        (*env)->PopLocalFrame(env, NULL);
         return PyErr_NoMemory();
     }
-    for (pos = 0; pos < self->lenParameters; pos++) {
+    for (pos = 0; pos < lenNonVarArg; pos++) {
         PyObject *param = NULL;
         int paramTypeId = -1;
         jclass paramType = (jclass) (*env)->GetObjectArrayElement(env,
                            self->parameters, pos);
 
-        param = PyTuple_GetItem(args, pos + 1);               /* borrowed */
+        param = PyTuple_GetItem(args, pos + 1);
         if (PyErr_Occurred()) {
             goto EXIT_ERROR;
         }
@@ -280,9 +294,42 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
         jargs[pos] = convert_pyarg_jvalue(env, param, paramType, paramTypeId, pos);
         if (PyErr_Occurred()) {
+            jboolean varargs = java_lang_reflect_Method_isVarArgs(env, self->rmethod);
+            if ((*env)->ExceptionOccurred(env)) {
+                /* Cannot convert to python since there is already a python exception */
+                (*env)->ExceptionClear(env);
+                goto EXIT_ERROR;
+            }
+            if (varargs && pos == (self->lenParameters - 1)
+                    && PyErr_ExceptionMatches(PyExc_TypeError)) {
+                PyErr_Clear();
+                lenNonVarArg -= 1;
+            } else {
+                goto EXIT_ERROR;
+            }
+        }
+
+        (*env)->DeleteLocalRef(env, paramType);
+    }
+    if (lenNonVarArg + 1 == self->lenParameters) {
+        PyObject *param = NULL;
+        jclass paramType = (jclass) (*env)->GetObjectArrayElement(env,
+                           self->parameters, lenNonVarArg);
+        if (lenArgs == self->lenParameters) {
+            param = PyTuple_New(0);
+        } else {
+            param = PyTuple_GetSlice(args, self->lenParameters, lenArgs);
+        }
+        if (PyErr_Occurred()) {
             goto EXIT_ERROR;
         }
 
+        jargs[lenNonVarArg] = convert_pyarg_jvalue(env, param, paramType, JARRAY_ID,
+                              lenNonVarArg);
+        Py_DecRef(param);
+        if (PyErr_Occurred()) {
+            goto EXIT_ERROR;
+        }
         (*env)->DeleteLocalRef(env, paramType);
     }
 
@@ -697,7 +744,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
     // re pin array objects if needed
     if (foundArray) {
-        for (pos = 0; pos < self->lenParameters; pos++) {
+        for (pos = 0; pos < lenNonVarArg; pos++) {
             PyObject *param = PyTuple_GetItem(args, pos + 1);     /* borrowed */
             if (param && pyjarray_check(param)) {
                 pyjarray_pin((PyJArrayObject *) param);
