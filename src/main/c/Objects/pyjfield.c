@@ -73,7 +73,7 @@ PyJFieldObject* PyJField_New(JNIEnv *env, jobject rfield)
         goto EXIT_ERROR;
     }
 
-    pyf->pyFieldName = jstring_To_PyObject(env, jstr);
+    pyf->pyFieldName = jstring_As_PyString(env, jstr);
 
     (*env)->DeleteLocalRef(env, jstr);
 
@@ -207,7 +207,7 @@ PyObject* pyjfield_get(PyJFieldObject *self, PyJObject* pyjobject)
             Py_RETURN_NONE;
         }
 
-        result = jstring_To_PyObject(env, jstr);
+        result = jstring_As_PyString(env, jstr);
         (*env)->DeleteLocalRef(env, jstr);
         break;
     }
@@ -232,7 +232,7 @@ PyObject* pyjfield_get(PyJFieldObject *self, PyJObject* pyjobject)
             Py_RETURN_NONE;
         }
 
-        result = PyJObject_NewClass(env, obj);
+        result = PyJClass_Wrap(env, obj);
         (*env)->DeleteLocalRef(env, obj);
         break;
     }
@@ -257,7 +257,7 @@ PyObject* pyjfield_get(PyJFieldObject *self, PyJObject* pyjobject)
             Py_RETURN_NONE;
         }
 
-        result = convert_jobject_pyobject(env, obj);
+        result = jobject_As_PyObject(env, obj);
         (*env)->DeleteLocalRef(env, obj);
         break;
     }
@@ -302,7 +302,7 @@ PyObject* pyjfield_get(PyJFieldObject *self, PyJObject* pyjobject)
             return NULL;
         }
 
-        result = Py_BuildValue("i", ret);
+        result = jint_As_PyObject(ret);
         break;
     }
 
@@ -322,7 +322,7 @@ PyObject* pyjfield_get(PyJFieldObject *self, PyJObject* pyjobject)
             return NULL;
         }
 
-        result = Py_BuildValue("i", ret);
+        result = jbyte_As_PyObject(ret);
         break;
     }
 
@@ -341,7 +341,7 @@ PyObject* pyjfield_get(PyJFieldObject *self, PyJObject* pyjobject)
         if (process_java_exception(env)) {
             return NULL;
         }
-        result = jchar_To_PyObject(ret);
+        result = jchar_As_PyObject(ret);
         break;
     }
 
@@ -361,7 +361,7 @@ PyObject* pyjfield_get(PyJFieldObject *self, PyJObject* pyjobject)
             return NULL;
         }
 
-        result = Py_BuildValue("i", (int) ret);
+        result = jshort_As_PyObject(ret);
         break;
     }
 
@@ -381,7 +381,7 @@ PyObject* pyjfield_get(PyJFieldObject *self, PyJObject* pyjobject)
             return NULL;
         }
 
-        result = PyFloat_FromDouble(ret);
+        result = jdouble_As_PyObject(ret);
         break;
     }
 
@@ -401,7 +401,7 @@ PyObject* pyjfield_get(PyJFieldObject *self, PyJObject* pyjobject)
             return NULL;
         }
 
-        result = PyFloat_FromDouble((double) ret);
+        result = jfloat_As_PyObject(ret);
         break;
     }
 
@@ -421,7 +421,7 @@ PyObject* pyjfield_get(PyJFieldObject *self, PyJObject* pyjobject)
             return NULL;
         }
 
-        result = PyLong_FromLongLong((PY_LONG_LONG) ret);
+        result = jlong_As_PyObject(ret);
         break;
     }
 
@@ -442,7 +442,7 @@ PyObject* pyjfield_get(PyJFieldObject *self, PyJObject* pyjobject)
             return NULL;
         }
 
-        result = PyBool_FromLong(ret);
+        result = jboolean_As_PyObject(ret);
         break;
     }
 

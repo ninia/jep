@@ -60,7 +60,7 @@ static PyObject* pyjclass_add_inner_class(JNIEnv *env, PyJObject *topClz,
         jstring          shortName  = NULL;
         const char      *charName   = NULL;
 
-        attrClz = PyJObject_NewClass(env, innerClz);
+        attrClz = PyJClass_Wrap(env, innerClz);
         if (!attrClz) {
             return NULL;
         }
@@ -135,7 +135,7 @@ static PyObject* pyjclass_add_inner_classes(JNIEnv *env,
 }
 
 
-int pyjclass_init(JNIEnv *env, PyObject *pyjob)
+static int pyjclass_init(JNIEnv *env, PyObject *pyjob)
 {
     ((PyJClassObject*) pyjob)->constructor = NULL;
 
@@ -157,21 +157,23 @@ int pyjclass_init(JNIEnv *env, PyObject *pyjob)
     return 1;
 }
 
-
-int PyJClass_Check(PyObject *obj)
+PyObject* PyJClass_Wrap(JNIEnv *env, jobject obj)
 {
-    if (PyObject_TypeCheck(obj, &PyJClass_Type)) {
-        return 1;
+    PyObject* pyjob = PyJObject_New(env, &PyJClass_Type, NULL, obj);
+    if (pyjob) {
+        if (!pyjclass_init(env, pyjob)) {
+            Py_DecRef(pyjob);
+            pyjob = NULL;
+        }
     }
-    return 0;
+    return pyjob;
 }
-
 
 static void pyjclass_dealloc(PyJClassObject *self)
 {
 #if USE_DEALLOC
     Py_CLEAR(self->constructor);
-    pyjobject_dealloc((PyJObject*) self);
+    PyJClass_Type.tp_base->tp_dealloc((PyObject*) self);
 #endif
 }
 

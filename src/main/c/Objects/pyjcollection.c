@@ -27,22 +27,6 @@
 
 #include "Jep.h"
 
-
-PyJObject* PyJCollection_New()
-{
-    // PyJObject will have already initialized PyJCollection_Type
-    return (PyJObject*) PyObject_NEW(PyJCollectionObject, &PyJCollection_Type);
-}
-
-
-int PyJCollection_Check(PyObject *obj)
-{
-    if (PyObject_TypeCheck(obj, &PyJCollection_Type)) {
-        return 1;
-    }
-    return 0;
-}
-
 /*
  * Gets the size of the collection.
  */
@@ -117,7 +101,7 @@ static PySequenceMethods pyjcollection_seq_methods = {
 PyTypeObject PyJCollection_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "jep.PyJCollection",
-    sizeof(PyJCollectionObject),
+    sizeof(PyJObject),
     0,
     0,                                        /* tp_dealloc */
     0,                                        /* tp_print */

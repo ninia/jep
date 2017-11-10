@@ -39,21 +39,10 @@
 
 extern PyTypeObject PyJList_Type;
 
-typedef struct {
-    PyJCollectionObject obj; /* magic inheritance */
-} PyJListObject;
+#define PyJList_Wrap(env, jobj, jcls) \
+    PyJObject_New(env, &PyJList_Type, jobj, jcls)
 
-
-/*
- * Returns a new PyJList, which is a PyJCollection with some sequence methods
- * attached to it.
- */
-PyJObject* PyJList_New(void);
-
-/*
- * Returns true if the object is a PyJList.
- */
-int PyJList_Check(PyObject*);
-
+#define PyJList_Check(pyobj) \
+    PyObject_TypeCheck(pyobj, &PyJList_Type)
 
 #endif // ndef pyjlist

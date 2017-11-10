@@ -40,21 +40,10 @@
 
 extern PyTypeObject PyJCollection_Type;
 
-typedef struct {
-    PyJIterableObject obj; /* magic inheritance */
-} PyJCollectionObject;
+#define PyJCollection_Wrap(env, jobj, jcls) \
+    PyJObject_New(env, &PyJCollection_Type, jobj, jcls)
 
-
-/*
- * Returns a new PyJCollection, which is a PyJIterable with a few more methods
- * attached to it.
- */
-PyJObject* PyJCollection_New(void);
-
-/*
- * Returns true if the object is a PyJCollection.
- */
-int PyJCollection_Check(PyObject*);
-
+#define PyJCollection_Check(pyobj) \
+    PyObject_TypeCheck(pyobj, &PyJCollection_Type)
 
 #endif // ndef pyjcollection

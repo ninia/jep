@@ -45,10 +45,18 @@ typedef struct {
                                        the object's Java clazz */
 } PyJObject;
 
-PyObject* PyJObject_New(JNIEnv*, jobject);
-PyObject* PyJObject_NewClass(JNIEnv*, jclass);
-int PyJObject_Check(PyObject*);
+/*
+ * Create a new instance of PyJObject or one of it's subtypes that wraps
+ * the object provided. If the class of the object is known it can be passed
+ * in, or the final argument can be NULL and this function will figure it out. 
+ */
+PyObject* PyJObject_New(JNIEnv*, PyTypeObject*, jobject, jclass);
 
-void pyjobject_dealloc(PyJObject*);
+#define PyJObject_Wrap(env, jobj, jcls) \
+    PyJObject_New(env, &PyJObject_Type, jobj, jcls)
+
+#define PyJObject_Check(pyobj) \
+    PyObject_TypeCheck(pyobj, &PyJObject_Type)
+
 
 #endif // ndef pyjobject

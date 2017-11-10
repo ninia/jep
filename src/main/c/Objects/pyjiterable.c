@@ -27,22 +27,6 @@
 
 #include "Jep.h"
 
-
-PyJObject* PyJIterable_New()
-{
-    // PyJObject will have already initialized PyJIterable_Type
-    return (PyJObject*) PyObject_NEW(PyJIterableObject, &PyJIterable_Type);
-}
-
-
-int PyJIterable_Check(PyObject *obj)
-{
-    if (PyObject_TypeCheck(obj, &PyJIterable_Type)) {
-        return 1;
-    }
-    return 0;
-}
-
 /*
  * Gets the iterator for the object.
  */
@@ -66,7 +50,7 @@ static PyObject* pyjiterable_getiter(PyObject* obj)
                         "java.util.Iterable returned a null value from iterator()");
         goto FINALLY;
     }
-    result = PyJObject_New(env, iter);
+    result = jobject_As_PyObject(env, iter);
 FINALLY:
     (*env)->PopLocalFrame(env, NULL);
     return result;
@@ -79,7 +63,7 @@ FINALLY:
 PyTypeObject PyJIterable_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "jep.PyJIterable",
-    sizeof(PyJIterableObject),
+    sizeof(PyJObject),
     0,
     0,                                        /* tp_dealloc */
     0,                                        /* tp_print */

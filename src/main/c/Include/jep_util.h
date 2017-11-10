@@ -44,15 +44,6 @@
 #define JNI_METHOD(var, env, type, name, sig)\
     (var || (var = (*env)->GetMethodID(env, type, name, sig)))
 
-// call toString() on jobject, make a python string and return
-// sets error conditions as needed.
-// returns new reference to PyObject
-PyObject* jobject_topystring(JNIEnv*, jobject);
-
-// call toString() on jobject and return result.
-// NULL on error
-jstring jobject_tostring(JNIEnv*, jobject);
-
 // get a const char* string from java string.
 // you *must* call release when you're finished with it.
 // returns local reference.
@@ -69,12 +60,7 @@ void unref_cache_frequent_classes(JNIEnv*);
 
 int get_jtype(JNIEnv*, jclass);
 int pyarg_matches_jtype(JNIEnv*, PyObject*, jclass, int);
-PyObject* jstring_To_PyObject(JNIEnv*, jobject);
-PyObject* jchar_To_PyObject(jchar);
-PyObject* convert_jobject(JNIEnv*, jobject, int);
-PyObject* convert_jobject_pyobject(JNIEnv*, jobject);
 jvalue convert_pyarg_jvalue(JNIEnv*, PyObject*, jclass, int, int);
-
 
 #define JBOOLEAN_ID 0
 #define JINT_ID     1

@@ -39,20 +39,10 @@
 
 extern PyTypeObject PyJIterable_Type;
 
-typedef struct {
-    PyJObject obj; /* magic inheritance */
-} PyJIterableObject;
+#define PyJIterable_Wrap(env, jobj, jcls) \
+    PyJObject_New(env, &PyJIterable_Type, jobj, jcls)
 
-
-/*
- * Returns a new PyJIterable, which is a PyJObject that supports iteration.
- */
-PyJObject* PyJIterable_New(void);
-
-/*
- * Returns true if the object is a PyJIterable.
- */
-int PyJIterable_Check(PyObject*);
-
+#define PyJIterable_Check(pyobj) \
+    PyObject_TypeCheck(pyobj, &PyJIterable_Type)
 
 #endif // ndef pyjiterable

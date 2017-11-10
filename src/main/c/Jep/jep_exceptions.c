@@ -127,7 +127,7 @@ int process_py_exception(JNIEnv *env)
                     return 1;
                 }
                 if (jmessage != NULL) {
-                    v = jstring_To_PyObject(env, jmessage);
+                    v = jstring_As_PyString(env, jmessage);
                 }
             }
 
@@ -433,7 +433,7 @@ int process_import_exception(JNIEnv *env)
         return 1;
     }
 
-    estr = jobject_tostring(env, exception);
+    estr = java_lang_Object_toString(env, exception);
     if ((*env)->ExceptionCheck(env) || !estr) {
         PyErr_Format(PyExc_RuntimeError, "toString() on exception failed.");
         return 1;
@@ -505,7 +505,7 @@ int process_java_exception(JNIEnv *env)
     pyExceptionType = pyerrtype_from_throwable(env, exception);
 
     // turn the Java exception into a PyJObject so the interpreter can handle it
-    jpyExc = PyJObject_New(env, exception);
+    jpyExc = PyJObject_Wrap(env, exception, NULL);
     if ((*env)->ExceptionCheck(env) || !jpyExc) {
         PyErr_Format(PyExc_RuntimeError,
                      "wrapping java exception in pyjobject failed.");

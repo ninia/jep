@@ -27,23 +27,6 @@
 
 #include "Jep.h"
 
-
-PyJObject* PyJAutoCloseable_New()
-{
-    // PyJObject will have already initialized PyJAutoCloseable_Type
-    return (PyJObject*) PyObject_NEW(PyJAutoCloseableObject,
-                                     &PyJAutoCloseable_Type);
-}
-
-
-int PyJAutoCloseable_Check(PyObject *obj)
-{
-    if (PyObject_TypeCheck(obj, &PyJAutoCloseable_Type)) {
-        return 1;
-    }
-    return 0;
-}
-
 /*
  * Enters the Python ContextManager.
  */
@@ -95,7 +78,7 @@ static PyMethodDef pyjautocloseable_methods[] = {
 PyTypeObject PyJAutoCloseable_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "jep.PyJAutoCloseable",
-    sizeof(PyJAutoCloseableObject),
+    sizeof(PyJObject),
     0,
     0,                                        /* tp_dealloc */
     0,                                        /* tp_print */

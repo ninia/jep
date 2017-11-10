@@ -39,20 +39,10 @@
 
 extern PyTypeObject PyJAutoCloseable_Type;
 
-typedef struct {
-    PyJObject obj; /* magic inheritance */
-} PyJAutoCloseableObject;
+#define PyJAutoCloseable_Wrap(env, jobj, jcls) \
+    PyJObject_New(env, &PyJAutoCloseable_Type, jobj, jcls)
 
-
-/*
- * Returns a new PyJAutoCloseable, which is a PyJObject that implements
- * close().
- */
-PyJObject* PyJAutoCloseable_New(void);
-
-/*
- * Returns true if the object is a PyJAutoCloseable.
- */
-int PyJAutoCloseable_Check(PyObject*);
+#define PyJAutoCloseable_Check(pyobj) \
+    PyObject_TypeCheck(pyobj, &PyJAutoCloseable_Type)
 
 #endif // ndef pyjautocloseable

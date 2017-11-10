@@ -38,20 +38,11 @@
 
 extern PyTypeObject PyJIterator_Type;
 
-typedef struct {
-    PyJObject obj; /* magic inheritance */
-} PyJIteratorObject;
+#define PyJIterator_Wrap(env, jobj, jcls) \
+    PyJObject_New(env, &PyJIterator_Type, jobj, jcls)
 
-
-/*
- * Returns a new PyJIterator, which is a PyJObject for iterators.
- */
-PyJObject* PyJIterator_New(void);
-
-/*
- * Returns true if the object is a PyJIterator.
- */
-int PyJIterator_Check(PyObject*);
+#define PyJIterator_Check(pyobj) \
+    PyObject_TypeCheck(pyobj, &PyJIterator_Type)
 
 
 #endif // ndef pyjiterator

@@ -58,7 +58,8 @@ JNIEXPORT void JNICALL Java_jep_MainInterpreter_setInitParams
  * Signature: ([Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_jep_MainInterpreter_initializePython
-(JNIEnv *env, jclass class, jobjectArray argv) {
+(JNIEnv *env, jclass class, jobjectArray argv)
+{
     pyembed_startup(env, argv);
 }
 
@@ -68,7 +69,8 @@ JNIEXPORT void JNICALL Java_jep_MainInterpreter_initializePython
  * Signature: (Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_jep_MainInterpreter_sharedImportInternal
-(JNIEnv *env, jclass class, jstring module) {
+(JNIEnv *env, jclass class, jstring module)
+{
     pyembed_shared_import(env, module);
 }
 

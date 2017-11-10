@@ -81,22 +81,6 @@ static PyObject* java_number_to_python(JNIEnv *env, PyObject* n)
     }
 }
 
-
-PyJObject* PyJNumber_New()
-{
-    // PyJObject will have already initialized PyJNumber_Type
-    return (PyJObject*) PyObject_NEW(PyJNumberObject, &PyJNumber_Type);
-}
-
-
-int PyJNumber_Check(PyObject *obj)
-{
-    if (PyObject_TypeCheck(obj, &PyJNumber_Type)) {
-        return 1;
-    }
-    return 0;
-}
-
 #define TO_PYTHON_NUMBER(env, var)\
     if (PyJNumber_Check(var)) {\
         var = java_number_to_python(env, var);\
@@ -394,7 +378,7 @@ static PyNumberMethods pyjnumber_number_methods = {
 PyTypeObject PyJNumber_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "jep.PyJNumber",
-    sizeof(PyJNumberObject),
+    sizeof(PyJObject),
     0,
     0,                                        /* tp_dealloc */
     0,                                        /* tp_print */

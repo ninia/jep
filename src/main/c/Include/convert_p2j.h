@@ -91,4 +91,4 @@ jobject  PyObject_As_jobject(JNIEnv*, PyObject*, jclass);
  */
 jvalue   PyObject_As_jvalue(JNIEnv*, PyObject*, jclass);
 
-#endif // ifndef _Included_convert_py2j
+#endif // ifndef _Included_convert_p2j

@@ -39,21 +39,11 @@
 
 extern PyTypeObject PyJMap_Type;
 
-typedef struct {
-    PyJObject obj; /* magic inheritance */
-} PyJMapObject;
+#define PyJMap_Wrap(env, jobj, jcls) \
+    PyJObject_New(env, &PyJMap_Type, jobj, jcls)
 
-
-/*
- * Returns a new PyJMap, which is a PyJObject with some mapping methods
- * attached to it.
- */
-PyJObject* PyJMap_New(void);
-
-/*
- * Returns true if the object is a PyJMap.
- */
-int PyJMap_Check(PyObject*);
+#define PyJMap_Check(pyobj) \
+    PyObject_TypeCheck(pyobj, &PyJMap_Type)
 
 
 #endif // ndef pyjmap

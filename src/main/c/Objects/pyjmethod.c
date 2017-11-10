@@ -50,7 +50,7 @@ PyJMethodObject* PyJMethod_New(JNIEnv *env, jobject rmethod)
     if (process_java_exception(env) || !jname) {
         return NULL;
     }
-    pyname = jstring_To_PyObject(env, jname);
+    pyname = jstring_As_PyString(env, jname);
     (*env)->DeleteLocalRef(env, jname);
 
     pym                = PyObject_NEW(PyJMethodObject, &PyJMethod_Type);
@@ -382,7 +382,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
         Py_END_ALLOW_THREADS;
         if (!process_java_exception(env) && jstr != NULL) {
-            result = jstring_To_PyObject(env, jstr);
+            result = jstring_As_PyString(env, jstr);
             (*env)->DeleteLocalRef(env, jstr);
         }
 
@@ -447,7 +447,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
         Py_END_ALLOW_THREADS;
         if (!process_java_exception(env) && obj != NULL) {
-            result = PyJObject_NewClass(env, obj);
+            result = PyJClass_Wrap(env, obj);
         }
 
         break;
@@ -478,7 +478,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
         Py_END_ALLOW_THREADS;
         if (!process_java_exception(env) && obj != NULL) {
-            result = convert_jobject_pyobject(env, obj);
+            result = jobject_As_PyObject(env, obj);
         }
 
         break;
@@ -509,7 +509,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
         Py_END_ALLOW_THREADS;
         if (!process_java_exception(env)) {
-            result = Py_BuildValue("i", ret);
+            result = jint_As_PyObject(ret);
         }
 
         break;
@@ -540,7 +540,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
         Py_END_ALLOW_THREADS;
         if (!process_java_exception(env)) {
-            result = Py_BuildValue("i", ret);
+            result = jbyte_As_PyObject(ret);
         }
 
         break;
@@ -571,7 +571,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
         Py_END_ALLOW_THREADS;
         if (!process_java_exception(env)) {
-            result = jchar_To_PyObject(ret);
+            result = jchar_As_PyObject(ret);
         }
         break;
     }
@@ -601,7 +601,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
         Py_END_ALLOW_THREADS;
         if (!process_java_exception(env)) {
-            result = Py_BuildValue("i", (int) ret);
+            result = jshort_As_PyObject(ret);
         }
 
         break;
@@ -632,7 +632,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
         Py_END_ALLOW_THREADS;
         if (!process_java_exception(env)) {
-            result = PyFloat_FromDouble(ret);
+            result = jdouble_As_PyObject(ret);
         }
 
         break;
@@ -663,7 +663,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
         Py_END_ALLOW_THREADS;
         if (!process_java_exception(env)) {
-            result = PyFloat_FromDouble((double) ret);
+            result = jfloat_As_PyObject(ret);
         }
 
         break;
@@ -694,7 +694,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
         Py_END_ALLOW_THREADS;
         if (!process_java_exception(env)) {
-            result = PyLong_FromLongLong(ret);
+            result = jlong_As_PyObject(ret);
         }
 
         break;
@@ -725,7 +725,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
         Py_END_ALLOW_THREADS;
         if (!process_java_exception(env)) {
-            result = PyBool_FromLong(ret);
+            result = jboolean_As_PyObject(ret);
         }
 
         break;

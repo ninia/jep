@@ -27,22 +27,6 @@
 
 #include "Jep.h"
 
-
-PyJObject* PyJIterator_New()
-{
-    // PyJObject will have already initialized PyJIterator_Type
-    return (PyJObject*) PyObject_NEW(PyJIteratorObject, &PyJIterator_Type);
-}
-
-
-int PyJIterator_Check(PyObject *obj)
-{
-    if (PyObject_TypeCheck(obj, &PyJIterator_Type)) {
-        return 1;
-    }
-    return 0;
-}
-
 static PyObject* pyjiterator_next(PyObject* self)
 {
     jboolean      nextAvail = JNI_FALSE;
@@ -68,7 +52,7 @@ static PyObject* pyjiterator_next(PyObject* self)
             return NULL;
         }
 
-        result = convert_jobject_pyobject(env, nextItem);
+        result = jobject_As_PyObject(env, nextItem);
         (*env)->PopLocalFrame(env, NULL);
         return result;
     }
@@ -83,7 +67,7 @@ static PyObject* pyjiterator_next(PyObject* self)
 PyTypeObject PyJIterator_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "jep.PyJIterator",
-    sizeof(PyJIteratorObject),
+    sizeof(PyJObject),
     0,
     0,                                        /* tp_dealloc */
     0,                                        /* tp_print */

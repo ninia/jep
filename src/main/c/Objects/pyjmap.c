@@ -27,22 +27,6 @@
 
 #include "Jep.h"
 
-
-PyJObject* PyJMap_New()
-{
-    // PyJObject will have already initialized PyJMap_Type
-    return (PyJObject*) PyObject_NEW(PyJMapObject, &PyJMap_Type);
-}
-
-
-int PyJMap_Check(PyObject *obj)
-{
-    if (PyObject_TypeCheck(obj, &PyJMap_Type)) {
-        return 1;
-    }
-    return 0;
-}
-
 /*
  * Gets the size of the map.
  */
@@ -139,7 +123,7 @@ static PyObject* pyjmap_getitem(PyObject *o, PyObject *key)
         }
     }
 
-    result = convert_jobject_pyobject(env, val);
+    result = jobject_As_PyObject(env, val);
 FINALLY:
     (*env)->PopLocalFrame(env, NULL);
     return result;
@@ -233,7 +217,7 @@ static PyObject* pyjmap_getiter(PyObject* obj)
         goto FINALLY;
     }
 
-    result = PyJObject_New(env, iter);
+    result = PyJIterator_Wrap(env, iter, NULL);
 FINALLY:
     (*env)->PopLocalFrame(env, NULL);
     return result;
@@ -266,7 +250,7 @@ static PyMappingMethods pyjmap_map_methods = {
 PyTypeObject PyJMap_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "jep.PyJMap",
-    sizeof(PyJMapObject),
+    sizeof(PyJObject),
     0,
     0,                                        /* tp_dealloc */
     0,                                        /* tp_print */

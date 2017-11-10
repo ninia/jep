@@ -39,21 +39,11 @@
 
 extern PyTypeObject PyJNumber_Type;
 
-typedef struct {
-    PyJObject obj; /* magic inheritance */
-} PyJNumberObject;
+#define PyJNumber_Wrap(env, jobj, jcls) \
+    PyJObject_New(env, &PyJNumber_Type, jobj, jcls)
 
-
-/*
- * Returns a new PyJNumber, which is a PyJObject with some number methods
- * attached to it.
- */
-PyJObject* PyJNumber_New(void);
-
-/*
- * Returns true if the object is a PyJNumber.
- */
-int PyJNumber_Check(PyObject*);
+#define PyJNumber_Check(pyobj) \
+    PyObject_TypeCheck(pyobj, &PyJNumber_Type)
 
 
 #endif // ndef pyjnumber

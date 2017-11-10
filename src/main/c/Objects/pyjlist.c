@@ -37,13 +37,6 @@ static int pyjlist_setslice(PyObject*, Py_ssize_t, Py_ssize_t, PyObject*);
 static PyObject* pyjlist_inplace_add(PyObject*, PyObject*);
 static PyObject* pyjlist_inplace_fill(PyObject*, Py_ssize_t);
 
-
-PyJObject* PyJList_New()
-{
-    // PyJObject will have already initialized PyJList_Type
-    return (PyJObject*) PyObject_NEW(PyJListObject, &PyJList_Type);
-}
-
 /*
  * Convenience method to copy a list's items into a new java.util.List of the
  * same type.
@@ -76,21 +69,11 @@ static PyObject* pyjlist_new_copy(PyObject *toCopy)
         goto FINALLY;
     }
 
-    result = PyJObject_New(env, newList);
+    result = PyJList_Wrap(env, newList, obj->clazz);
 FINALLY:
     (*env)->PopLocalFrame(env, NULL);
     return result;
 }
-
-
-int PyJList_Check(PyObject *obj)
-{
-    if (PyObject_TypeCheck(obj, &PyJList_Type)) {
-        return 1;
-    }
-    return 0;
-}
-
 
 /*
  * Method for the + operator on pyjlist.  For example, result = o1 + o2, where
@@ -165,7 +148,7 @@ static PyObject* pyjlist_getitem(PyObject *o, Py_ssize_t i)
         (*env)->PopLocalFrame(env, NULL);
         Py_RETURN_NONE;
     } else {
-        PyObject *result = convert_jobject_pyobject(env, val);
+        PyObject *result = jobject_As_PyObject(env, val);
         (*env)->PopLocalFrame(env, NULL);
         return result;
     }
@@ -192,7 +175,7 @@ static PyObject* pyjlist_getslice(PyObject *o, Py_ssize_t i1, Py_ssize_t i2)
         goto FINALLY;
     }
 
-    pyres = PyJObject_New(env, result);
+    pyres = PyJList_Wrap(env, result, NULL);
 FINALLY:
     (*env)->PopLocalFrame(env, NULL);
     return pyres;
@@ -536,7 +519,7 @@ static PyMappingMethods pyjlist_map_methods = {
 PyTypeObject PyJList_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "jep.PyJList",
-    sizeof(PyJListObject),
+    sizeof(PyJObject),
     0,
     0,                                        /* tp_dealloc */
     0,                                        /* tp_print */

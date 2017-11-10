@@ -205,6 +205,93 @@ void pyembed_preinit(jint noSiteFlag,
 
 }
 
+/*
+ * MSVC requires tp_base to be set at runtime instead of in the type
+ * declaration. :/  Otherwise we could just set tp_base in the type declaration
+ * and be done with it.  Since we are building an inheritance tree of types, we
+ * need to ensure that all the tp_base are set for the subtypes before we
+ * possibly use those subtypes.
+ *
+ * Furthermore, we need to ensure that the inheritance tree is built in the
+ * correct order, i.e. from the top down.  For example, we need to set that
+ * PyJIterable's tp_base extends PyJObject before we set that PyJCollection's
+ * tp_base extends PyJIterable.
+ *
+ * See https://docs.python.org/2/extending/newtypes.html
+ *     https://docs.python.org/3/extending/newtypes.html
+ */
+static int pyjtypes_ready(void)
+{
+    // start at the top with object
+    if (PyType_Ready(&PyJObject_Type) < 0) {
+        return -1;
+    }
+    if (!PyJClass_Type.tp_base) {
+        PyJClass_Type.tp_base = &PyJObject_Type;
+    }
+    if (PyType_Ready(&PyJClass_Type) < 0) {
+        return -1;
+    }
+
+    // next do number
+    if (!PyJNumber_Type.tp_base) {
+        PyJNumber_Type.tp_base = &PyJObject_Type;
+    }
+    if (PyType_Ready(&PyJNumber_Type) < 0) {
+        return -1;
+    }
+
+    // next do iterable
+    if (!PyJIterable_Type.tp_base) {
+        PyJIterable_Type.tp_base = &PyJObject_Type;
+    }
+    if (PyType_Ready(&PyJIterable_Type) < 0) {
+        return -1;
+    }
+
+    // next do iterator
+    if (!PyJIterator_Type.tp_base) {
+        PyJIterator_Type.tp_base = &PyJObject_Type;
+    }
+    if (PyType_Ready(&PyJIterator_Type) < 0) {
+        return -1;
+    }
+
+    // next do collection
+    if (!PyJCollection_Type.tp_base) {
+        PyJCollection_Type.tp_base = &PyJIterable_Type;
+    }
+    if (PyType_Ready(&PyJCollection_Type) < 0) {
+        return -1;
+    }
+
+    // next do list
+    if (!PyJList_Type.tp_base) {
+        PyJList_Type.tp_base = &PyJCollection_Type;
+    }
+    if (PyType_Ready(&PyJList_Type) < 0) {
+        return -1;
+    }
+
+    // next do map
+    if (!PyJMap_Type.tp_base) {
+        PyJMap_Type.tp_base = &PyJObject_Type;
+    }
+    if (PyType_Ready(&PyJMap_Type) < 0) {
+        return -1;
+    }
+
+    // last do autocloseable
+    if (!PyJAutoCloseable_Type.tp_base) {
+        PyJAutoCloseable_Type.tp_base = &PyJObject_Type;
+    }
+    if (PyType_Ready(&PyJAutoCloseable_Type) < 0) {
+        return -1;
+    }
+
+    return 0;
+}
+
 void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
 {
     PyObject* sysModule       = NULL;
@@ -263,6 +350,17 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
 
     Py_Initialize();
     PyEval_InitThreads();
+
+    if (pyjtypes_ready()) {
+        jclass excClass = (*env)->FindClass(env, "java/lang/IllegalStateException");
+        if (PyErr_Occurred()) {
+            PyErr_Print();
+        }
+        if (excClass != NULL) {
+            (*env)->ThrowNew(env, excClass, "Failed to initialize PyJTypes");
+        }
+        return;
+    }
 
     /*
      * Save a global reference to the sys.modules form the main thread to
@@ -784,7 +882,7 @@ static PyObject* pyembed_jproxy(PyObject *self, PyObject *args)
     // make sure target doesn't get garbage collected
     Py_INCREF(pytarget);
 
-    return PyJObject_New(env, proxy);
+    return PyJObject_Wrap(env, proxy, NULL);
 }
 
 
@@ -823,7 +921,7 @@ static PyObject* pyembed_forname(PyObject *self, PyObject *args)
     if (process_java_exception(env) || !objclazz) {
         return NULL;
     }
-    result = (PyObject *) PyJObject_NewClass(env, objclazz);
+    result = (PyObject *) PyJClass_Wrap(env, objclazz);
     (*env)->DeleteLocalRef(env, objclazz);
     return result;
 }
@@ -864,7 +962,7 @@ static PyObject* pyembed_findclass(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    result = (PyObject *) PyJObject_NewClass(env, clazz);
+    result = (PyObject *) PyJClass_Wrap(env, clazz);
     (*env)->DeleteLocalRef(env, clazz);
     return result;
 }
@@ -908,7 +1006,7 @@ jobject pyembed_invoke(JNIEnv *env,
             goto EXIT;
         }
 
-        pyval = convert_jobject_pyobject(env, val);
+        pyval = jobject_As_PyObject(env, val);
         if ((*env)->ExceptionCheck(env)) {
             goto EXIT;
         }
@@ -954,7 +1052,7 @@ jobject pyembed_invoke(JNIEnv *env,
             if ((*env)->ExceptionCheck(env)) {
                 goto EXIT;
             }
-            pykey = convert_jobject_pyobject(env, key);
+            pykey = jobject_As_PyObject(env, key);
             if (!pykey || (*env)->ExceptionCheck(env)) {
                 Py_XDECREF(pykey);
                 goto EXIT;
@@ -966,7 +1064,7 @@ jobject pyembed_invoke(JNIEnv *env,
                 Py_XDECREF(pykey);
                 goto EXIT;
             }
-            pyval = convert_jobject_pyobject(env, value);
+            pyval = jobject_As_PyObject(env, value);
             if (!pyval || (*env)->ExceptionCheck(env)) {
                 Py_XDECREF(pykey);
                 Py_XDECREF(pyval);
@@ -1630,7 +1728,7 @@ void pyembed_setparameter_object(JNIEnv *env,
     // does common things
     GET_COMMON;
 
-    pyjob = convert_jobject_pyobject(env, value);
+    pyjob = jobject_As_PyObject(env, value);
 
     if (pyjob) {
         if (pymodule == NULL) {
@@ -1705,7 +1803,7 @@ void pyembed_setparameter_class(JNIEnv *env,
         Py_INCREF(Py_None);
         pyjob = Py_None;
     } else {
-        pyjob = PyJObject_NewClass(env, value);
+        pyjob = PyJClass_Wrap(env, value);
     }
 
     if (pyjob) {
@@ -1776,7 +1874,7 @@ void pyembed_setparameter_bool(JNIEnv *env,
     // does common things
     GET_COMMON;
 
-    pyvalue = PyBool_FromLong(value);
+    pyvalue = jboolean_As_PyObject(value);
 
     if (pyvalue) {
         if (pymodule == NULL) {
@@ -1808,7 +1906,7 @@ void pyembed_setparameter_int(JNIEnv *env,
     // does common things
     GET_COMMON;
 
-    pyvalue = Py_BuildValue("i", value);
+    pyvalue = jint_As_PyObject(value);
 
     if (pyvalue) {
         if (pymodule == NULL) {
@@ -1841,7 +1939,7 @@ void pyembed_setparameter_long(JNIEnv *env,
     // does common things
     GET_COMMON;
 
-    pyvalue = PyLong_FromLongLong(value);
+    pyvalue = jlong_As_PyObject(value);
 
     if (pyvalue) {
         if (pymodule == NULL) {
@@ -1874,7 +1972,7 @@ void pyembed_setparameter_double(JNIEnv *env,
     // does common things
     GET_COMMON;
 
-    pyvalue = PyFloat_FromDouble(value);
+    pyvalue = jdouble_As_PyObject(value);
 
     if (pyvalue) {
         if (pymodule == NULL) {
@@ -1907,7 +2005,7 @@ void pyembed_setparameter_float(JNIEnv *env,
     // does common things
     GET_COMMON;
 
-    pyvalue = PyFloat_FromDouble((double) value);
+    pyvalue = jfloat_As_PyObject((double) value);
 
     if (pyvalue) {
         if (pymodule == NULL) {

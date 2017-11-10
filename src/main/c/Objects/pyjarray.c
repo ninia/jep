@@ -622,7 +622,6 @@ static int pyjarray_setitem(PyJArrayObject *self,
 
     case JSTRING_ID: {
         jstring  jstr = NULL;
-        char    *val;
 
         if (newitem == Py_None)
             ; // setting NULL
@@ -632,8 +631,7 @@ static int pyjarray_setitem(PyJArrayObject *self,
                 return -1;
             }
 
-            val  = PyString_AS_STRING(newitem);
-            jstr = (*env)->NewStringUTF(env, (const char *) val);
+            jstr = PyObject_As_jstring(env, newitem);
         }
 
         (*env)->SetObjectArrayElement(env,
@@ -819,7 +817,7 @@ static PyObject* pyjarray_item(PyJArrayObject *self, Py_ssize_t pos)
         if (process_java_exception(env))
             ;
         else if (jstr != NULL) {
-            ret = jstring_To_PyObject(env, jstr);
+            ret = jstring_As_PyString(env, jstr);
 
             (*env)->DeleteLocalRef(env, jstr);
         } else {
@@ -860,7 +858,7 @@ static PyObject* pyjarray_item(PyJArrayObject *self, Py_ssize_t pos)
         if (process_java_exception(env))
             ;
         else if (obj != NULL) {
-            ret = convert_jobject_pyobject(env, obj);
+            ret = jobject_As_PyObject(env, obj);
             (*env)->DeleteLocalRef(env, obj);
         } else {
             // null is okay
@@ -872,39 +870,36 @@ static PyObject* pyjarray_item(PyJArrayObject *self, Py_ssize_t pos)
     }
 
     case JBOOLEAN_ID:
-        ret = Py_BuildValue("i", ((jboolean *) self->pinnedArray)[(jsize) pos]);
+        ret = jboolean_As_PyObject(((jboolean *) self->pinnedArray)[(jsize) pos]);
         break;
 
     case JSHORT_ID:
-        ret = Py_BuildValue("i", ((jshort *) self->pinnedArray)[(jsize) pos]);
+        ret = jshort_As_PyObject(((jshort *) self->pinnedArray)[(jsize) pos]);
         break;
 
     case JINT_ID:
-        ret = Py_BuildValue("i", ((jint *) self->pinnedArray)[(jsize) pos]);
+        ret = jint_As_PyObject(((jint *) self->pinnedArray)[(jsize) pos]);
         break;
 
     case JBYTE_ID:
-        ret = Py_BuildValue("i", ((jbyte *) self->pinnedArray)[(jsize) pos]);
+        ret = jbyte_As_PyObject(((jbyte *) self->pinnedArray)[(jsize) pos]);
         break;
 
     case JCHAR_ID: {
-        char val[2];
-        val[0] = (char) ((jchar *) self->pinnedArray)[pos];
-        val[1] = '\0';
-        ret = PyString_FromString(val);
+        ret = jchar_As_PyObject(((jchar *) self->pinnedArray)[pos]);
         break;
     }
 
     case JLONG_ID:
-        ret = PyLong_FromLongLong(((jlong *) self->pinnedArray)[(jsize) pos]);
+        ret = jlong_As_PyObject(((jlong *) self->pinnedArray)[(jsize) pos]);
         break;
 
     case JFLOAT_ID:
-        ret = PyFloat_FromDouble(((jfloat *) self->pinnedArray)[(jsize) pos]);
+        ret = jfloat_As_PyObject(((jfloat *) self->pinnedArray)[(jsize) pos]);
         break;
 
     case JDOUBLE_ID:
-        ret = PyFloat_FromDouble(((jdouble *) self->pinnedArray)[(jsize) pos]);
+        ret = jdouble_As_PyObject(((jdouble *) self->pinnedArray)[(jsize) pos]);
         break;
 
     default:
@@ -944,7 +939,7 @@ static int pyjarray_index(PyJArrayObject *self, PyObject *el)
                 continue;
             }
 
-            t   = jstring_To_PyObject(env, l);
+            t   = jstring_As_PyString(env, l);
 
             ret = PyObject_RichCompareBool(el,
                                            t,

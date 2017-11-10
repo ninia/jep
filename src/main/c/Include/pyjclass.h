@@ -47,11 +47,10 @@ typedef struct {
     PyObject  *constructor;
 } PyJClassObject;
 
-int pyjclass_init(JNIEnv*, PyObject*);
+PyObject* PyJClass_Wrap(JNIEnv*, jobject);
 
-/*
- * Returns true if the object is a PyJClass.
- */
-int PyJClass_Check(PyObject*);
+#define PyJClass_Check(pyobj) \
+    PyObject_TypeCheck(pyobj, &PyJClass_Type)
+
 
 #endif // ndef pyjclass

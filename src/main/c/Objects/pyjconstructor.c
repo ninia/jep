@@ -189,7 +189,7 @@ static PyObject* pyjconstructor_call(PyJMethodObject *self, PyObject *args,
     }
 
     // finally, make pyjobject and return
-    pobj = PyJObject_New(env, obj);
+    pobj = jobject_As_PyJObject(env, obj, clazz->clazz);
 
     // we already closed the local frame, so make
     // sure to delete this local ref.
