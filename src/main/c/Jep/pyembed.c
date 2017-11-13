@@ -921,7 +921,7 @@ static PyObject* pyembed_forname(PyObject *self, PyObject *args)
     if (process_java_exception(env) || !objclazz) {
         return NULL;
     }
-    result = (PyObject *) PyJClass_Wrap(env, objclazz);
+    result = PyJClass_Wrap(env, objclazz);
     (*env)->DeleteLocalRef(env, objclazz);
     return result;
 }
@@ -962,7 +962,7 @@ static PyObject* pyembed_findclass(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    result = (PyObject *) PyJClass_Wrap(env, clazz);
+    result = PyJClass_Wrap(env, clazz);
     (*env)->DeleteLocalRef(env, clazz);
     return result;
 }
@@ -1007,7 +1007,7 @@ jobject pyembed_invoke(JNIEnv *env,
         }
 
         pyval = jobject_As_PyObject(env, val);
-        if ((*env)->ExceptionCheck(env)) {
+        if (!pyval) {
             goto EXIT;
         }
 
@@ -1053,8 +1053,7 @@ jobject pyembed_invoke(JNIEnv *env,
                 goto EXIT;
             }
             pykey = jobject_As_PyObject(env, key);
-            if (!pykey || (*env)->ExceptionCheck(env)) {
-                Py_XDECREF(pykey);
+            if (!pykey) {
                 goto EXIT;
             }
 
@@ -1065,9 +1064,8 @@ jobject pyembed_invoke(JNIEnv *env,
                 goto EXIT;
             }
             pyval = jobject_As_PyObject(env, value);
-            if (!pyval || (*env)->ExceptionCheck(env)) {
-                Py_XDECREF(pykey);
-                Py_XDECREF(pyval);
+            if (!pyval) {
+                Py_DECREF(pykey);
                 goto EXIT;
             }
 

@@ -100,12 +100,10 @@ PyObject* jobject_As_PyString(JNIEnv *env, jobject jobj)
     jstring     jstr;
 
     jstr = java_lang_Object_toString(env, jobj);
-    if (jstr == NULL) {
-        if (process_java_exception(env)) {
-            return NULL;
-        } else if (jstr == NULL) {
-            Py_RETURN_NONE;
-        }
+    if (process_java_exception(env)) {
+        return NULL;
+    } else if (jstr == NULL) {
+        Py_RETURN_NONE;
     }
     result = jstring_As_PyString(env, jstr);
     (*env)->DeleteLocalRef(env, jstr);
@@ -133,9 +131,21 @@ static PyObject* Character_As_PyObject(JNIEnv *env, jobject jobj)
 
 static PyObject* jnumber_As_PyObject(JNIEnv *env, jobject jobj, jclass class)
 {
-    if ((*env)->IsSameObject(env, class, JBYTE_OBJ_TYPE)
-            || (*env)->IsSameObject(env, class, JSHORT_OBJ_TYPE)
-            || (*env)->IsSameObject(env, class, JINT_OBJ_TYPE)) {
+    if ((*env)->IsSameObject(env, class, JBYTE_OBJ_TYPE)) {
+        jbyte b = java_lang_Number_byteValue(env, jobj);
+        if ((*env)->ExceptionCheck(env)) {
+            process_java_exception(env);
+            return NULL;
+        }
+        return jbyte_As_PyObject(b);
+    }else if ((*env)->IsSameObject(env, class, JSHORT_OBJ_TYPE)) {
+        jshort s = java_lang_Number_shortValue(env, jobj);
+        if ((*env)->ExceptionCheck(env)) {
+            process_java_exception(env);
+            return NULL;
+        }
+        return jshort_As_PyObject(s);
+    }else if ((*env)->IsSameObject(env, class, JINT_OBJ_TYPE)) {
         jint i = java_lang_Number_intValue(env, jobj);
         if ((*env)->ExceptionCheck(env)) {
             process_java_exception(env);
@@ -169,7 +179,6 @@ static PyObject* jnumber_As_PyObject(JNIEnv *env, jobject jobj, jclass class)
 
 }
 
-// TODO consoluidate this with the one below
 PyObject* jobject_As_PyJObject(JNIEnv *env, jobject jobj, jclass class)
 {
     PyObject* result = NULL;
@@ -202,10 +211,11 @@ PyObject* jobject_As_PyJObject(JNIEnv *env, jobject jobj, jclass class)
 PyObject* jobject_As_PyObject(JNIEnv *env, jobject jobj)
 {
     PyObject* result = NULL;
+    jclass    class  = NULL;
     if (jobj == NULL) {
         Py_RETURN_NONE;
     }
-    jclass class = (*env)->GetObjectClass(env, jobj);
+    class = (*env)->GetObjectClass(env, jobj);
     if ((*env)->IsSameObject(env, class, JSTRING_TYPE)) {
         result = jstring_As_PyString(env, jobj);
     } else if ((*env)->IsAssignableFrom(env, class, JNUMBER_TYPE)) {

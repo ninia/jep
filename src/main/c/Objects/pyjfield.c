@@ -453,11 +453,6 @@ PyObject* pyjfield_get(PyJFieldObject *self, PyJObject* pyjobject)
         Py_RETURN_NONE;
     }
 
-    // shouldn't happen
-    if (result == NULL) {
-        Py_RETURN_NONE;
-    }
-
     return result;
 }
 

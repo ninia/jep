@@ -1554,7 +1554,7 @@ static PyObject* pyjarray_str(PyJArrayObject *self)
 #if PY_MAJOR_VERSION >= 3
     JNIEnv   *env = pyembed_get_env();
 
-    ret = jobject_topystring(env, self->object);
+    ret = jobject_As_PyString(env, self->object);
     return ret;
 #else
     // retained to not break former behavior

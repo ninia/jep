@@ -128,6 +128,7 @@ int process_py_exception(JNIEnv *env)
                 }
                 if (jmessage != NULL) {
                     v = jstring_As_PyString(env, jmessage);
+                    (*env)->DeleteLocalRef(env, jmessage);
                 }
             }
 
@@ -404,10 +405,9 @@ int process_py_exception(JNIEnv *env)
 // true (1) if an exception was processed.
 int process_import_exception(JNIEnv *env)
 {
-    jstring     estr;
+    PyObject   *estr;
     jthrowable  exception    = NULL;
     PyObject   *pyException  = PyExc_ImportError;
-    char       *message;
     JepThread  *jepThread;
 
     if (!(*env)->ExceptionCheck(env)) {
@@ -433,15 +433,13 @@ int process_import_exception(JNIEnv *env)
         return 1;
     }
 
-    estr = java_lang_Object_toString(env, exception);
-    if ((*env)->ExceptionCheck(env) || !estr) {
-        PyErr_Format(PyExc_RuntimeError, "toString() on exception failed.");
+    estr = jobject_As_PyString(env, exception);
+    if (!estr) {
         return 1;
     }
 
-    message = (char *) jstring2char(env, estr);
-    PyErr_SetString(pyException, message);
-    release_utf_char(env, estr, message);
+    PyErr_SetObject(pyException, estr);
+    Py_DECREF(estr);
 
     (*env)->DeleteLocalRef(env, exception);
     return 1;
@@ -506,9 +504,7 @@ int process_java_exception(JNIEnv *env)
 
     // turn the Java exception into a PyJObject so the interpreter can handle it
     jpyExc = PyJObject_Wrap(env, exception, NULL);
-    if ((*env)->ExceptionCheck(env) || !jpyExc) {
-        PyErr_Format(PyExc_RuntimeError,
-                     "wrapping java exception in pyjobject failed.");
+    if (!jpyExc) {
         return 1;
     }
 

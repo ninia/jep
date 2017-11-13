@@ -49,7 +49,7 @@
   #define jint_As_PyObject PyInt_FromLong
 #endif
 
-#define jlong_As_PyObject PyLong_FromLong
+#define jlong_As_PyObject PyLong_FromLongLong
 
 #define jfloat_As_PyObject PyFloat_FromDouble
 #define jdouble_As_PyObject PyFloat_FromDouble
@@ -58,10 +58,18 @@ PyObject* jchar_As_PyObject(jchar);
 
 PyObject* jobject_As_PyObject(JNIEnv*, jobject);
 
-/* For constructors */
+/* 
+ * This will return only objects that are PyJObject or a subtype, things like
+ * strings and numbers will not be converted to the equivalent python type.
+ * This behavior is only desirable from constructors.
+ */
 PyObject* jobject_As_PyJObject(JNIEnv*, jobject, jclass);
 
 PyObject* jstring_As_PyString(JNIEnv*, jobject);
+/* 
+ * Equivalent to java_lang_Object_toString() and passing the result to 
+ * jstring_As_PyString
+ */
 PyObject* jobject_As_PyString(JNIEnv*, jobject);
 
 

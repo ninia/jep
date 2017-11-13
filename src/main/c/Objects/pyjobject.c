@@ -29,8 +29,6 @@
 
 /*
  * https://bugs.python.org/issue2897
-    return NULL;
-    eadyrn NULL;
  * structmember.h must be included to use PyMemberDef
  */
 #include "structmember.h"
@@ -233,7 +231,7 @@ PyObject* PyJObject_New(JNIEnv *env, PyTypeObject* type, jobject obj,
     if (pyjobject_init(env, pyjob)) {
         return (PyObject*) pyjob;
     }
-    Py_DecRef((PyObject*) pyjob);
+    Py_DECREF((PyObject*) pyjob);
     return NULL;
 }
 
@@ -269,15 +267,6 @@ static PyObject* pyjobject_str(PyJObject *self)
         pyres = jobject_As_PyString(env, self->object);
     } else {
         pyres = jobject_As_PyString(env, self->clazz);
-    }
-
-    if (process_java_exception(env)) {
-        return NULL;
-    }
-
-    // python doesn't like Py_None here...
-    if (pyres == NULL) {
-        return PyString_FromString("");
     }
 
     return pyres;

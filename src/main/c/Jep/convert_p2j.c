@@ -654,8 +654,7 @@ static jobject pyfastsequence_as_jobject(JNIEnv *env, PyObject *pyseq,
         }
 
         componentType = java_lang_Class_getComponentType(env, expectedType);
-        if (componentType == NULL) {
-            process_java_exception(env);
+        if (process_java_exception(env)) {
             return (*env)->PopLocalFrame(env, NULL);
         }
 

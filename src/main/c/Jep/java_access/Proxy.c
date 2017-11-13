@@ -39,7 +39,7 @@ jobject jep_Proxy_newProxyInstance(JNIEnv* env, jlong tstate, jlong ltarget,
     Py_BEGIN_ALLOW_THREADS
     if (newProxyInstance || (newProxyInstance = (*env)->GetStaticMethodID(env, JPROXY_TYPE, "newProxyInstance",
                    "(JJLjep/Jep;Ljava/lang/ClassLoader;[Ljava/lang/String;)Ljava/lang/Object;"))) {
-        result = (*env)->CallObjectMethod(env, JPROXY_TYPE, newProxyInstance,
+        result = (*env)->CallStaticObjectMethod(env, JPROXY_TYPE, newProxyInstance,
                                           tstate, ltarget, jep, loader, interfaces);
     }
     Py_END_ALLOW_THREADS
@@ -54,7 +54,7 @@ jobject jep_Proxy_newDirectProxyInstance(JNIEnv* env, jlong tstate,
     Py_BEGIN_ALLOW_THREADS
     if (newDirectProxyInstance || (newDirectProxyInstance = (*env)->GetStaticMethodID(env, JPROXY_TYPE, "newDirectProxyInstance",
                    "(JJLjep/Jep;Ljava/lang/ClassLoader;Ljava/lang/Class;)Ljava/lang/Object;"))) {
-        result = (*env)->CallObjectMethod(env, JPROXY_TYPE, newDirectProxyInstance,
+        result = (*env)->CallStaticObjectMethod(env, JPROXY_TYPE, newDirectProxyInstance,
                                           tstate, ltarget, jep, loader, targetInterface);
     }
     Py_END_ALLOW_THREADS
