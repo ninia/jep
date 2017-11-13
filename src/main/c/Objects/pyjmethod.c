@@ -212,41 +212,48 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
                                 PyObject *args,
                                 PyObject *keywords)
 {
-    JNIEnv        *env          = NULL;
-    int            lenNonVarArg = 0;
-    int            lenArgs      = 0;
-    PyObject      *firstArg     = NULL;
-    PyJObject     *instance     = NULL;
-    PyObject      *result       = NULL;
-    int            pos          = 0;
-    jvalue        *jargs        = NULL;
-    int            foundArray   = 0;   /* if params includes pyjarray instance */
-    PyThreadState *_save        = NULL;
+    JNIEnv        *env              = NULL;
+    int            lenPyArgsGiven   = 0;
+    int            lenJArgsExpected = 0;
+    /* The number of normal arguments before any varargs */
+    int            lenJArgsNormal   = 0;
+    PyObject      *firstArg         = NULL;
+    PyJObject     *instance         = NULL;
+    PyObject      *result           = NULL;
+    int            pos              = 0;
+    jvalue        *jargs            = NULL;
+    /* if params includes pyjarray instance */
+    int            foundArray       = 0;
 
     if (keywords != NULL) {
         PyErr_Format(PyExc_RuntimeError, "Keywords are not supported.");
         return NULL;
     }
-    lenArgs = PyTuple_Size(args);
+    lenPyArgsGiven = PyTuple_Size(args);
 
     env = pyembed_get_env();
-    lenNonVarArg = PyJMethod_GetParameterCount(self, env);
-    if (lenNonVarArg == -1) {
+    lenJArgsExpected = PyJMethod_GetParameterCount(self, env);
+    if (lenJArgsExpected == -1) {
         return NULL;
     }
-    if (lenNonVarArg != lenArgs - 1) {
+    /* Python gives one more arg than java expects for self/this. */
+    if (lenJArgsExpected != lenPyArgsGiven - 1) {
         jboolean varargs = java_lang_reflect_Method_isVarArgs(env, self->rmethod);
         if (process_java_exception(env)) {
             return NULL;
         }
-        if (!varargs || lenNonVarArg > lenArgs) {
+        if (!varargs || lenJArgsExpected > lenPyArgsGiven) {
             PyErr_Format(PyExc_RuntimeError,
                          "Invalid number of arguments: %i, expected %i.",
-                         lenArgs,
-                         lenNonVarArg + 1);
+                         lenPyArgsGiven,
+                         lenJArgsExpected + 1);
             return NULL;
         }
-        lenNonVarArg -= 1;
+        /* The last argument will be handled as varargs, so not a normal arg */
+        lenJArgsNormal -= lenJArgsExpected - 1;
+    } else {
+        /* No varargs, all args are normal */
+        lenJArgsNormal = lenJArgsExpected;
     }
 
     firstArg = PyTuple_GetItem(args, 0);
@@ -266,17 +273,17 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
         return NULL;
     }
 
-    if ((*env)->PushLocalFrame(env, JLOCAL_REFS + self->lenParameters) != 0) {
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS + lenJArgsExpected) != 0) {
         process_java_exception(env);
         return NULL;
     }
 
-    jargs = (jvalue *) PyMem_Malloc(sizeof(jvalue) * self->lenParameters);
+    jargs = (jvalue *) PyMem_Malloc(sizeof(jvalue) * lenJArgsExpected);
     if (jargs == NULL) {
         (*env)->PopLocalFrame(env, NULL);
         return PyErr_NoMemory();
     }
-    for (pos = 0; pos < lenNonVarArg; pos++) {
+    for (pos = 0; pos < lenJArgsNormal; pos++) {
         PyObject *param = NULL;
         int paramTypeId = -1;
         jclass paramType = (jclass) (*env)->GetObjectArrayElement(env,
@@ -294,38 +301,47 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
         jargs[pos] = convert_pyarg_jvalue(env, param, paramType, paramTypeId, pos);
         if (PyErr_Occurred()) {
-            jboolean varargs = java_lang_reflect_Method_isVarArgs(env, self->rmethod);
-            if ((*env)->ExceptionOccurred(env)) {
-                /* Cannot convert to python since there is already a python exception */
-                (*env)->ExceptionClear(env);
-                goto EXIT_ERROR;
-            }
-            if (varargs && pos == (self->lenParameters - 1)
+            if (pos == (lenJArgsExpected - 1)
                     && PyErr_ExceptionMatches(PyExc_TypeError)) {
-                PyErr_Clear();
-                lenNonVarArg -= 1;
-            } else {
-                goto EXIT_ERROR;
+                jboolean varargs = java_lang_reflect_Method_isVarArgs(env, self->rmethod);
+                if ((*env)->ExceptionOccurred(env)) {
+                    /* Cannot convert to python since there is already a python exception */
+                    (*env)->ExceptionClear(env);
+                    goto EXIT_ERROR;
+                }
+                if (varargs) {
+                    /* Retry the last arg as array for varargs */
+                    PyErr_Clear();
+                    lenJArgsNormal -= 1;
+                } else {
+                    goto EXIT_ERROR;
+                }
             }
         }
 
         (*env)->DeleteLocalRef(env, paramType);
     }
-    if (lenNonVarArg + 1 == self->lenParameters) {
+    if (lenJArgsNormal + 1 == lenJArgsExpected) {
+        /* Need to process last arg as varargs. */
         PyObject *param = NULL;
         jclass paramType = (jclass) (*env)->GetObjectArrayElement(env,
-                           self->parameters, lenNonVarArg);
-        if (lenArgs == self->lenParameters) {
+                           self->parameters, lenJArgsExpected - 1);
+        if (lenPyArgsGiven == lenJArgsExpected) {
+            /*
+             * Python args are normally one longer than expected to allow for
+             * this/self so if it isn't then nothing was given for the varargs
+             */
             param = PyTuple_New(0);
         } else {
-            param = PyTuple_GetSlice(args, self->lenParameters, lenArgs);
+            param = PyTuple_GetSlice(args, lenJArgsExpected, lenPyArgsGiven);
         }
         if (PyErr_Occurred()) {
             goto EXIT_ERROR;
         }
 
-        jargs[lenNonVarArg] = convert_pyarg_jvalue(env, param, paramType, JARRAY_ID,
-                              lenNonVarArg);
+        jargs[lenJArgsExpected - 1] = convert_pyarg_jvalue(env, param, paramType,
+                                      JARRAY_ID,
+                                      lenJArgsExpected - 1);
         Py_DecRef(param);
         if (PyErr_Occurred()) {
             goto EXIT_ERROR;
@@ -340,7 +356,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
     case JSTRING_ID: {
         jstring jstr;
-        Py_UNBLOCK_THREADS;
+        Py_BEGIN_ALLOW_THREADS;
 
         if (self->isStatic)
             jstr = (jstring) (*env)->CallStaticObjectMethodA(
@@ -364,7 +380,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
                            jargs);
         }
 
-        Py_BLOCK_THREADS;
+        Py_END_ALLOW_THREADS;
         if (!process_java_exception(env) && jstr != NULL) {
             result = jstring_To_PyObject(env, jstr);
             (*env)->DeleteLocalRef(env, jstr);
@@ -375,7 +391,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
     case JARRAY_ID: {
         jobjectArray obj;
-        Py_UNBLOCK_THREADS;
+        Py_BEGIN_ALLOW_THREADS;
 
         if (self->isStatic)
             obj = (jobjectArray) (*env)->CallStaticObjectMethodA(
@@ -398,7 +414,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
                           jargs);
         }
 
-        Py_BLOCK_THREADS;
+        Py_END_ALLOW_THREADS;
         if (!process_java_exception(env) && obj != NULL) {
             result = pyjarray_new(env, obj);
         }
@@ -408,7 +424,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
     case JCLASS_ID: {
         jobject obj;
-        Py_UNBLOCK_THREADS;
+        Py_BEGIN_ALLOW_THREADS;
 
         if (self->isStatic)
             obj = (*env)->CallStaticObjectMethodA(
@@ -429,7 +445,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
                                                 jargs);
         }
 
-        Py_BLOCK_THREADS;
+        Py_END_ALLOW_THREADS;
         if (!process_java_exception(env) && obj != NULL) {
             result = PyJObject_NewClass(env, obj);
         }
@@ -439,7 +455,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
     case JOBJECT_ID: {
         jobject obj;
-        Py_UNBLOCK_THREADS;
+        Py_BEGIN_ALLOW_THREADS;
 
         if (self->isStatic)
             obj = (*env)->CallStaticObjectMethodA(
@@ -460,7 +476,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
                                                 jargs);
         }
 
-        Py_BLOCK_THREADS;
+        Py_END_ALLOW_THREADS;
         if (!process_java_exception(env) && obj != NULL) {
             result = convert_jobject_pyobject(env, obj);
         }
@@ -470,7 +486,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
     case JINT_ID: {
         jint ret;
-        Py_UNBLOCK_THREADS;
+        Py_BEGIN_ALLOW_THREADS;
 
         if (self->isStatic)
             ret = (*env)->CallStaticIntMethodA(
@@ -491,7 +507,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
                                              jargs);
         }
 
-        Py_BLOCK_THREADS;
+        Py_END_ALLOW_THREADS;
         if (!process_java_exception(env)) {
             result = Py_BuildValue("i", ret);
         }
@@ -501,7 +517,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
     case JBYTE_ID: {
         jbyte ret;
-        Py_UNBLOCK_THREADS;
+        Py_BEGIN_ALLOW_THREADS;
 
         if (self->isStatic)
             ret = (*env)->CallStaticByteMethodA(
@@ -522,7 +538,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
                                               jargs);
         }
 
-        Py_BLOCK_THREADS;
+        Py_END_ALLOW_THREADS;
         if (!process_java_exception(env)) {
             result = Py_BuildValue("i", ret);
         }
@@ -532,7 +548,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
     case JCHAR_ID: {
         jchar ret;
-        Py_UNBLOCK_THREADS;
+        Py_BEGIN_ALLOW_THREADS;
 
         if (self->isStatic)
             ret = (*env)->CallStaticCharMethodA(
@@ -553,7 +569,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
                                               jargs);
         }
 
-        Py_BLOCK_THREADS;
+        Py_END_ALLOW_THREADS;
         if (!process_java_exception(env)) {
             result = jchar_To_PyObject(ret);
         }
@@ -562,7 +578,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
     case JSHORT_ID: {
         jshort ret;
-        Py_UNBLOCK_THREADS;
+        Py_BEGIN_ALLOW_THREADS;
 
         if (self->isStatic)
             ret = (*env)->CallStaticShortMethodA(
@@ -583,7 +599,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
                                                jargs);
         }
 
-        Py_BLOCK_THREADS;
+        Py_END_ALLOW_THREADS;
         if (!process_java_exception(env)) {
             result = Py_BuildValue("i", (int) ret);
         }
@@ -593,7 +609,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
     case JDOUBLE_ID: {
         jdouble ret;
-        Py_UNBLOCK_THREADS;
+        Py_BEGIN_ALLOW_THREADS;
 
         if (self->isStatic)
             ret = (*env)->CallStaticDoubleMethodA(
@@ -614,7 +630,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
                                                 jargs);
         }
 
-        Py_BLOCK_THREADS;
+        Py_END_ALLOW_THREADS;
         if (!process_java_exception(env)) {
             result = PyFloat_FromDouble(ret);
         }
@@ -624,7 +640,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
     case JFLOAT_ID: {
         jfloat ret;
-        Py_UNBLOCK_THREADS;
+        Py_BEGIN_ALLOW_THREADS;
 
         if (self->isStatic)
             ret = (*env)->CallStaticFloatMethodA(
@@ -645,7 +661,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
                                                jargs);
         }
 
-        Py_BLOCK_THREADS;
+        Py_END_ALLOW_THREADS;
         if (!process_java_exception(env)) {
             result = PyFloat_FromDouble((double) ret);
         }
@@ -655,7 +671,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
     case JLONG_ID: {
         jlong ret;
-        Py_UNBLOCK_THREADS;
+        Py_BEGIN_ALLOW_THREADS;
 
         if (self->isStatic)
             ret = (*env)->CallStaticLongMethodA(
@@ -676,7 +692,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
                                               jargs);
         }
 
-        Py_BLOCK_THREADS;
+        Py_END_ALLOW_THREADS;
         if (!process_java_exception(env)) {
             result = PyLong_FromLongLong(ret);
         }
@@ -686,7 +702,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
     case JBOOLEAN_ID: {
         jboolean ret;
-        Py_UNBLOCK_THREADS;
+        Py_BEGIN_ALLOW_THREADS;
 
         if (self->isStatic)
             ret = (*env)->CallStaticBooleanMethodA(
@@ -707,7 +723,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
                                                  jargs);
         }
 
-        Py_BLOCK_THREADS;
+        Py_END_ALLOW_THREADS;
         if (!process_java_exception(env)) {
             result = PyBool_FromLong(ret);
         }
@@ -716,7 +732,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
     }
 
     default:
-        Py_UNBLOCK_THREADS;
+        Py_BEGIN_ALLOW_THREADS;
 
         // i hereby anoint thee a void method
         if (self->isStatic)
@@ -730,7 +746,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
                                     self->methodId,
                                     jargs);
 
-        Py_BLOCK_THREADS;
+        Py_END_ALLOW_THREADS;
         process_java_exception(env);
         break;
     }
@@ -744,7 +760,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
     // re pin array objects if needed
     if (foundArray) {
-        for (pos = 0; pos < lenNonVarArg; pos++) {
+        for (pos = 0; pos < lenJArgsNormal; pos++) {
             PyObject *param = PyTuple_GetItem(args, pos + 1);     /* borrowed */
             if (param && pyjarray_check(param)) {
                 pyjarray_pin((PyJArrayObject *) param);
