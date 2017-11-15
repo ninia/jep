@@ -124,27 +124,9 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
             throws Throwable {
         this.jep.isValidThread();
 
-        /*
-         * If this is a functional interface but a non-abstract (default) interface method is called
-         * then invoke it normally instead treating it as a callable.
-         */  
-        boolean functionalInterface = this.functionalInterface  && (method.getModifiers() & Modifier.ABSTRACT) != 0;
-
-        // java passes null args sometimes. *shrugs*
-        if (args == null)
-            args = new Object[0];
-
-        // find typeid for args. it's easier in Java and I'm a lazy
-        // bastard.
-        int types[] = new int[args.length];
-        for (int i = 0; i < args.length; i++)
-            types[i] = Util.getTypeId(args[i]);
-
-        // TODO this does not handle default methods.
-        return invoke(method.getName(), this.tstate, this.target, args, types,
-                Util.getTypeId(method.getReturnType()), functionalInterface);
+        return invoke(proxy, this.tstate, this.target, method, args, this.functionalInterface);
     }
 
-    private static native Object invoke(String name, long tstate, long target,
-            Object[] args, int[] types, int returnType, boolean functionalInterface);
+    private static native Object invoke(Object proxy, long tstate, long target, Method method,
+            Object[] args, boolean functionalInterface);
 }

@@ -27,10 +27,23 @@
 
 #include "Jep.h"
 
+static jmethodID byteValue = 0;
 static jmethodID doubleValue = 0;
 static jmethodID floatValue  = 0;
 static jmethodID intValue    = 0;
 static jmethodID longValue   = 0;
+static jmethodID shortValue = 0;
+
+jbyte java_lang_Number_byteValue(JNIEnv* env, jobject this)
+{
+    jbyte result = 0;
+    Py_BEGIN_ALLOW_THREADS
+    if (JNI_METHOD(byteValue, env, JNUMBER_TYPE, "byteValue", "()B")) {
+        result = (*env)->CallByteMethod(env, this, byteValue);
+    }
+    Py_END_ALLOW_THREADS
+    return result;
+}
 
 jdouble java_lang_Number_doubleValue(JNIEnv* env, jobject this)
 {
@@ -71,6 +84,17 @@ jlong java_lang_Number_longValue(JNIEnv* env, jobject this)
     Py_BEGIN_ALLOW_THREADS
     if (JNI_METHOD(longValue, env, JNUMBER_TYPE, "longValue", "()J")) {
         result = (*env)->CallLongMethod(env, this, longValue);
+    }
+    Py_END_ALLOW_THREADS
+    return result;
+}
+
+jshort java_lang_Number_shortValue(JNIEnv* env, jobject this)
+{
+    jshort result = 0;
+    Py_BEGIN_ALLOW_THREADS
+    if (JNI_METHOD(shortValue, env, JNUMBER_TYPE, "shortValue", "()S")) {
+        result = (*env)->CallShortMethod(env, this, shortValue);
     }
     Py_END_ALLOW_THREADS
     return result;

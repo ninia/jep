@@ -27,8 +27,18 @@
 
 #include "Jep.h"
 
-static jmethodID getModifiers = 0;
-static jmethodID getName      = 0;
+static jmethodID getDeclaringClass = 0;
+static jmethodID getModifiers      = 0;
+static jmethodID getName           = 0;
+
+jclass java_lang_reflect_Member_getDeclaringClass(JNIEnv* env, jobject this)
+{
+    jclass result = NULL;
+    if (JNI_METHOD(getDeclaringClass, env, JMEMBER_TYPE, "getDeclaringClass", "()Ljava/lang/Class;")) {
+        result = (jclass) (*env)->CallObjectMethod(env, this, getDeclaringClass);
+    }
+    return result;
+}
 
 jint java_lang_reflect_Member_getModifiers(JNIEnv* env, jobject this)
 {

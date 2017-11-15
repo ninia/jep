@@ -30,62 +30,176 @@
 #include "invocationhandler.h"
 
 
-// note that this function is called by java, not python. this is
-// different than most of our calls. so i don't use the util functions
-// for exception processing. if there's a java exception, just return
-// NULL.
+static jobject invokeDefault(JNIEnv *env, jobject obj, jobject method,
+                             jobjectArray args)
+{
+    jclass       interface = NULL;
+    jmethodID    methodID  = NULL;
+    jobjectArray argTypes  = NULL;
+    jsize        argLen    = 0;
+    jvalue      *argVals   = NULL;
+    jsize        i         = 0;
+    jclass       retType   = NULL;
+    jobject      result    = NULL;
+
+    if (args) {
+        argTypes = java_lang_reflect_Method_getParameterTypes(env, method);
+        if ((*env)->ExceptionOccurred(env)) {
+            return NULL;
+        }
+        argLen = (*env)->GetArrayLength(env, args);
+    }
+    argVals = (jvalue *) PyMem_Malloc(sizeof(jvalue) * argLen);
+    for (i = 0 ; i < argLen ; i += 1) {
+        jobject type = (*env)->GetObjectArrayElement(env, argTypes, i);
+        jobject arg = (*env)->GetObjectArrayElement(env, args, i);
+        if ((*env)->IsAssignableFrom(env, type, JOBJECT_TYPE)) {
+            argVals[i].l = arg;
+        } else if ((*env)->IsSameObject(env, type, JBOOLEAN_TYPE)) {
+            argVals[i].z = java_lang_Boolean_booleanValue(env, arg);
+        } else if ((*env)->IsSameObject(env, type, JBYTE_TYPE)) {
+            argVals[i].b = java_lang_Number_byteValue(env, arg);
+        } else if ((*env)->IsSameObject(env, type, JCHAR_TYPE)) {
+            argVals[i].c = java_lang_Character_charValue(env, arg);
+        } else if ((*env)->IsSameObject(env, type, JSHORT_TYPE)) {
+            argVals[i].s = java_lang_Number_shortValue(env, arg);
+        } else if ((*env)->IsSameObject(env, type, JINT_TYPE)) {
+            argVals[i].i = java_lang_Number_intValue(env, arg);
+        } else if ((*env)->IsSameObject(env, type, JLONG_TYPE)) {
+            argVals[i].j = java_lang_Number_longValue(env, arg);
+        } else if ((*env)->IsSameObject(env, type, JFLOAT_TYPE)) {
+            argVals[i].f = java_lang_Number_floatValue(env, arg);
+        } else if ((*env)->IsSameObject(env, type, JDOUBLE_TYPE)) {
+            argVals[i].d = java_lang_Number_doubleValue(env, arg);
+        }
+        (*env)->DeleteLocalRef(env, type);
+    }
+    interface = java_lang_reflect_Member_getDeclaringClass(env, method);
+    if ((*env)->ExceptionOccurred(env)) {
+        return NULL;
+    }
+    methodID = (*env)->FromReflectedMethod(env, method);
+    retType = java_lang_reflect_Method_getReturnType(env, method);
+    if ((*env)->ExceptionOccurred(env)) {
+        return NULL;
+    }
+    Py_BEGIN_ALLOW_THREADS;
+    if ((*env)->IsAssignableFrom(env, retType, JOBJECT_TYPE)) {
+        result = (*env)->CallNonvirtualObjectMethodA(env, obj, interface, methodID,
+                 argVals);
+    } else if ((*env)->IsSameObject(env, retType, JBOOLEAN_TYPE)) {
+        jboolean z = (*env)->CallNonvirtualBooleanMethodA(env, obj, interface,
+                     methodID, argVals);
+        if (!(*env)->ExceptionOccurred(env)) {
+            result = java_lang_Boolean_new_Z(env, z);
+        }
+    } else if ((*env)->IsSameObject(env, retType, JBYTE_TYPE)) {
+        jbyte b = (*env)->CallNonvirtualByteMethodA(env, obj, interface, methodID,
+                  argVals);
+        if (!(*env)->ExceptionOccurred(env)) {
+            result = java_lang_Byte_new_B(env, b);
+        }
+    } else if ((*env)->IsSameObject(env, retType, JCHAR_TYPE)) {
+        jchar c = (*env)->CallNonvirtualCharMethodA(env, obj, interface, methodID,
+                  argVals);
+        if (!(*env)->ExceptionOccurred(env)) {
+            result = java_lang_Character_new_C(env, c);
+        }
+    } else if ((*env)->IsSameObject(env, retType, JSHORT_TYPE)) {
+        jchar s = (*env)->CallNonvirtualShortMethodA(env, obj, interface, methodID,
+                  argVals);
+        if (!(*env)->ExceptionOccurred(env)) {
+            result = java_lang_Short_new_S(env, s);
+        }
+    } else if ((*env)->IsSameObject(env, retType, JINT_TYPE)) {
+        jint i = (*env)->CallNonvirtualIntMethodA(env, obj, interface, methodID,
+                 argVals);
+        if (!(*env)->ExceptionOccurred(env)) {
+            result = java_lang_Integer_new_I(env, i);
+        }
+    } else if ((*env)->IsSameObject(env, retType, JLONG_TYPE)) {
+        jlong j = (*env)->CallNonvirtualLongMethodA(env, obj, interface, methodID,
+                  argVals);
+        if (!(*env)->ExceptionOccurred(env)) {
+            result = java_lang_Long_new_J(env, j);
+        }
+    } else if ((*env)->IsSameObject(env, retType, JFLOAT_TYPE)) {
+        jfloat f = (*env)->CallNonvirtualFloatMethodA(env, obj, interface,
+                   methodID, argVals);
+        if (!(*env)->ExceptionOccurred(env)) {
+            result = java_lang_Float_new_F(env, f);
+        }
+    } else if ((*env)->IsSameObject(env, retType, JDOUBLE_TYPE)) {
+        jdouble d = (*env)->CallNonvirtualDoubleMethodA(env, obj, interface,
+                    methodID, argVals);
+        if (!(*env)->ExceptionOccurred(env)) {
+            result = java_lang_Double_new_D(env, d);
+        }
+    } else if ((*env)->IsSameObject(env, retType, JVOID_TYPE)) {
+        (*env)->CallNonvirtualVoidMethodA(env, obj, interface, methodID, argVals);
+    }
+    Py_END_ALLOW_THREADS;
+    return result;
+}
 
 /*
+ * Note that this function is called by java so it should throw java exceptions.
+ *
  * Class:     jep_InvocationHandler
  * Method:    invoke
- * Signature: (Ljava/lang/String;JJ[Ljava/lang/Object;[Ljava/lang/Class;Ljava/lang/Class;)Ljava/lang/Object;
+ * Signature: (Ljava/lang/Object;JJLjava/lang/reflect/Method;[Ljava/lang/Object;Z
  */
-JNIEXPORT jobject JNICALL Java_jep_InvocationHandler_invoke
-(JNIEnv *env,
- jclass clazz,
- jstring jname,
- jlong _jepThread,
- jlong _target,
- jobjectArray args,
- jintArray types,
- jint returnType,
- jboolean functionalInterface
-)
+JNIEXPORT jobject JNICALL Java_jep_InvocationHandler_invoke(JNIEnv *env,
+        jclass class, jobject obj, jlong _jepThread, jlong _target, jobject method,
+        jobjectArray args, jboolean functionalInterface
+                                                           )
 {
+    JepThread     *jepThread = NULL;
+    PyObject      *target    = NULL;
+    jobject        result    = NULL;
+    jint           modifiers;
+    jboolean       abstract;
 
-    JepThread     *jepThread;
-    jobject        ret;
-    const char    *cname;
-    PyObject      *target;
-    PyObject      *callable;
+    target   = (PyObject *) _target;
+    jepThread = (JepThread *) _jepThread;
 
-    target   = (PyObject *) (intptr_t) _target;
-    ret      = NULL;
-    callable = NULL;
-
-    jepThread = (JepThread *) (intptr_t) _jepThread;
-    if (!jepThread) {
-        THROW_JEP(env, "Couldn't get thread objects.");
+    modifiers = java_lang_reflect_Member_getModifiers(env, method);
+    if ((*env)->ExceptionOccurred(env)) {
+        return NULL;
+    }
+    abstract = java_lang_reflect_Modifier_isAbstract(env, modifiers);
+    if ((*env)->ExceptionOccurred(env)) {
         return NULL;
     }
 
-    PyEval_AcquireThread(jepThread->tstate);
-
-    // now get the callable object
-    cname = jstring2char(env, jname);
-    // python docs say this returns a new ref. they lie like dogs.
-    callable = functionalInterface ? target : PyObject_GetAttrString(target,
-               (char *) cname);
-    release_utf_char(env, jname, cname);
-
-    if (process_py_exception(env) || !callable) {
-        goto EXIT;
+    if (functionalInterface && abstract) {
+        PyEval_AcquireThread(jepThread->tstate);
+        result = pyembed_invoke(env, target, args, NULL);
+        PyEval_ReleaseThread(jepThread->tstate);
+    } else {
+        const char* attrName;
+        jstring name = java_lang_reflect_Member_getName(env, method);
+        if ((*env)->ExceptionOccurred(env)) {
+            return NULL;
+        }
+        attrName = (*env)->GetStringUTFChars(env, name, 0);
+        PyEval_AcquireThread(jepThread->tstate);
+        if (abstract || PyObject_HasAttrString(target, attrName)) {
+            PyObject *attr = PyObject_GetAttrString(target, attrName);
+            if (attr == NULL) {
+                process_py_exception(env);
+            } else {
+                result = pyembed_invoke(env, attr, args, NULL);
+                Py_DecRef(attr);
+            }
+        } else {
+            result = invokeDefault(env, obj, method, args);
+        }
+        PyEval_ReleaseThread(jepThread->tstate);
+        (*env)->ReleaseStringUTFChars(env, name, attrName);
     }
 
-    ret = pyembed_invoke(env, callable, args, NULL);
-
-EXIT:
-    PyEval_ReleaseThread(jepThread->tstate);
-
-    return ret;
+    return result;
 }
+
+

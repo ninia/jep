@@ -28,6 +28,7 @@
 #ifndef _Included_java_lang_reflect_Member
 #define _Included_java_lang_reflect_Member
 
+jclass  java_lang_reflect_Member_getDeclaringClass(JNIEnv*, jobject);
 jint    java_lang_reflect_Member_getModifiers(JNIEnv*, jobject);
 jstring java_lang_reflect_Member_getName(JNIEnv*, jobject);
 

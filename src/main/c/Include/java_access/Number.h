@@ -28,9 +28,11 @@
 #ifndef _Included_java_lang_Number
 #define _Included_java_lang_Number
 
+jbyte    java_lang_Number_byteValue(JNIEnv*, jobject);
 jdouble java_lang_Number_doubleValue(JNIEnv*, jobject);
 jfloat  java_lang_Number_floatValue(JNIEnv*, jobject);
 jint    java_lang_Number_intValue(JNIEnv*, jobject);
 jlong   java_lang_Number_longValue(JNIEnv*, jobject);
+jshort  java_lang_Number_shortValue(JNIEnv*, jobject);
 
 #endif // ndef java_lang_Number
