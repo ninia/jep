@@ -213,7 +213,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
                                 PyObject *keywords)
 {
     JNIEnv        *env              = NULL;
-    int            lenPyArgsGiven   = 0;
+    Py_ssize_t     lenPyArgsGiven   = 0;
     int            lenJArgsExpected = 0;
     /* The number of normal arguments before any varargs */
     int            lenJArgsNormal   = 0;
@@ -245,7 +245,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
         if (!varargs || lenJArgsExpected > lenPyArgsGiven) {
             PyErr_Format(PyExc_RuntimeError,
                          "Invalid number of arguments: %i, expected %i.",
-                         lenPyArgsGiven,
+                         (int) lenPyArgsGiven,
                          lenJArgsExpected + 1);
             return NULL;
         }

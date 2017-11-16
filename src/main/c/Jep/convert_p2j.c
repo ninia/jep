@@ -568,7 +568,7 @@ static jobject pyfloat_as_jobject(JNIEnv *env, PyObject *pyobject,
  */
 #define pyfastsequence_as_primitive_array(jtype, Type) \
     jtype *buf = malloc(size*sizeof(jtype));\
-    jtype##Array jarray = (*env)->New##Type##Array(env, size);\
+    jtype##Array jarray = (*env)->New##Type##Array(env, (jsize) size);\
     if (jarray == NULL) {\
         free(buf);\
         process_java_exception(env);\
@@ -582,7 +582,7 @@ static jobject pyfloat_as_jobject(JNIEnv *env, PyObject *pyobject,
             return (*env)->PopLocalFrame(env, NULL);\
         }\
     }\
-    (*env)->Set##Type##ArrayRegion(env, jarray,0, size, buf);\
+    (*env)->Set##Type##ArrayRegion(env, jarray,0, (jsize) size, buf);\
     free(buf);\
     if (process_java_exception(env)){\
         return (*env)->PopLocalFrame(env, NULL);\
@@ -660,7 +660,7 @@ static jobject pyfastsequence_as_jobject(JNIEnv *env, PyObject *pyseq,
         }
 
         if ((*env)->IsAssignableFrom(env, componentType, JOBJECT_TYPE)) {
-            jobjectArray jarray = (*env)->NewObjectArray(env, size, componentType, NULL);
+            jobjectArray jarray = (*env)->NewObjectArray(env, (jsize) size, componentType, NULL);
             if (!jarray) {
                 process_java_exception(env);
                 return (*env)->PopLocalFrame(env, NULL);
@@ -676,7 +676,7 @@ static jobject pyfastsequence_as_jobject(JNIEnv *env, PyObject *pyseq,
                      */
                     return (*env)->PopLocalFrame(env, NULL);
                 }
-                (*env)->SetObjectArrayElement(env, jarray, i, value);
+                (*env)->SetObjectArrayElement(env, jarray, (jsize) i, value);
                 (*env)->DeleteLocalRef(env, value);
                 if (process_java_exception(env)) {
                     return (*env)->PopLocalFrame(env, NULL);

@@ -40,6 +40,12 @@ environments. There are 2 different changes that help with this:
    to set the LD_LIBRARY_PATH and/or java.library.path to the location of the
    Jep library.
 
+Interface default methods can be called on JProxy objects
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+When a Python object is wrapped in a Java interface(using jproxy) it will now
+correctly call default methods on the Java interface that are not overriden by
+the Python object.
+
 
 Compatibility Notes
 *******************

@@ -54,7 +54,7 @@ jclass java_lang_reflect_Method_getReturnType(JNIEnv* env, jobject this)
 
 jboolean java_lang_reflect_Method_isVarArgs(JNIEnv* env, jobject this)
 {
-    jboolean result = NULL;
+    jboolean result = JNI_FALSE;
     if (JNI_METHOD(isVarArgs, env, JMETHOD_TYPE, "isVarArgs", "()Z")) {
         result = (*env)->CallBooleanMethod(env, this, isVarArgs);
     }

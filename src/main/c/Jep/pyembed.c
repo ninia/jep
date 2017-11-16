@@ -903,7 +903,7 @@ jobject pyembed_invoke(JNIEnv *env,
         jobject   val;
         PyObject *pyval;
 
-        val = (*env)->GetObjectArrayElement(env, args, i);
+        val = (*env)->GetObjectArrayElement(env, args, (jsize) i);
         if ((*env)->ExceptionCheck(env)) { /* careful, NULL is okay */
             goto EXIT;
         }
