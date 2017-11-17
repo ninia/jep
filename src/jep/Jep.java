@@ -1199,12 +1199,13 @@ public final class Jep implements Closeable {
             System.err.println(warning);
         }
 
+        // close all the PyObjects we created
+        for (int i = 0; i < this.pythonObjects.size(); i++) {
+            pythonObjects.get(i).close();
+        }
+
         // don't attempt close twice if something goes wrong
         this.closed = true;
-
-        // close all the PyObjects we created
-        for (int i = 0; i < this.pythonObjects.size(); i++)
-            pythonObjects.get(i).close();
 
         try {
             eval(this.tstate, "import jep");
