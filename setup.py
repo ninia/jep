@@ -115,7 +115,8 @@ if __name__ == '__main__':
           # my hacks to compile java files
           java_files=get_files('.java'),
           extra_jar_files=['src/main/resources/classlist/classlist_7.txt',
-                           'src/main/resources/classlist/classlist_8.txt'],
+                           'src/main/resources/classlist/classlist_8.txt',
+                           'src/main/resources/classlist/classlist_9.txt'],
           javah_files=[   # tuple containing class and the header file to output
               ('jep.Jep', 'jep.h'),
               ('jep.python.PyObject', 'jep_object.h'),
