@@ -110,7 +110,8 @@ if __name__ == '__main__':
           java_files=get_files('.java'),
           extra_jar_files=['src/jep/classlist_6.txt',
                            'src/jep/classlist_7.txt',
-                           'src/jep/classlist_8.txt'],
+                           'src/jep/classlist_8.txt',
+                           'src/jep/classlist_9.txt'],
           javah_files=[   # tuple containing class and the header file to output
               ('jep.Jep', 'jep.h'),
               ('jep.python.PyObject', 'jep_object.h'),
