@@ -132,6 +132,8 @@ def get_java_lib_folders():
             jre = os.path.join(get_java_home(), 'lib')
         else:
             jre = os.path.join(get_java_home(), 'jre', 'lib')
+            if not os.path.exists(jre):
+                jre = os.path.join(get_java_home(), 'lib')
         folders = []
         for root, dirnames, filenames in os.walk(jre):
             if is_windows():

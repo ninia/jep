@@ -56,6 +56,12 @@ public class TestSharedModulesThreads extends Thread{
             jep.eval("t.daemon = True");
             jep.eval("t.start()");
             jep.eval("t.join()");
+            /*
+             * Sleep to workaround a python bug, that occasionally fails the
+             * test. Remove the sleep when 2.7 and 3.3 are no longer supported.
+             * https://bugs.python.org/issue18808
+             */
+            Thread.sleep(10);
             Object success = jep.getValue("success");
             if(!Boolean.TRUE.equals(success)){
                 System.exit(1);
