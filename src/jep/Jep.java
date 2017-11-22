@@ -1,26 +1,26 @@
 /**
  * Copyright (c) 2017 JEP AUTHORS.
- *
+ * <p>
  * This file is licensed under the the zlib/libpng License.
- *
+ * <p>
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any
  * damages arising from the use of this software.
- * 
+ * <p>
  * Permission is granted to anyone to use this software for any
  * purpose, including commercial applications, and to alter it and
  * redistribute it freely, subject to the following restrictions:
- * 
- *     1. The origin of this software must not be misrepresented; you
- *     must not claim that you wrote the original software. If you use
- *     this software in a product, an acknowledgment in the product
- *     documentation would be appreciated but is not required.
- * 
- *     2. Altered source versions must be plainly marked as such, and
- *     must not be misrepresented as being the original software.
- * 
- *     3. This notice may not be removed or altered from any source
- *     distribution.
+ * <p>
+ * 1. The origin of this software must not be misrepresented; you
+ * must not claim that you wrote the original software. If you use
+ * this software in a product, an acknowledgment in the product
+ * documentation would be appreciated but is not required.
+ * <p>
+ * 2. Altered source versions must be plainly marked as such, and
+ * must not be misrepresented as being the original software.
+ * <p>
+ * 3. This notice may not be removed or altered from any source
+ * distribution.
  */
 package jep;
 
@@ -34,6 +34,7 @@ import java.util.concurrent.SynchronousQueue;
 import jep.python.PyModule;
 import jep.python.PyObject;
 
+
 /**
  * <p>
  * Embeds CPython in Java. Each Jep instance can be considered a Python
@@ -42,7 +43,7 @@ import jep.python.PyObject;
  * affect another when using CPython extensions or referencing the same Java
  * objects in different sub-interpreters.
  * </p>
- * 
+ *
  * <p>
  * In general, methods called on a Jep instance must be called from the same
  * thread that created the instance. To maintain stability, avoid having two Jep
@@ -51,7 +52,7 @@ import jep.python.PyObject;
  * thread. Jep instances should always be closed when no longer needed to
  * prevent memory leaks.
  * </p>
- * 
+ *
  * @author Mike Johnson
  */
 public final class Jep implements Closeable {
@@ -125,7 +126,7 @@ public final class Jep implements Closeable {
          * and ultimately Py_Initialize(). We load on a separate thread to try
          * and avoid GIL issues that come about from a sub-interpreter being on
          * the same thread as the top/main interpreter.
-         * 
+         *
          * @throws Error
          */
         private void initialize() throws Error {
@@ -194,7 +195,7 @@ public final class Jep implements Closeable {
          * Import a module into the top interpreter on the correct thread for
          * that interpreter. This is called from the python shared modules
          * import hook to create a module needed by a jep interpreter.
-         * 
+         *
          * @param module
          *            the name of the module to import
          */
@@ -213,17 +214,37 @@ public final class Jep implements Closeable {
         }
     }
 
+
     static {
-        System.loadLibrary("jep");
+        // possibility to bundle the jep library with embedding
+        // application within it's classpath.
+
+        try {
+            System.loadLibrary("jep");
+        } catch (Exception ex) {
+            System.err.println("Unable to locate jep shared library. Try bundled version as fallback");
+
+            String OS_NAME = System.getProperty("os.name");
+            try {
+                if (OS_NAME.toUpperCase().contains("LINUX")) {
+                    NativeUtils.loadLibraryFromJar("/jep.so");
+                } else if (OS_NAME.toUpperCase().contains("WINDOWS")) {
+                    NativeUtils.loadLibraryFromJar("/jep.dll");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
     }
 
     /**
      * Sets interpreter settings for the top Python interpreter. This method
      * must be called before the first Jep instance is created in the process.
-     * 
+     *
      * @param config
      *            the python configuration to use.
-     * 
+     *
      * @since 3.6
      */
     public static void setInitParams(PyConfig config) throws JepException {
@@ -240,12 +261,12 @@ public final class Jep implements Closeable {
     /**
      * Sets the sys.argv values on the top interpreter. This is a workaround for
      * issues with shared modules and should be considered experimental.
-     * 
+     *
      * @param argv
      *            the arguments to be set on Python's sys.argv for the top/main
-     *            interpreter
+     *               interpreter
      * @throws JepException
-     * 
+     *
      * @since 3.7
      */
     public static void setSharedModulesArgv(String... argv)
@@ -258,9 +279,9 @@ public final class Jep implements Closeable {
     }
 
     private static native void setInitParams(int noSiteFlag,
-            int noUserSiteDiretory, int ignoreEnvironmentFlag, int verboseFlag,
-            int optimizeFlag, int dontWriteBytecodeFlag,
-            int hashRandomizationFlag);
+                                             int noUserSiteDiretory, int ignoreEnvironmentFlag, int verboseFlag,
+                                             int optimizeFlag, int dontWriteBytecodeFlag,
+                                             int hashRandomizationFlag);
 
     private static native void initializePython(String[] topInterpreterArgv);
 
@@ -270,7 +291,7 @@ public final class Jep implements Closeable {
      * Creates the TopInterpreter instance that will be used by Jep. This should
      * be called from all Jep constructors to ensure the native module has been
      * loaded and initialized before a valid Jep instance is produced.
-     * 
+     *
      * @throws Error
      */
     private synchronized static void createTopInterpreter() throws Error {
@@ -294,7 +315,7 @@ public final class Jep implements Closeable {
     /**
      * Creates a new <code>Jep</code> instance and its associated
      * sub-interpreter.
-     * 
+     *
      * @exception JepException
      *                if an error occurs
      */
@@ -305,7 +326,7 @@ public final class Jep implements Closeable {
     /**
      * Creates a new <code>Jep</code> instance and its associated
      * sub-interpreter.
-     * 
+     *
      * @param interactive
      *            whether {@link #eval(String)} should support the slower
      *            behavior of potentially waiting for multiple statements
@@ -319,7 +340,7 @@ public final class Jep implements Closeable {
     /**
      * Creates a new <code>Jep</code> instance and its associated
      * sub-interpreter.
-     * 
+     *
      * @param interactive
      *            whether {@link #eval(String)} should support the slower
      *            behavior of potentially waiting for multiple statements
@@ -336,7 +357,7 @@ public final class Jep implements Closeable {
     /**
      * Creates a new <code>Jep</code> instance and its associated
      * sub-interpreter.
-     * 
+     *
      * @param interactive
      *            whether {@link #eval(String)} should support the slower
      *            behavior of potentially waiting for multiple statements
@@ -356,7 +377,7 @@ public final class Jep implements Closeable {
     /**
      * Creates a new <code>Jep</code> instance and its associated
      * sub-interpreter.
-     * 
+     *
      * @param interactive
      *            whether {@link #eval(String)} should support the slower
      *            behavior of potentially waiting for multiple statements
@@ -372,7 +393,7 @@ public final class Jep implements Closeable {
      *                if an error occurs
      */
     public Jep(boolean interactive, String includePath, ClassLoader cl,
-            ClassEnquirer ce) throws JepException {
+               ClassEnquirer ce) throws JepException {
         this(new JepConfig().setInteractive(interactive)
                 .setIncludePath(includePath).setClassLoader(cl)
                 .setClassEnquirer(ce));
@@ -455,9 +476,9 @@ public final class Jep implements Closeable {
     /**
      * Checks if the current thread is valid for the method call. All calls must
      * check the thread.
-     * 
+     *
      * <b>Internal Only</b>
-     * 
+     *
      * @exception JepException
      *                if an error occurs
      */
@@ -472,7 +493,7 @@ public final class Jep implements Closeable {
 
     /**
      * Runs a Python script.
-     * 
+     *
      * @param script
      *            a <code>String</code> absolute path to script file.
      * @exception JepException
@@ -484,7 +505,7 @@ public final class Jep implements Closeable {
 
     /**
      * Runs a Python script.
-     * 
+     *
      * @param script
      *            a <code>String</code> absolute path to script file.
      * @param cl
@@ -510,7 +531,7 @@ public final class Jep implements Closeable {
 
     /**
      * Invokes a Python function.
-     * 
+     *
      * @param name
      *            must be a valid Python function name in globals dict
      * @param args
@@ -532,35 +553,35 @@ public final class Jep implements Closeable {
     }
 
     private native Object invoke(long tstate, String name, Object[] args,
-            int[] types);
+                                 int[] types);
 
     /**
      * <p>
      * Evaluate Python statements.
      * </p>
-     * 
+     *
      * <p>
      * In interactive mode, Jep may not immediately execute the given lines of
      * code. In that case, eval() returns false and the statement is stored and
      * is appended to the next incoming string.
      * </p>
-     * 
+     *
      * <p>
      * If you're running an unknown number of statements, finish with
      * <code>eval(null)</code> to flush the statement buffer.
      * </p>
-     * 
+     *
      * <p>
      * Interactive mode is slower than a straight eval call since it has to
      * compile the code strings to detect the end of the block. Non-interactive
      * mode is faster, but code blocks must be complete. For example:
      * </p>
-     * 
+     *
      * <pre>
      * interactive mode == false
      * <code>jep.eval("if(Test):\n    print('Hello world')");</code>
      * </pre>
-     * 
+     *
      * <pre>
      * interactive mode == true
      * <code>jep.eval("if(Test):");
@@ -568,12 +589,12 @@ public final class Jep implements Closeable {
      * jep.eval(null);
      * </code>
      * </pre>
-     * 
+     *
      * <p>
      * Also, Python does not readily return object values from eval(). Use
      * {@link #getValue(String)} instead.
      * </p>
-     * 
+     *
      * @param str
      *            a <code>String</code> statement to eval
      * @return true if statement complete and was executed.
@@ -631,7 +652,7 @@ public final class Jep implements Closeable {
     private native void eval(long tstate, String str) throws JepException;
 
     /**
-     * 
+     *
      * <p>
      * Retrieves a value from this Python sub-interpreter. Supports retrieving:
      * <ul>
@@ -644,7 +665,7 @@ public final class Jep implements Closeable {
      * <li>Python tuples</li>
      * <li>Python dictionaries</li>
      * </ul>
-     * 
+     *
      * <p>
      * For Python containers, such as lists and dictionaries, getValue will
      * recursively move through the container and convert each item. If the type
@@ -652,7 +673,7 @@ public final class Jep implements Closeable {
      * a String representation of the object. This fallback behavior will
      * probably change in the future and should not be relied upon.
      * </p>
-     * 
+     *
      * <pre>
      * Python is pretty picky about what it accepts here. The general syntax
      * <code>
@@ -661,7 +682,7 @@ public final class Jep implements Closeable {
      * </code>
      * will work.
      * </pre>
-     * 
+     *
      * @param str
      *            the name of the Python variable to get from the
      *            sub-interpreter's global scope
@@ -679,7 +700,7 @@ public final class Jep implements Closeable {
 
     /**
      * Retrieves a Python string object as a Java byte[].
-     * 
+     *
      * @param str
      *            the name of the Python variable to get from the
      *            sub-interpreter's global scope
@@ -699,9 +720,9 @@ public final class Jep implements Closeable {
     /**
      * Track Python objects we create so they can be smoothly shutdown with no
      * risk of crashes due to bad reference counting.
-     * 
+     *
      * <b>Internal use only.</b>
-     * 
+     *
      * @param obj
      *            a <code>PyObject</code> value
      * @return same object, for inlining stuff
@@ -715,9 +736,9 @@ public final class Jep implements Closeable {
     /**
      * Track Python objects we create so they can be smoothly shutdown with no
      * risk of crashes due to bad reference counting.
-     * 
+     *
      * <b>Internal use only.</b>
-     * 
+     *
      * @param obj
      *            a <code>PyObject</code> value
      * @param inc
@@ -738,7 +759,7 @@ public final class Jep implements Closeable {
     /**
      * Create a Python module on the interpreter. If the given name is valid,
      * imported module, this method will return that module.
-     * 
+     *
      * @param name
      *            a <code>String</code> value
      * @return a <code>PyModule</code> value
@@ -757,7 +778,7 @@ public final class Jep implements Closeable {
 
     /**
      * Sets the default classloader.
-     * 
+     *
      * @param cl
      *            a <code>ClassLoader</code> value
      */
@@ -775,7 +796,7 @@ public final class Jep implements Closeable {
      * Changes behavior of {@link #eval(String)}. Interactive mode can wait for
      * further Python statements to be evaled, while non-interactive mode can
      * only execute complete Python statements.
-     * 
+     *
      * @param v
      *            if the sub-interpreter should run in interactive mode
      */
@@ -785,7 +806,7 @@ public final class Jep implements Closeable {
 
     /**
      * Gets whether or not this sub-interpreter is interactive.
-     * 
+     *
      * @return whether or not the sub-interpreter is interactive
      */
     public boolean isInteractive() {
@@ -795,7 +816,7 @@ public final class Jep implements Closeable {
     /**
      * Sets the Java Object into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -838,7 +859,7 @@ public final class Jep implements Closeable {
     /**
      * Sets the Java String into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -858,7 +879,7 @@ public final class Jep implements Closeable {
     /**
      * Sets the Java boolean into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -878,7 +899,7 @@ public final class Jep implements Closeable {
     /**
      * Sets the Java int into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -895,7 +916,7 @@ public final class Jep implements Closeable {
     /**
      * Sets the Java short into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -915,7 +936,7 @@ public final class Jep implements Closeable {
     /**
      * Sets the Java char[] into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -932,7 +953,7 @@ public final class Jep implements Closeable {
     /**
      * Sets the Java char into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -943,13 +964,13 @@ public final class Jep implements Closeable {
     public void set(String name, char v) throws JepException {
         isValidThread();
 
-        set(tstate, name, new String(new char[] { v }));
+        set(tstate, name, new String(new char[]{v}));
     }
 
     /**
      * Sets the Java byte into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param b
@@ -966,7 +987,7 @@ public final class Jep implements Closeable {
     /**
      * Sets the Java long into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -986,7 +1007,7 @@ public final class Jep implements Closeable {
     /**
      * Sets the Java double into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -1006,7 +1027,7 @@ public final class Jep implements Closeable {
     /**
      * Sets the Java float into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -1028,7 +1049,7 @@ public final class Jep implements Closeable {
     /**
      * Sets the Java boolean[] into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -1048,7 +1069,7 @@ public final class Jep implements Closeable {
     /**
      * Sets the Java int[] into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -1068,7 +1089,7 @@ public final class Jep implements Closeable {
     /**
      * Sets the Java short[] into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -1088,7 +1109,7 @@ public final class Jep implements Closeable {
     /**
      * Sets the Java byte[] into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -1108,7 +1129,7 @@ public final class Jep implements Closeable {
     /**
      * Sets the Java long[] into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -1128,7 +1149,7 @@ public final class Jep implements Closeable {
     /**
      * Sets the Java double[] into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -1148,7 +1169,7 @@ public final class Jep implements Closeable {
     /**
      * Sets the Java float[] into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -1170,7 +1191,7 @@ public final class Jep implements Closeable {
     /**
      * Shuts down the Python sub-interpreter. Make sure you call this to prevent
      * memory leaks.
-     * 
+     *
      */
     @Override
     public synchronized void close() {
