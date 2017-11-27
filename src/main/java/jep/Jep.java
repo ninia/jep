@@ -364,6 +364,7 @@ public final class Jep implements AutoCloseable {
      *                if an error occurs
      */
     public Object invoke(String name, Object... args) throws JepException {
+        isValidThread();
         if (name == null || name.trim().equals("")) {
             throw new JepException("Invalid function name.");
         }
@@ -384,6 +385,7 @@ public final class Jep implements AutoCloseable {
      */
     public Object invoke(String name, Map<String, Object> kwargs)
             throws JepException {
+        isValidThread();
         if (name == null || name.trim().equals("")) {
             throw new JepException("Invalid function name.");
         }
@@ -406,6 +408,7 @@ public final class Jep implements AutoCloseable {
      */
     public Object invoke(String name, Object[] args, Map<String, Object> kwargs)
             throws JepException {
+        isValidThread();
         if (name == null || name.trim().equals("")) {
             throw new JepException("Invalid function name.");
         }
