@@ -25,12 +25,10 @@
 package jep;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import jep.python.PyModule;
-import jep.python.PyObject;
+import jep.python.MemoryManager;
 
 /**
  * <p>
@@ -71,14 +69,11 @@ public final class Jep implements AutoCloseable {
 
     private boolean interactive = false;
 
+    private final MemoryManager memoryManager = new MemoryManager();
+    
     // windows requires this as unix newline...
     private static final String LINE_SEP = "\n";
 
-    /*
-     * keep track of objects that we create. do this to prevent crashes in
-     * userland if jep is closed.
-     */
-    private final List<PyObject> pythonObjects = new ArrayList<>();
 
     /**
      * Tracks if this thread has been used for an interpreter before. Using
@@ -582,45 +577,6 @@ public final class Jep implements AutoCloseable {
             throws JepException;
 
     /**
-     * Track Python objects we create so they can be smoothly shutdown with no
-     * risk of crashes due to bad reference counting.
-     * 
-     * <b>Internal use only.</b>
-     * 
-     * @param obj
-     *            a <code>PyObject</code> value
-     * @return same object, for inlining stuff
-     * @exception JepException
-     *                if an error occurs
-     */
-    public PyObject trackObject(PyObject obj) throws JepException {
-        return trackObject(obj, true);
-    }
-
-    /**
-     * Track Python objects we create so they can be smoothly shutdown with no
-     * risk of crashes due to bad reference counting.
-     * 
-     * <b>Internal use only.</b>
-     * 
-     * @param obj
-     *            a <code>PyObject</code> value
-     * @param inc
-     *            should trackObject incref()
-     * @return same object, for inlining stuff
-     * @exception JepException
-     *                if an error occurs
-     */
-    public PyObject trackObject(PyObject obj, boolean inc) throws JepException {
-        // make sure python doesn't close it
-        if (inc)
-            obj.incref();
-
-        this.pythonObjects.add(obj);
-        return obj;
-    }
-
-    /**
      * Create a Python module on the interpreter. If the given name is valid,
      * imported module, this method will return that module.
      * 
@@ -633,8 +589,7 @@ public final class Jep implements AutoCloseable {
      */
     @Deprecated
     public PyModule createModule(String name) throws JepException {
-        return (PyModule) trackObject(new PyModule(this.tstate,
-                createModule(this.tstate, name), this));
+        return new PyModule(this.tstate, createModule(this.tstate, name), this);
     }
 
     private native long createModule(long tstate, String name)
@@ -1055,6 +1010,17 @@ public final class Jep implements AutoCloseable {
     // -------------------------------------------------- close me
 
     /**
+     * Gets the memory manager associated with this Jep instance. The memory
+     * manager attempts to track native memory usage of PyObjects. This should
+     * not be called outside of Jep and should be considered an internal method.
+     * 
+     * @return the memory manager
+     */
+    public MemoryManager getMemoryManager() {
+        return memoryManager;
+    }
+    
+    /**
      * Shuts down the Python sub-interpreter. Make sure you call this to prevent
      * memory leaks.
      * 
@@ -1083,10 +1049,7 @@ public final class Jep implements AutoCloseable {
             throw new JepException(warning.toString());
         }
 
-        // close all the PyObjects we created
-        for (int i = 0; i < this.pythonObjects.size(); i++) {
-            pythonObjects.get(i).close();
-        }
+        getMemoryManager().cleanupReferences();
 
         // don't attempt close twice if something goes wrong
         this.closed = true;

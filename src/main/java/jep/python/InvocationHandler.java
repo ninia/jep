@@ -22,25 +22,21 @@
  *     3. This notice may not be removed or altered from any source
  *     distribution.
  */
-package jep;
+package jep.python;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
-import jep.python.PyObject;
+import jep.Jep;
+import jep.JepException;
 
 /**
  * Handle Proxy method calls.
- *
- * @author Mike Johnson
  */
 public class InvocationHandler implements java.lang.reflect.InvocationHandler {
 
-    private long tstate;
-
-    private long target;
-
-    private Jep jep;
+    private final PyObject pyObject;
+    
     private final boolean functionalInterface;
 
     /**
@@ -59,20 +55,9 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
      */
     public InvocationHandler(long tstate, long ltarget, Jep jep, final boolean functionalInterface)
             throws JepException {
-        this.tstate = tstate;
-        this.target = ltarget;
-        this.jep = jep;
         this.functionalInterface = functionalInterface;
 
-        // track target with jep.
-
-        // this ensures that our target doesn't get garbage collected,
-        // and since we can't have a close(), it'll get cleaned up.
-
-        // correction. object is now increfed before being returned to
-        // Java since in some cases the garbage collection could run
-        // before this.
-        jep.trackObject(new PyObject(this.tstate, this.target, this.jep), false);
+        this.pyObject = new PyObject(tstate, ltarget, jep);
     }
 
     /**
@@ -122,9 +107,9 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args)
             throws Throwable {
-        this.jep.isValidThread();
+        pyObject.jep.isValidThread();
 
-        return invoke(proxy, this.tstate, this.target, method, args, this.functionalInterface);
+        return invoke(proxy, pyObject.pointer.tstate, pyObject.pointer.pyObject, method, args, this.functionalInterface);
     }
 
     private static native Object invoke(Object proxy, long tstate, long target, Method method,

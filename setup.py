@@ -120,7 +120,7 @@ if __name__ == '__main__':
           javah_files=[   # tuple containing class and the header file to output
               ('jep.Jep', 'jep.h'),
               ('jep.python.PyObject', 'jep_object.h'),
-              ('jep.InvocationHandler', 'invocationhandler.h'),
+              ('jep.python.InvocationHandler', 'invocationhandler.h'),
               ('jep.MainInterpreter', 'maininterpreter.h'),
           ],
           distclass=JepDistribution,

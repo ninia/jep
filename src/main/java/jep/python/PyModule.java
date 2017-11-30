@@ -61,8 +61,7 @@ public class PyModule extends PyObject {
      */
     public PyModule createModule(String name) throws JepException {
         super.isValid();
-        return (PyModule) jep.trackObject(new PyModule(super.tstate,
-                super.createModule(super.tstate, super.obj, name), super.jep));
+        return new PyModule(pointer.tstate, super.createModule(pointer.tstate, pointer.pyObject, name), super.jep);
     }
 
     /**
@@ -82,6 +81,6 @@ public class PyModule extends PyObject {
      */
     public Object getValue(String str) throws JepException {
         super.isValid();
-        return super.getValue(super.tstate, super.obj, str);
+        return super.getValue(pointer.tstate, pointer.pyObject, str);
     }
 }

@@ -33,23 +33,10 @@ import jep.JepException;
  * @author Mike Johnson
  */
 public class PyObject {
-    /**
-     * the jep that created this object
-     *
-     */
-    protected Jep  jep = null;
-
-    /**
-     * the pointer to the PyObject
-     *
-     */
-    protected long obj = 0;
-
-    /**
-     * thread state pointer in python
-     *
-     */
-    protected long tstate = 0;
+    
+    protected final PyPointer pointer;
+    
+    protected final Jep jep;
 
 
     /**
@@ -60,13 +47,9 @@ public class PyObject {
      * @param jep the instance of jep that created this object
      * @exception JepException if an error occurs
      */
-    public PyObject(long tstate, long obj, Jep jep) throws JepException {
-        this.tstate = tstate;
-        this.obj    = obj;
-        this.jep    = jep;
-
-        if(obj == 0)
-            throw new JepException("Unable to create object, NULL.");
+    public PyObject(long tstate, long pyObject, Jep jep) throws JepException {
+        this.jep = jep;
+        this.pointer = new PyPointer(this, jep, tstate, pyObject);
     }
 
 
@@ -76,8 +59,6 @@ public class PyObject {
      * @throws JepException if an error occurs
      */
     public void isValid() throws JepException {
-        if(obj == 0)
-            throw new JepException("Object: Invalid pointer.");
         jep.isValidThread();
     }
 
@@ -89,7 +70,7 @@ public class PyObject {
      */
     public void decref() throws JepException {
         isValid();
-        this.decref(this.tstate, this.obj);
+        this.decref(pointer.tstate, pointer.pyObject);
     }
 
 
@@ -103,7 +84,7 @@ public class PyObject {
      */
     public void incref() throws JepException {
         isValid();
-        this.incref(this.tstate, this.obj);
+        this.incref(pointer.tstate, pointer.pyObject);
     }
 
 
@@ -115,17 +96,13 @@ public class PyObject {
      * 
      */
     public void close() {
-        try {
-            if(this.obj == 0)
-                return;
-
-            this.decref();
+        try{
+            isValid();
+            this.pointer.dispose();
+        } catch(JepException e){
+            // TODO throw?
+            return;
         }
-        catch(JepException e) {
-            // shouldn't happen?
-        }
-
-        this.obj = 0;
     }
 
 
@@ -140,7 +117,7 @@ public class PyObject {
      */
     public void set(String name, Object v) throws JepException {
         isValid();
-        set(this.tstate, this.obj, name, v);
+        set(pointer.tstate, pointer.pyObject, name, v);
     }
 
     private native void set(long tstate, long module, String name, Object v)
@@ -156,7 +133,7 @@ public class PyObject {
      */
     public void set(String name, String v) throws JepException {
         isValid();
-        set(this.tstate, this.obj, name, v);
+        set(pointer.tstate, pointer.pyObject, name, v);
     }
 
     private native void set(long tstate, long module, String name, String v)
@@ -189,7 +166,7 @@ public class PyObject {
      */
     public void set(String name, int v) throws JepException {
         isValid();
-        set(this.tstate, this.obj, name, v);
+        set(pointer.tstate, pointer.pyObject, name, v);
     }
     
     /**
@@ -201,7 +178,7 @@ public class PyObject {
      */
     public void set(String name, short v) throws JepException {
         isValid();
-        set(this.tstate, this.obj, name, v);
+        set(pointer.tstate, pointer.pyObject, name, v);
     }
     
     private native void set(long tstate, long module, String name, int v)
@@ -217,7 +194,7 @@ public class PyObject {
      */
     public void set(String name, char[] v) throws JepException {
         isValid();
-        set(this.tstate, this.obj, name, new String(v));
+        set(pointer.tstate, pointer.pyObject, name, new String(v));
     }
 
 
@@ -230,7 +207,7 @@ public class PyObject {
      */
     public void set(String name, char v) throws JepException {
         isValid();
-        set(this.tstate, this.obj, name, new String(new char[] { v }));
+        set(pointer.tstate, pointer.pyObject, name, new String(new char[] { v }));
     }
 
 
@@ -243,7 +220,7 @@ public class PyObject {
      */
     public void set(String name, byte b) throws JepException {
         isValid();
-        set(this.tstate, this.obj, name, b);
+        set(pointer.tstate, pointer.pyObject, name, b);
     }
 
     
@@ -256,7 +233,7 @@ public class PyObject {
      */
     public void set(String name, long v) throws JepException {
         isValid();
-        set(this.tstate, this.obj, name, v);
+        set(pointer.tstate, pointer.pyObject, name, v);
     }
     
     private native void set(long tstate, long module, String name, long v)
@@ -272,7 +249,7 @@ public class PyObject {
      */
     public void set(String name, double v) throws JepException {
         isValid();
-        set(this.tstate, this.obj, name, v);
+        set(pointer.tstate, pointer.pyObject, name, v);
     }
     
     private native void set(long tstate, long module, String name, double v)
@@ -288,7 +265,7 @@ public class PyObject {
      */
     public void set(String name, float v) throws JepException {
         isValid();
-        set(this.tstate, this.obj, name, v);
+        set(pointer.tstate, pointer.pyObject, name, v);
     }
     
     private native void set(long tstate, long module, String name, float v)
@@ -306,7 +283,7 @@ public class PyObject {
      */
     public void set(String name, boolean[] v) throws JepException {
         isValid();
-        set(this.tstate, this.obj, name, v);
+        set(pointer.tstate, pointer.pyObject, name, v);
     }
 
     private native void set(long tstate, long module, String name, boolean[] v)
@@ -322,7 +299,7 @@ public class PyObject {
      */
     public void set(String name, int[] v) throws JepException {
         isValid();
-        set(this.tstate, this.obj, name, v);
+        set(pointer.tstate, pointer.pyObject, name, v);
     }
 
     private native void set(long tstate, long module, String name, int[] v)
@@ -338,7 +315,7 @@ public class PyObject {
      */
     public void set(String name, short[] v) throws JepException {
         isValid();
-        set(this.tstate, this.obj, name, v);
+        set(pointer.tstate, pointer.pyObject, name, v);
     }
 
     private native void set(long tstate, long module, String name, short[] v)
@@ -354,7 +331,7 @@ public class PyObject {
      */
     public void set(String name, byte[] v) throws JepException {
         isValid();
-        set(this.tstate, this.obj, name, v);
+        set(pointer.tstate, pointer.pyObject, name, v);
     }
 
     private native void set(long tstate, long module, String name, byte[] v)
@@ -370,7 +347,7 @@ public class PyObject {
      */
     public void set(String name, long[] v) throws JepException {
         isValid();
-        set(this.tstate, this.obj, name, v);
+        set(pointer.tstate, pointer.pyObject, name, v);
     }
 
     private native void set(long tstate, long module, String name, long[] v)
@@ -386,7 +363,7 @@ public class PyObject {
      */
     public void set(String name, double[] v) throws JepException {
         isValid();
-        set(this.tstate, this.obj, name, v);
+        set(pointer.tstate, pointer.pyObject, name, v);
     }
 
     private native void set(long tstate, long module, String name, double[] v)
@@ -402,7 +379,7 @@ public class PyObject {
      */
     public void set(String name, float[] v) throws JepException {
         isValid();
-        set(this.tstate, this.obj, name, v);
+        set(pointer.tstate, pointer.pyObject, name, v);
     }
 
     private native void set(long tstate, long module, String name, float[] v)

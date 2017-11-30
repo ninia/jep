@@ -89,7 +89,7 @@ public class Proxy extends java.lang.reflect.Proxy {
             ClassLoader loader, String[] interfaces, boolean functionalInterface) {
         InvocationHandler ih = null;
         try {
-            ih = new jep.InvocationHandler(tstate, ltarget, jep, functionalInterface);
+            ih = new jep.python.InvocationHandler(tstate, ltarget, jep, functionalInterface);
         } catch (JepException e) {
             throw new IllegalArgumentException(e);
         }

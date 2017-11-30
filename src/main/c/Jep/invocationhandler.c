@@ -149,7 +149,7 @@ static jobject invokeDefault(JNIEnv *env, jobject obj, jobject method,
  * Method:    invoke
  * Signature: (Ljava/lang/Object;JJLjava/lang/reflect/Method;[Ljava/lang/Object;Z
  */
-JNIEXPORT jobject JNICALL Java_jep_InvocationHandler_invoke(JNIEnv *env,
+JNIEXPORT jobject JNICALL Java_jep_python_InvocationHandler_invoke(JNIEnv *env,
         jclass class, jobject obj, jlong _jepThread, jlong _target, jobject method,
         jobjectArray args, jboolean functionalInterface
                                                            )
