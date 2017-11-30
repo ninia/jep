@@ -27,7 +27,7 @@
 
 #include "Jep.h"
 
-#include "invocationhandler.h"
+#include "jep_python_InvocationHandler.h"
 
 
 static jobject invokeDefault(JNIEnv *env, jobject obj, jobject method,

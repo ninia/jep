@@ -26,7 +26,7 @@
 */
 
 #include "Jep.h"
-#include "maininterpreter.h"
+#include "jep_MainInterpreter.h"
 
 
 // -------------------------------------------------- jni functions

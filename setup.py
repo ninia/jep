@@ -17,7 +17,7 @@ from commands.clean import really_clean
 
 from commands.dist import JepDistribution
 from commands.install_lib import jep_install
-from commands.java import build_java, build_javah, get_java_home, get_java_include,\
+from commands.java import build_java, get_java_home, get_java_include,\
     get_java_linker_args, build_jar, get_java_lib_folders, get_java_libraries, setup_java
 from commands.python import get_python_libs, get_python_linker_args
 from commands.scripts import build_scripts
@@ -117,17 +117,11 @@ if __name__ == '__main__':
           extra_jar_files=['src/main/resources/classlist/classlist_7.txt',
                            'src/main/resources/classlist/classlist_8.txt',
                            'src/main/resources/classlist/classlist_9.txt'],
-          javah_files=[   # tuple containing class and the header file to output
-              ('jep.Jep', 'jep.h'),
-              ('jep.python.PyObject', 'jep_object.h'),
-              ('jep.python.InvocationHandler', 'invocationhandler.h'),
-              ('jep.MainInterpreter', 'maininterpreter.h'),
-          ],
+          javah_files=['jep.Jep', 'jep.python.PyObject', 'jep.python.InvocationHandler', 'jep.MainInterpreter'],
           distclass=JepDistribution,
           cmdclass={
               'setup_java': setup_java,
               'build_java': build_java,
-              'build_javah': build_javah,
               'build_jar': build_jar,
               'build': jep_build,
               'build_ext' : build_ext,

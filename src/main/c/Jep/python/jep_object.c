@@ -26,7 +26,7 @@
 */
 
 #include "Jep.h"
-
+#include "jep_python_PyObject.h"
 
 /*
  * Class:     jep_python_PyObject

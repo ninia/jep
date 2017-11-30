@@ -2,7 +2,7 @@ from __future__ import print_function
 
 from distutils import log
 from distutils.cmd import Command
-from distutils.spawn import spawn
+from distutils.spawn import spawn, find_executable
 from distutils.dep_util import newer_group
 
 import shutil
@@ -70,7 +70,6 @@ def is_apple_jdk():
     a bin, include, and lib dir.
     """
     return get_java_home() == MAC_JAVA_HOME
-
 
 def get_java_include():
     """
@@ -233,6 +232,9 @@ class build_java(Command):
         build_java.testoutdir = os.path.join(build_java.outdir, 'test')
         if not os.path.exists(build_java.testoutdir):
             os.makedirs(build_java.testoutdir)
+        build_java.headeroutdir = os.path.join('build', 'include')
+        if not os.path.exists(build_java.headeroutdir):
+            os.makedirs(build_java.headeroutdir)
 
         self.java_files = []
         if is_apple_jdk():
@@ -246,7 +248,14 @@ class build_java(Command):
     def build(self, *jclasses):
         jep = [x for x in list(*jclasses) if not x.startswith('src{0}test{0}java{0}'.format(os.sep))]
         tests = [x for x in list(*jclasses) if x.startswith('src{0}test{0}java{0}'.format(os.sep))]
-        spawn([self.javac, '-deprecation', '-d', build_java.outdir, '-classpath', 'src'] + jep)
+        javah = find_executable("javah", os.path.dirname(self.javac))
+        if javah is None:
+            spawn([self.javac, '-deprecation', '-d', build_java.outdir, '-h', build_java.headeroutdir, '-classpath', 'src'] + jep)
+        else:
+            # Old versions of java generate headers with the javah command,
+            spawn([self.javac, '-deprecation', '-d', build_java.outdir, '-classpath', 'src'] + jep)
+            javah_files = self.distribution.javah_files or []
+            spawn([javah, '-classpath', build_java.outdir, '-d', build_java.headeroutdir] + javah_files)
         spawn([self.javac, '-deprecation', '-d', build_java.testoutdir, '-classpath', '{0}{1}src'.format(build_java.outdir, os.pathsep)] + tests)
         # Copy the source files over to the build directory to make src.jar's.
         self.copySrc('jep', jep)
@@ -311,36 +320,3 @@ class build_jar(Command):
             self.build()
         else:
             log.debug('skipping packing jar files (up to date)')
-
-
-class build_javah(Command):
-    outdir = None
-
-    user_options = [
-        ('javah=', None,
-         'use javah (default: {0}/bin/javah)'.format(get_java_home())),
-    ]
-
-    def initialize_options(self):
-        build_javah.outdir = os.path.join('build', 'include')
-        if not os.path.exists(build_javah.outdir):
-            os.mkdir(build_javah.outdir)
-
-        if is_apple_jdk():
-            self.javah = os.path.join(get_java_home(), 'Commands', 'javah')
-        else:
-            self.javah = os.path.join(get_java_home(), 'bin', 'javah')
-        self.javah_files = []
-
-    def finalize_options(self):
-        self.javah_files = self.distribution.javah_files or []
-
-    def build(self, jclass, header):
-        spawn([self.javah, '-classpath', build_java.outdir, '-o', os.path.join(build_javah.outdir, header), jclass])
-
-    def run(self):
-        if not skip_java_build(self):
-            for jclass, header in self.javah_files:
-                self.build(jclass, header)
-        else:
-            log.debug('skipping generating .h files (up to date')

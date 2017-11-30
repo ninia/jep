@@ -26,7 +26,7 @@
 */
 
 #include "Jep.h"
-#include "jep.h"
+#include "jep_Jep.h"
 
 
 #ifdef WIN32
