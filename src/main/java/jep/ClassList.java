@@ -78,12 +78,13 @@ public class ClassList implements ClassEnquirer {
         Set<String> seen = new HashSet<>();
 
         while(tok.hasMoreTokens()) {
-            queue.add(tok.nextToken());
+            String el = tok.nextToken();
+            queue.add(el);
+            seen.add(el);
         }
 
         while (!queue.isEmpty()) {
             String el = queue.remove();
-            seen.add(el);
 
             if (!el.toLowerCase().endsWith(".jar")) {
                 // ignore filesystem classpath
@@ -109,6 +110,7 @@ public class ClassList implements ClassEnquirer {
                             String path = file.getParent() + File.separator + relativePath;
                             if(!seen.contains(path)) {
                                 queue.add(path);
+                                seen.add(path);
                             }
                         }
                     }
