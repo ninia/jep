@@ -30,14 +30,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.StringTokenizer;
+import java.util.*;
+import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 
 /**
  * A singleton that searches for loaded classes from the JRE and the Java
@@ -77,8 +74,17 @@ public class ClassList implements ClassEnquirer {
                 System.getProperty("java.class.path"),
                 System.getProperty("path.separator"));
 
-        while (tok.hasMoreTokens()) {
+        Queue<String> queue = new LinkedList<>();
+        Set<String> seen = new HashSet<>();
+
+        while(tok.hasMoreTokens()) {
             String el = tok.nextToken();
+            queue.add(el);
+            seen.add(el);
+        }
+
+        while (!queue.isEmpty()) {
+            String el = queue.remove();
 
             if (!el.toLowerCase().endsWith(".jar")) {
                 // ignore filesystem classpath
@@ -91,6 +97,25 @@ public class ClassList implements ClassEnquirer {
                 continue;
 
             try (JarFile jfile = new JarFile(el, false)) {
+
+                // add entries from manifest to check later
+                Manifest manifest = jfile.getManifest();
+                if (manifest != null) {
+                    String classpath = manifest.getMainAttributes().getValue(Attributes.Name.CLASS_PATH);
+
+                    if(classpath != null) {
+                        String[] relativePaths = classpath.split(" ");
+
+                        for(String relativePath : relativePaths) {
+                            String path = file.getParent() + File.separator + relativePath;
+                            if(!seen.contains(path)) {
+                                queue.add(path);
+                                seen.add(path);
+                            }
+                        }
+                    }
+                }
+
                 Enumeration<JarEntry> entries = jfile.entries();
                 while (entries.hasMoreElements()) {
                     String entry = entries.nextElement().getName();
