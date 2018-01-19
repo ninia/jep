@@ -117,7 +117,11 @@ if __name__ == '__main__':
           extra_jar_files=['src/main/resources/classlist/classlist_7.txt',
                            'src/main/resources/classlist/classlist_8.txt',
                            'src/main/resources/classlist/classlist_9.txt'],
-          javah_files=['jep.Jep', 'jep.python.PyObject', 'jep.python.InvocationHandler', 'jep.MainInterpreter'],
+          javah_files=['jep.Jep',
+                       'jep.MainInterpreter',
+                       'jep.python.InvocationHandler',
+                       'jep.python.PyObject',
+                       'jep.python.PyPointer'],
           distclass=JepDistribution,
           cmdclass={
               'setup_java': setup_java,

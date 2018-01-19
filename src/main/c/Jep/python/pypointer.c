@@ -27,6 +27,8 @@
 
 #include "Jep.h"
 
+#include "jep_python_PyPointer.h"
+
 
 /*
  * Class:     jep_python_PyPointer
