@@ -633,16 +633,15 @@ void unshareBuiltins(JepThread *jepThread)
 #endif
 
 intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller,
-                             jboolean hasSharedModules)
+                             jboolean hasSharedModules, jboolean subinterpreter)
 {
     JepThread *jepThread;
-    PyObject  *tdict, *mod_main, *globals;
+    PyObject  *tdict, *globals;
     if (cl == NULL) {
         THROW_JEP(env, "Invalid Classloader.");
         return 0;
     }
 
-    PyEval_AcquireThread(mainThreadState);
 
     /*
      * Do not use PyMem_Malloc because PyGILState_Check() returns false since
@@ -652,24 +651,32 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller,
     jepThread = malloc(sizeof(JepThread));
     if (!jepThread) {
         THROW_JEP(env, "Out of memory.");
-        PyEval_ReleaseThread(mainThreadState);
         return 0;
     }
 
-    jepThread->tstate = Py_NewInterpreter();
+    if (subinterpreter) {
+        PyEval_AcquireThread(mainThreadState);
+
+        jepThread->tstate = Py_NewInterpreter();
 #if PY_MAJOR_VERSION < 3
-    if (hasSharedModules) {
-        shareBuiltins(jepThread);
-    } else {
-        jepThread->originalBuiltins = NULL;
-    }
+        if (hasSharedModules) {
+            shareBuiltins(jepThread);
+        } else {
+            jepThread->originalBuiltins = NULL;
+        }
 #endif
 
-    /*
-     * Py_NewInterpreter() seems to take the thread state, but we're going to
-     * save/release and reacquire it since that doesn't seem documented
-     */
-    PyEval_SaveThread();
+        /*
+         * Py_NewInterpreter() seems to take the thread state, but we're going to
+         * save/release and reacquire it since that doesn't seem documented
+         */
+        PyEval_SaveThread();
+    } else {
+        jepThread->tstate = PyThreadState_New(mainThreadState->interp);
+#if PY_MAJOR_VERSION < 3
+        jepThread->originalBuiltins = NULL;
+#endif
+    }
     PyEval_AcquireThread(jepThread->tstate);
 
     // store java.lang.Class objects for later use.
@@ -681,15 +688,19 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller,
         printf("WARNING: Failed to get and cache primitive class types!\n");
     }
 
-
-    mod_main = PyImport_AddModule("__main__");                      /* borrowed */
-    if (mod_main == NULL) {
-        THROW_JEP(env, "Couldn't add module __main__.");
-        PyEval_ReleaseThread(jepThread->tstate);
-        return 0;
+    if (subinterpreter) {
+        PyObject *mod_main = PyImport_AddModule("__main__");                      /* borrowed */
+        if (mod_main == NULL) {
+            THROW_JEP(env, "Couldn't add module __main__.");
+            PyEval_ReleaseThread(jepThread->tstate);
+            return 0;
+        }
+        globals = PyModule_GetDict(mod_main);
+        Py_INCREF(globals);
+    } else {
+        globals = PyDict_New();
+        PyDict_SetItemString(globals, "__builtins__", PyEval_GetBuiltins());
     }
-    globals = PyModule_GetDict(mod_main);
-    Py_INCREF(globals);
 
     // init static module
     jepThread->modjep          = initjep(hasSharedModules);
@@ -737,7 +748,6 @@ void pyembed_thread_close(JNIEnv *env, intptr_t _jepThread)
         unshareBuiltins(jepThread);
     }
 #endif
-
     key = PyString_FromString(DICT_KEY);
     if ((tdict = PyThreadState_GetDict()) != NULL && key != NULL) {
         PyDict_DelItem(tdict, key);
@@ -754,9 +764,13 @@ void pyembed_thread_close(JNIEnv *env, intptr_t _jepThread)
     if (jepThread->caller) {
         (*env)->DeleteGlobalRef(env, jepThread->caller);
     }
-
-    Py_EndInterpreter(jepThread->tstate);
-
+    if (jepThread->tstate->interp == mainThreadState->interp) {
+        PyThreadState_Clear(jepThread->tstate);
+        PyThreadState_Swap(NULL);
+        PyThreadState_Delete(jepThread->tstate);
+    } else {
+        Py_EndInterpreter(jepThread->tstate);
+    }
     free(jepThread);
     PyEval_ReleaseLock();
 }

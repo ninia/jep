@@ -46,6 +46,15 @@ When a Python object is wrapped in a Java interface(using jproxy) it will now
 correctly call default methods on the Java interface that are not overriden by
 the Python object.
 
+Allow creation of Jep without a sub-interpreter
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+JepConfig now provides an option to create a Jep which will not use a
+sub-interpreter. This is intended to improve compatibility with extension
+modules for simple use cases. All the Jep instances that do not use a
+sub-interpreter will share interpreter state, most visibly this means all
+imported modules are shared. When the sub-interpreter option is disabled in
+JepConfig it is no longer valid to set an include path because the system path
+is shared with other Jep instances.
 
 Compatibility Notes
 *******************

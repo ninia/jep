@@ -44,6 +44,8 @@ public class JepConfig {
 
     protected boolean interactive = false;
 
+    protected boolean subInterpreter = true;
+
     protected StringBuilder includePath = null;
 
     protected ClassLoader classLoader = null;
@@ -64,6 +66,32 @@ public class JepConfig {
      */
     public JepConfig setInteractive(boolean interactive) {
         this.interactive = interactive;
+        return this;
+    }
+
+    /**
+     * Sets whether Jep should use a sub-interpreter. Sub-interpreters provide
+     * the maximum isolation for different Jep instances by keeping all imported
+     * modules and interpreter state separate. This isolation allows each
+     * distinct Jep instance to behave more like a distinct python instance.
+     * Without sub-interpreters each Jep instance behaves more like a unique
+     * python thread, able to perform independent tasks but imported modules are
+     * shared.
+     *
+     * Some python extensions do not support sub-interpreters so turning them
+     * off is the simplest way to maximize compatibility with extensions.
+     * Without sub-interpreters some care must be taken to ensure that modules
+     * are not being modified in conflicting ways, for example changes to
+     * sys.path, time.tzset(), or numpy.seterr() will affect all Jep instances
+     * that are not using sub-interpreters.
+     * 
+     * @param subInterpreter
+     *            whether the Jep instance should use a sub-interpreter
+     * @return a reference to this JepConfig
+     * @since 3.8
+     */
+    public JepConfig setSubInterpreter(boolean subInterpreter) {
+        this.subInterpreter = subInterpreter;
         return this;
     }
 
@@ -192,5 +220,28 @@ public class JepConfig {
      */
     public Jep createJep() throws JepException {
         return new Jep(this);
+    }
+
+    /**
+     * Ensure that this JepConfig is valid, throwing a JepException if it is
+     * not. Some configuration options cannot be used together, this method
+     * detects conflicts. The config options will be validated before a Jep is
+     * created so it is not usually necessary to call this method outside of
+     * Jep.
+     *
+     * @throws JepException
+     * @since 3.8
+     */
+    public void validate() throws JepException {
+        if (!subInterpreter) {
+            if (includePath != null && includePath.length() != 0) {
+                throw new JepException(
+                        "Include Path cannot be used with Shared Interpreters");
+            }
+            if (sharedModules != null && !sharedModules.isEmpty()) {
+                throw new JepException(
+                        "Shared Modules cannot be used with Shared Interpreters");
+            }
+        }
     }
 }
