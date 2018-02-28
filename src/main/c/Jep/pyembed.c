@@ -1486,7 +1486,7 @@ EXIT:
 }
 
 
-jobject pyembed_getvalue(JNIEnv *env, intptr_t _jepThread, char *str)
+jobject pyembed_getvalue(JNIEnv *env, intptr_t _jepThread, char *str, jclass clazz)
 {
     PyObject       *result;
     jobject         ret = NULL;
@@ -1522,7 +1522,7 @@ jobject pyembed_getvalue(JNIEnv *env, intptr_t _jepThread, char *str)
     }
 
     // convert results to jobject
-    ret = PyObject_As_jobject(env, result, JOBJECT_TYPE);
+    ret = PyObject_As_jobject(env, result, clazz);
     if (!ret) {
         process_py_exception(env);
     }

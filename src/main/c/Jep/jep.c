@@ -151,13 +151,13 @@ JNIEXPORT void JNICALL Java_jep_Jep_eval
  * Signature: (ILjava/lang/String;)Ljava/lang/Object;
  */
 JNIEXPORT jobject JNICALL Java_jep_Jep_getValue
-(JNIEnv *env, jobject obj, jlong tstate, jstring jstr)
+(JNIEnv *env, jobject obj, jlong tstate, jstring jstr, jclass clazz)
 {
     const char *str;
     jobject ret;
 
     str = jstring2char(env, jstr);
-    ret = pyembed_getvalue(env, (intptr_t) tstate, (char *) str);
+    ret = pyembed_getvalue(env, (intptr_t) tstate, (char *) str, clazz);
     release_utf_char(env, jstr, str);
     return ret;
 }

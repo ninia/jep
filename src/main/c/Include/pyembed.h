@@ -65,7 +65,7 @@ jobject pyembed_invoke(JNIEnv*, PyObject*, jobjectArray, jobject);
 void pyembed_eval(JNIEnv*, intptr_t, char*);
 int pyembed_compile_string(JNIEnv*, intptr_t, char*);
 void pyembed_setloader(JNIEnv*, intptr_t, jobject);
-jobject pyembed_getvalue(JNIEnv*, intptr_t, char*);
+jobject pyembed_getvalue(JNIEnv*, intptr_t, char*, jclass);
 jobject pyembed_getvalue_array(JNIEnv*, intptr_t, char*);
 jobject pyembed_getvalue_on(JNIEnv*, intptr_t, intptr_t, char*);
 

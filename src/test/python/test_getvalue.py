@@ -15,3 +15,6 @@ class TestGetValue(unittest.TestCase):
 
     def test_get_temp_value(self):
         jep_pipe(build_java_process_cmd('jep.test.TestGetTempValue'))
+
+    def test_get_with_class(self):
+        jep_pipe(build_java_process_cmd('jep.test.TestGetWithClass'))

@@ -25,6 +25,7 @@
 package jep;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 
 import jep.python.PyModule;
@@ -97,7 +98,7 @@ public final class Jep implements AutoCloseable {
      * 
      * @throws JepException
      *             if an error occurs
-     * @deprecated Please use {@link #MainInterpreter.setInitParams(PyConfig)}
+     * @deprecated Please use {@link MainInterpreter#setInitParams(PyConfig)}
      *             instead.
      * @since 3.6
      */
@@ -116,7 +117,7 @@ public final class Jep implements AutoCloseable {
      * @throws JepException
      *             if an error occurs
      * @deprecated Please use
-     *             {@link #MainInterpreter.setSharedModulesArgv(String...)}
+     *             {@link MainInterpreter#setSharedModulesArgv(String...)}
      *             instead.
      * 
      * @since 3.7
@@ -548,7 +549,7 @@ public final class Jep implements AutoCloseable {
      * 
      * @param str
      *            the name of the Python variable to get from the
-     *            sub-interpreter's global scope
+     *            interpreter's global scope
      * @return an <code>Object</code> value
      * @exception JepException
      *                if an error occurs
@@ -556,10 +557,88 @@ public final class Jep implements AutoCloseable {
     public Object getValue(String str) throws JepException {
         isValidThread();
 
-        return getValue(this.tstate, str);
+        return getValue(this.tstate, str, Object.class);
+    }
+    
+    /**
+     * Like {@link #getValue(String)} but allows specifying the return type.
+     * If Jep cannot convert the variable to the specified type then a
+     * JepException is thrown. This can be used to safely ensure that the
+     * return value is an expected type. The following table describes what
+     * conversions are currently possible.
+     *
+     * <table border="1">
+     *  <tr>
+     *   <th>Python Class</th>
+     *   <th>Java Classes</th>
+     *   <th>Notes</th>
+     *  </tr>
+     *  <tr>
+     *   <td>str</td>
+     *   <td>{@link String}, {@link Character}</td>
+     *   <td>Character conversion will fail if the str is longer than 1.</td>
+     *  </tr>
+     *  <tr>
+     *   <td>bool</td>
+     *   <td>{@link Boolean}</td>
+     *  </tr>
+     *  <tr>
+     *   <td>int</td>
+     *   <td>{@link Long}, {@link Integer}, {@link Short}, {@link Byte}</td>
+     *   <td>Conversion fails if the number is outside the valid range for the Java type</td>
+     *  </tr>
+     *  <tr>
+     *   <td>float</td>
+     *   <td>{@link Double}, {@link Float}</td>
+     *  </tr>
+     *  <tr>
+     *   <td>list, tuple</td>
+     *   <td>{@link List}, array</td>
+     *   <td>When a tuple is converted to a List it is unmodifiable.</td>
+     *  </tr>
+     *  <tr>
+     *   <td>dict</td>
+     *   <td>{@link Map}</td>
+     *  </tr>
+     *  <tr>
+     *   <td>function, method</td>
+     *   <td>Any FunctionalInterface</td>
+     *  </tr>
+     *  <tr>
+     *   <td>numpy.ndarray</td>
+     *   <td>{@link NDArray}</td>
+     *   <td>Only if jep was built with numpy support</td>
+     *  </tr>
+     *  <tr>
+     *   <td>NoneType</td>
+     *   <td>Any(null)</td>
+     *  </tr>
+     *  <tr>
+         <td colspan="3">Jep object such as pyjobjects and jarrays will be returned if the Java type of the wrapped object is compatible.</td>
+     *  <tr>
+     *  <tr>
+     *   <td>Anything else</td>
+     *   <td>{@link String}</td>
+     *   <td>This converson may be removed in future versions of Jep if a better default type is defined.</td>
+     *  </tr>
+     * </table>
+     *
+     * @param str
+     *            the name of the Python variable to get from the
+     *            interpreter's global scope
+     * @param clazz
+                  the Java class of the return type.
+     * @return a Java version the variable
+     * @exception JepException
+     *                if an error occurs
+     */ 
+    public <T> T getValue(String str, Class<T> clazz) throws JepException {
+        isValidThread();
+
+        return clazz.cast(getValue(this.tstate, str, clazz));
     }
 
-    private native Object getValue(long tstate, String str) throws JepException;
+    private native Object getValue(long tstate, String str, Class<?> clazz) throws JepException;
 
     /**
      * Retrieves a Python string object as a Java byte[].
