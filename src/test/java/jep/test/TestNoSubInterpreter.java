@@ -20,7 +20,7 @@ public class TestNoSubInterpreter extends Thread{
 
     public static void main(String[] args) throws Throwable{
         TestNoSubInterpreter[] t = new TestNoSubInterpreter[4];
-        try(Jep jep = new Jep(new JepConfig().setSubInterpreter(false))){
+        try(Jep jep = new Jep(new JepConfig().setUseSubInterpreter(false))){
             jep.eval("import sys");
             jep.set("n", t.length);
             jep.eval("sys.sharedTestThing = [None] * n");
@@ -36,7 +36,7 @@ public class TestNoSubInterpreter extends Thread{
                 throw t[i].e;
             }
         }
-        try(Jep jep = new Jep(new JepConfig().setSubInterpreter(false))){
+        try(Jep jep = new Jep(new JepConfig().setUseSubInterpreter(false))){
             for(int i = 0 ; i < t.length ; i += 1){
                 jep.eval("import sys");
                 jep.set("i", i);
@@ -46,12 +46,12 @@ public class TestNoSubInterpreter extends Thread{
                 }
             }
         }
-        try(Jep jep = new Jep(new JepConfig().setSubInterpreter(false).addIncludePaths("."))){
+        try(Jep jep = new Jep(new JepConfig().setUseSubInterpreter(false).addIncludePaths("."))){
             throw new IllegalStateException("Include Path was supposed to fail");
         }catch(JepException e){
             // This is what we want
         }
-        try(Jep jep = new Jep(new JepConfig().setSubInterpreter(false).addSharedModules("datetime"))){
+        try(Jep jep = new Jep(new JepConfig().setUseSubInterpreter(false).addSharedModules("datetime"))){
             throw new IllegalStateException("Shared Module was supposed to fail");
         }catch(JepException e){
             // This is what we want
@@ -68,7 +68,7 @@ public class TestNoSubInterpreter extends Thread{
 
     @Override
     public void run() {
-        try(Jep jep = new Jep(new JepConfig().setSubInterpreter(false))){
+        try(Jep jep = new Jep(new JepConfig().setUseSubInterpreter(false))){
             jep.eval("import sys");
             jep.set("index", index);
             jep.eval("sys.sharedTestThing[index] = True");

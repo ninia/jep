@@ -633,7 +633,7 @@ void unshareBuiltins(JepThread *jepThread)
 #endif
 
 intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller,
-                             jboolean hasSharedModules, jboolean subinterpreter)
+                             jboolean hasSharedModules, jboolean usesubinterpreter)
 {
     JepThread *jepThread;
     PyObject  *tdict, *globals;
@@ -654,7 +654,7 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller,
         return 0;
     }
 
-    if (subinterpreter) {
+    if (usesubinterpreter) {
         PyEval_AcquireThread(mainThreadState);
 
         jepThread->tstate = Py_NewInterpreter();
@@ -688,7 +688,7 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller,
         printf("WARNING: Failed to get and cache primitive class types!\n");
     }
 
-    if (subinterpreter) {
+    if (usesubinterpreter) {
         PyObject *mod_main = PyImport_AddModule("__main__");                      /* borrowed */
         if (mod_main == NULL) {
             THROW_JEP(env, "Couldn't add module __main__.");

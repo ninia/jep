@@ -48,13 +48,12 @@ the Python object.
 
 Allow creation of Jep without a sub-interpreter
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-JepConfig now provides an option to create a Jep which will not use a
-sub-interpreter. This is intended to improve compatibility with extension
-modules for simple use cases. All the Jep instances that do not use a
-sub-interpreter will share interpreter state, most visibly this means all
-imported modules are shared. When the sub-interpreter option is disabled in
-JepConfig it is no longer valid to set an include path because the system path
-is shared with other Jep instances.
+JepConfig now provides an option to create a Jep without using a
+sub-interpreter. This is intended to improve compatibility with Python
+extension modules. For simple use cases this can provide an alternative to using
+shared modules. Creating a Jep without a sub-interpreter is equivalent to
+sharing all modules. See the JavaDoc on JepConfig.setSubInterpreter(boolean) for
+more information on the limitations and capabilities of this new mode.
 
 Compatibility Notes
 *******************

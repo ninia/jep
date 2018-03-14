@@ -44,7 +44,7 @@ public class JepConfig {
 
     protected boolean interactive = false;
 
-    protected boolean subInterpreter = true;
+    protected boolean useSubInterpreter = true;
 
     protected StringBuilder includePath = null;
 
@@ -70,28 +70,39 @@ public class JepConfig {
     }
 
     /**
-     * Sets whether Jep should use a sub-interpreter. Sub-interpreters provide
-     * the maximum isolation for different Jep instances by keeping all imported
-     * modules and interpreter state separate. This isolation allows each
-     * distinct Jep instance to behave more like a distinct python instance.
-     * Without sub-interpreters each Jep instance behaves more like a unique
-     * python thread, able to perform independent tasks but imported modules are
-     * shared.
+     * Sets whether Jep should be created using a Python sub-interpreter. By
+     * default this option is true, indicating that each Jep instance creates a
+     * unique Python sub-interpreter. Sub-interpreters isolate different Jep
+     * instances, allowing them to be used safely from multiple unrelated pieces
+     * of a Java application without any risk that the Jep instances will impact
+     * each other.
      *
-     * Some python extensions do not support sub-interpreters so turning them
-     * off is the simplest way to maximize compatibility with extensions.
-     * Without sub-interpreters some care must be taken to ensure that modules
-     * are not being modified in conflicting ways, for example changes to
-     * sys.path, time.tzset(), or numpy.seterr() will affect all Jep instances
-     * that are not using sub-interpreters.
-     * 
-     * @param subInterpreter
+     * Setting this to false will create a Jep instance that does not use
+     * sub-interpreters. In this case each Jep still maintains distinct global
+     * variables but some interpreter state will be shared. The primary impact
+     * is that Jep instances will share any imported modules. This is equivalent
+     * to using {@link #setSharedModules(Set)} to share all modules. Anything
+     * that changes the way a module behaves will impact all Jep instances so
+     * care must be taken to ensure that different Jep instances aren't
+     * conflicting. For example sys.path, time.tzset(), and numpy.seterr() will
+     * change the behavior of all Jep instances. Methods on JepConfig that
+     * change shared modules or the include path cannot be used when this is
+     * false because all modules are shared and the include path cannot be
+     * changed without afffecting other Jep instances.
+     *
+     * Within a single java process it is valid to mix Jep instances that use
+     * sub-interpreters with those that don't. The sub-interpreter instances of
+     * jep will remain isolated while those without sub-interpreters will share
+     * state.
+     *
+     *
+     * @param useSubInterpreter
      *            whether the Jep instance should use a sub-interpreter
      * @return a reference to this JepConfig
      * @since 3.8
      */
-    public JepConfig setSubInterpreter(boolean subInterpreter) {
-        this.subInterpreter = subInterpreter;
+    public JepConfig setUseSubInterpreter(boolean useSubInterpreter) {
+        this.useSubInterpreter = useSubInterpreter;
         return this;
     }
 
@@ -233,7 +244,7 @@ public class JepConfig {
      * @since 3.8
      */
     public void validate() throws JepException {
-        if (!subInterpreter) {
+        if (!useSubInterpreter) {
             if (includePath != null && includePath.length() != 0) {
                 throw new JepException(
                         "Include Path cannot be used with Shared Interpreters");

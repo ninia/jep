@@ -65,9 +65,9 @@ JNI_OnUnload(JavaVM *vm, void *reserved)
  */
 JNIEXPORT jlong JNICALL Java_jep_Jep_init
 (JNIEnv *env, jobject obj, jobject cl, jboolean hasSharedModules,
- jboolean subinterpreter)
+ jboolean usesubinterpreter)
 {
-    return pyembed_thread_init(env, cl, obj, hasSharedModules, subinterpreter);
+    return pyembed_thread_init(env, cl, obj, hasSharedModules, usesubinterpreter);
 }
 
 

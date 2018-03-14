@@ -246,7 +246,7 @@ public final class Jep implements AutoCloseable {
                 && !config.sharedModules.isEmpty();
 
         this.interactive = config.interactive;
-        this.tstate = init(this.classLoader, hasSharedModules, config.subInterpreter);
+        this.tstate = init(this.classLoader, hasSharedModules, config.useSubInterpreter);
         threadUsed.set(true);
         this.thread = Thread.currentThread();
 
@@ -289,7 +289,7 @@ public final class Jep implements AutoCloseable {
         }
     }
 
-    private native long init(ClassLoader classloader, boolean hasSharedModules, boolean subinterpreter)
+    private native long init(ClassLoader classloader, boolean hasSharedModules, boolean useSubinterpreter)
             throws JepException;
 
     /**
