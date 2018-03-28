@@ -32,11 +32,12 @@ import jep.python.MemoryManager;
 
 /**
  * <p>
- * Embeds CPython in Java. Each Jep instance can be considered a Python
- * sub-intepreter, mostly sandboxed from other Jep instances. However, it is not
- * guaranteed to be completely sandboxed, as one sub-interpreter may be able to
- * affect another when using CPython extensions or referencing the same Java
- * objects in different sub-interpreters.
+ * Embeds CPython in Java. Each Jep provides access to a Python interpreter and
+ * maintains an independent global namespace for Python variables. Values can be
+ * passed from Java to Python using the various set() methods. Various methods,
+ * such as {@link #eval(String)} and {@link #invoke(String, Object...)} can be
+ * used to execute Python code. Python variables can be accessed using
+ * {@link #getValue(String)}.
  * </p>
  * 
  * <p>
@@ -70,10 +71,9 @@ public final class Jep implements AutoCloseable {
     private boolean interactive = false;
 
     private final MemoryManager memoryManager = new MemoryManager();
-    
+
     // windows requires this as unix newline...
     private static final String LINE_SEP = "\n";
-
 
     /**
      * Tracks if this thread has been used for an interpreter before. Using
@@ -246,7 +246,8 @@ public final class Jep implements AutoCloseable {
                 && !config.sharedModules.isEmpty();
 
         this.interactive = config.interactive;
-        this.tstate = init(this.classLoader, hasSharedModules, config.useSubInterpreter);
+        this.tstate = init(this.classLoader, hasSharedModules,
+                config.useSubInterpreter);
         threadUsed.set(true);
         this.thread = Thread.currentThread();
 
@@ -289,8 +290,8 @@ public final class Jep implements AutoCloseable {
         }
     }
 
-    private native long init(ClassLoader classloader, boolean hasSharedModules, boolean useSubinterpreter)
-            throws JepException;
+    private native long init(ClassLoader classloader, boolean hasSharedModules,
+            boolean useSubinterpreter) throws JepException;
 
     /**
      * Checks if the current thread is valid for the method call. All calls must
@@ -1020,7 +1021,7 @@ public final class Jep implements AutoCloseable {
     public MemoryManager getMemoryManager() {
         return memoryManager;
     }
-    
+
     /**
      * Shuts down the Python sub-interpreter. Make sure you call this to prevent
      * memory leaks.
