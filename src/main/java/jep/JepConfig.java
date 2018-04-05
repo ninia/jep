@@ -88,9 +88,9 @@ public class JepConfig {
      * change the behavior of all Jep instances. Methods on JepConfig that
      * change shared modules or the include path cannot be used when this is
      * false because all modules are shared and the include path cannot be
-     * changed without afffecting other Jep instances.
+     * changed without affecting other Jep instances.
      *
-     * Within a single java process it is valid to mix Jep instances that use
+     * Within a single Java process it is valid to mix Jep instances that use
      * sub-interpreters with those that don't. The sub-interpreter instances of
      * jep will remain isolated while those without sub-interpreters will share
      * state.

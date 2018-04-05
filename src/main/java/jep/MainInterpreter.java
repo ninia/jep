@@ -131,7 +131,7 @@ public final class MainInterpreter implements AutoCloseable {
                     pyConfig.hashRandomizationFlag);
         }
 
-        thread = new Thread(new Runnable() {
+        thread = new Thread("JepMainInterpreter"){
 
             @Override
             public void run() {
@@ -166,7 +166,7 @@ public final class MainInterpreter implements AutoCloseable {
                     // ignore
                 }
             }
-        });
+        };
         thread.setDaemon(true);
         synchronized (this) {
             thread.start();
