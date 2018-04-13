@@ -77,6 +77,7 @@ static jmethodID doubleBuffer_getOrder = NULL;
 static PyObject* _init_numpy(void)
 {
     import_array();
+    return NULL;
 }
 #else
 static void _init_numpy(void)
