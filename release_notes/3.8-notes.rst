@@ -1,7 +1,7 @@
 Jep 3.8 Release Notes
 *********************
 This release emphasized...
-It is compatible with Python 2.7, 3.3, 3.4, 3.5, and 3.6.  
+It is compatible with Python 2.7, 3.3, 3.4, 3.5, 3.6, and 3.7.  
 
 
 Maven layout

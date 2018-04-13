@@ -888,9 +888,9 @@ static PyObject* pyembed_jproxy(PyObject *self, PyObject *args)
     }
 
     for (i = 0; i < inum; i++) {
-        char     *str;
-        jstring   jstr;
-        PyObject *item;
+        const char *str;
+        jstring     jstr;
+        PyObject   *item;
 
         item = PyList_GET_ITEM(interfaces, i);
         if (!PyString_Check(item)) {
@@ -1663,6 +1663,10 @@ static void pyembed_run_pyc(JepThread *jepThread,
     // Python 3.3 added an extra long containing the size of the source.
     // https://github.com/python/cpython/commit/5136ac0ca21a05691978df8d0650f902c8ca3463
     (void) PyMarshal_ReadLongFromFile(fp);
+#if PY_MINOR_VERSION >= 7
+    // PEP 552 added another long
+    (void) PyMarshal_ReadLongFromFile(fp);
+#endif
 #endif
     v = (PyObject *) (intptr_t) PyMarshal_ReadLastObjectFromFile(fp);
     if (v == NULL || !PyCode_Check(v)) {
@@ -1714,7 +1718,7 @@ static int maybe_pyc_file(FILE *fp, const char* filename, const char* ext,
         int ispyc = 0;
         if (ftell(fp) == 0) {
             if (fread(buf, 1, 2, fp) == 2
-                    && (buf[1] << 8 | buf[0]) == halfmagic) {
+                    && ((unsigned int)buf[1] << 8 | buf[0]) == halfmagic) {
                 ispyc = 1;
             }
             rewind(fp);

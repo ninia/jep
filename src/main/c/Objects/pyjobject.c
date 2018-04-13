@@ -342,7 +342,7 @@ static PyObject* pyjobject_richcompare(PyJObject *self,
 #endif
 
             if (!(*env)->IsInstanceOf(env, self->object, JCOMPARABLE_TYPE)) {
-                char* jname = PyString_AsString(self->javaClassName);
+                const char* jname = PyString_AsString(self->javaClassName);
                 PyErr_Format(PyExc_TypeError, "Invalid comparison operation for Java type %s",
                              jname);
                 return NULL;

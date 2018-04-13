@@ -43,7 +43,7 @@ int process_py_exception(JNIEnv *env)
 {
     PyObject *ptype, *pvalue, *ptrace, *pystack = NULL;
     PyObject *message = NULL;
-    char *m = NULL;
+    const char *m = NULL;
     PyJObject *jexc = NULL;
     jobject jepException = NULL;
     jstring jmsg;
@@ -243,7 +243,7 @@ int process_py_exception(JNIEnv *env)
                 count = 0;
                 for (i = 0; i < stackSize; i++) {
                     PyObject *stackEntry, *pyLine;
-                    char *charPyFile, *charPyFunc = NULL;
+                    const char *charPyFile, *charPyFunc = NULL;
                     int pyLineNum;
 
                     stackEntry = PyList_GetItem(pystack, i);

@@ -274,7 +274,7 @@ static int pyjarray_init(JNIEnv *env,
         case JCHAR_ID: {
             int   i;
             long  v = 0;
-            char  *val;
+            const char *val;
             jchar *ar = (jchar *) pyarray->pinnedArray;
             if (!value || !PyString_Check(value)) {
                 if (value && PyInt_Check(value)) {
@@ -718,7 +718,7 @@ static int pyjarray_setitem(PyJArrayObject *self,
         if (PyInt_Check(newitem)) {
             ((jchar *) self->pinnedArray)[pos] = (jchar) PyInt_AS_LONG(newitem);
         } else if (PyString_Check(newitem) && PyString_GET_SIZE(newitem) == 1) {
-            char *val = PyString_AS_STRING(newitem);
+            const char *val = PyString_AS_STRING(newitem);
             ((jchar *) self->pinnedArray)[pos] = (jchar) val[0];
         } else {
             PyErr_SetString(PyExc_TypeError, "Expected char.");
@@ -1128,7 +1128,7 @@ static int pyjarray_index(PyJArrayObject *self, PyObject *el)
         if (PyInt_Check(el)) {
             v = (jchar) PyInt_AS_LONG(el);
         } else if (PyString_Check(el) && PyString_GET_SIZE(el) == 1) {
-            char *val = PyString_AS_STRING(el);
+            const char *val = PyString_AS_STRING(el);
             v = (jchar) val[0];
         } else {
             PyErr_SetString(PyExc_TypeError, "Expected char.");
