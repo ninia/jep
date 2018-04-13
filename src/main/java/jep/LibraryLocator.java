@@ -26,6 +26,8 @@ package jep;
 
 import java.io.File;
 
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 /**
  * Utility class for finding the jep native library for JNI. {@link Jep} will
  * try to load the library using a simple {@link System#loadLibrary(String)}
@@ -199,6 +201,50 @@ final class LibraryLocator {
             File jepDir = new File(pathDir, "jep");
             if (jepDir.isDirectory()) {
                 File libraryFile = new File(jepDir, libraryName);
+                if (libraryFile.exists()) {
+                    try {
+                        System.load(libraryFile.getAbsolutePath());
+                    } catch (UnsatisfiedLinkError e) {
+                        /*
+                         * This is almost always caused because libpython isn't
+                         * found, so try to figure out the exact libpython that
+                         * is needed and look in PYTHONHOME.
+                         * 
+                         */
+                        Matcher m = Pattern.compile("libpython[\\w\\.]*")
+                                .matcher(e.getMessage());
+                        if (m.find() && findPythonLibrary(m.group(0))) {
+                            System.load(libraryFile.getAbsolutePath());
+                        } else {
+                            throw e;
+                        }
+                    }
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Attempt to load libpython from within PYTHONHOME
+     * 
+     * @param libraryName
+     *            the full file name of libpython
+     * @return true if libpython was found and loaded.
+     */
+    private boolean findPythonLibrary(String libraryName) {
+        if (ignoreEnv) {
+            return false;
+        }
+        String pythonHome = System.getenv("PYTHONHOME");
+        if (pythonHome != null) {
+            for (String libDirName : new String[] { "lib", "lib64", "Lib" }) {
+                File libDir = new File(pythonHome, libDirName);
+                if (!libDir.isDirectory()) {
+                    continue;
+                }
+                File libraryFile = new File(libDir, libraryName);
                 if (libraryFile.exists()) {
                     System.load(libraryFile.getAbsolutePath());
                     return true;
