@@ -1,9 +1,6 @@
 environment:
 
   matrix:
-# TODO need to figure out why 32bit python 2.7 crashes in the tests.
-#    - PYTHON: "C:\\Python27"
-#      JAVA_HOME: "C:\\Program Files (x86)\\Java\\jdk1.6.0"
     - PYTHON: "C:\\Python33"
       JAVA_HOME: "C:\\Program Files (x86)\\Java\\jdk1.8.0"
     - PYTHON: "C:\\Python34"
@@ -12,13 +9,21 @@ environment:
       JAVA_HOME: "C:\\Program Files (x86)\\Java\\jdk1.8.0"
     - PYTHON: "C:\\Python35"
       JAVA_HOME: "C:\\Program Files (x86)\\Java\\jdk1.7.0"
+
+    - PYTHON: "C:\\Python35-x64"
+      JAVA_HOME: "C:\\Program Files\\Java\\jdk1.7.0"
+
     - PYTHON: "C:\\Python27-x64"
       JAVA_HOME: "C:\\Program Files\\Java\\jdk1.8.0"
     - PYTHON: "C:\\Python35-x64"
       JAVA_HOME: "C:\\Program Files\\Java\\jdk1.8.0"
+    - PYTHON: "C:\\Python36-x64"
+      JAVA_HOME: "C:\\Program Files\\Java\\jdk1.8.0"
+
     - PYTHON: "C:\\Python35-x64"
-      JAVA_HOME: "C:\\Program Files\\Java\\jdk1.7.0"
-# TODO there are more possible combinations that can be added
+      JAVA_HOME: "C:\\Program Files\\Java\\jdk9"
+    - PYTHON: "C:\\Python36-x64"
+      JAVA_HOME: "C:\\Program Files\\Java\\jdk9"
 
 build: off
 
