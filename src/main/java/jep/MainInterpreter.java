@@ -128,7 +128,7 @@ public final class MainInterpreter implements AutoCloseable {
             setInitParams(pyConfig.noSiteFlag, pyConfig.noUserSiteDirectory,
                     pyConfig.ignoreEnvironmentFlag, pyConfig.verboseFlag,
                     pyConfig.optimizeFlag, pyConfig.dontWriteBytecodeFlag,
-                    pyConfig.hashRandomizationFlag);
+                    pyConfig.hashRandomizationFlag, pyConfig.pythonHome);
         }
 
         thread = new Thread("JepMainInterpreter"){
@@ -258,7 +258,7 @@ public final class MainInterpreter implements AutoCloseable {
     private static native void setInitParams(int noSiteFlag,
             int noUserSiteDiretory, int ignoreEnvironmentFlag, int verboseFlag,
             int optimizeFlag, int dontWriteBytecodeFlag,
-            int hashRandomizationFlag);
+            int hashRandomizationFlag, String pythonHome);
 
     private static native void initializePython(String[] mainInterpreterArgv);
 

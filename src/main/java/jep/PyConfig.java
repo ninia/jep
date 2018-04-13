@@ -49,6 +49,8 @@ public class PyConfig {
 
     protected int hashRandomizationFlag = -1;
 
+    protected String pythonHome;
+
     /**
      * Set the Py_NoSiteFlag variable on the python interpreter. This
      * corresponds to the python "-S" flag and will prevent the "site" module
@@ -143,6 +145,20 @@ public class PyConfig {
      */
     public PyConfig setHashRandomizationFlag(int hashRandomizationFlag) {
         this.hashRandomizationFlag = hashRandomizationFlag;
+        return this;
+    }
+
+    /**
+     * Set the home location on the python interpreter. THis is the location of
+     * the standard python libraries. This corresponds to the environment
+     * variable PYTHONHOME.
+     * 
+     * @param pythonHome
+     *            the home location of the python installation
+     * @return a reference to this PyConfig
+     */
+    public PyConfig setPythonHome(String pythonHome) {
+        this.pythonHome = pythonHome;
         return this;
     }
 

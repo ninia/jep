@@ -40,6 +40,13 @@ environments. There are 2 different changes that help with this:
    to set the LD_LIBRARY_PATH and/or java.library.path to the location of the
    Jep library.
 
+PYTHONHOME can be set from java
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PyConfig can now be used to set the "home" directory for Python. This serves the
+same purpose as the PYTHONHOME environmental variable. This value can be used by
+Jep when trying to find the Jep native library and it is also used by Python to 
+find the standard Python libraries.
+
 Interface default methods can be called on JProxy objects
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 When a Python object is wrapped in a Java interface(using jproxy) it will now

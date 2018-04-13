@@ -58,6 +58,8 @@ final class LibraryLocator {
 
     private final boolean noUserSite;
 
+    private final String pythonHome;
+    
     private LibraryLocator(PyConfig pyConfig) {
         if (pyConfig != null) {
             ignoreEnv = pyConfig.ignoreEnvironmentFlag != 0
@@ -65,12 +67,14 @@ final class LibraryLocator {
             noSite = pyConfig.noSiteFlag != 0 && pyConfig.noSiteFlag != -1;
             noUserSite = pyConfig.noUserSiteDirectory != 0
                     && pyConfig.noUserSiteDirectory != -1;
+            pythonHome = pyConfig.pythonHome;
         } else {
             ignoreEnv = false;
             noSite = false;
             noUserSite = false;
+            pythonHome = null;
         }
-
+        
         String libraryName = System.mapLibraryName("jep");
         if (libraryName.endsWith(".dylib")) {
             /*
@@ -110,10 +114,13 @@ final class LibraryLocator {
      * @return true if the library was loaded.
      */
     private boolean searchSitePackages() {
-        if (ignoreEnv || noSite) {
+        if (noSite) {
             return false;
         }
-        String pythonHome = System.getenv("PYTHONHOME");
+        String pythonHome = this.pythonHome;
+        if (pythonHome == null && !ignoreEnv) {
+            pythonHome = System.getenv("PYTHONHOME");
+        }
         if (pythonHome != null) {
             for (String libDirName : new String[] { "lib", "lib64", "Lib" }) {
                 File libDir = new File(pythonHome, libDirName);
@@ -234,10 +241,10 @@ final class LibraryLocator {
      * @return true if libpython was found and loaded.
      */
     private boolean findPythonLibrary(String libraryName) {
-        if (ignoreEnv) {
-            return false;
+        String pythonHome = this.pythonHome;
+        if (pythonHome == null && !ignoreEnv) {
+            pythonHome = System.getenv("PYTHONHOME");
         }
-        String pythonHome = System.getenv("PYTHONHOME");
         if (pythonHome != null) {
             for (String libDirName : new String[] { "lib", "lib64", "Lib" }) {
                 File libDir = new File(pythonHome, libDirName);

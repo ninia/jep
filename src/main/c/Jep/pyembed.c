@@ -173,13 +173,15 @@ static PyObject* initjep(jboolean hasSharedModules)
     return modjep;
 }
 
-void pyembed_preinit(jint noSiteFlag,
+void pyembed_preinit(JNIEnv *env,
+                     jint noSiteFlag,
                      jint noUserSiteDirectory,
                      jint ignoreEnvironmentFlag,
                      jint verboseFlag,
                      jint optimizeFlag,
                      jint dontWriteBytecodeFlag,
-                     jint hashRandomizationFlag)
+                     jint hashRandomizationFlag,
+                     jstring pythonHome)
 {
     if (noSiteFlag >= 0) {
         Py_NoSiteFlag = noSiteFlag;
@@ -202,7 +204,27 @@ void pyembed_preinit(jint noSiteFlag,
     if (hashRandomizationFlag >= 0) {
         Py_HashRandomizationFlag = hashRandomizationFlag;
     }
-
+    if (pythonHome) {
+        const char* homeAsUTF = (*env)->GetStringUTFChars(env, pythonHome, NULL);
+        #if PY_MAJOR_VERSION >= 3
+            #if PY_MINOR_VERSION >= 5
+                wchar_t* homeForPython = Py_DecodeLocale(homeAsUTF, NULL);
+            #else
+                int length = (*env)->GetStringUTFLength(env, pythonHome);
+                wchar_t* homeForPython = malloc((length+1)*sizeof(wchar_t));
+                mbstowcs(homeForPython, homeAsUTF, length+1);
+            #endif
+        #else
+            int length = (*env)->GetStringUTFLength(env, pythonHome);
+            char* homeForPython = malloc(length);
+            strncpy(homeForPython, homeAsUTF, length);
+        #endif
+        (*env)->ReleaseStringUTFChars(env, pythonHome, homeAsUTF);
+        
+        Py_SetPythonHome(homeForPython);
+        // Python documentation says that the string should not be changed for
+        // the duration of the program so it can never be freed.
+    }
 }
 
 /*
