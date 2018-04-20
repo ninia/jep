@@ -67,6 +67,7 @@ class build_scripts(Command):
             virtual_env=os.environ.get('VIRTUAL_ENV') or '',
             ld_library_path='',
             ld_preload='',
+            pythonhome='',
         )
 
         if not is_osx() and not is_windows():
@@ -81,6 +82,16 @@ class build_scripts(Command):
             if lib_python:
                 context['ld_preload'] = 'LD_PRELOAD="{0}"; export LD_PRELOAD'.format(
                     lib_python)
+        if is_osx():
+            prefix = sysconfig.get_config_var('prefix')
+            exec_prefix = sysconfig.get_config_var('exec_prefix')
+            if prefix == exec_prefix:
+                pythonhome = prefix
+            else:
+                pythonhome = prefix + ':' + exec_prefix
+            context['pythonhome'] = 'PYTHONHOME="{0}"; export PYTHONHOME'.format(
+                    pythonhome)
+
 
         for script in self.scripts:
             if is_windows():

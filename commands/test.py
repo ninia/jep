@@ -56,6 +56,12 @@ class test(Command):
             environment['PATH'] = py_path + os.pathsep + java_path + os.pathsep + os.environ['PATH']
         else:
             environment['PATH'] = java_path + os.pathsep + os.environ['PATH']
+        prefix = sysconfig.get_config_var('prefix')
+        exec_prefix = sysconfig.get_config_var('exec_prefix')
+        if prefix == exec_prefix:
+            environment['PYTHONHOME'] = prefix
+        else:
+            environment['PYTHONHOME'] = prefix + ':' + exec_prefix
 
 
         # find the jep library and makes sure it's named correctly
