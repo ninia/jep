@@ -40,7 +40,7 @@ environments. There are 2 different changes that help with this:
    to set the LD_LIBRARY_PATH and/or java.library.path to the location of the
    Jep library.
 
-PYTHONHOME can be set from java
+PYTHONHOME can be set from Java
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 PyConfig can now be used to set the "home" directory for Python. This serves the
 same purpose as the PYTHONHOME environmental variable. This value can be used by
