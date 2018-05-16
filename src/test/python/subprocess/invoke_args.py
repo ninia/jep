@@ -66,3 +66,10 @@ def invokeArgsAndKeywordArgs(arg1, arg2, arg3=True, arg4=False, arg5=None, arg6=
     x.assertEqual(arg6, 10)
     x.assertIsNone(argnull)
     return [arg1, arg2, arg3, arg4, arg5, arg6, argnull]
+
+class ClassWithMethod(object):
+    """Use to test invoke on methods"""
+    def theMethod(self, arg):
+        return arg
+
+objectWithMethod = ClassWithMethod()

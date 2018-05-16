@@ -104,6 +104,18 @@ public class TestInvoke {
                 }
             }
 
+            // allow attribute lookup
+            result = jep.invoke("objectWithMethod.theMethod", new Object());
+
+            // test that you can't call attributes that don't exist.
+            try {
+                result = jep.invoke("objectWithMethod.anything");
+            } catch (JepException e) {
+                if (!e.getMessage().contains("anything")) {
+                    throw new IllegalStateException(
+                            "Bad error message, error did not include missing attribute name");
+                }
+            }
         }
     }
 

@@ -353,7 +353,8 @@ public final class Jep implements AutoCloseable {
      * Invokes a Python function.
      * 
      * @param name
-     *            must be a valid Python function name in globals dict
+     *            a Python function name in globals dict or the name of a
+     *            global object and method using dot notation.
      * @param args
      *            args to pass to the function in order
      * @return an <code>Object</code> value
@@ -373,7 +374,8 @@ public final class Jep implements AutoCloseable {
      * Invokes a Python function.
      * 
      * @param name
-     *            must be a valid Python function name in globals dict
+     *            a Python function name in globals dict or the name of a
+     *            global object and method using dot notation.
      * @param kwargs
      *            a Map of keyword args
      * @return an <Object> value

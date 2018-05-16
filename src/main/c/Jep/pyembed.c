@@ -1167,18 +1167,37 @@ jobject pyembed_invoke_method(JNIEnv *env,
 
     PyEval_AcquireThread(jepThread->tstate);
 
-    callable = PyDict_GetItemString(jepThread->globals, (char *) cname);
+    callable = PyDict_GetItemString(jepThread->globals, cname);
     if (!callable) {
-        char strBuf[128];
-        snprintf(strBuf, 128, "Unable to find object with name: %s", cname);
-        THROW_JEP(env, strBuf);
-        goto EXIT;
+        char* dot = strchr(cname, '.');
+        if (dot != NULL && (dot - cname) < 63) {
+            char globalName[64];
+            PyObject* obj;
+            strncpy(globalName, cname, dot - cname);
+            globalName[dot - cname] = '\0';
+            obj = PyDict_GetItemString(jepThread->globals, globalName);
+            if (obj != NULL) {
+                callable = PyObject_GetAttrString(obj, dot + 1);
+                if( callable == NULL ){
+                    process_py_exception(env);
+                    goto EXIT;
+                }
+            } else {
+                char errorBuf[128];
+                snprintf(errorBuf, 128, "Unable to find object with name: %s", globalName);
+                THROW_JEP(env, errorBuf);
+                goto EXIT;
+            }
+        } else {
+            char errorBuf[128];
+            snprintf(errorBuf, 128, "Unable to find object with name: %s", cname);
+            THROW_JEP(env, errorBuf);
+            goto EXIT;
+        }
     }
-    if (process_py_exception(env)) {
-        goto EXIT;
+    if (!process_py_exception(env)) {
+        ret = pyembed_invoke(env, callable, args, kwargs);
     }
-
-    ret = pyembed_invoke(env, callable, args, kwargs);
 
 EXIT:
     PyEval_ReleaseThread(jepThread->tstate);
