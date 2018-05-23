@@ -43,7 +43,7 @@ public class PyObject {
      * Make a new PyObject
      * 
      * @param tstate a <code>long</code> value
-     * @param obj the address of the python object
+     * @param pyObject the address of the python object
      * @param jep the instance of jep that created this object
      * @exception JepException if an error occurs
      */

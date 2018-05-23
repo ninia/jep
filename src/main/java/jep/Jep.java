@@ -574,7 +574,7 @@ public final class Jep implements AutoCloseable {
      *   <th>Notes</th>
      *  </tr>
      *  <tr>
-     *   <td>str</td>
+     *   <td>str/unicode</td>
      *   <td>{@link String}, {@link Character}</td>
      *   <td>Character conversion will fail if the str is longer than 1.</td>
      *  </tr>
@@ -583,7 +583,7 @@ public final class Jep implements AutoCloseable {
      *   <td>{@link Boolean}</td>
      *  </tr>
      *  <tr>
-     *   <td>int</td>
+     *   <td>int/long</td>
      *   <td>{@link Long}, {@link Integer}, {@link Short}, {@link Byte}</td>
      *   <td>Conversion fails if the number is outside the valid range for the Java type</td>
      *  </tr>
@@ -607,19 +607,19 @@ public final class Jep implements AutoCloseable {
      *  <tr>
      *   <td>numpy.ndarray</td>
      *   <td>{@link NDArray}</td>
-     *   <td>Only if jep was built with numpy support</td>
+     *   <td>Only if Jep was built with numpy support</td>
      *  </tr>
      *  <tr>
      *   <td>NoneType</td>
      *   <td>Any(null)</td>
      *  </tr>
      *  <tr>
-         <td colspan="3">Jep object such as pyjobjects and jarrays will be returned if the Java type of the wrapped object is compatible.</td>
+         <td colspan="3">Jep objects such as PyJObjects and jarrays will be returned if the Java type of the wrapped object is compatible.</td>
      *  <tr>
      *  <tr>
      *   <td>Anything else</td>
      *   <td>{@link String}</td>
-     *   <td>This converson may be removed in future versions of Jep if a better default type is defined.</td>
+     *   <td>This conversion will likely be removed in future versions of Jep so it is unsafe to depend on this behavior.</td>
      *  </tr>
      * </table>
      *
@@ -628,7 +628,7 @@ public final class Jep implements AutoCloseable {
      *            interpreter's global scope
      * @param clazz
                   the Java class of the return type.
-     * @return a Java version the variable
+     * @return a Java version of the variable
      * @exception JepException
      *                if an error occurs
      */ 

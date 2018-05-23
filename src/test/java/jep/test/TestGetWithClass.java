@@ -20,14 +20,11 @@ public class TestGetWithClass {
          if (!c.equals('a')) {
              throw new IllegalStateException(c + " is not 'a'"); 
          }
-         JepException ex = null;
          try {
              c = jep.getValue("'abc'", Character.class);
-         } catch (JepException e) {
-             ex = e;
-         }
-         if (ex == null) {
              throw new IllegalStateException("'abc' is not a Character(" + c + ")");  
+         } catch (JepException e) {
+             /* This is what should happen. */
          }
     }
 
@@ -59,14 +56,12 @@ public class TestGetWithClass {
          if (!l.equals((long) 2)) {
              throw new IllegalStateException(l + " is not 2"); 
          }
-         JepException ex = null;
+         /* Test byte overflow causes a JepException */
          try {
              b = jep.getValue("1000", Byte.class);
-         } catch (JepException e) {
-             ex = e;
-         }
-         if (ex == null) {
              throw new IllegalStateException("1000 is not a Byte(" + b + ")");  
+         } catch (JepException e) {
+             /* This is what should happen. */
          }
     }
 
@@ -124,7 +119,21 @@ public class TestGetWithClass {
          if (j != null) {
              throw new IllegalStateException(j + " is not null"); 
          }
+    }
 
+    public static void testIncompatible(Jep jep) throws JepException {
+         try {
+             Integer i = jep.getValue("object", Integer.class);
+             throw new IllegalStateException("object is not a Integer(" + i + ")");  
+         } catch (JepException e) {
+             /* This is what should happen. */
+         }
+         try {
+             Integer i = jep.getValue("object()", Integer.class);
+             throw new IllegalStateException("object() is not a Integer(" + i + ")");  
+         } catch (JepException e) {
+             /* This is what should happen. */
+         }
     }
 
     public static void main(String[] args) throws JepException {
@@ -136,6 +145,7 @@ public class TestGetWithClass {
             testSeq(jep);
             testDict(jep);
             testNone(jep);
+            testIncompatible(jep);
         }
     }
 
