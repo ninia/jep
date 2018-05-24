@@ -94,6 +94,15 @@ PyObject* jstring_As_PyString(JNIEnv *env, jstring jstr)
 }
 #endif
 
+PyObject* JPyObject_As_PyObject(JNIEnv *env, jobject jobj)
+{
+    PyObject *ret;
+    jlong l = jep_python_PyObject_getPyObject(env, jobj);
+    ret = (PyObject*) l;
+    Py_INCREF(ret);
+    return ret;
+}
+
 PyObject* jobject_As_PyString(JNIEnv *env, jobject jobj)
 {
     PyObject   *result;
@@ -224,6 +233,8 @@ PyObject* jobject_As_PyObject(JNIEnv *env, jobject jobj)
         result = Boolean_As_PyObject(env, jobj);
     } else if ((*env)->IsSameObject(env, class, JCHAR_OBJ_TYPE)) {
         result = Character_As_PyObject(env, jobj);
+    } else if ((*env)->IsAssignableFrom(env, class, JPYOBJECT_TYPE)) {
+        result = JPyObject_As_PyObject(env, jobj);
 #if JEP_NUMPY_ENABLED
     } else if (jndarray_check(env, jobj)) {
         result = convert_jndarray_pyndarray(env, jobj);

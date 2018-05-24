@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import jep.python.PyModule;
+import jep.python.PyObject;
 import jep.python.MemoryManager;
 
 /**
@@ -618,8 +619,8 @@ public final class Jep implements AutoCloseable {
      *  <tr>
      *  <tr>
      *   <td>Anything else</td>
-     *   <td>{@link String}</td>
-     *   <td>This conversion will likely be removed in future versions of Jep so it is unsafe to depend on this behavior.</td>
+     *   <td>{@link String}, {@link PyObject}</td>
+     *   <td>String conversion will likely be removed in future versions of Jep so it is unsafe to depend on this behavior.</td>
      *  </tr>
      * </table>
      *
@@ -631,6 +632,7 @@ public final class Jep implements AutoCloseable {
      * @return a Java version of the variable
      * @exception JepException
      *                if an error occurs
+     * @since 3.8
      */ 
     public <T> T getValue(String str, Class<T> clazz) throws JepException {
         isValidThread();

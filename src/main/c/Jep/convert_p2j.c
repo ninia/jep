@@ -793,6 +793,28 @@ jobject PyCallable_as_functional_interface(JNIEnv *env, PyObject *callable,
     return proxy;
 };
 
+static jobject PyObject_As_JPyObject(JNIEnv *env, PyObject *pyobject)
+{
+    jobject jpyobject;
+
+    JepThread *jepThread = pyembed_get_jepthread();
+    if (!jepThread) {
+        if (!PyErr_Occurred()) {
+            PyErr_SetString(PyExc_RuntimeError, "Invalid JepThread pointer.");
+        }
+        return NULL;
+    }
+
+    jpyobject = jep_python_PyObject_new_J_J_Jep(env, (jlong) jepThread, (jlong) pyobject, jepThread->caller);
+    if(process_java_exception(env) || !jpyobject) {
+        return NULL;
+    }
+    // incref to ensure python does not garbage collect it out from under us
+    Py_INCREF(pyobject);
+
+    return jpyobject;
+}
+
 jobject PyObject_As_jobject(JNIEnv *env, PyObject *pyobject,
                             jclass expectedType)
 {
@@ -845,6 +867,8 @@ jobject PyObject_As_jobject(JNIEnv *env, PyObject *pyobject,
 #endif
     } else if ((*env)->IsAssignableFrom(env, JSTRING_TYPE, expectedType)) {
         return (jobject) PyObject_As_jstring(env, pyobject);
+    } else if ((*env)->IsAssignableFrom(env, JPYOBJECT_TYPE, expectedType)) {
+        return (jobject) PyObject_As_JPyObject(env, pyobject);
     }
     raiseTypeError(env, pyobject, expectedType);
     return NULL;

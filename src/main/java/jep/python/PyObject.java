@@ -28,9 +28,16 @@ import jep.Jep;
 import jep.JepException;
 
 /**
- * PyObject.java - encapsulates a pointer to a PyObject
+ * A Java object that wraps a pointer to a Python object.
+ * 
+ * This class is not thread safe and PyObjects can only be used on the Thread
+ * where they were created. When a Jep instance is closed all PyObjects from
+ * that instance will be invalid and can no longer be used.
  *
- * @author Mike Johnson
+ * This class is in the process of a redesign so methods may be added, removed,
+ * or changed in ways that are not backwards compatible in the future. When
+ * using this class it may require extra effort to move to a new version of
+ * Jep.
  */
 public class PyObject {
     
@@ -52,6 +59,14 @@ public class PyObject {
         this.pointer = new PyPointer(this, jep, tstate, pyObject);
     }
 
+    /**
+     * Called from native code
+     * 
+     * @return the address of the native PyObject
+     */
+    protected long getPyObject() {
+        return pointer.pyObject;
+    }
 
     /**
      * Check if PyObject is valid

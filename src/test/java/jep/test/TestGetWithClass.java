@@ -8,6 +8,7 @@ import jep.JepException;
 
 /**
  * @author bsteffen
+ * @since 3.8
  */
 public class TestGetWithClass {
 

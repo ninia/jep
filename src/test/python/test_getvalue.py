@@ -18,3 +18,6 @@ class TestGetValue(unittest.TestCase):
 
     def test_get_with_class(self):
         jep_pipe(build_java_process_cmd('jep.test.TestGetWithClass'))
+
+    def test_get_jpyobject(self):
+        jep_pipe(build_java_process_cmd('jep.test.TestGetJPyObject'))
