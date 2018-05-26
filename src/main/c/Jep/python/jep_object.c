@@ -276,6 +276,49 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2_3F
     release_utf_char(env, jname, name);
 }
 
+/*
+ * Class:     jep_python_PyObject
+ * Method:    getAttr
+ * Signature: (JJLjava/lang/String;Ljava/lang/Class;)Ljava/lang/Object;
+ */
+JNIEXPORT jobject JNICALL Java_jep_python_PyObject_getAttr
+  (JNIEnv *env, jobject obj, jlong tstate, jlong pyobj, jstring str, jclass clazz)
+{
+    JepThread  *jepThread;
+    PyObject   *pyObject;
+    const char *attrName;
+    PyObject   *attr;
+    jobject     ret = NULL;
+
+    jepThread = (JepThread *) tstate;
+    if (!jepThread) {
+        THROW_JEP(env, "Couldn't get thread objects.");
+        return ret;
+    }
+
+    pyObject = (PyObject*) pyobj;
+    attrName = jstring2char(env, str);
+
+    PyEval_AcquireThread(jepThread->tstate);
+    
+    attr = PyObject_GetAttrString(pyObject, attrName);
+    if (process_py_exception(env)) {
+        goto EXIT;
+    }
+
+    ret = PyObject_As_jobject(env, attr, clazz);
+    if (process_py_exception(env)) {
+        goto EXIT;
+    }
+
+
+EXIT:
+    Py_XDECREF(attr);
+    PyEval_ReleaseThread(jepThread->tstate);
+    release_utf_char(env, str, attrName);
+    return ret;
+}
+
 
 /*
  * Class:     jep_python_PyObject

@@ -628,7 +628,7 @@ public final class Jep implements AutoCloseable {
      *            the name of the Python variable to get from the
      *            interpreter's global scope
      * @param clazz
-                  the Java class of the return type.
+     *            the Java class of the return type.
      * @return a Java version of the variable
      * @exception JepException
      *                if an error occurs

@@ -400,6 +400,40 @@ public class PyObject {
     private native void set(long tstate, long module, String name, float[] v)
         throws JepException;
 
+    /**
+     * Access an attribute of the wrapped Python Object, similar to the python
+     * built-in function getattr.
+     * 
+     * @param name the attribute name
+     * @return a Java version of the attribute
+     * @exception JepException
+     *                if an error occurs
+     */
+    public Object getAttr(String name) throws JepException {
+        isValid();
+        return getAttr(pointer.tstate, pointer.pyObject, name, Object.class);
+    }
+
+    /**
+     * Access an attribute of the wrapped Python Object, similar to the python
+     * built-in function getattr. This method allows you to specify the return
+     * type, the supported types are the same as 
+     * {@link Jep#getValue(String, Class)}.
+     * 
+     * @param name the attribute name
+     * @param clazz the Java class of the return type.
+     * @return a Java version of the attribute
+     * @exception JepException
+     *                if an error occurs
+     */
+    public <T> T getAttr(String name, Class<T> clazz) throws JepException {
+        isValid();
+        return clazz.cast(getAttr(pointer.tstate, pointer.pyObject, name, clazz));
+    }
+
+    private native Object getAttr(long tstate, long pyObject, String name, Class<?> clazz)
+        throws JepException;
+
 
     /**
      * Create a module.
