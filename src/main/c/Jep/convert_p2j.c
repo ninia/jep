@@ -44,61 +44,6 @@
     static jstring UTF8 = NULL;
 #endif
 
-char isFunctionalInterfaceType(JNIEnv *env, jclass type)
-{
-    jobjectArray methods;
-    jsize numMethods;
-    jobject abstractMethod = NULL;
-    jsize i;
-    jboolean isInterface;
-    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
-        process_java_exception(env);
-        return 0;
-    }
-    isInterface = java_lang_Class_isInterface(env, type);
-    if (process_java_exception(env)) {
-        (*env)->PopLocalFrame(env, NULL);
-        return 0;
-    }
-    if (!isInterface) {
-        return 0; // It's not an interface, so it can't be functional
-    }
-    methods = java_lang_Class_getMethods(env, type);
-    if (process_java_exception(env)) {
-        (*env)->PopLocalFrame(env, NULL);
-        return 0;
-    }
-    numMethods = (*env)->GetArrayLength(env, methods);
-    for (i = 0; i < numMethods; i++) {
-        jobject method = (*env)->GetObjectArrayElement(env, methods, i);
-        jint modifiers = java_lang_reflect_Member_getModifiers(env, method);
-        jboolean isAbstract;
-        if (process_java_exception(env)) {
-            (*env)->PopLocalFrame(env, NULL);
-            return 0;
-        }
-        isAbstract = java_lang_reflect_Modifier_isAbstract(env, modifiers);
-        if (process_java_exception(env)) {
-            (*env)->PopLocalFrame(env, NULL);
-            return 0;
-        }
-        if (isAbstract) {
-            if (abstractMethod != NULL) {
-                // We found two different abstract methods, so we're not a functional interfaces
-                (*env)->PopLocalFrame(env, NULL);
-                return 0;
-            } else {
-                abstractMethod = method;
-            }
-        } else {
-            // it's a default method, so just ignore it
-            (*env)->DeleteLocalRef(env, method);
-        }
-    }
-    (*env)->PopLocalFrame(env, NULL);
-    return abstractMethod != NULL;
-}
-
 /*
  * When there is no way to convert a PyObject of a specific expected Java type
  * then a Python TypeError is raised. This function is used to make a pretty
@@ -128,7 +73,27 @@ static void raiseTypeError(JNIEnv *env, PyObject *pyobject, jclass expectedType)
     (*env)->DeleteLocalRef(env, expTypeJavaName);
 }
 
+static jobject PyObject_As_JPyObject(JNIEnv *env, PyObject *pyobject)
+{
+    jobject jpyobject;
 
+    JepThread *jepThread = pyembed_get_jepthread();
+    if (!jepThread) {
+        if (!PyErr_Occurred()) {
+            PyErr_SetString(PyExc_RuntimeError, "Invalid JepThread pointer.");
+        }
+        return NULL;
+    }
+
+    jpyobject = jep_python_PyObject_new_J_J_Jep(env, (jlong) jepThread, (jlong) pyobject, jepThread->caller);
+    if(process_java_exception(env) || !jpyobject) {
+        return NULL;
+    }
+    // incref to ensure python does not garbage collect it out from under us
+    Py_INCREF(pyobject);
+
+    return jpyobject;
+}
 
 jboolean PyObject_As_jboolean(PyObject *pylong)
 {
@@ -362,7 +327,8 @@ static jobject pystring_as_jobject(JNIEnv *env, PyObject *pyobject,
             return NULL;
         }
         return result;
-
+    } else if ((*env)->IsAssignableFrom(env, JPYOBJECT_TYPE, expectedType)) {
+        return PyObject_As_JPyObject(env, pyobject);
     }
     raiseTypeError(env, pyobject, expectedType);
     return NULL;
@@ -417,6 +383,8 @@ static jobject pybool_as_jobject(JNIEnv *env, PyObject *pyobject,
             return NULL;
         }
         return result;
+    } else if ((*env)->IsAssignableFrom(env, JPYOBJECT_TYPE, expectedType)) {
+        return PyObject_As_JPyObject(env, pyobject);
     }
     raiseTypeError(env, pyobject, expectedType);
     return NULL;
@@ -439,6 +407,8 @@ static jobject pyunicode_as_jobject(JNIEnv *env, PyObject *pyobject,
             return NULL;
         }
         return result;
+    } else if ((*env)->IsAssignableFrom(env, JPYOBJECT_TYPE, expectedType)) {
+        return PyObject_As_JPyObject(env, pyobject);
     }
     raiseTypeError(env, pyobject, expectedType);
     return NULL;
@@ -495,6 +465,8 @@ static jobject pylong_as_jobject(JNIEnv *env, PyObject *pyobject,
             return NULL;
         }
         return result;
+    } else if ((*env)->IsAssignableFrom(env, JPYOBJECT_TYPE, expectedType)) {
+        return PyObject_As_JPyObject(env, pyobject);
     }
     raiseTypeError(env, pyobject, expectedType);
     return NULL;
@@ -554,6 +526,8 @@ static jobject pyfloat_as_jobject(JNIEnv *env, PyObject *pyobject,
             return NULL;
         }
         return result;
+    } else if ((*env)->IsAssignableFrom(env, JPYOBJECT_TYPE, expectedType)) {
+        return PyObject_As_JPyObject(env, pyobject);
     }
     raiseTypeError(env, pyobject, expectedType);
     return NULL;
@@ -699,6 +673,8 @@ static jobject pyfastsequence_as_jobject(JNIEnv *env, PyObject *pyseq,
         } else if ((*env)->IsSameObject(env, componentType, JSHORT_TYPE)) {
             pyfastsequence_as_primitive_array(jshort, Short);
         }
+    } else if ((*env)->IsAssignableFrom(env, JPYOBJECT_TYPE, expectedType)) {
+        return PyObject_As_JPyObject(env, pyseq);
     }
     raiseTypeError(env, pyseq, expectedType);
     return NULL;
@@ -751,9 +727,66 @@ static jobject pydict_as_jobject(JNIEnv *env, PyObject *pydict,
             }
         }
         return (*env)->PopLocalFrame(env, jmap);
+    } else if ((*env)->IsAssignableFrom(env, JPYOBJECT_TYPE, expectedType)) {
+        return PyObject_As_JPyObject(env, pydict);
     }
     raiseTypeError(env, pydict, expectedType);
     return NULL;
+}
+
+char isFunctionalInterfaceType(JNIEnv *env, jclass type)
+{
+    jobjectArray methods;
+    jsize numMethods;
+    jobject abstractMethod = NULL;
+    jsize i;
+    jboolean isInterface;
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
+        process_java_exception(env);
+        return 0;
+    }
+    isInterface = java_lang_Class_isInterface(env, type);
+    if (process_java_exception(env)) {
+        (*env)->PopLocalFrame(env, NULL);
+        return 0;
+    }
+    if (!isInterface) {
+        return 0; // It's not an interface, so it can't be functional
+    }
+    methods = java_lang_Class_getMethods(env, type);
+    if (process_java_exception(env)) {
+        (*env)->PopLocalFrame(env, NULL);
+        return 0;
+    }
+    numMethods = (*env)->GetArrayLength(env, methods);
+    for (i = 0; i < numMethods; i++) {
+        jobject method = (*env)->GetObjectArrayElement(env, methods, i);
+        jint modifiers = java_lang_reflect_Member_getModifiers(env, method);
+        jboolean isAbstract;
+        if (process_java_exception(env)) {
+            (*env)->PopLocalFrame(env, NULL);
+            return 0;
+        }
+        isAbstract = java_lang_reflect_Modifier_isAbstract(env, modifiers);
+        if (process_java_exception(env)) {
+            (*env)->PopLocalFrame(env, NULL);
+            return 0;
+        }
+        if (isAbstract) {
+            if (abstractMethod != NULL) {
+                // We found two different abstract methods, so we're not a functional interfaces
+                (*env)->PopLocalFrame(env, NULL);
+                return 0;
+            } else {
+                abstractMethod = method;
+            }
+        } else {
+            // it's a default method, so just ignore it
+            (*env)->DeleteLocalRef(env, method);
+        }
+    }
+    (*env)->PopLocalFrame(env, NULL);
+    return abstractMethod != NULL;
 }
 
 jobject PyCallable_as_functional_interface(JNIEnv *env, PyObject *callable,
@@ -792,28 +825,6 @@ jobject PyCallable_as_functional_interface(JNIEnv *env, PyObject *callable,
 
     return proxy;
 };
-
-static jobject PyObject_As_JPyObject(JNIEnv *env, PyObject *pyobject)
-{
-    jobject jpyobject;
-
-    JepThread *jepThread = pyembed_get_jepthread();
-    if (!jepThread) {
-        if (!PyErr_Occurred()) {
-            PyErr_SetString(PyExc_RuntimeError, "Invalid JepThread pointer.");
-        }
-        return NULL;
-    }
-
-    jpyobject = jep_python_PyObject_new_J_J_Jep(env, (jlong) jepThread, (jlong) pyobject, jepThread->caller);
-    if(process_java_exception(env) || !jpyobject) {
-        return NULL;
-    }
-    // incref to ensure python does not garbage collect it out from under us
-    Py_INCREF(pyobject);
-
-    return jpyobject;
-}
 
 jobject PyObject_As_jobject(JNIEnv *env, PyObject *pyobject,
                             jclass expectedType)
@@ -868,7 +879,7 @@ jobject PyObject_As_jobject(JNIEnv *env, PyObject *pyobject,
     } else if ((*env)->IsAssignableFrom(env, JSTRING_TYPE, expectedType)) {
         return (jobject) PyObject_As_jstring(env, pyobject);
     } else if ((*env)->IsAssignableFrom(env, JPYOBJECT_TYPE, expectedType)) {
-        return (jobject) PyObject_As_JPyObject(env, pyobject);
+        return PyObject_As_JPyObject(env, pyobject);
     }
     raiseTypeError(env, pyobject, expectedType);
     return NULL;

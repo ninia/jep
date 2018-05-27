@@ -11,12 +11,14 @@ import jep.python.PyObject;
 public class TestGetJPyObject {
 
     public static void testIdentity(Jep jep) throws JepException {
-        jep.eval("t = object()");
-        PyObject t = jep.getValue("t", PyObject.class);
-        jep.set("t2", t);
-        Boolean b = jep.getValue("t is not t2", Boolean.class);
-        if (b.booleanValue()) {
-            throw new IllegalStateException("JPyObject is not preserving identity.");
+        jep.eval("t = [object(), 1, 1.5, True, None, [], (), {'key','value'} ]");
+        PyObject[] diverseTypes = jep.getValue("t", PyObject[].class);
+        for(int i = 0 ; i < diverseTypes.length; i += 1){
+            jep.set("t2", diverseTypes[i]);
+            Boolean b = jep.getValue("t[" + i + "] is not t2", Boolean.class);
+            if (b.booleanValue()) {
+                throw new IllegalStateException("JPyObject " + i + " is not preserving identity.");
+            }
         }
     }
 
