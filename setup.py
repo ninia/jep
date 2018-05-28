@@ -123,6 +123,7 @@ if __name__ == '__main__':
                        'jep.MainInterpreter',
                        'jep.python.InvocationHandler',
                        'jep.python.PyObject',
+                       'jep.python.PyCallable',
                        'jep.python.PyPointer'],
           distclass=JepDistribution,
           cmdclass={

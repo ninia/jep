@@ -75,6 +75,7 @@
 #include "java_access/Iterable.h"
 #include "java_access/Iterator.h"
 #include "java_access/JepException.h"
+#include "java_access/JPyCallable.h"
 #include "java_access/JPyObject.h"
 #include "java_access/List.h"
 #include "java_access/Long.h"

@@ -3,6 +3,7 @@ package jep.test;
 import jep.Jep;
 import jep.JepException;
 import jep.python.PyObject;
+import jep.python.PyCallable;
 
 /**
  * @author bsteffen
@@ -53,10 +54,24 @@ public class TestGetJPyObject {
         }
     }
 
+    public static void testJPyCallable(Jep jep) throws JepException {
+        PyCallable chr = jep.getValue("chr", PyCallable.class);
+        Object result = chr.call(32);
+        if (!" ".equals(result)) {
+            throw new IllegalStateException("JPyCallable chr does not work as expected."); 
+        }
+        PyCallable count = jep.getValue("[1,2,1,4,1,4].count", PyCallable.class);
+        result = count.call(1);
+        if (((Number) result).intValue() != 3) {
+            throw new IllegalStateException("JPyCallable list.count does not work as expected."); 
+        }
+    }
+
     public static void main(String[] args) throws JepException {
         try (Jep jep = new Jep()) {
             testIdentity(jep);
             testGetAttr(jep);
+            testJPyCallable(jep);
         }
     }
 
