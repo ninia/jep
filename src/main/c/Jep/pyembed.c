@@ -852,7 +852,7 @@ static PyObject* pyembed_jproxy(PyObject *self, PyObject *args)
     JNIEnv        *env = NULL;
     PyObject      *pytarget;
     PyObject      *interfaces;
-    jobject        cl;
+    PyObject      *result;
     jobject        classes;
     Py_ssize_t     inum, i;
     jobject        proxy;
@@ -873,7 +873,6 @@ static PyObject* pyembed_jproxy(PyObject *self, PyObject *args)
     }
 
     env = jepThread->env;
-    cl  = jepThread->classloader;
 
     inum = (int) PyList_GET_SIZE(interfaces);
     if (inum < 1) {
@@ -909,8 +908,9 @@ static PyObject* pyembed_jproxy(PyObject *self, PyObject *args)
                                        (jlong) (intptr_t) jepThread,
                                        (jlong) (intptr_t) pytarget,
                                        jepThread->caller,
-                                       cl,
+                                       jepThread->classloader,
                                        classes);
+    (*env)->DeleteLocalRef(env, classes);
     if (process_java_exception(env) || !proxy) {
         return NULL;
     }
@@ -918,7 +918,9 @@ static PyObject* pyembed_jproxy(PyObject *self, PyObject *args)
     // make sure target doesn't get garbage collected
     Py_INCREF(pytarget);
 
-    return PyJObject_Wrap(env, proxy, NULL);
+    result = PyJObject_Wrap(env, proxy, NULL);
+    (*env)->DeleteLocalRef(env, proxy);
+    return result;
 }
 
 

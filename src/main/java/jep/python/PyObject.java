@@ -83,6 +83,7 @@ public class PyObject {
      *
      * @exception JepException if an error occurs
      */
+    @Deprecated
     public void decref() throws JepException {
         isValid();
         this.decref(pointer.tstate, pointer.pyObject);
@@ -97,6 +98,7 @@ public class PyObject {
      *
      * @exception JepException if an error occurs
      */
+    @Deprecated
     public void incref() throws JepException {
         isValid();
         this.incref(pointer.tstate, pointer.pyObject);
@@ -408,6 +410,7 @@ public class PyObject {
      * @return a Java version of the attribute
      * @exception JepException
      *                if an error occurs
+     * @since 3.8
      */
     public Object getAttr(String name) throws JepException {
         isValid();
@@ -425,6 +428,7 @@ public class PyObject {
      * @return a Java version of the attribute
      * @exception JepException
      *                if an error occurs
+     * @since 3.8
      */
     public <T> T getAttr(String name, Class<T> clazz) throws JepException {
         isValid();

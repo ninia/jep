@@ -12,7 +12,7 @@ import jep.python.PyCallable;
 public class TestGetJPyObject {
 
     public static void testIdentity(Jep jep) throws JepException {
-        jep.eval("t = [object(), 1, 1.5, True, None, [], (), {'key','value'} ]");
+        jep.eval("t = [object(), 1, 1.5, True, None, [], (), {'key':'value'} ]");
         PyObject[] diverseTypes = jep.getValue("t", PyObject[].class);
         for(int i = 0 ; i < diverseTypes.length; i += 1){
             jep.set("t2", diverseTypes[i]);
@@ -32,14 +32,14 @@ public class TestGetJPyObject {
         testclass.append("    self.attr3 = attr3\n");
         testclass.append("    self.selfattr = self\n"); 
         jep.eval(testclass.toString());
-        jep.eval("t = testclass(1, 'str', None)");
+        jep.eval("t = testclass(1, 'A String', None)");
         PyObject t = jep.getValue("t", PyObject.class);
         Number attr1 = t.getAttr("attr1", Number.class);
         if(attr1.intValue() != 1){
             throw new IllegalStateException("JPyObject attr1 lookup failed.");
         }
         Object attr2 = t.getAttr("attr2");
-        if(!attr2.equals("str")){
+        if(!attr2.equals("A String")){
             throw new IllegalStateException("JPyObject attr2 lookup failed.");
         }
         Object attr3 = t.getAttr("attr3");
