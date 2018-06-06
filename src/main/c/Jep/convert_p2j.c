@@ -353,19 +353,22 @@ jchar PyObject_As_jchar(PyObject *pyobject)
 
 jstring PyObject_As_jstring(JNIEnv *env, PyObject *pyobject)
 {
+    jstring   result;
     PyObject *pystring = PyObject_Str(pyobject);
     if (pystring == NULL) {
         return NULL;
     }
 #if PY_MAJOR_VERSION < 3
     if (PyUnicode_Check(pystring)) {
-        return pyunicode_as_jstring(env, pystring);
+        result =  pyunicode_as_jstring(env, pystring);
     } else {
-        return pystring_as_jstring(env, pystring);
+        result = pystring_as_jstring(env, pystring);
     }
 #else
-    return pyunicode_as_jstring(env, pystring);
+    result = pyunicode_as_jstring(env, pystring);
 #endif
+    Py_DECREF(pystring);
+    return result;
 }
 
 static jobject pybool_as_jobject(JNIEnv *env, PyObject *pyobject,

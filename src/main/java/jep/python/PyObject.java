@@ -469,4 +469,26 @@ public class PyObject {
     protected native Object getValue(long tstate,
                                      long onModule,
                                      String str) throws JepException;
+
+    @Override
+    public boolean equals(Object obj) {
+        return equals(pointer.tstate, pointer.pyObject, obj);
+    }
+
+    @Override
+    public String toString() {
+        return toString(pointer.tstate, pointer.pyObject);
+    }
+
+    @Override
+    public int hashCode() {
+        return Long.hashCode(hashCode(pointer.tstate, pointer.pyObject));
+    }
+
+    private native boolean equals(long tstate, long pyObject, Object obj);
+
+    private native String toString(long tstate, long pyObject);
+
+    private native long hashCode(long tstate, long pyObject);
+
 }

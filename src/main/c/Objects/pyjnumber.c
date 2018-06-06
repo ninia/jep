@@ -316,6 +316,23 @@ static PyObject* pyjnumber_richcompare(PyObject *self,
     return result;
 }
 
+static long pyjnumber_hash(PyObject *self)
+{
+    JNIEnv   *env    = pyembed_get_env();
+    long      result = -1;
+
+    if (PyJNumber_Check(self)) {
+        self = java_number_to_python(env, self);
+        if (self == NULL) {
+            return result;
+        }
+    }
+
+    result = PyObject_Hash(self);
+    Py_DECREF(self);
+    return result;
+}
+
 
 static PyNumberMethods pyjnumber_number_methods = {
     (binaryfunc) pyjnumber_add,                 /* nb_add */
@@ -389,7 +406,7 @@ PyTypeObject PyJNumber_Type = {
     &pyjnumber_number_methods,                /* tp_as_number */
     0,                                        /* tp_as_sequence */
     0,                                        /* tp_as_mapping */
-    0,                                        /* tp_hash  */
+    pyjnumber_hash,                           /* tp_hash  */
     0,                                        /* tp_call */
     0,                                        /* tp_str */
     0,                                        /* tp_getattro */

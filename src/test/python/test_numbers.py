@@ -161,3 +161,11 @@ class TestNumbers(unittest.TestCase):
         self.assertEqual(x.get(0).get(), 0)
         self.assertEqual(x.get(1).get(), 1)
         self.assertEqual(x.get(2).get(), 2)
+
+    def test_hash(self):
+        # verify a PyJNumber can be hashed by Python, this will call the Python hash() not the Java hashCode()
+        a = Integer(50)
+        self.assertEqual(50, hash(a))
+        b = Integer(-1)
+        # -1 in Python means error code so they weirdly have the hash of -1 be -2
+        self.assertEqual(-2, hash(b))
