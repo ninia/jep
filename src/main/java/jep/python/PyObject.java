@@ -482,7 +482,8 @@ public class PyObject {
 
     @Override
     public int hashCode() {
-        return Long.hashCode(hashCode(pointer.tstate, pointer.pyObject));
+        Long value = hashCode(pointer.tstate, pointer.pyObject);
+        return value.hashCode();
     }
 
     private native boolean equals(long tstate, long pyObject, Object obj);
