@@ -77,6 +77,20 @@ public class PyObject {
         jep.isValidThread();
     }
 
+    /**
+     * Check if PyObject is valid. This is an alternative to isValid() if you
+     * need a RuntimeException.
+     * 
+     * @throws IllegalStateException
+     */
+    public void isValidRuntime() throws IllegalStateException {
+        try {
+            isValid();
+        } catch (JepException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
 
     /**
      * internal use only
@@ -403,40 +417,84 @@ public class PyObject {
         throws JepException;
 
     /**
-     * Access an attribute of the wrapped Python Object, similar to the python
-     * built-in function getattr.
+     * Access an attribute of the wrapped Python Object, similar to the Python
+     * built-in function getattr. This is equivalent to the Python statement
+     * <code>this.attr_name</code>.
      * 
-     * @param name the attribute name
+     * @param attr_name
+     *            the attribute name
      * @return a Java version of the attribute
      * @exception JepException
      *                if an error occurs
      * @since 3.8
      */
-    public Object getAttr(String name) throws JepException {
+    public Object getAttr(String attr_name) throws JepException {
         isValid();
-        return getAttr(pointer.tstate, pointer.pyObject, name, Object.class);
+        return getAttr(pointer.tstate, pointer.pyObject, attr_name,
+                Object.class);
     }
 
     /**
-     * Access an attribute of the wrapped Python Object, similar to the python
+     * Access an attribute of the wrapped Python Object, similar to the Python
      * built-in function getattr. This method allows you to specify the return
-     * type, the supported types are the same as 
+     * type, the supported types are the same as
      * {@link Jep#getValue(String, Class)}.
      * 
-     * @param name the attribute name
-     * @param clazz the Java class of the return type.
+     * @param attr_name
+     *            the attribute name
+     * @param clazz
+     *            the Java class of the return type.
      * @return a Java version of the attribute
      * @exception JepException
      *                if an error occurs
      * @since 3.8
      */
-    public <T> T getAttr(String name, Class<T> clazz) throws JepException {
+    public <T> T getAttr(String attr_name, Class<T> clazz) throws JepException {
         isValid();
-        return clazz.cast(getAttr(pointer.tstate, pointer.pyObject, name, clazz));
+        return clazz.cast(
+                getAttr(pointer.tstate, pointer.pyObject, attr_name, clazz));
     }
 
-    private native Object getAttr(long tstate, long pyObject, String name, Class<?> clazz)
+    private native Object getAttr(long tstate, long pyObject, String attr_name,
+            Class<?> clazz)
         throws JepException;
+
+    /**
+     * Sets an attribute on the wrapped Python object, similar to the Python
+     * built-in function setattr. This is equivalent to the Python statement
+     * <code>this.attr_name = o</code>.
+     * 
+     * @param attr_name
+     *            the attribute name
+     * @param o
+     *            the object to set as an attribute
+     * @throws JepException
+     * 
+     * @since 3.8
+     */
+    public void setAttr(String attr_name, Object o) throws JepException {
+        isValid();
+        setAttr(pointer.tstate, pointer.pyObject, attr_name, o);
+    }
+
+    private native void setAttr(long tstate, long pyObject,
+            String attr_name, Object o);
+
+    /**
+     * Deletes an attribute on the wrapped Python object, similar to the Python
+     * built-in function delattr. This is equivalent to the Python statement
+     * <code>del this.attr_name</code>.
+     * 
+     * @param attr_name
+     *            the name of the attribute to be deleted
+     * @throws JepException
+     */
+    public void delAttr(String attr_name) throws JepException {
+        isValid();
+        delAttr(pointer.tstate, pointer.pyObject, attr_name);
+    }
+
+    private native void delAttr(long tstate, long pyObject, String attr_name);
 
 
     /**
@@ -472,16 +530,19 @@ public class PyObject {
 
     @Override
     public boolean equals(Object obj) {
+        isValidRuntime();
         return equals(pointer.tstate, pointer.pyObject, obj);
     }
 
     @Override
     public String toString() {
+        isValidRuntime();
         return toString(pointer.tstate, pointer.pyObject);
     }
 
     @Override
     public int hashCode() {
+        isValidRuntime();
         Long value = hashCode(pointer.tstate, pointer.pyObject);
         return value.hashCode();
     }

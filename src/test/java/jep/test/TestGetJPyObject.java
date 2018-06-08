@@ -25,7 +25,7 @@ public class TestGetJPyObject {
         }
     }
 
-    public static void testGetAttr(Jep jep) throws JepException {
+    private static String buildTestClassPython() {
         StringBuilder testclass = new StringBuilder();
         testclass.append("class testclass(object):\n");
         testclass.append("  def __init__(self, attr1, attr2, attr3):\n");
@@ -33,7 +33,11 @@ public class TestGetJPyObject {
         testclass.append("    self.attr2 = attr2\n");
         testclass.append("    self.attr3 = attr3\n");
         testclass.append("    self.selfattr = self\n");
-        jep.eval(testclass.toString());
+        return testclass.toString();
+    }
+
+    public static void testGetAttr(Jep jep) throws JepException {
+        jep.eval(buildTestClassPython());
         jep.eval("t = testclass(1, 'A String', None)");
         PyObject t = jep.getValue("t", PyObject.class);
         Number attr1 = t.getAttr("attr1", Number.class);
@@ -54,6 +58,73 @@ public class TestGetJPyObject {
         if (b.booleanValue()) {
             throw new IllegalStateException(
                     "JPyObject selfattr lookup failed.");
+        }
+
+        try {
+            t.getAttr(null, PyObject.class);
+            throw new IllegalStateException("JPyObject null attr_name failed");
+        } catch (JepException e) {
+            /*
+             * We want an exception as Jep should not have allowed null. Python
+             * will crash when we use the CPython API if the attr_name is null.
+             */
+        }
+    }
+
+    public static void testSetAttr(Jep jep) throws JepException {
+        jep.eval(buildTestClassPython());
+        jep.eval("t = testclass(1, 'A String', None)");
+        PyObject t = jep.getValue("t", PyObject.class);
+
+        t.setAttr("attr1", 5.5);
+        if (jep.getValue("t.attr1", Double.class) != 5.5) {
+            throw new IllegalStateException("JPyObject attr1 setting failed.");
+        }
+
+        t.setAttr("attr2", "B String");
+        if (!jep.getValue("t.attr2", String.class).equals("B String")) {
+            throw new IllegalStateException("JPyObject attr2 setting failed.");
+        }
+
+        t.setAttr("attr3", null);
+        if (!jep.getValue("t.attr3 is None", Boolean.class)) {
+            throw new IllegalStateException("JPyObject attr3 setting failed.");
+        }
+
+        t.setAttr("attr4", "C String");
+        if (!jep.getValue("t.attr4", String.class).equals("C String")) {
+            throw new IllegalStateException("JPyObject attr4 setting failed.");
+        }
+
+
+        try {
+            t.setAttr(null, "ABC");
+            throw new IllegalStateException("JPyObject null attr_name failed");
+        } catch (JepException e) {
+            /*
+             * We want an exception as Jep should not have allowed null. Python
+             * will crash when we use the CPython API if the attr_name is null.
+             */
+        }
+    }
+
+    public static void testDelAttr(Jep jep) throws JepException {
+        jep.eval(buildTestClassPython());
+        jep.eval("t = testclass(1, 'A String', None)");
+        PyObject t = jep.getValue("t", PyObject.class);
+
+        t.delAttr("attr1");
+        if (jep.getValue("'attr1' in t.__dict__", Boolean.class)) {
+            throw new IllegalStateException("JPyObject attr1 deleting failed.");
+        }
+        try {
+            t.delAttr(null);
+            throw new IllegalStateException("JPyObject null attr_name failed");
+        } catch (JepException e) {
+            /*
+             * We want an exception as Jep should not have allowed null. Python
+             * will crash when we use the CPython API if the attr_name is null.
+             */
         }
     }
 
@@ -133,6 +204,8 @@ public class TestGetJPyObject {
         try (Jep jep = new Jep()) {
             testIdentity(jep);
             testGetAttr(jep);
+            testSetAttr(jep);
+            testDelAttr(jep);
             testJPyCallable(jep);
             testToString(jep);
             testEquals(jep);
