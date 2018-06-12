@@ -31,32 +31,37 @@ package jep;
  */
 public final class Util {
 
+    /*
+     * TODO this class should eventually not be needed, convert its
+     * functionality to native code
+     */
+
     // these must be the same as util.h
-    public static final int JBOOLEAN_ID = 0;
+    protected static final int JBOOLEAN_ID = 0;
 
-    public static final int JINT_ID = 1;
+    protected static final int JINT_ID = 1;
 
-    public static final int JLONG_ID = 2;
+    protected static final int JLONG_ID = 2;
 
-    public static final int JOBJECT_ID = 3;
+    protected static final int JOBJECT_ID = 3;
 
-    public static final int JSTRING_ID = 4;
+    protected static final int JSTRING_ID = 4;
 
-    public static final int JVOID_ID = 5;
+    protected static final int JVOID_ID = 5;
 
-    public static final int JDOUBLE_ID = 6;
+    protected static final int JDOUBLE_ID = 6;
 
-    public static final int JSHORT_ID = 7;
+    protected static final int JSHORT_ID = 7;
 
-    public static final int JFLOAT_ID = 8;
+    protected static final int JFLOAT_ID = 8;
 
-    public static final int JARRAY_ID = 9;
+    protected static final int JARRAY_ID = 9;
 
-    public static final int JCHAR_ID = 10;
+    protected static final int JCHAR_ID = 10;
 
-    public static final int JBYTE_ID = 11;
+    protected static final int JBYTE_ID = 11;
 
-    public static final int JCLASS_ID = 12;
+    protected static final int JCLASS_ID = 12;
 
     private Util() {
     }
@@ -75,7 +80,7 @@ public final class Util {
      *            an <code>Object</code> value
      * @return an <code>int</code> one of the type _ID constants
      */
-    public static final int getTypeId(Object obj) {
+    protected static final int getTypeId(Object obj) {
         if (obj == null) {
             return -1;
         }
@@ -147,7 +152,7 @@ public final class Util {
      *            an <code>Object</code> value
      * @return an <code>int</code> one of the type _ID constants
      */
-    public static final int getTypeId(Class<?> clazz) {
+    protected static final int getTypeId(Class<?> clazz) {
         if (clazz == null) {
             return -1;
         }

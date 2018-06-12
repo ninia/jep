@@ -25,7 +25,6 @@
 package jep.python;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 
 import jep.Jep;
 import jep.JepException;
@@ -36,7 +35,7 @@ import jep.JepException;
 public class InvocationHandler implements java.lang.reflect.InvocationHandler {
 
     private final PyObject pyObject;
-    
+
     private final boolean functionalInterface;
 
     /**
@@ -49,12 +48,13 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
      * @param jep
      *            the jep interpreter
      * @param functionalInterface
-     *            whether the target is a python callable that should be invoked directly
+     *            whether the target is a python callable that should be invoked
+     *            directly
      * @exception JepException
      *                if an error occurs
      */
-    public InvocationHandler(long tstate, long ltarget, Jep jep, final boolean functionalInterface)
-            throws JepException {
+    public InvocationHandler(long tstate, long ltarget, Jep jep,
+            final boolean functionalInterface) throws JepException {
         this.functionalInterface = functionalInterface;
 
         this.pyObject = new PyObject(tstate, ltarget, jep);
@@ -109,9 +109,10 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
             throws Throwable {
         pyObject.jep.isValidThread();
 
-        return invoke(proxy, pyObject.pointer.tstate, pyObject.pointer.pyObject, method, args, this.functionalInterface);
+        return invoke(proxy, pyObject.pointer.tstate, pyObject.pointer.pyObject,
+                method, args, this.functionalInterface);
     }
 
-    private static native Object invoke(Object proxy, long tstate, long target, Method method,
-            Object[] args, boolean functionalInterface);
+    private static native Object invoke(Object proxy, long tstate, long target,
+            Method method, Object[] args, boolean functionalInterface);
 }

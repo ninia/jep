@@ -30,30 +30,74 @@ import jep.Jep;
 import jep.JepException;
 
 /**
- * 
  * A Java object that wraps a pointer to a Python callable.
  * 
- *
- * @author njensen
+ * These objects are frequently instance methods bound to Python's self object
+ * where the self object is this Java PyObject. They can also be Python objects
+ * that implement the method __call__.
+ * 
+ * @see "https://docs.python.org/2/reference/expressions.html#calls"
+ * @see "https://docs.python.org/3/reference/expressions.html#calls"
+ * 
+ *      Example: <code>
+ *     Jep jep = new Jep();
+ *     jep.eval("class example(object):\n" +
+ *              "    def __init__(self):\n" +
+ *              "        pass\n" +
+ *              "    def helloWorld(self):\n" +
+ *              "        return 'Hello World'\n");
+ *     jep.eval("instance = example()");
+ *     PyObject pyobj = jep.getValue("instance", PyObject.class);
+ *     PyCallable pyHelloWorld = PyObject.getAttr("helloWorld", PyCallable.class);
+ *     String result = (String) pyHelloWorld.call();
+ *     System.out.println(result);
+ * </code>
+ * 
+ * @author Nate Jensen
  * @since 3.8
  */
 public class PyCallable extends PyObject {
 
-    public PyCallable(long tstate, long pyObject, Jep jep)
-            throws JepException {
+    public PyCallable(long tstate, long pyObject, Jep jep) throws JepException {
         super(tstate, pyObject, jep);
     }
 
+    /**
+     * Invokes this callable with the args in order.
+     * 
+     * @param args
+     *            args to pass to the function in order
+     * @return an <Object> value
+     * @throws JepException
+     */
     public Object call(Object... args) throws JepException {
         isValid();
         return call(pointer.tstate, pointer.pyObject, args, null);
     }
 
+    /**
+     * Invokes this callable with keyword args.
+     * 
+     * @param kwargs
+     *            a Map of keyword args
+     * @return an <Object> value
+     * @throws JepException
+     */
     public Object call(Map<String, Object> kwargs) throws JepException {
         isValid();
         return call(pointer.tstate, pointer.pyObject, null, kwargs);
     }
 
+    /**
+     * Invokes this callable with positional args and keyword args.
+     * 
+     * @param args
+     *            args to pass to the function in order
+     * @param kwargs
+     *            a Map of keyword args
+     * @return an <Object> value
+     * @throws JepException
+     */
     public Object call(Object[] args, Map<String, Object> kwargs)
             throws JepException {
         isValid();

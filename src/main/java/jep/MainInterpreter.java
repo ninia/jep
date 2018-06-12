@@ -63,13 +63,12 @@ import java.util.concurrent.SynchronousQueue;
  */
 public final class MainInterpreter implements AutoCloseable {
 
-
     private static MainInterpreter instance = null;
 
     private static PyConfig pyConfig = null;
-    
+
     private static String[] sharedModulesArgv = null;
-    
+
     private Thread thread;
 
     private BlockingQueue<String> importQueue = new SynchronousQueue<>();
@@ -131,7 +130,7 @@ public final class MainInterpreter implements AutoCloseable {
                     pyConfig.hashRandomizationFlag, pyConfig.pythonHome);
         }
 
-        thread = new Thread("JepMainInterpreter"){
+        thread = new Thread("JepMainInterpreter") {
 
             @Override
             public void run() {
@@ -210,7 +209,7 @@ public final class MainInterpreter implements AutoCloseable {
      */
     @Override
     public void close() {
-        if(thread != null){
+        if (thread != null) {
             thread.interrupt();
         }
     }

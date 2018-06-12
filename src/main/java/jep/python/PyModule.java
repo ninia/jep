@@ -29,9 +29,12 @@ import jep.JepException;
 
 /**
  * PyModule.java - encapsulates a pointer to a PyModule
+ * 
+ * @deprecated Use PyObject.getAttr(...) and PyObject.setAttr(...) instead.
  *
  * @author Mike Johnson
  */
+@Deprecated
 public class PyModule extends PyObject {
     /**
      * Creates a new <code>PyModule</code> instance.
@@ -61,17 +64,24 @@ public class PyModule extends PyObject {
      */
     public PyModule createModule(String name) throws JepException {
         super.isValid();
-        return new PyModule(pointer.tstate, super.createModule(pointer.tstate, pointer.pyObject, name), super.jep);
+        return new PyModule(pointer.tstate,
+                super.createModule(pointer.tstate, pointer.pyObject, name),
+                super.jep);
     }
 
     /**
-     * Retrieves a value from python. If the result is not a java object,
-     * the implementation currently returns a String.
+     * Retrieves a value from python. If the result is not a java object, the
+     * implementation currently returns a String.
      *
      * Python is pretty picky about what it excepts here. The general syntax:
-     * <blockquote><pre>eval("a = 5")
-     *String a = (String) getValue("a")</pre></blockquote>
-     * will work.
+     * <blockquote>
+     * 
+     * <pre>
+     * eval("a = 5")
+     *String a = (String) getValue("a")
+     * </pre>
+     * 
+     * </blockquote> will work.
      *
      * @param str
      *            a <code>String</code> value

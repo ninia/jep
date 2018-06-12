@@ -33,10 +33,10 @@ import java.util.Set;
 import jep.JepException;
 
 /**
- * Manages the native memory associated with JPyObjects in a Jep instance.
+ * Manages the native memory associated with PyObjects in a Jep instance.
  * 
  * @see "http://www.oracle.com/technetwork/articles/java/finalization-137655.html"
- * @author njensen
+ * @author Nate Jensen
  * @since 3.8
  */
 public final class MemoryManager {
@@ -46,8 +46,7 @@ public final class MemoryManager {
     private Set<PyPointer> pointers = Collections
             .newSetFromMap(new IdentityHashMap<PyPointer, Boolean>());
 
-    protected ReferenceQueue<PyObject> getReferenceQueue()
-            throws JepException {
+    protected ReferenceQueue<PyObject> getReferenceQueue() throws JepException {
         cleanupWeakReferences();
         return refQueue;
     }

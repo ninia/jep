@@ -36,23 +36,25 @@ import jep.JepException;
  *
  * This class is in the process of a redesign so methods may be added, removed,
  * or changed in ways that are not backwards compatible in the future. When
- * using this class it may require extra effort to move to a new version of
- * Jep.
+ * using this class it may require extra effort to move to a new version of Jep.
  */
-public class PyObject {
-    
-    protected final PyPointer pointer;
-    
-    protected final Jep jep;
+public class PyObject implements AutoCloseable {
 
+    protected final PyPointer pointer;
+
+    protected final Jep jep;
 
     /**
      * Make a new PyObject
      * 
-     * @param tstate a <code>long</code> value
-     * @param pyObject the address of the python object
-     * @param jep the instance of jep that created this object
-     * @exception JepException if an error occurs
+     * @param tstate
+     *            a <code>long</code> value
+     * @param pyObject
+     *            the address of the python object
+     * @param jep
+     *            the instance of jep that created this object
+     * @exception JepException
+     *                if an error occurs
      */
     public PyObject(long tstate, long pyObject, Jep jep) throws JepException {
         this.jep = jep;
@@ -69,10 +71,14 @@ public class PyObject {
     }
 
     /**
-     * Check if PyObject is valid
+     * Check if PyObject is valid.
      * 
-     * @throws JepException if an error occurs
+     * @deprecated In a future release this method will not be public.
+     * 
+     * @throws JepException
+     *             if an error occurs
      */
+    @Deprecated
     public void isValid() throws JepException {
         jep.isValidThread();
     }
@@ -83,7 +89,7 @@ public class PyObject {
      * 
      * @throws IllegalStateException
      */
-    public void isValidRuntime() throws IllegalStateException {
+    protected void isValidRuntime() throws IllegalStateException {
         try {
             isValid();
         } catch (JepException e) {
@@ -91,11 +97,11 @@ public class PyObject {
         }
     }
 
-
     /**
-     * internal use only
+     * @deprecated internal use only
      *
-     * @exception JepException if an error occurs
+     * @exception JepException
+     *                if an error occurs
      */
     @Deprecated
     public void decref() throws JepException {
@@ -103,14 +109,13 @@ public class PyObject {
         this.decref(pointer.tstate, pointer.pyObject);
     }
 
-
     private native void decref(long tstate, long ptr) throws JepException;
 
-
     /**
-     * internal use only
+     * @deprecated internal use only
      *
-     * @exception JepException if an error occurs
+     * @exception JepException
+     *                if an error occurs
      */
     @Deprecated
     public void incref() throws JepException {
@@ -118,303 +123,385 @@ public class PyObject {
         this.incref(pointer.tstate, pointer.pyObject);
     }
 
-
     private native void incref(long tstate, long ptr) throws JepException;
 
-
-    /**
-     * I will be closed automagically.
-     * 
-     */
-    public void close() {
-        try{
-            isValid();
-            this.pointer.dispose();
-        } catch(JepException e){
-            // TODO throw?
-            return;
-        }
+    @Override
+    public void close() throws JepException {
+        isValid();
+        this.pointer.dispose();
     }
-
 
     // ------------------------------ set things
 
     /**
      * Describe <code>set</code> method here.
+     * 
+     * @deprecated Use setAttr(String, Object) instead.
      *
-     * @param name a <code>String</code> value
-     * @param v an <code>Object</code> value
-     * @exception JepException if an error occurs
+     * @param name
+     *            a <code>String</code> value
+     * @param v
+     *            an <code>Object</code> value
+     * @exception JepException
+     *                if an error occurs
      */
+    @Deprecated
     public void set(String name, Object v) throws JepException {
         isValid();
         set(pointer.tstate, pointer.pyObject, name, v);
     }
 
     private native void set(long tstate, long module, String name, Object v)
-        throws JepException;
-
+            throws JepException;
 
     /**
      * Describe <code>set</code> method here.
+     * 
+     * @deprecated Use setAttr(String, Object) instead.
      *
-     * @param name a <code>String</code> value
-     * @param v a <code>String</code> value
-     * @exception JepException if an error occurs
+     * @param name
+     *            a <code>String</code> value
+     * @param v
+     *            a <code>String</code> value
+     * @exception JepException
+     *                if an error occurs
      */
+    @Deprecated
     public void set(String name, String v) throws JepException {
         isValid();
         set(pointer.tstate, pointer.pyObject, name, v);
     }
 
     private native void set(long tstate, long module, String name, String v)
-        throws JepException;
-
-
+            throws JepException;
 
     /**
      * Describe <code>set</code> method here.
+     * 
+     * @deprecated Use setAttr(String, Object) instead.
      *
-     * @param name a <code>String</code> value
-     * @param v a <code>boolean</code> value
-     * @exception JepException if an error occurs
+     * @param name
+     *            a <code>String</code> value
+     * @param v
+     *            a <code>boolean</code> value
+     * @exception JepException
+     *                if an error occurs
      */
+    @Deprecated
     public void set(String name, boolean v) throws JepException {
         // there's essentially no difference between int and bool...
-        if(v)
+        if (v) {
             set(name, 1);
-        else
+        } else {
             set(name, 0);
+        }
     }
-
 
     /**
      * Describe <code>set</code> method here.
+     * 
+     * @deprecated Use setAttr(String, Object) instead.
      *
-     * @param name a <code>String</code> value
-     * @param v an <code>int</code> value
-     * @exception JepException if an error occurs
+     * @param name
+     *            a <code>String</code> value
+     * @param v
+     *            an <code>int</code> value
+     * @exception JepException
+     *                if an error occurs
      */
+    @Deprecated
     public void set(String name, int v) throws JepException {
         isValid();
         set(pointer.tstate, pointer.pyObject, name, v);
     }
-    
+
     /**
      * Describe <code>set</code> method here.
+     * 
+     * @deprecated Use setAttr(String, Object) instead.
      *
-     * @param name a <code>String</code> value
-     * @param v an <code>int</code> value
-     * @exception JepException if an error occurs
+     * @param name
+     *            a <code>String</code> value
+     * @param v
+     *            an <code>int</code> value
+     * @exception JepException
+     *                if an error occurs
      */
+    @Deprecated
     public void set(String name, short v) throws JepException {
         isValid();
         set(pointer.tstate, pointer.pyObject, name, v);
     }
-    
-    private native void set(long tstate, long module, String name, int v)
-        throws JepException;
 
-    
+    private native void set(long tstate, long module, String name, int v)
+            throws JepException;
+
     /**
      * Describe <code>set</code> method here.
+     * 
+     * @deprecated Use setAttr(String, Object) instead.
      *
-     * @param name a <code>String</code> value
-     * @param v a <code>char[]</code> value
-     * @exception JepException if an error occurs
+     * @param name
+     *            a <code>String</code> value
+     * @param v
+     *            a <code>char[]</code> value
+     * @exception JepException
+     *                if an error occurs
      */
+    @Deprecated
     public void set(String name, char[] v) throws JepException {
         isValid();
         set(pointer.tstate, pointer.pyObject, name, new String(v));
     }
 
-
     /**
      * Describe <code>set</code> method here.
+     * 
+     * @deprecated Use setAttr(String, Object) instead.
      *
-     * @param name a <code>String</code> value
-     * @param v a <code>char</code> value
-     * @exception JepException if an error occurs
+     * @param name
+     *            a <code>String</code> value
+     * @param v
+     *            a <code>char</code> value
+     * @exception JepException
+     *                if an error occurs
      */
+    @Deprecated
     public void set(String name, char v) throws JepException {
         isValid();
-        set(pointer.tstate, pointer.pyObject, name, new String(new char[] { v }));
+        set(pointer.tstate, pointer.pyObject, name,
+                new String(new char[] { v }));
     }
-
 
     /**
      * Describe <code>set</code> method here.
+     * 
+     * @deprecated Use setAttr(String, Object) instead.
      *
-     * @param name a <code>String</code> value
-     * @param b a <code>byte</code> value
-     * @exception JepException if an error occurs
+     * @param name
+     *            a <code>String</code> value
+     * @param b
+     *            a <code>byte</code> value
+     * @exception JepException
+     *                if an error occurs
      */
+    @Deprecated
     public void set(String name, byte b) throws JepException {
         isValid();
         set(pointer.tstate, pointer.pyObject, name, b);
     }
 
-    
     /**
      * Describe <code>set</code> method here.
+     * 
+     * @deprecated Use setAttr(String, Object) instead.
      *
-     * @param name a <code>String</code> value
-     * @param v a <code>long</code> value
-     * @exception JepException if an error occurs
+     * @param name
+     *            a <code>String</code> value
+     * @param v
+     *            a <code>long</code> value
+     * @exception JepException
+     *                if an error occurs
      */
+    @Deprecated
     public void set(String name, long v) throws JepException {
         isValid();
         set(pointer.tstate, pointer.pyObject, name, v);
     }
-    
+
     private native void set(long tstate, long module, String name, long v)
-        throws JepException;
-    
-    
+            throws JepException;
+
     /**
      * Describe <code>set</code> method here.
+     * 
+     * @deprecated Use setAttr(String, Object) instead.
      *
-     * @param name a <code>String</code> value
-     * @param v a <code>double</code> value
-     * @exception JepException if an error occurs
+     * @param name
+     *            a <code>String</code> value
+     * @param v
+     *            a <code>double</code> value
+     * @exception JepException
+     *                if an error occurs
      */
+    @Deprecated
     public void set(String name, double v) throws JepException {
         isValid();
         set(pointer.tstate, pointer.pyObject, name, v);
     }
-    
-    private native void set(long tstate, long module, String name, double v)
-        throws JepException;
 
+    private native void set(long tstate, long module, String name, double v)
+            throws JepException;
 
     /**
      * Describe <code>set</code> method here.
+     * 
+     * @deprecated Use setAttr(String, Object) instead.
      *
-     * @param name a <code>String</code> value
-     * @param v a <code>float</code> value
-     * @exception JepException if an error occurs
+     * @param name
+     *            a <code>String</code> value
+     * @param v
+     *            a <code>float</code> value
+     * @exception JepException
+     *                if an error occurs
      */
+    @Deprecated
     public void set(String name, float v) throws JepException {
         isValid();
         set(pointer.tstate, pointer.pyObject, name, v);
     }
-    
-    private native void set(long tstate, long module, String name, float v)
-        throws JepException;
 
+    private native void set(long tstate, long module, String name, float v)
+            throws JepException;
 
     // -------------------------------------------------- set arrays
 
     /**
      * Describe <code>set</code> method here.
+     * 
+     * @deprecated Use setAttr(String, Object) instead.
      *
-     * @param name a <code>String</code> value
-     * @param v a <code>boolean[]</code> value
-     * @exception JepException if an error occurs
+     * @param name
+     *            a <code>String</code> value
+     * @param v
+     *            a <code>boolean[]</code> value
+     * @exception JepException
+     *                if an error occurs
      */
+    @Deprecated
     public void set(String name, boolean[] v) throws JepException {
         isValid();
         set(pointer.tstate, pointer.pyObject, name, v);
     }
 
     private native void set(long tstate, long module, String name, boolean[] v)
-        throws JepException;
-
+            throws JepException;
 
     /**
      * Describe <code>set</code> method here.
+     * 
+     * @deprecated Use setAttr(String, Object) instead.
      *
-     * @param name a <code>String</code> value
-     * @param v an <code>int[]</code> value
-     * @exception JepException if an error occurs
+     * @param name
+     *            a <code>String</code> value
+     * @param v
+     *            an <code>int[]</code> value
+     * @exception JepException
+     *                if an error occurs
      */
+    @Deprecated
     public void set(String name, int[] v) throws JepException {
         isValid();
         set(pointer.tstate, pointer.pyObject, name, v);
     }
 
     private native void set(long tstate, long module, String name, int[] v)
-        throws JepException;
-
+            throws JepException;
 
     /**
      * Describe <code>set</code> method here.
+     * 
+     * @deprecated Use setAttr(String, Object) instead.
      *
-     * @param name a <code>String</code> value
-     * @param v a <code>short[]</code> value
-     * @exception JepException if an error occurs
+     * @param name
+     *            a <code>String</code> value
+     * @param v
+     *            a <code>short[]</code> value
+     * @exception JepException
+     *                if an error occurs
      */
+    @Deprecated
     public void set(String name, short[] v) throws JepException {
         isValid();
         set(pointer.tstate, pointer.pyObject, name, v);
     }
 
     private native void set(long tstate, long module, String name, short[] v)
-        throws JepException;
-
+            throws JepException;
 
     /**
      * Describe <code>set</code> method here.
+     * 
+     * @deprecated Use setAttr(String, Object) instead.
      *
-     * @param name a <code>String</code> value
-     * @param v a <code>byte[]</code> value
-     * @exception JepException if an error occurs
+     * @param name
+     *            a <code>String</code> value
+     * @param v
+     *            a <code>byte[]</code> value
+     * @exception JepException
+     *                if an error occurs
      */
+    @Deprecated
     public void set(String name, byte[] v) throws JepException {
         isValid();
         set(pointer.tstate, pointer.pyObject, name, v);
     }
 
     private native void set(long tstate, long module, String name, byte[] v)
-        throws JepException;
-
+            throws JepException;
 
     /**
      * Describe <code>set</code> method here.
+     * 
+     * @deprecated Use setAttr(String, Object) instead.
      *
-     * @param name a <code>String</code> value
-     * @param v a <code>long[]</code> value
-     * @exception JepException if an error occurs
+     * @param name
+     *            a <code>String</code> value
+     * @param v
+     *            a <code>long[]</code> value
+     * @exception JepException
+     *                if an error occurs
      */
+    @Deprecated
     public void set(String name, long[] v) throws JepException {
         isValid();
         set(pointer.tstate, pointer.pyObject, name, v);
     }
 
     private native void set(long tstate, long module, String name, long[] v)
-        throws JepException;
-
+            throws JepException;
 
     /**
      * Describe <code>set</code> method here.
+     * 
+     * @deprecated Use setAttr(String, Object) instead.
      *
-     * @param name a <code>String</code> value
-     * @param v a <code>double[]</code> value
-     * @exception JepException if an error occurs
+     * @param name
+     *            a <code>String</code> value
+     * @param v
+     *            a <code>double[]</code> value
+     * @exception JepException
+     *                if an error occurs
      */
+    @Deprecated
     public void set(String name, double[] v) throws JepException {
         isValid();
         set(pointer.tstate, pointer.pyObject, name, v);
     }
 
     private native void set(long tstate, long module, String name, double[] v)
-        throws JepException;
-
+            throws JepException;
 
     /**
      * Describe <code>set</code> method here.
+     * 
+     * @deprecated Use setAttr(String, Object) instead.
      *
-     * @param name a <code>String</code> value
-     * @param v a <code>float[]</code> value
-     * @exception JepException if an error occurs
+     * @param name
+     *            a <code>String</code> value
+     * @param v
+     *            a <code>float[]</code> value
+     * @exception JepException
+     *                if an error occurs
      */
+    @Deprecated
     public void set(String name, float[] v) throws JepException {
         isValid();
         set(pointer.tstate, pointer.pyObject, name, v);
     }
 
     private native void set(long tstate, long module, String name, float[] v)
-        throws JepException;
+            throws JepException;
 
     /**
      * Access an attribute of the wrapped Python Object, similar to the Python
@@ -456,8 +543,7 @@ public class PyObject {
     }
 
     private native Object getAttr(long tstate, long pyObject, String attr_name,
-            Class<?> clazz)
-        throws JepException;
+            Class<?> clazz) throws JepException;
 
     /**
      * Sets an attribute on the wrapped Python object, similar to the Python
@@ -477,8 +563,8 @@ public class PyObject {
         setAttr(pointer.tstate, pointer.pyObject, attr_name, o);
     }
 
-    private native void setAttr(long tstate, long pyObject,
-            String attr_name, Object o);
+    private native void setAttr(long tstate, long pyObject, String attr_name,
+            Object o);
 
     /**
      * Deletes an attribute on the wrapped Python object, similar to the Python
@@ -496,37 +582,41 @@ public class PyObject {
 
     private native void delAttr(long tstate, long pyObject, String attr_name);
 
-
     /**
      * Create a module.
      *
      * <b>Internal use only.</b>
      *
-     * @param tstate a <code>long</code> value
-     * @param onModule a <code>long</code> value
-     * @param name a <code>String</code> value
+     * @param tstate
+     *            a <code>long</code> value
+     * @param onModule
+     *            a <code>long</code> value
+     * @param name
+     *            a <code>String</code> value
      * @return a <code>long</code> value
-     * @exception JepException if an error occurs
+     * @exception JepException
+     *                if an error occurs
      */
-    protected native long createModule(long tstate,
-                                       long onModule,
-                                       String name) throws JepException;
-
+    protected native long createModule(long tstate, long onModule, String name)
+            throws JepException;
 
     /**
      * Get a string value from a module.
      *
      * <b>Internal use only.</b>
      *
-     * @param tstate a <code>long</code> value
-     * @param onModule a <code>long</code> value
-     * @param str a <code>String</code> value
+     * @param tstate
+     *            a <code>long</code> value
+     * @param onModule
+     *            a <code>long</code> value
+     * @param str
+     *            a <code>String</code> value
      * @return an <code>Object</code> value
-     * @exception JepException if an error occurs
+     * @exception JepException
+     *                if an error occurs
      */
-    protected native Object getValue(long tstate,
-                                     long onModule,
-                                     String str) throws JepException;
+    protected native Object getValue(long tstate, long onModule, String str)
+            throws JepException;
 
     @Override
     public boolean equals(Object obj) {

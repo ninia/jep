@@ -25,21 +25,21 @@
 package jep;
 
 import java.io.File;
-
-import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
- * Utility class for finding the jep native library for JNI. {@link Jep} will
+ * Utility class for finding the Jep native library for JNI. {@link Jep} will
  * try to load the library using a simple {@link System#loadLibrary(String)}
  * however if that fails then this class will be used to try to find the
  * location of the library.
  * 
- * The jep library is typically distributed inside the jep python module, so
- * this class attempts to find a jep module with the python library inside of
+ * The Jep library is typically distributed inside the jep Python module, so
+ * this class attempts to find a jep module with the native library inside of
  * it. In order to find the module this class will attempt to mimic the process
- * python uses to build the path and it will search through the same
- * directories. Since this is jsut a mirror of what python is doing, if there
- * are changes to python it may require changes here. Python also has alot of
+ * Python uses to build the path and it will search through the same
+ * directories. Since this is just a mirror of what Python is doing, if there
+ * are changes to Python it may require changes here. Python also has a lot of
  * specialization for specific operating systems. Rather than try to handle each
  * case the same, this class will check in any location that might be valid on
  * any operating system and assumes that inappropriate locations will simply not
@@ -59,7 +59,7 @@ final class LibraryLocator {
     private final boolean noUserSite;
 
     private final String pythonHome;
-    
+
     private LibraryLocator(PyConfig pyConfig) {
         if (pyConfig != null) {
             ignoreEnv = pyConfig.ignoreEnvironmentFlag != 0
@@ -74,7 +74,7 @@ final class LibraryLocator {
             noUserSite = false;
             pythonHome = null;
         }
-        
+
         String libraryName = System.mapLibraryName("jep");
         if (libraryName.endsWith(".dylib")) {
             /*

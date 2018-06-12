@@ -28,9 +28,9 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
+import jep.python.MemoryManager;
 import jep.python.PyModule;
 import jep.python.PyObject;
-import jep.python.MemoryManager;
 
 /**
  * <p>
@@ -51,7 +51,6 @@ import jep.python.MemoryManager;
  * prevent memory leaks.
  * </p>
  * 
- * @author Mike Johnson
  */
 public final class Jep implements AutoCloseable {
 
@@ -355,8 +354,8 @@ public final class Jep implements AutoCloseable {
      * Invokes a Python function.
      * 
      * @param name
-     *            a Python function name in globals dict or the name of a
-     *            global object and method using dot notation.
+     *            a Python function name in globals dict or the name of a global
+     *            object and method using dot notation.
      * @param args
      *            args to pass to the function in order
      * @return an <code>Object</code> value
@@ -376,8 +375,8 @@ public final class Jep implements AutoCloseable {
      * Invokes a Python function.
      * 
      * @param name
-     *            a Python function name in globals dict or the name of a
-     *            global object and method using dot notation.
+     *            a Python function name in globals dict or the name of a global
+     *            object and method using dot notation.
      * @param kwargs
      *            a Map of keyword args
      * @return an <Object> value
@@ -549,8 +548,8 @@ public final class Jep implements AutoCloseable {
      * </pre>
      * 
      * @param str
-     *            the name of the Python variable to get from the
-     *            interpreter's global scope
+     *            the name of the Python variable to get from the interpreter's
+     *            global scope
      * @return an <code>Object</code> value
      * @exception JepException
      *                if an error occurs
@@ -560,13 +559,13 @@ public final class Jep implements AutoCloseable {
 
         return getValue(this.tstate, str, Object.class);
     }
-    
+
     /**
-     * Like {@link #getValue(String)} but allows specifying the return type.
-     * If Jep cannot convert the variable to the specified type then a
-     * JepException is thrown. This can be used to safely ensure that the
-     * return value is an expected type. The following table describes what
-     * conversions are currently possible.
+     * Like {@link #getValue(String)} but allows specifying the return type. If
+     * Jep cannot convert the variable to the specified type then a JepException
+     * is thrown. This can be used to safely ensure that the return value is an
+     * expected type. The following table describes what conversions are
+     * currently possible.
      *
      * <table border="1">
      *  <tr>
@@ -625,22 +624,23 @@ public final class Jep implements AutoCloseable {
      * </table>
      *
      * @param str
-     *            the name of the Python variable to get from the
-     *            interpreter's global scope
+     *            the name of the Python variable to get from the interpreter's
+     *            global scope
      * @param clazz
      *            the Java class of the return type.
      * @return a Java version of the variable
      * @exception JepException
      *                if an error occurs
      * @since 3.8
-     */ 
+     */
     public <T> T getValue(String str, Class<T> clazz) throws JepException {
         isValidThread();
 
         return clazz.cast(getValue(this.tstate, str, clazz));
     }
 
-    private native Object getValue(long tstate, String str, Class<?> clazz) throws JepException;
+    private native Object getValue(long tstate, String str, Class<?> clazz)
+            throws JepException;
 
     /**
      * Retrieves a Python string object as a Java byte[].

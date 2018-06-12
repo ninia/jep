@@ -29,9 +29,12 @@ import jep.JepException;
 
 /**
  * PyClass.java - encapsulates a pointer to a class object
- *
+ * 
+ * @deprecated Use PyObject.getAttr(...) and PyObject.setAttr(...) instead.
+ * 
  * @author Mike Johnson
  */
+@Deprecated
 public class PyClass extends PyObject {
 
     /**
@@ -39,8 +42,10 @@ public class PyClass extends PyObject {
      * 
      * @param tstate
      *            a <code>long</code> value
-     * @param obj the address of the python class
-     * @param jep the jep instance which created this
+     * @param obj
+     *            the address of the python class
+     * @param jep
+     *            the jep instance which created this
      * @exception JepException
      *                if an error occurs
      */

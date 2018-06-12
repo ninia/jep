@@ -101,8 +101,11 @@ public class JepException extends Exception {
      * Construct with the address of a python exception type. This is for
      * internal use only.
      *
-     * @param s error message
-     * @param pythonType the address of the type of the python exception that triggered this exception.
+     * @param s
+     *            error message
+     * @param pythonType
+     *            the address of the type of the python exception that triggered
+     *            this exception
      */
     protected JepException(String s, long pythonType) {
         super(s);

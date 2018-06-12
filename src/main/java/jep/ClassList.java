@@ -30,7 +30,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -77,7 +86,7 @@ public class ClassList implements ClassEnquirer {
         Queue<String> queue = new LinkedList<>();
         Set<String> seen = new HashSet<>();
 
-        while(tok.hasMoreTokens()) {
+        while (tok.hasMoreTokens()) {
             String el = tok.nextToken();
             queue.add(el);
             seen.add(el);
@@ -101,14 +110,16 @@ public class ClassList implements ClassEnquirer {
                 // add entries from manifest to check later
                 Manifest manifest = jfile.getManifest();
                 if (manifest != null) {
-                    String classpath = manifest.getMainAttributes().getValue(Attributes.Name.CLASS_PATH);
+                    String classpath = manifest.getMainAttributes()
+                            .getValue(Attributes.Name.CLASS_PATH);
 
-                    if(classpath != null) {
+                    if (classpath != null) {
                         String[] relativePaths = classpath.split(" ");
 
-                        for(String relativePath : relativePaths) {
-                            String path = file.getParent() + File.separator + relativePath;
-                            if(!seen.contains(path)) {
+                        for (String relativePath : relativePaths) {
+                            String path = file.getParent() + File.separator
+                                    + relativePath;
+                            if (!seen.contains(path)) {
                                 queue.add(path);
                                 seen.add(path);
                             }
@@ -203,9 +214,9 @@ public class ClassList implements ClassEnquirer {
         String rsc = "jep/classlist_";
         if (version.startsWith("10.")) {
             rsc += "10";
-        }else if (version.startsWith("9.")) {
+        } else if (version.startsWith("9.")) {
             rsc += "9";
-        }else if (version.startsWith("1.8")) {
+        } else if (version.startsWith("1.8")) {
             rsc += "8";
         } else {
             rsc += "7";

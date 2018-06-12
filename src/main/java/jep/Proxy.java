@@ -46,9 +46,10 @@ public class Proxy extends java.lang.reflect.Proxy {
         super(h);
     }
 
-    private static Object newDirectProxyInstance(long tstate, long ltarget, Jep jep,
-            ClassLoader loader, Class<?> targetInterface) {
-        return newProxyInstance(tstate, ltarget, jep, loader, new String[] { targetInterface.getName() }, true);
+    private static Object newDirectProxyInstance(long tstate, long ltarget,
+            Jep jep, ClassLoader loader, Class<?> targetInterface) {
+        return newProxyInstance(tstate, ltarget, jep, loader,
+                new String[] { targetInterface.getName() }, true);
     }
 
     /**
@@ -82,14 +83,17 @@ public class Proxy extends java.lang.reflect.Proxy {
      */
     public static Object newProxyInstance(long tstate, long ltarget, Jep jep,
             ClassLoader loader, String[] interfaces) {
-        return newProxyInstance(tstate, ltarget, jep, loader, interfaces, false);
+        return newProxyInstance(tstate, ltarget, jep, loader, interfaces,
+                false);
     }
 
     private static Object newProxyInstance(long tstate, long ltarget, Jep jep,
-            ClassLoader loader, String[] interfaces, boolean functionalInterface) {
+            ClassLoader loader, String[] interfaces,
+            boolean functionalInterface) {
         InvocationHandler ih = null;
         try {
-            ih = new jep.python.InvocationHandler(tstate, ltarget, jep, functionalInterface);
+            ih = new jep.python.InvocationHandler(tstate, ltarget, jep,
+                    functionalInterface);
         } catch (JepException e) {
             throw new IllegalArgumentException(e);
         }

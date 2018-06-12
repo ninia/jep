@@ -34,7 +34,7 @@ import jep.JepException;
  * Java as a PyObject or its subclasses.
  * 
  *
- * @author njensen
+ * @author Nate Jensen
  * @since 3.8
  */
 public class PyPointer extends WeakReference<PyObject> {
@@ -60,8 +60,8 @@ public class PyPointer extends WeakReference<PyObject> {
      *            the pointer to the PyObject*
      * @throws JepException
      */
-    protected PyPointer(PyObject referrent, Jep parent,
-            long tstate, long pyObject) throws JepException {
+    protected PyPointer(PyObject referrent, Jep parent, long tstate,
+            long pyObject) throws JepException {
         super(referrent, parent.getMemoryManager().getReferenceQueue());
         this.tstate = tstate;
         this.pyObject = pyObject;
