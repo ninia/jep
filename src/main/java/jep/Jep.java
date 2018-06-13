@@ -379,8 +379,9 @@ public final class Jep implements AutoCloseable {
      *            object and method using dot notation.
      * @param kwargs
      *            a Map of keyword args
-     * @return an <Object> value
+     * @return an {@link Object} value
      * @throws JepException
+     *             if an error occurs
      * @since 3.8
      */
     public Object invoke(String name, Map<String, Object> kwargs)
@@ -402,8 +403,9 @@ public final class Jep implements AutoCloseable {
      *            args to pass to the function in order
      * @param kwargs
      *            a Map of keyword args
-     * @return an <Object> value
+     * @return an {@link Object} value
      * @throws JepException
+     *             if an error occurs
      * @since 3.8
      */
     public Object invoke(String name, Object[] args, Map<String, Object> kwargs)
@@ -559,6 +561,7 @@ public final class Jep implements AutoCloseable {
      * currently possible.
      *
      * <table border="1">
+     *  <caption>The valid classes for Python to Java conversions</caption>
      *  <tr>
      *   <th>Python Class</th>
      *   <th>Java Classes</th>
@@ -614,6 +617,8 @@ public final class Jep implements AutoCloseable {
      *  </tr>
      * </table>
      *
+     * @param <T>
+     *            the generic type of the return type
      * @param str
      *            the name of the Python variable to get from the interpreter's
      *            global scope

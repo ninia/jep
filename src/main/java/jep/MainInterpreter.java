@@ -85,8 +85,9 @@ public final class MainInterpreter implements AutoCloseable {
      * Creates the MainInterpreter instance that will be used by Jep. This
      * should be called from all Jep constructors to ensure the native module
      * has been loaded and initialized before a valid Jep instance is produced.
-     * 
+     * @return the main interpreter 
      * @throws Error
+     *                if an error occurs
      */
     protected synchronized static MainInterpreter getMainInterpreter()
             throws Error {
@@ -113,6 +114,7 @@ public final class MainInterpreter implements AutoCloseable {
      * thread as the main interpreter.
      * 
      * @throws Error
+     *             if an error occurs
      */
     protected void initialize() throws Error {
         try {
@@ -189,6 +191,8 @@ public final class MainInterpreter implements AutoCloseable {
      * 
      * @param module
      *            the name of the module to import
+     * @throws JepException
+     *             if an error occurs
      */
     public void sharedImport(String module) throws JepException {
         try {

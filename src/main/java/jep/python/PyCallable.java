@@ -34,12 +34,9 @@ import jep.JepException;
  * 
  * These objects can be instance methods, functions, lambdas, or any Python
  * object implementing the __call__ method.
- * 
- * @see "https://docs.python.org/2/reference/expressions.html#calls"
- * @see "https://docs.python.org/3/reference/expressions.html#calls"
- * 
+ * <p>
  * Instance Method Example:
- * <code>
+ * <pre>{@code
  *     jep.eval("class Example(object):\n" +
  *              "    def __init__(self):\n" +
  *              "        pass\n" +
@@ -49,16 +46,18 @@ import jep.JepException;
  *     PyObject pyobj = jep.getValue("instance", PyObject.class);
  *     PyCallable pyHelloWorld = PyObject.getAttr("helloWorld", PyCallable.class);
  *     String result = (String) pyHelloWorld.call();
- * </code>
- * 
+ * }</pre>
+ * <p>
  * Function Example:
- * <code>
+ * <pre>{@code
  *     jep.eval("def hello(arg):\n" +
  *              "    return 'Hello ' +  str(arg)");
  *     PyCallable pyHello = jep.getValue("hello", PyCallable.class);
  *     String result = (String) pyHello.call("World");
- * </code>
+ * }</pre>
  * 
+ * @see <a href="https://docs.python.org/2/reference/expressions.html#calls">Python 2 Call Expression</a>
+ * @see <a href="https://docs.python.org/3/reference/expressions.html#calls">Python 3 Call Expression</a>
  * @author Nate Jensen
  * @since 3.8
  */
@@ -73,8 +72,9 @@ public class PyCallable extends PyObject {
      * 
      * @param args
      *            args to pass to the function in order
-     * @return an <Object> value
+     * @return an {@link Object} value
      * @throws JepException
+     *             if an error occurs
      */
     public Object call(Object... args) throws JepException {
         isValid();
@@ -86,8 +86,9 @@ public class PyCallable extends PyObject {
      * 
      * @param kwargs
      *            a Map of keyword args
-     * @return an <Object> value
+     * @return an {@link Object} value
      * @throws JepException
+     *             if an error occurs
      */
     public Object call(Map<String, Object> kwargs) throws JepException {
         isValid();
@@ -101,8 +102,9 @@ public class PyCallable extends PyObject {
      *            args to pass to the function in order
      * @param kwargs
      *            a Map of keyword args
-     * @return an <Object> value
+     * @return an {@link Object} value
      * @throws JepException
+     *             if an error occurs
      */
     public Object call(Object[] args, Map<String, Object> kwargs)
             throws JepException {

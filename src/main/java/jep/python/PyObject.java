@@ -77,7 +77,7 @@ public class PyObject implements AutoCloseable {
      *             method signature may change.
      * 
      * @throws JepException
-     *             if an error occurs
+     *             if it is not safe to use this python object
      */
     @Deprecated
     public void isValid() throws JepException {
@@ -89,6 +89,7 @@ public class PyObject implements AutoCloseable {
      * need a RuntimeException.
      * 
      * @throws IllegalStateException
+     *             if it is not safe to use this python object
      */
     protected void isValidRuntime() throws IllegalStateException {
         try {
@@ -528,6 +529,8 @@ public class PyObject implements AutoCloseable {
      * type, the supported types are the same as
      * {@link Jep#getValue(String, Class)}.
      * 
+     * @param <T>
+     *            the generic type of the return type
      * @param attr_name
      *            the attribute name
      * @param clazz
@@ -556,6 +559,7 @@ public class PyObject implements AutoCloseable {
      * @param o
      *            the object to set as an attribute
      * @throws JepException
+     *                if an error occurs
      * 
      * @since 3.8
      */
@@ -575,6 +579,7 @@ public class PyObject implements AutoCloseable {
      * @param attr_name
      *            the name of the attribute to be deleted
      * @throws JepException
+     *                if an error occurs
      */
     public void delAttr(String attr_name) throws JepException {
         isValid();

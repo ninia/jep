@@ -227,6 +227,7 @@ public class JepConfig {
      * 
      * @return a new Jep instance
      * @throws JepException
+     *             if an error occurs
      * @since 3.8
      */
     public Jep createJep() throws JepException {
@@ -241,6 +242,7 @@ public class JepConfig {
      * Jep.
      *
      * @throws JepException
+     *             if an error occurs
      * @since 3.8
      */
     public void validate() throws JepException {

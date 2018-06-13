@@ -30,7 +30,7 @@ import jep.JepException;
 /**
  * PyClass.java - encapsulates a pointer to a class object
  * 
- * @deprecated Use {@link #PyObject.getAttr(String)} and {@link #PyObject.setAttr(String, Object)} instead.
+ * @deprecated Use {@link PyObject#getAttr(String)} and {@link PyObject#setAttr(String, Object)} instead.
  * 
  * @author Mike Johnson
  */

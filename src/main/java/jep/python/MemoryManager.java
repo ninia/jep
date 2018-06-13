@@ -35,7 +35,7 @@ import jep.JepException;
 /**
  * Manages the native memory associated with PyObjects in a Jep instance.
  * 
- * @see "http://www.oracle.com/technetwork/articles/java/finalization-137655.html"
+ * @see <a href="http://www.oracle.com/technetwork/articles/java/finalization-137655.html">How to Handle Java Finalization's Memory-Retention Issues</a>
  * @author Nate Jensen
  * @since 3.8
  */
@@ -64,6 +64,7 @@ public final class MemoryManager {
      * Jep instance.
      * 
      * @throws JepException
+     *                if an error occurs
      */
     public void cleanupReferences() throws JepException {
         Iterator<PyPointer> itr = pointers.iterator();
@@ -84,6 +85,7 @@ public final class MemoryManager {
      * developer did not explicitly free the memory with PyObject.close().
      * 
      * @throws JepException
+     *                if an error occurs
      */
     public void cleanupWeakReferences() throws JepException {
         PyPointer p = (PyPointer) refQueue.poll();
