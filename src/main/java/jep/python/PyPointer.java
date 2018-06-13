@@ -45,7 +45,7 @@ public class PyPointer extends WeakReference<PyObject> {
 
     protected final MemoryManager memoryManager;
 
-    protected boolean disposed;
+    protected volatile boolean disposed;
 
     /**
      * Constructor
@@ -85,6 +85,10 @@ public class PyPointer extends WeakReference<PyObject> {
             memoryManager.removeReference(this);
             decref(tstate, pyObject);
         }
+    }
+
+    protected boolean isDisposed() {
+        return disposed;
     }
 
     private native void decref(long tstate, long pyObject) throws JepException;

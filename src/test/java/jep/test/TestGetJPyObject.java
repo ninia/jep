@@ -200,7 +200,61 @@ public class TestGetJPyObject {
         }
     }
 
-    public static void main(String[] args) throws JepException {
+    public static void testThreading(Jep jep) throws JepException, InterruptedException {
+        final PyObject o = jep.getValue("object()", PyObject.class);
+        final boolean[] exception = { false };
+        Thread t = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    o.getAttr("__doc__");
+                } catch(JepException e){
+                    exception[0] = true;
+                }
+            }
+        };
+        t.start();
+        t.join();
+        if (!exception[0]) {
+            throw new IllegalStateException(
+                    "JPyObject allowed access on wrong thread");
+
+        }
+    }
+
+    public static void testClosing(Jep jep) throws JepException {
+        PyObject leaky = null;
+        try (PyObject o = jep.getValue("object()", PyObject.class)) {
+            leaky = o;
+        }
+        try {
+            leaky.getAttr("__doc__");
+            throw new IllegalStateException(
+                    "JPyObject allowed access on wrong thread");
+        } catch(JepException e){
+            /*
+             * We want an exception as Jep should not have allowed access.
+             */
+        }
+    }
+
+    public static void testClosingJep() throws JepException {
+        PyObject leaky = null;
+        try (Jep jep = new Jep()) {
+            leaky = jep.getValue("object()", PyObject.class);
+        }
+        try {
+            leaky.getAttr("__doc__");
+            throw new IllegalStateException(
+                    "JPyObject allowed access on wrong thread");
+        } catch(JepException e){
+            /*
+             * We want an exception as Jep should not have allowed access.
+             */
+        }
+    }
+
+    public static void main(String[] args) throws Exception {
         try (Jep jep = new Jep()) {
             testIdentity(jep);
             testGetAttr(jep);
@@ -210,7 +264,10 @@ public class TestGetJPyObject {
             testToString(jep);
             testEquals(jep);
             testHashCode(jep);
+            testThreading(jep);
+            testClosing(jep);
         }
+        testClosingJep();
     }
 
 }

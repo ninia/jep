@@ -82,6 +82,9 @@ public class PyObject implements AutoCloseable {
     @Deprecated
     public void isValid() throws JepException {
         jep.isValidThread();
+        if (this.pointer.isDisposed()) {
+            throw new JepException(getClass().getSimpleName() + " has been closed."); 
+        }
     }
 
     /**
