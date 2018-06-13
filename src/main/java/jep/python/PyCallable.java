@@ -32,25 +32,31 @@ import jep.JepException;
 /**
  * A Java object that wraps a pointer to a Python callable.
  * 
- * These objects are frequently instance methods bound to Python's self object
- * where the self object is this Java PyObject. They can also be Python objects
- * that implement the method __call__.
+ * These objects can be instance methods, functions, lambdas, or any Python
+ * object implementing the __call__ method.
  * 
  * @see "https://docs.python.org/2/reference/expressions.html#calls"
  * @see "https://docs.python.org/3/reference/expressions.html#calls"
  * 
- *      Example: <code>
- *     Jep jep = new Jep();
- *     jep.eval("class example(object):\n" +
+ * Instance Method Example:
+ * <code>
+ *     jep.eval("class Example(object):\n" +
  *              "    def __init__(self):\n" +
  *              "        pass\n" +
  *              "    def helloWorld(self):\n" +
  *              "        return 'Hello World'\n");
- *     jep.eval("instance = example()");
+ *     jep.eval("instance = Example()");
  *     PyObject pyobj = jep.getValue("instance", PyObject.class);
  *     PyCallable pyHelloWorld = PyObject.getAttr("helloWorld", PyCallable.class);
  *     String result = (String) pyHelloWorld.call();
- *     System.out.println(result);
+ * </code>
+ * 
+ * Function Example:
+ * <code>
+ *     jep.eval("def hello(arg):\n" +
+ *              "    return 'Hello ' +  str(arg)");
+ *     PyCallable pyHello = jep.getValue("hello", PyCallable.class);
+ *     String result = (String) pyHello.call("World");
  * </code>
  * 
  * @author Nate Jensen

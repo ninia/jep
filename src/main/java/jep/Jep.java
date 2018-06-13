@@ -538,15 +538,6 @@ public final class Jep implements AutoCloseable {
      * probably change in the future and should not be relied upon.
      * </p>
      * 
-     * <pre>
-     * Python is pretty picky about what it accepts here. The general syntax
-     * <code>
-     * jep.eval("a = 5");
-     * String a = (String) jep.getValue("a");
-     * </code>
-     * will work.
-     * </pre>
-     * 
      * @param str
      *            the name of the Python variable to get from the interpreter's
      *            global scope

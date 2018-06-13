@@ -30,7 +30,7 @@ import jep.JepException;
 /**
  * PyModule.java - encapsulates a pointer to a PyModule
  * 
- * @deprecated Use PyObject.getAttr(...) and PyObject.setAttr(...) instead.
+ * @deprecated Use {@link #PyObject.getAttr(String)} and {@link #PyObject.setAttr(String, Object)} instead.
  *
  * @author Mike Johnson
  */
@@ -70,10 +70,10 @@ public class PyModule extends PyObject {
     }
 
     /**
-     * Retrieves a value from python. If the result is not a java object, the
+     * Retrieves a value from python. If the result is not a Java object, the
      * implementation currently returns a String.
      *
-     * Python is pretty picky about what it excepts here. The general syntax:
+     * Python is pretty picky about what it expects here. The general syntax:
      * <blockquote>
      * 
      * <pre>

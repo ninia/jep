@@ -73,7 +73,8 @@ public class PyObject implements AutoCloseable {
     /**
      * Check if PyObject is valid.
      * 
-     * @deprecated In a future release this method will not be public.
+     * @deprecated In a future release this method will not be public and/or its
+     *             method signature may change.
      * 
      * @throws JepException
      *             if an error occurs
@@ -136,7 +137,7 @@ public class PyObject implements AutoCloseable {
     /**
      * Describe <code>set</code> method here.
      * 
-     * @deprecated Use setAttr(String, Object) instead.
+     * @deprecated Use {@link #setAttr(String, Object)} instead.
      *
      * @param name
      *            a <code>String</code> value
@@ -157,7 +158,7 @@ public class PyObject implements AutoCloseable {
     /**
      * Describe <code>set</code> method here.
      * 
-     * @deprecated Use setAttr(String, Object) instead.
+     * @deprecated Use {@link #setAttr(String, Object)} instead.
      *
      * @param name
      *            a <code>String</code> value
@@ -178,7 +179,7 @@ public class PyObject implements AutoCloseable {
     /**
      * Describe <code>set</code> method here.
      * 
-     * @deprecated Use setAttr(String, Object) instead.
+     * @deprecated Use {@link #setAttr(String, Object)} instead.
      *
      * @param name
      *            a <code>String</code> value
@@ -200,7 +201,7 @@ public class PyObject implements AutoCloseable {
     /**
      * Describe <code>set</code> method here.
      * 
-     * @deprecated Use setAttr(String, Object) instead.
+     * @deprecated Use {@link #setAttr(String, Object)} instead.
      *
      * @param name
      *            a <code>String</code> value
@@ -218,7 +219,7 @@ public class PyObject implements AutoCloseable {
     /**
      * Describe <code>set</code> method here.
      * 
-     * @deprecated Use setAttr(String, Object) instead.
+     * @deprecated Use {@link #setAttr(String, Object)} instead.
      *
      * @param name
      *            a <code>String</code> value
@@ -239,7 +240,7 @@ public class PyObject implements AutoCloseable {
     /**
      * Describe <code>set</code> method here.
      * 
-     * @deprecated Use setAttr(String, Object) instead.
+     * @deprecated Use {@link #setAttr(String, Object)} instead.
      *
      * @param name
      *            a <code>String</code> value
@@ -257,7 +258,7 @@ public class PyObject implements AutoCloseable {
     /**
      * Describe <code>set</code> method here.
      * 
-     * @deprecated Use setAttr(String, Object) instead.
+     * @deprecated Use {@link #setAttr(String, Object)} instead.
      *
      * @param name
      *            a <code>String</code> value
@@ -276,7 +277,7 @@ public class PyObject implements AutoCloseable {
     /**
      * Describe <code>set</code> method here.
      * 
-     * @deprecated Use setAttr(String, Object) instead.
+     * @deprecated Use {@link #setAttr(String, Object)} instead.
      *
      * @param name
      *            a <code>String</code> value
@@ -294,7 +295,7 @@ public class PyObject implements AutoCloseable {
     /**
      * Describe <code>set</code> method here.
      * 
-     * @deprecated Use setAttr(String, Object) instead.
+     * @deprecated Use {@link #setAttr(String, Object)} instead.
      *
      * @param name
      *            a <code>String</code> value
@@ -315,7 +316,7 @@ public class PyObject implements AutoCloseable {
     /**
      * Describe <code>set</code> method here.
      * 
-     * @deprecated Use setAttr(String, Object) instead.
+     * @deprecated Use {@link #setAttr(String, Object)} instead.
      *
      * @param name
      *            a <code>String</code> value
@@ -336,7 +337,7 @@ public class PyObject implements AutoCloseable {
     /**
      * Describe <code>set</code> method here.
      * 
-     * @deprecated Use setAttr(String, Object) instead.
+     * @deprecated Use {@link #setAttr(String, Object)} instead.
      *
      * @param name
      *            a <code>String</code> value
@@ -359,7 +360,7 @@ public class PyObject implements AutoCloseable {
     /**
      * Describe <code>set</code> method here.
      * 
-     * @deprecated Use setAttr(String, Object) instead.
+     * @deprecated Use {@link #setAttr(String, Object)} instead.
      *
      * @param name
      *            a <code>String</code> value
@@ -380,7 +381,7 @@ public class PyObject implements AutoCloseable {
     /**
      * Describe <code>set</code> method here.
      * 
-     * @deprecated Use setAttr(String, Object) instead.
+     * @deprecated Use {@link #setAttr(String, Object)} instead.
      *
      * @param name
      *            a <code>String</code> value
@@ -401,7 +402,7 @@ public class PyObject implements AutoCloseable {
     /**
      * Describe <code>set</code> method here.
      * 
-     * @deprecated Use setAttr(String, Object) instead.
+     * @deprecated Use {@link #setAttr(String, Object)} instead.
      *
      * @param name
      *            a <code>String</code> value
@@ -422,7 +423,7 @@ public class PyObject implements AutoCloseable {
     /**
      * Describe <code>set</code> method here.
      * 
-     * @deprecated Use setAttr(String, Object) instead.
+     * @deprecated Use {@link #setAttr(String, Object)} instead.
      *
      * @param name
      *            a <code>String</code> value
@@ -443,7 +444,7 @@ public class PyObject implements AutoCloseable {
     /**
      * Describe <code>set</code> method here.
      * 
-     * @deprecated Use setAttr(String, Object) instead.
+     * @deprecated Use {@link #setAttr(String, Object)} instead.
      *
      * @param name
      *            a <code>String</code> value
@@ -464,7 +465,7 @@ public class PyObject implements AutoCloseable {
     /**
      * Describe <code>set</code> method here.
      * 
-     * @deprecated Use setAttr(String, Object) instead.
+     * @deprecated Use {@link #setAttr(String, Object)} instead.
      *
      * @param name
      *            a <code>String</code> value
@@ -485,7 +486,7 @@ public class PyObject implements AutoCloseable {
     /**
      * Describe <code>set</code> method here.
      * 
-     * @deprecated Use setAttr(String, Object) instead.
+     * @deprecated Use {@link #setAttr(String, Object)} instead.
      *
      * @param name
      *            a <code>String</code> value
