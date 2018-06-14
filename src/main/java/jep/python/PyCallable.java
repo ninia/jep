@@ -77,7 +77,7 @@ public class PyCallable extends PyObject {
      *             if an error occurs
      */
     public Object call(Object... args) throws JepException {
-        isValid();
+        checkValid();
         return call(pointer.tstate, pointer.pyObject, args, null);
     }
 
@@ -91,7 +91,7 @@ public class PyCallable extends PyObject {
      *             if an error occurs
      */
     public Object call(Map<String, Object> kwargs) throws JepException {
-        isValid();
+        checkValid();
         return call(pointer.tstate, pointer.pyObject, null, kwargs);
     }
 
@@ -108,7 +108,7 @@ public class PyCallable extends PyObject {
      */
     public Object call(Object[] args, Map<String, Object> kwargs)
             throws JepException {
-        isValid();
+        checkValid();
         return call(pointer.tstate, pointer.pyObject, args, kwargs);
     }
 

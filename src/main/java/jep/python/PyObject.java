@@ -81,6 +81,16 @@ public class PyObject implements AutoCloseable {
      */
     @Deprecated
     public void isValid() throws JepException {
+        checkValid();
+    }
+
+    /**
+     * Check if PyObject is valid.
+     * 
+     * @throws JepException
+     *             if it is not safe to use this python object
+     */
+    protected void checkValid() throws JepException {
         jep.isValidThread();
         if (this.pointer.isDisposed()) {
             throw new JepException(getClass().getSimpleName() + " has been closed."); 
@@ -94,9 +104,9 @@ public class PyObject implements AutoCloseable {
      * @throws IllegalStateException
      *             if it is not safe to use this python object
      */
-    protected void isValidRuntime() throws IllegalStateException {
+    protected void checkValidRuntime() throws IllegalStateException {
         try {
-            isValid();
+            checkValid();
         } catch (JepException e) {
             throw new IllegalStateException(e);
         }
@@ -525,7 +535,7 @@ public class PyObject implements AutoCloseable {
      * @since 3.8
      */
     public Object getAttr(String attr_name) throws JepException {
-        isValid();
+        checkValid();
         return getAttr(pointer.tstate, pointer.pyObject, attr_name,
                 Object.class);
     }
@@ -548,7 +558,7 @@ public class PyObject implements AutoCloseable {
      * @since 3.8
      */
     public <T> T getAttr(String attr_name, Class<T> clazz) throws JepException {
-        isValid();
+        checkValid();
         return clazz.cast(
                 getAttr(pointer.tstate, pointer.pyObject, attr_name, clazz));
     }
@@ -571,7 +581,7 @@ public class PyObject implements AutoCloseable {
      * @since 3.8
      */
     public void setAttr(String attr_name, Object o) throws JepException {
-        isValid();
+        checkValid();
         setAttr(pointer.tstate, pointer.pyObject, attr_name, o);
     }
 
@@ -587,9 +597,11 @@ public class PyObject implements AutoCloseable {
      *            the name of the attribute to be deleted
      * @throws JepException
      *                if an error occurs
+     *
+     * @since 3.8
      */
     public void delAttr(String attr_name) throws JepException {
-        isValid();
+        checkValid();
         delAttr(pointer.tstate, pointer.pyObject, attr_name);
     }
 
@@ -633,19 +645,19 @@ public class PyObject implements AutoCloseable {
 
     @Override
     public boolean equals(Object obj) {
-        isValidRuntime();
+        checkValidRuntime();
         return equals(pointer.tstate, pointer.pyObject, obj);
     }
 
     @Override
     public String toString() {
-        isValidRuntime();
+        checkValidRuntime();
         return toString(pointer.tstate, pointer.pyObject);
     }
 
     @Override
     public int hashCode() {
-        isValidRuntime();
+        checkValidRuntime();
         Long value = hashCode(pointer.tstate, pointer.pyObject);
         return value.hashCode();
     }

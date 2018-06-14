@@ -36,8 +36,6 @@ import javax.script.ScriptEngineFactory;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
 
-import jep.python.PyModule;
-
 /**
  * Implements {@link javax.script.ScriptEngine}
  * 
@@ -305,7 +303,7 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable {
     @Override
     public Object get(String name) {
         try {
-            PyModule module = null;
+            jep.python.PyModule module = null;
             String[] tokens = null;
 
             if (name.indexOf('.') > 0) {
@@ -343,7 +341,7 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable {
     @Override
     public void put(String name, Object val) throws IllegalArgumentException {
         try {
-            PyModule module = null;
+            jep.python.PyModule module = null;
             String[] tokens = null;
             String mname = null;
 

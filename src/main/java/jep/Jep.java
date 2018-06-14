@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 
 import jep.python.MemoryManager;
-import jep.python.PyModule;
 import jep.python.PyObject;
 
 /**
@@ -681,8 +680,8 @@ public class Jep implements AutoCloseable {
      *                if an error occurs
      */
     @Deprecated
-    public PyModule createModule(String name) throws JepException {
-        return new PyModule(this.tstate, createModule(this.tstate, name), this);
+    public jep.python.PyModule createModule(String name) throws JepException {
+        return new jep.python.PyModule(this.tstate, createModule(this.tstate, name), this);
     }
 
     private native long createModule(long tstate, String name)
