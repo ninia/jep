@@ -55,12 +55,13 @@ the Python object.
 
 Allow creation of Jep without a sub-interpreter
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-JepConfig now provides an option to create a Jep without using a
-sub-interpreter. This is intended to improve compatibility with Python
+A new subclass of Jep has been created called SharedInterpreter. Instances of
+this class can be used the same as an ordinary Jep instance but it will not use
+a Python sub-interpreter. This is intended to improve compatibility with Python
 extension modules. For simple use cases this can provide an alternative to using
-shared modules. Creating a Jep without a sub-interpreter is equivalent to
-sharing all modules. See the JavaDoc on JepConfig.setSubInterpreter(boolean) for
-more information on the limitations and capabilities of this new mode.
+shared modules. Creating a SharedInterpreter is equivalent to sharing all
+modules. See the JavaDoc on SharedInterpreter for more information on the
+limitations and capabilities of this new mode.
 
 Compatibility Notes
 *******************

@@ -52,7 +52,7 @@ import jep.python.PyObject;
  * </p>
  * 
  */
-public final class Jep implements AutoCloseable {
+public class Jep implements AutoCloseable {
 
     private static final String THREAD_WARN = "JEP THREAD WARNING: ";
 
@@ -226,7 +226,10 @@ public final class Jep implements AutoCloseable {
     }
 
     public Jep(JepConfig config) throws JepException {
-        config.validate();
+        this(config, true);
+    }
+
+    protected Jep(JepConfig config, boolean useSubInterpreter) throws JepException {
         MainInterpreter mainInterpreter = MainInterpreter.getMainInterpreter();
         if (threadUsed.get()) {
             Thread current = Thread.currentThread();
@@ -248,10 +251,13 @@ public final class Jep implements AutoCloseable {
 
         this.interactive = config.interactive;
         this.tstate = init(this.classLoader, hasSharedModules,
-                config.useSubInterpreter);
+                useSubInterpreter);
         threadUsed.set(true);
         this.thread = Thread.currentThread();
+        configureInterpreter(config);
+    }
 
+    protected void configureInterpreter(JepConfig config) throws JepException {
         // why write C code if you don't have to? :-)
         if (config.includePath != null) {
             String includePath = config.includePath.toString();
@@ -265,30 +271,36 @@ public final class Jep implements AutoCloseable {
             eval("sys.path += '" + includePath + "'.split('"
                     + File.pathSeparator + "')");
         }
+        boolean hasSharedModules = config.sharedModules != null
+                && !config.sharedModules.isEmpty();
 
         eval("import jep");
         if (hasSharedModules) {
             set("sharedModules", config.sharedModules);
-            set("sharedImporter", mainInterpreter);
+            set("sharedImporter", MainInterpreter.getMainInterpreter());
             eval("jep.shared_modules_hook.setupImporter(sharedModules,sharedImporter)");
             eval("del sharedModules");
             eval("del sharedImporter");
             eval(null); // flush
         }
-        ClassEnquirer ce = config.classEnquirer;
-        if (ce == null) {
-            ce = ClassList.getInstance();
-        }
-        set("classlist", ce);
-        eval("jep.java_import_hook.setupImporter(classlist)");
-        eval("del classlist");
-        eval(null); // flush
-
+        setupJavaImportHook(config.classEnquirer);
         if (config.redirectOutputStreams) {
             eval("from jep import redirect_streams");
             eval("redirect_streams.setup()");
             eval(null); // flush
         }
+    }
+
+    protected void setupJavaImportHook(ClassEnquirer enquirer) throws JepException {
+        if (enquirer == null) {
+            enquirer = ClassList.getInstance();
+        }
+        set("classlist", enquirer);
+        eval("from jep import java_import_hook");
+        eval("java_import_hook.setupImporter(classlist)");
+        eval("del classlist");
+        eval("del java_import_hook");
+        eval(null); // flush
     }
 
     private native long init(ClassLoader classloader, boolean hasSharedModules,
