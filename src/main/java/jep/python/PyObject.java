@@ -132,7 +132,11 @@ public class PyObject implements AutoCloseable {
 
     @Override
     public void close() throws JepException {
-        isValid();
+        /* 
+         * Do not use isValid() because there should be no exception if this is
+         * already closed.
+         */
+        jep.isValidThread();
         this.pointer.dispose();
     }
 

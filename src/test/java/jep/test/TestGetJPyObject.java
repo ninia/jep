@@ -226,6 +226,11 @@ public class TestGetJPyObject {
         PyObject leaky = null;
         try (PyObject o = jep.getValue("object()", PyObject.class)) {
             leaky = o;
+            /* 
+             * The AutoCloseable interface strongly recommends making it
+             *  harmless to call close more than once.
+             */
+            o.close();
         }
         try {
             leaky.getAttr("__doc__");
