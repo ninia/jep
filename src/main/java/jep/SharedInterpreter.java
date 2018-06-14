@@ -32,10 +32,10 @@ package jep;
  * safely from multiple unrelated pieces of a Java application without any risk
  * that the Jep instances will impact each other.
  *
- * This class allwos creation of a Jep instance that does not use
+ * This class allows creation of a Jep instance that does not use
  * sub-interpreters. In this case each SharedInterpreter still maintains
  * distinct global variables but some interpreter state will be shared. The
- * primary impact is that SharedINterpreters will share any imported modules.
+ * primary impact is that SharedInterpreters will share any imported modules.
  * This is equivalent to using shared modules to share every python package in
  * Jep. Anything that changes the way a module behaves will impact all
  * SharedInterpreters so care must be taken to ensure that different
@@ -44,7 +44,7 @@ package jep;
  *
  * Within a single Java process it is valid to mix Jep instances that use
  * sub-interpreters with SharedInterpreters. The sub-interpreter instances of
- * jep will remain isolated from other Jep instances and from any
+ * Jep will remain isolated from other Jep instances and from any
  * SharedInterpreters. To maintain stability, it is not possible to have
  * multiple Jep instances active on the same Thread at the same time and this
  * limitation includes SharedInterpreters.
