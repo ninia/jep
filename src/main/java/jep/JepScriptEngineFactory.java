@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2017 JEP AUTHORS.
+ * Copyright (c) 2006-2018 JEP AUTHORS.
  *
  * This file is licensed under the the zlib/libpng License.
  *
