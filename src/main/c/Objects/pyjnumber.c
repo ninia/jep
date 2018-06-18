@@ -316,7 +316,7 @@ static PyObject* pyjnumber_richcompare(PyObject *self,
     return result;
 }
 
-static long pyjnumber_hash(PyObject *self)
+static Py_hash_t pyjnumber_hash(PyObject *self)
 {
     JNIEnv   *env    = pyembed_get_env();
     long      result = -1;

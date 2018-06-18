@@ -463,7 +463,7 @@ static int pyjobject_setattro(PyJObject *obj, PyObject *name, PyObject *v)
     return pyjfield_set((PyJFieldObject *) cur, obj, v);
 }
 
-static long pyjobject_hash(PyJObject *self)
+static Py_hash_t pyjobject_hash(PyJObject *self)
 {
     JNIEnv *env = pyembed_get_env();
     int   hash = -1;
