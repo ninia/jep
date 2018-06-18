@@ -236,7 +236,7 @@ static jstring pyunicode_as_jstring(JNIEnv *env, PyObject *pyunicode)
     } else if (PyUnicode_KIND((pyunicode)) == PyUnicode_2BYTE_KIND) {
         Py_UCS2* data = PyUnicode_2BYTE_DATA(pyunicode);
         Py_ssize_t length = PyUnicode_GET_LENGTH(pyunicode);
-        return (*env)->NewString(env, (jchar*) data, length);
+        return (*env)->NewString(env, (jchar*) data, (jsize) length);
     }
 #endif
     bytes = PyUnicode_AsUTF16String(pyunicode);

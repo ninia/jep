@@ -174,7 +174,7 @@ public class TestGetJPyObject {
          * since Java object is on the left, will use Integer.equals(obj) and
          * not be equals since Java compares class types
          */
-        if ((new Integer(1)).equals(jep.getValue("1", PyObject.class))) {
+        if ((Integer.valueOf(1)).equals(jep.getValue("1", PyObject.class))) {
             throw new IllegalStateException(
                     "Java equals(JPyObject) does not work as expected");
         }
