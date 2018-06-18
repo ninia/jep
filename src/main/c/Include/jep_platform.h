@@ -75,7 +75,7 @@
     #define JLOCAL_REFS 16
 
     /* Python 2 compatibility */
-    #ifndef Py_hash_t
+    #if PY_MAJOR_VERSION < 3
         #define Py_hash_t long
     #endif
 

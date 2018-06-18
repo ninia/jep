@@ -515,7 +515,7 @@ JNIEXPORT jlong JNICALL Java_jep_python_PyObject_hashCode
   (JNIEnv *env, jobject obj, jlong tstate, jlong pyobj) {
     JepThread  *jepThread;
     PyObject   *pyObject;
-    long        hash = -1;
+    Py_hash_t        hash = -1;
 
     jepThread = (JepThread *) tstate;
     if (!jepThread) {
