@@ -1,4 +1,4 @@
-/* 
+/*
    jep - Java Embedded Python
 
    Copyright (c) 2004-2018 JEP AUTHORS.
@@ -8,7 +8,7 @@
    This software is provided 'as-is', without any express or implied
    warranty. In no event will the authors be held liable for any
    damages arising from the use of this software.
-   
+
    Permission is granted to anyone to use this software for any
    purpose, including commercial applications, and to alter it and
    redistribute it freely, subject to the following restrictions:
@@ -22,7 +22,7 @@
    must not be misrepresented as being the original software.
 
    3. This notice may not be removed or altered from any source
-   distribution.   
+   distribution.
 */
 
 #include "Jep.h"
@@ -34,11 +34,12 @@
  * Signature: (J)V
  */
 JNIEXPORT void JNICALL Java_jep_python_PyObject_decref
-(JNIEnv *env, jobject jobj, jlong tstate, jlong ptr) {
+(JNIEnv *env, jobject jobj, jlong tstate, jlong ptr)
+{
     PyObject *o = (PyObject *) ptr;
-    JepThread* jepThread = (JepThread *) tstate; 
+    JepThread* jepThread = (JepThread *) tstate;
 
-    if(ptr == 0) {
+    if (ptr == 0) {
         THROW_JEP(env, "jep_object: Invalid object");
     } else {
         PyEval_AcquireThread(jepThread->tstate);
@@ -55,11 +56,12 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_decref
  * Signature: (J)V
  */
 JNIEXPORT void JNICALL Java_jep_python_PyObject_incref
-(JNIEnv *env, jobject jobj, jlong tstate, jlong ptr) {
+(JNIEnv *env, jobject jobj, jlong tstate, jlong ptr)
+{
     PyObject *o = (PyObject *) ptr;
-    JepThread* jepThread = (JepThread *) tstate; 
+    JepThread* jepThread = (JepThread *) tstate;
 
-    if(ptr == 0) {
+    if (ptr == 0) {
         THROW_JEP(env, "jep_object: Invalid object");
     } else {
         PyEval_AcquireThread(jepThread->tstate);
@@ -74,13 +76,16 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_incref
  * Method:    set
  * Signature: (JJLjava/lang/String;Ljava/lang/Object;)V
  */
-JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2Ljava_lang_Object_2
+JNIEXPORT void JNICALL
+Java_jep_python_PyObject_set__JJLjava_lang_String_2Ljava_lang_Object_2
 (JNIEnv *env, jobject obj, jlong tstate, jlong module,
- jstring jname, jobject jval) {
+ jstring jname, jobject jval)
+{
     const char *name;
-    
+
     name = jstring2char(env, jname);
-    pyembed_setparameter_object(env, (intptr_t) tstate, (intptr_t) module, name, jval);
+    pyembed_setparameter_object(env, (intptr_t) tstate, (intptr_t) module, name,
+                                jval);
     release_utf_char(env, jname, name);
 }
 
@@ -90,14 +95,17 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2Ljava_
  * Method:    set
  * Signature: (JJLjava/lang/String;Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2Ljava_lang_String_2
+JNIEXPORT void JNICALL
+Java_jep_python_PyObject_set__JJLjava_lang_String_2Ljava_lang_String_2
 (JNIEnv *env, jobject obj, jlong tstate, jlong module,
- jstring jname, jstring jval) {
+ jstring jname, jstring jval)
+{
     const char *name, *value;
 
     name  = jstring2char(env, jname);
     value = jstring2char(env, jval);
-    pyembed_setparameter_string(env, (intptr_t) tstate, (intptr_t) module, name, value);
+    pyembed_setparameter_string(env, (intptr_t) tstate, (intptr_t) module, name,
+                                value);
     release_utf_char(env, jname, name);
     release_utf_char(env, jval, value);
 }
@@ -109,11 +117,13 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2Ljava_
  */
 JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2I
 (JNIEnv *env, jobject obj, jlong tstate, jlong module,
- jstring jname, jint jval) {
+ jstring jname, jint jval)
+{
     const char *name;
-    
+
     name = jstring2char(env, jname);
-    pyembed_setparameter_int(env, (intptr_t) tstate, (intptr_t) module, name, (int) jval);
+    pyembed_setparameter_int(env, (intptr_t) tstate, (intptr_t) module, name,
+                             (int) jval);
     release_utf_char(env, jname, name);
 }
 
@@ -125,11 +135,13 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2I
  */
 JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2J
 (JNIEnv *env, jobject obj, jlong tstate, jlong module,
- jstring jname, jlong jval) {
+ jstring jname, jlong jval)
+{
     const char *name;
-    
+
     name = jstring2char(env, jname);
-    pyembed_setparameter_long(env, (intptr_t) tstate, (intptr_t) module, name, (PY_LONG_LONG) jval);
+    pyembed_setparameter_long(env, (intptr_t) tstate, (intptr_t) module, name,
+                              (PY_LONG_LONG) jval);
     release_utf_char(env, jname, name);
 }
 
@@ -141,11 +153,13 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2J
  */
 JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2D
 (JNIEnv *env, jobject obj, jlong tstate, jlong module,
- jstring jname, jdouble jval) {
+ jstring jname, jdouble jval)
+{
     const char *name;
-    
+
     name = jstring2char(env, jname);
-    pyembed_setparameter_double(env, (intptr_t) tstate, (intptr_t) module, name, (double) jval);
+    pyembed_setparameter_double(env, (intptr_t) tstate, (intptr_t) module, name,
+                                (double) jval);
     release_utf_char(env, jname, name);
 }
 
@@ -156,11 +170,13 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2D
  */
 JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2F
 (JNIEnv *env, jobject obj, jlong tstate, jlong module,
- jstring jname, jfloat jval) {
+ jstring jname, jfloat jval)
+{
     const char *name;
-    
+
     name = jstring2char(env, jname);
-    pyembed_setparameter_float(env, (intptr_t) tstate, (intptr_t) module, name, (float) jval);
+    pyembed_setparameter_float(env, (intptr_t) tstate, (intptr_t) module, name,
+                               (float) jval);
     release_utf_char(env, jname, name);
 }
 
@@ -172,11 +188,13 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2F
  */
 JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2_3Z
 (JNIEnv *env, jobject obj, jlong tstate, jlong module,
- jstring jname, jbooleanArray jarr) {
+ jstring jname, jbooleanArray jarr)
+{
     const char *name;
-    
+
     name = jstring2char(env, jname);
-    pyembed_setparameter_array(env, (intptr_t) tstate, (intptr_t) module, name, (jobjectArray) jarr);
+    pyembed_setparameter_array(env, (intptr_t) tstate, (intptr_t) module, name,
+                               (jobjectArray) jarr);
     release_utf_char(env, jname, name);
 }
 
@@ -188,11 +206,13 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2_3Z
  */
 JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2_3I
 (JNIEnv *env, jobject obj, jlong tstate, jlong module,
- jstring jname, jintArray jarr) {
+ jstring jname, jintArray jarr)
+{
     const char *name;
-    
+
     name = jstring2char(env, jname);
-    pyembed_setparameter_array(env, (intptr_t) tstate, (intptr_t) module, name, (jobjectArray) jarr);
+    pyembed_setparameter_array(env, (intptr_t) tstate, (intptr_t) module, name,
+                               (jobjectArray) jarr);
     release_utf_char(env, jname, name);
 }
 
@@ -204,11 +224,13 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2_3I
  */
 JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2_3S
 (JNIEnv *env, jobject obj, jlong tstate, jlong module,
- jstring jname, jshortArray jarr) {
+ jstring jname, jshortArray jarr)
+{
     const char *name;
-    
+
     name = jstring2char(env, jname);
-    pyembed_setparameter_array(env, (intptr_t) tstate, (intptr_t) module, name, (jobjectArray) jarr);
+    pyembed_setparameter_array(env, (intptr_t) tstate, (intptr_t) module, name,
+                               (jobjectArray) jarr);
     release_utf_char(env, jname, name);
 }
 
@@ -220,11 +242,13 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2_3S
  */
 JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2_3B
 (JNIEnv *env, jobject obj, jlong tstate, jlong module,
- jstring jname, jbyteArray jarr) {
+ jstring jname, jbyteArray jarr)
+{
     const char *name;
-    
+
     name = jstring2char(env, jname);
-    pyembed_setparameter_array(env, (intptr_t) tstate, (intptr_t) module, name, (jobjectArray) jarr);
+    pyembed_setparameter_array(env, (intptr_t) tstate, (intptr_t) module, name,
+                               (jobjectArray) jarr);
     release_utf_char(env, jname, name);
 }
 
@@ -236,11 +260,13 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2_3B
  */
 JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2_3J
 (JNIEnv *env, jobject obj, jlong tstate, jlong module,
- jstring jname, jlongArray jarr) {
+ jstring jname, jlongArray jarr)
+{
     const char *name;
-    
+
     name = jstring2char(env, jname);
-    pyembed_setparameter_array(env, (intptr_t) tstate, (intptr_t) module, name, (jobjectArray) jarr);
+    pyembed_setparameter_array(env, (intptr_t) tstate, (intptr_t) module, name,
+                               (jobjectArray) jarr);
     release_utf_char(env, jname, name);
 }
 
@@ -252,11 +278,13 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2_3J
  */
 JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2_3D
 (JNIEnv *env, jobject obj, jlong tstate, jlong module,
- jstring jname, jdoubleArray jarr) {
+ jstring jname, jdoubleArray jarr)
+{
     const char *name;
-    
+
     name = jstring2char(env, jname);
-    pyembed_setparameter_array(env, (intptr_t) tstate, (intptr_t) module, name, (jobjectArray) jarr);
+    pyembed_setparameter_array(env, (intptr_t) tstate, (intptr_t) module, name,
+                               (jobjectArray) jarr);
     release_utf_char(env, jname, name);
 }
 
@@ -268,11 +296,13 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2_3D
  */
 JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2_3F
 (JNIEnv *env, jobject obj, jlong tstate, jlong module,
- jstring jname, jfloatArray jarr) {
+ jstring jname, jfloatArray jarr)
+{
     const char *name;
-    
+
     name = jstring2char(env, jname);
-    pyembed_setparameter_array(env, (intptr_t) tstate, (intptr_t) module, name, (jobjectArray) jarr);
+    pyembed_setparameter_array(env, (intptr_t) tstate, (intptr_t) module, name,
+                               (jobjectArray) jarr);
     release_utf_char(env, jname, name);
 }
 
@@ -282,7 +312,7 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_set__JJLjava_lang_String_2_3F
  * Signature: (JJLjava/lang/String;Ljava/lang/Class;)Ljava/lang/Object;
  */
 JNIEXPORT jobject JNICALL Java_jep_python_PyObject_getAttr
-  (JNIEnv *env, jobject obj, jlong tstate, jlong pyobj, jstring str, jclass clazz)
+(JNIEnv *env, jobject obj, jlong tstate, jlong pyobj, jstring str, jclass clazz)
 {
     JepThread  *jepThread;
     PyObject   *pyObject;
@@ -296,7 +326,7 @@ JNIEXPORT jobject JNICALL Java_jep_python_PyObject_getAttr
         return ret;
     }
 
-    if(str == NULL) {
+    if (str == NULL) {
         THROW_JEP(env, "Attribute name cannot be null.");
         return ret;
     }
@@ -305,7 +335,7 @@ JNIEXPORT jobject JNICALL Java_jep_python_PyObject_getAttr
     attrName = jstring2char(env, str);
 
     PyEval_AcquireThread(jepThread->tstate);
-    
+
     attr = PyObject_GetAttrString(pyObject, attrName);
     if (process_py_exception(env)) {
         goto EXIT;
@@ -328,7 +358,8 @@ EXIT:
  * Signature: (JJLjava/lang/String;Ljava/lang/Object;)V
  */
 JNIEXPORT void JNICALL Java_jep_python_PyObject_setAttr
-  (JNIEnv *env, jobject obj, jlong tstate, jlong pyobj, jstring str, jobject jAttr)
+(JNIEnv *env, jobject obj, jlong tstate, jlong pyobj, jstring str,
+ jobject jAttr)
 {
     JepThread  *jepThread;
     PyObject   *pyObject;
@@ -342,7 +373,7 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_setAttr
         return;
     }
 
-    if(str == NULL) {
+    if (str == NULL) {
         THROW_JEP(env, "Attribute name cannot be null.");
         return;
     }
@@ -352,11 +383,11 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_setAttr
 
     PyEval_AcquireThread(jepThread->tstate);
     pyAttr = jobject_As_PyObject(env, jAttr);
-    if(process_py_exception(env)) {
+    if (process_py_exception(env)) {
         goto EXIT;
     }
     ret = PyObject_SetAttrString(pyObject, attrName, pyAttr);
-    if(ret == -1) {
+    if (ret == -1) {
         process_py_exception(env);
     }
 
@@ -385,7 +416,7 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_delAttr
         return;
     }
 
-    if(str == NULL) {
+    if (str == NULL) {
         THROW_JEP(env, "Attribute name cannot be null.");
         return;
     }
@@ -395,7 +426,7 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_delAttr
 
     PyEval_AcquireThread(jepThread->tstate);
     ret = PyObject_DelAttrString(pyObject, attrName);
-    if(ret == -1) {
+    if (ret == -1) {
         process_py_exception(env);
     }
 
@@ -411,12 +442,14 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_delAttr
  * Signature: (JJLjava/lang/String;)J
  */
 JNIEXPORT jlong JNICALL Java_jep_python_PyObject_createModule
-(JNIEnv *env, jobject obj, jlong tstate, jlong module, jstring jstr) {
+(JNIEnv *env, jobject obj, jlong tstate, jlong module, jstring jstr)
+{
     const char *str;
     jlong ret;
 
     str = jstring2char(env, jstr);
-    ret = pyembed_create_module_on(env, (intptr_t) tstate, (intptr_t) module, (char *) str);
+    ret = pyembed_create_module_on(env, (intptr_t) tstate, (intptr_t) module,
+                                   (char *) str);
     release_utf_char(env, jstr, str);
     return ret;
 }
@@ -428,12 +461,14 @@ JNIEXPORT jlong JNICALL Java_jep_python_PyObject_createModule
  * Signature: (JJLjava/lang/String;)Ljava/lang/Object;
  */
 JNIEXPORT jobject JNICALL Java_jep_python_PyObject_getValue
-(JNIEnv *env, jobject obj, jlong tstate, jlong onModule, jstring jstr) {
+(JNIEnv *env, jobject obj, jlong tstate, jlong onModule, jstring jstr)
+{
     const char *str;
     jobject ret;
 
     str = jstring2char(env, jstr);
-    ret = pyembed_getvalue_on(env, (intptr_t) tstate, (intptr_t) onModule, (char *) str);
+    ret = pyembed_getvalue_on(env, (intptr_t) tstate, (intptr_t) onModule,
+                              (char *) str);
     release_utf_char(env, jstr, str);
     return ret;
 }
@@ -445,7 +480,7 @@ JNIEXPORT jobject JNICALL Java_jep_python_PyObject_getValue
  * Signature: (JJLjava/lang/Object;)Z
  */
 JNIEXPORT jboolean JNICALL Java_jep_python_PyObject_equals
-  (JNIEnv *env, jobject obj, jlong tstate, jlong pyObj, jobject otherObj)
+(JNIEnv *env, jobject obj, jlong tstate, jlong pyObj, jobject otherObj)
 {
     JepThread    *jepThread;
     PyObject     *pyObject;
@@ -467,7 +502,7 @@ JNIEXPORT jboolean JNICALL Java_jep_python_PyObject_equals
     }
 
     result = PyObject_RichCompareBool(pyObject, otherPyObject, Py_EQ);
-    if(result == -1) {
+    if (result == -1) {
         process_py_exception(env);
     } else if (result == 1) {
         ret = JNI_TRUE;
@@ -486,7 +521,8 @@ EXIT:
  * Signature: (JJ)Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_jep_python_PyObject_toString
-  (JNIEnv *env, jobject obj, jlong tstate, jlong pyobj) {
+(JNIEnv *env, jobject obj, jlong tstate, jlong pyobj)
+{
     JepThread  *jepThread;
     PyObject   *pyObject;
     jstring     ret = NULL;
@@ -512,7 +548,8 @@ JNIEXPORT jstring JNICALL Java_jep_python_PyObject_toString
  * Signature: (JJ)J
  */
 JNIEXPORT jlong JNICALL Java_jep_python_PyObject_hashCode
-  (JNIEnv *env, jobject obj, jlong tstate, jlong pyobj) {
+(JNIEnv *env, jobject obj, jlong tstate, jlong pyobj)
+{
     JepThread  *jepThread;
     PyObject   *pyObject;
     Py_hash_t        hash = -1;

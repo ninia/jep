@@ -1,4 +1,4 @@
-/* 
+/*
    jep - Java Embedded Python
 
    Copyright (c) 2017-2018 JEP AUTHORS.
@@ -8,7 +8,7 @@
    This software is provided 'as-is', without any express or implied
    warranty. In no event will the authors be held liable for any
    damages arising from the use of this software.
-   
+
    Permission is granted to anyone to use this software for any
    purpose, including commercial applications, and to alter it and
    redistribute it freely, subject to the following restrictions:
@@ -22,7 +22,7 @@
    must not be misrepresented as being the original software.
 
    3. This notice may not be removed or altered from any source
-   distribution.   
+   distribution.
 */
 
 #include "Jep.h"
@@ -35,7 +35,8 @@
  * Signature: (JJ[Ljava/lang/Object;Ljava/util/Map;)Ljava/lang/Object;
  */
 JNIEXPORT jobject JNICALL Java_jep_python_PyCallable_call
-  (JNIEnv *env, jobject this, jlong tstate, jlong pyobj, jobjectArray args, jobject kwargs)
+(JNIEnv *env, jobject this, jlong tstate, jlong pyobj, jobjectArray args,
+ jobject kwargs)
 {
 
     JepThread  *jepThread;

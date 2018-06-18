@@ -48,7 +48,7 @@ typedef struct {
 /*
  * Create a new instance of PyJObject or one of it's subtypes that wraps
  * the object provided. If the class of the object is known it can be passed
- * in, or the final argument can be NULL and this function will figure it out. 
+ * in, or the final argument can be NULL and this function will figure it out.
  */
 PyObject* PyJObject_New(JNIEnv*, PyTypeObject*, jobject, jclass);
 

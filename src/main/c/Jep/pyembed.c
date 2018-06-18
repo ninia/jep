@@ -1180,9 +1180,9 @@ jobject pyembed_invoke_method(JNIEnv *env,
             strncpy(globalName, cname, dot - cname);
             globalName[dot - cname] = '\0';
             obj = PyDict_GetItemString(jepThread->globals, globalName);
-            if ( obj ) {
+            if (obj) {
                 callable = PyObject_GetAttrString(obj, dot + 1);
-                if( callable ){
+                if (callable) {
                     ret = pyembed_invoke(env, callable, args, kwargs);
                     Py_DECREF(callable);
                 } else {
@@ -1198,7 +1198,7 @@ jobject pyembed_invoke_method(JNIEnv *env,
             snprintf(errorBuf, 128, "Unable to find object with name: %s", cname);
             THROW_JEP(env, errorBuf);
         }
-    }else if (!process_py_exception(env)) {
+    } else if (!process_py_exception(env)) {
         ret = pyembed_invoke(env, callable, args, kwargs);
     }
 

@@ -147,14 +147,14 @@ static PyObject* jnumber_As_PyObject(JNIEnv *env, jobject jobj, jclass class)
             return NULL;
         }
         return jbyte_As_PyObject(b);
-    }else if ((*env)->IsSameObject(env, class, JSHORT_OBJ_TYPE)) {
+    } else if ((*env)->IsSameObject(env, class, JSHORT_OBJ_TYPE)) {
         jshort s = java_lang_Number_shortValue(env, jobj);
         if ((*env)->ExceptionCheck(env)) {
             process_java_exception(env);
             return NULL;
         }
         return jshort_As_PyObject(s);
-    }else if ((*env)->IsSameObject(env, class, JINT_OBJ_TYPE)) {
+    } else if ((*env)->IsSameObject(env, class, JINT_OBJ_TYPE)) {
         jint i = java_lang_Number_intValue(env, jobj);
         if ((*env)->ExceptionCheck(env)) {
             process_java_exception(env);

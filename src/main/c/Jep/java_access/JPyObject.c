@@ -31,19 +31,22 @@ static jmethodID init_J_J_Jep = 0;
 static jmethodID getPyObject  = 0;
 
 
-jobject jep_python_PyObject_new_J_J_Jep(JNIEnv* env, jlong tstate, jlong pyObject, jobject jep)
+jobject jep_python_PyObject_new_J_J_Jep(JNIEnv* env, jlong tstate,
+                                        jlong pyObject, jobject jep)
 {
     jobject result = NULL;
     Py_BEGIN_ALLOW_THREADS
     if (JNI_METHOD(init_J_J_Jep, env, JPYOBJECT_TYPE, "<init>", "(JJLjep/Jep;)V")) {
-        result = (*env)->NewObject(env, JPYOBJECT_TYPE, init_J_J_Jep, tstate, pyObject, jep);
+        result = (*env)->NewObject(env, JPYOBJECT_TYPE, init_J_J_Jep, tstate, pyObject,
+                                   jep);
     }
     Py_END_ALLOW_THREADS
 
     return result;
 }
 
-jlong jep_python_PyObject_getPyObject(JNIEnv* env, jobject this) {
+jlong jep_python_PyObject_getPyObject(JNIEnv* env, jobject this)
+{
     jlong result = 0;
     Py_BEGIN_ALLOW_THREADS
     if (JNI_METHOD(getPyObject, env, JPYOBJECT_TYPE, "getPyObject", "()J")) {

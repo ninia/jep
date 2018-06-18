@@ -449,12 +449,13 @@ static int pyjobject_setattro(PyJObject *obj, PyObject *name, PyObject *v)
         return -1;
     }
 
-    if (!PyJField_Check(cur)) {    
+    if (!PyJField_Check(cur)) {
         if (PyJMethod_Check(cur) || PyJMultiMethod_Check(cur)) {
             PyErr_Format(PyExc_AttributeError, "'%s' object cannot assign to method '%s'.",
                          PyString_AsString(obj->javaClassName), PyString_AsString(name));
-        }else{
-            PyErr_Format(PyExc_AttributeError, "'%s' object cannot assign to attribute '%s'.",
+        } else {
+            PyErr_Format(PyExc_AttributeError,
+                         "'%s' object cannot assign to attribute '%s'.",
                          PyString_AsString(obj->javaClassName), PyString_AsString(name));
         }
         return -1;

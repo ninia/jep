@@ -86,7 +86,7 @@ static jobject PyObject_As_JPyObject(JNIEnv *env, PyObject *pyobject)
     }
 
     jpyobject = jep_python_PyObject_new_J_J_Jep(env, (jlong) jepThread, (jlong) pyobject, jepThread->caller);
-    if(process_java_exception(env) || !jpyobject) {
+    if (process_java_exception(env) || !jpyobject) {
         return NULL;
     }
     // incref to ensure python does not garbage collect it out from under us
@@ -842,7 +842,7 @@ static jobject PyCallable_As_JPyCallable(JNIEnv *env, PyObject *pyobject)
     }
 
     jpycallable = jep_python_PyCallable_new_J_J_Jep(env, (jlong) jepThread, (jlong) pyobject, jepThread->caller);
-    if(process_java_exception(env) || !jpycallable) {
+    if (process_java_exception(env) || !jpycallable) {
         return NULL;
     }
     // incref to ensure python does not garbage collect it out from under us
