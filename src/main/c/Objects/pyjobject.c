@@ -465,8 +465,8 @@ static int pyjobject_setattro(PyJObject *obj, PyObject *name, PyObject *v)
 
 static Py_hash_t pyjobject_hash(PyJObject *self)
 {
-    JNIEnv *env = pyembed_get_env();
-    int   hash = -1;
+    JNIEnv *env    = pyembed_get_env();
+    Py_hash_t hash = -1;
 
     if (self->object) {
         hash = java_lang_Object_hashCode(env, self->object);

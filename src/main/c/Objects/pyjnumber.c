@@ -319,7 +319,7 @@ static PyObject* pyjnumber_richcompare(PyObject *self,
 static Py_hash_t pyjnumber_hash(PyObject *self)
 {
     JNIEnv   *env    = pyembed_get_env();
-    long      result = -1;
+    Py_hash_t result = -1;
 
     if (PyJNumber_Check(self)) {
         self = java_number_to_python(env, self);
