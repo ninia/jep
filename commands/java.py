@@ -281,7 +281,7 @@ class build_jar(Command):
 
     user_options = [
         ('jar=', None,
-         'use javac (default: {0}/bin/jar)'.format(get_java_home())),
+         'use jar (default: {0}/bin/jar)'.format(get_java_home())),
     ]
 
     def initialize_options(self):

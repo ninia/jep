@@ -19,6 +19,7 @@ from commands.dist import JepDistribution
 from commands.install_lib import jep_install
 from commands.java import build_java, get_java_home, get_java_include,\
     get_java_linker_args, build_jar, get_java_lib_folders, get_java_libraries, setup_java
+from commands.javadoc import javadoc
 from commands.python import get_python_libs, get_python_linker_args
 from commands.scripts import build_scripts
 from commands.test import test
@@ -129,6 +130,7 @@ if __name__ == '__main__':
           cmdclass={
               'setup_java': setup_java,
               'build_java': build_java,
+              'javadoc': javadoc,
               'build_jar': build_jar,
               'build': jep_build,
               'build_ext' : build_ext,
