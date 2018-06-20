@@ -71,14 +71,15 @@ static PyThreadState *mainThreadState = NULL;
 static PyObject* mainThreadModules = NULL;
 static PyObject* mainThreadModulesLock = NULL;
 
-int pyembed_version_unsafe(void);
+static int pyembed_is_version_unsafe(void);
+static void handle_startup_exception(JNIEnv*, const char*);
 
 static PyObject* pyembed_findclass(PyObject*, PyObject*);
 static PyObject* pyembed_forname(PyObject*, PyObject*);
 static PyObject* pyembed_jproxy(PyObject*, PyObject*);
 
 static int maybe_pyc_file(FILE*, const char*, const char*, int);
-static void pyembed_run_pyc(JepThread *jepThread, FILE *);
+static void pyembed_run_pyc(JepThread*, FILE*);
 
 static struct PyMethodDef jep_methods[] = {
     {
@@ -134,22 +135,37 @@ static struct PyModuleDef jep_module_def = {
 };
 #endif
 
-static PyObject* initjep(jboolean hasSharedModules)
+static PyObject* initjep(JNIEnv *env, jboolean hasSharedModules)
 {
     PyObject *modjep;
 
 #if PY_MAJOR_VERSION >= 3
     PyObject *sysmodules;
     modjep = PyModule_Create(&jep_module_def);
+    if (modjep == NULL) {
+        handle_startup_exception(env, "Couldn't create module _jep");
+        return NULL;
+    }
     sysmodules = PyImport_GetModuleDict();
-    PyDict_SetItemString(sysmodules, "_jep", modjep);
+    if (PyDict_SetItemString(sysmodules, "_jep", modjep) == -1) {
+        handle_startup_exception(env, "Couldn't set _jep on sys.modules");
+        return NULL;
+    }
 #else
-    PyImport_AddModule("_jep");
-    Py_InitModule((char *) "_jep", jep_methods);
+    modjep = PyImport_AddModule("_jep");
+    if (modjep == NULL) {
+        handle_startup_exception(env, "Couldn't add module _jep");
+        return NULL;
+    }
+    modjep = Py_InitModule((char *) "_jep", jep_methods);
+    if (modjep == NULL) {
+        handle_startup_exception(env, "Couldn't init module _jep");
+        return NULL;
+    }
 #endif
     modjep = PyImport_ImportModule("_jep");
     if (modjep == NULL) {
-        printf("WARNING: couldn't import module _jep.\n");
+        handle_startup_exception(env, "Couldn't import module _jep");
     } else {
         // stuff for making new pyjarray objects
         PyModule_AddIntConstant(modjep, "JBOOLEAN_ID", JBOOLEAN_ID);
@@ -164,9 +180,9 @@ static PyObject* initjep(jboolean hasSharedModules)
         PyModule_AddIntConstant(modjep, "JEP_NUMPY_ENABLED", JEP_NUMPY_ENABLED);
         if (hasSharedModules) {
             Py_INCREF(mainThreadModules);
-            PyModule_AddObject(modjep, "topInterpreterModules", mainThreadModules);
+            PyModule_AddObject(modjep, "mainInterpreterModules", mainThreadModules);
             Py_INCREF(mainThreadModulesLock);
-            PyModule_AddObject(modjep, "topInterpreterModulesLock", mainThreadModulesLock);
+            PyModule_AddObject(modjep, "mainInterpreterModulesLock", mainThreadModulesLock);
         }
     }
 
@@ -211,8 +227,8 @@ void pyembed_preinit(JNIEnv *env,
                 wchar_t* homeForPython = Py_DecodeLocale(homeAsUTF, NULL);
             #else
                 int length = (*env)->GetStringUTFLength(env, pythonHome);
-                wchar_t* homeForPython = malloc((length+1)*sizeof(wchar_t));
-                mbstowcs(homeForPython, homeAsUTF, length+1);
+                wchar_t* homeForPython = malloc((length + 1) * sizeof(wchar_t));
+                mbstowcs(homeForPython, homeAsUTF, length + 1);
             #endif
         #else
             int length = (*env)->GetStringUTFLength(env, pythonHome);
@@ -220,7 +236,7 @@ void pyembed_preinit(JNIEnv *env,
             strncpy(homeForPython, homeAsUTF, length);
         #endif
         (*env)->ReleaseStringUTFChars(env, pythonHome, homeAsUTF);
-        
+
         Py_SetPythonHome(homeForPython);
         // Python documentation says that the string should not be changed for
         // the duration of the program so it can never be freed.
@@ -314,6 +330,18 @@ static int pyjtypes_ready(void)
     return 0;
 }
 
+static void handle_startup_exception(JNIEnv *env, const char* excMsg)
+{
+    jclass excClass = (*env)->FindClass(env, "java/lang/IllegalStateException");
+    if (PyErr_Occurred()) {
+        PyErr_Print();
+    }
+    if (excClass != NULL) {
+        (*env)->ThrowNew(env, excClass, excMsg);
+    }
+}
+
+
 void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
 {
     PyObject* sysModule       = NULL;
@@ -366,7 +394,7 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
         return;
     }
 
-    if (pyembed_version_unsafe()) {
+    if (pyembed_is_version_unsafe()) {
         return;
     }
 
@@ -374,13 +402,7 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
     PyEval_InitThreads();
 
     if (pyjtypes_ready()) {
-        jclass excClass = (*env)->FindClass(env, "java/lang/IllegalStateException");
-        if (PyErr_Occurred()) {
-            PyErr_Print();
-        }
-        if (excClass != NULL) {
-            (*env)->ThrowNew(env, excClass, "Failed to initialize PyJTypes");
-        }
+        handle_startup_exception(env, "Failed to initialize PyJTypes");
         return;
     }
 
@@ -389,21 +411,34 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
      * support shared modules
      */
     sysModule = PyImport_ImportModule("sys");
+    if (sysModule == NULL) {
+        handle_startup_exception(env, "Failed to import sys module");
+        return;
+    }
+
     mainThreadModules = PyObject_GetAttrString(sysModule, "modules");
+    if (mainThreadModules == NULL) {
+        handle_startup_exception(env, "Failed to get sys.modules");
+        return;
+    }
     Py_DECREF(sysModule);
+
     threadingModule = PyImport_ImportModule("threading");
     if (threadingModule == NULL) {
-        jclass excClass = (*env)->FindClass(env, "java/lang/IllegalStateException");
-        if (PyErr_Occurred()) {
-            PyErr_Print();
-        }
-        if (excClass != NULL) {
-            (*env)->ThrowNew(env, excClass, "Failed to load threading module.");
-        }
+        handle_startup_exception(env, "Failed to import threading module");
         return;
     }
     lockCreator = PyObject_GetAttrString(threadingModule, "Lock");
+    if (lockCreator == NULL) {
+        handle_startup_exception(env, "Failed to get Lock attribute");
+        return;
+    }
+
     mainThreadModulesLock = PyObject_CallObject(lockCreator, NULL);
+    if (mainThreadModulesLock == NULL) {
+        handle_startup_exception(env, "Failed to get main thread modules lock");
+        return;
+    }
     Py_DECREF(threadingModule);
     Py_DECREF(lockCreator);
 
@@ -497,7 +532,7 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
  * that Jep was built against.  If they don't match, refuse to initialize Jep
  * and instead throw an exception because a mismatch could cause a JVM crash.
  */
-int pyembed_version_unsafe(void)
+int pyembed_is_version_unsafe(void)
 {
     const char *pyversion = NULL;
     char       *version   = NULL;
@@ -711,7 +746,7 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller,
     }
 
     if (usesubinterpreter) {
-        PyObject *mod_main = PyImport_AddModule("__main__");                      /* borrowed */
+        PyObject *mod_main = PyImport_AddModule("__main__");    /* borrowed */
         if (mod_main == NULL) {
             THROW_JEP(env, "Couldn't add module __main__.");
             PyEval_ReleaseThread(jepThread->tstate);
@@ -725,7 +760,7 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller,
     }
 
     // init static module
-    jepThread->modjep          = initjep(hasSharedModules);
+    jepThread->modjep          = initjep(env, hasSharedModules);
     jepThread->globals         = globals;
     jepThread->env             = env;
     jepThread->classloader     = (*env)->NewGlobalRef(env, cl);
@@ -1488,7 +1523,8 @@ EXIT:
 }
 
 
-jobject pyembed_getvalue(JNIEnv *env, intptr_t _jepThread, char *str, jclass clazz)
+jobject pyembed_getvalue(JNIEnv *env, intptr_t _jepThread, char *str,
+                         jclass clazz)
 {
     PyObject       *result;
     jobject         ret = NULL;
