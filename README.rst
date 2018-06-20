@@ -1,7 +1,15 @@
-[![Python: 2.7, 3.3, 3.4, 3.5, 3.6, 3.7](https://img.shields.io/pypi/pyversions/Jep.svg)](https://pypi.python.org/pypi/jep)
-[![License: zlib/libpng](https://img.shields.io/pypi/l/Jep.svg)](https://pypi.python.org/pypi/jep)
-[![Pypi: v3.7.1](https://img.shields.io/pypi/v/Jep.svg)](https://pypie.python.org/pypi/jep)
-[![Docs: wiki](https://img.shields.io/badge/docs-wiki-orange.svg)](https://github.com/ninia/jep/wiki)
+.. image:: https://img.shields.io/pypi/pyversions/Jep.svg
+    :target: https://pypi.python.org/pypi/jep
+
+.. image:: https://img.shields.io/pypi/l/Jep.svg
+    :target: https://pypi.python.org/pypi/jep
+
+.. image:: https://img.shields.io/pypi/v/Jep.svg
+    :target: https://pypie.python.org/pypi/jep
+	
+.. image:: https://img.shields.io/badge/docs-wiki-orange.svg
+    :target: https://github.com/ninia/jep/wiki
+
 
 Jep - Java Embedded Python
 ===========================
@@ -46,10 +54,10 @@ Notable features
 
 Help
 ----
-* [Documentation](https://github.com/ninia/jep/wiki)
-* [Mailing List](https://groups.google.com/d/forum/jep-project)
-* [Known Issues](https://github.com/ninia/jep/issues)
-* [Project Page](https://github.com/ninia/jep)
+* Documentation: https://github.com/ninia/jep/wiki
+* Mailing List: https://groups.google.com/d/forum/jep-project
+* Known Issues: https://github.com/ninia/jep/issues
+* Project Page: https://github.com/ninia/jep
 
 We welcome comments, contributions, bug reports, wiki documentation, etc.
 
