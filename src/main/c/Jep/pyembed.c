@@ -482,7 +482,6 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
         free(argv);
         (*env)->PopLocalFrame(env, NULL);
 
-        process_py_exception(env);
 #else
         wchar_t **argv = NULL;
         jsize count = 0;
@@ -517,8 +516,6 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
         }
         free(argv);
         (*env)->PopLocalFrame(env, NULL);
-
-        process_py_exception(env);
 
 #endif
     }
