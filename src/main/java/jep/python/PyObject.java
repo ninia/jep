@@ -93,7 +93,8 @@ public class PyObject implements AutoCloseable {
     protected void checkValid() throws JepException {
         jep.isValidThread();
         if (this.pointer.isDisposed()) {
-            throw new JepException(getClass().getSimpleName() + " has been closed."); 
+            throw new JepException(
+                    getClass().getSimpleName() + " has been closed.");
         }
     }
 
@@ -142,7 +143,7 @@ public class PyObject implements AutoCloseable {
 
     @Override
     public void close() throws JepException {
-        /* 
+        /*
          * Do not use isValid() because there should be no exception if this is
          * already closed.
          */
@@ -576,7 +577,7 @@ public class PyObject implements AutoCloseable {
      * @param o
      *            the object to set as an attribute
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      * 
      * @since 3.8
      */
@@ -596,7 +597,7 @@ public class PyObject implements AutoCloseable {
      * @param attr_name
      *            the name of the attribute to be deleted
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      *
      * @since 3.8
      */
@@ -643,18 +644,48 @@ public class PyObject implements AutoCloseable {
     protected native Object getValue(long tstate, long onModule, String str)
             throws JepException;
 
+    /**
+     * Checks that the Java type matches and if so then uses Python's rich
+     * compare with the == operator to check if this wrapped Python object
+     * matches the other PyObject.
+     * 
+     * Equals is not consistent between languages. Java is strict on equality
+     * while Python is flexible. For example in Python code: Integer.valueOf(5)
+     * == 5 will evaluate to True while in Java code:
+     * Integer.valueOf(5).equals(other) where other is a PyObject wrapping 5
+     * will evaluate to false.
+     */
     @Override
     public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
         checkValidRuntime();
         return equals(pointer.tstate, pointer.pyObject, obj);
     }
 
+    /**
+     * Produces the string representation of the wrapped Python object by using
+     * the Python built-in method str.
+     */
     @Override
     public String toString() {
         checkValidRuntime();
         return toString(pointer.tstate, pointer.pyObject);
     }
 
+    /**
+     * Produces the hash code of the wrapped Python object by using the Python
+     * built-in method hash. Hash codes are not consistent between languages.
+     * For example the hash code of the string "hello" will be different in
+     * Python than in Java, even if this PyObject wrapped the string "hello".
+     */
     @Override
     public int hashCode() {
         checkValidRuntime();
