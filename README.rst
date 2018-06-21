@@ -54,10 +54,10 @@ Notable features
 
 Help
 ----
-* Documentation: https://github.com/ninia/jep/wiki
-* Mailing List: https://groups.google.com/d/forum/jep-project
-* Known Issues: https://github.com/ninia/jep/issues
-* Project Page: https://github.com/ninia/jep
+* `Documentation <https://github.com/ninia/jep/wiki>`_
+* `Mailing List <https://groups.google.com/d/forum/jep-project>`_
+* `Known Issues <https://github.com/ninia/jep/issues>`_
+* `Project Page <https://github.com/ninia/jep>`_
 
 We welcome comments, contributions, bug reports, wiki documentation, etc.
 

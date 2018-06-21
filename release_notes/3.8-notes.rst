@@ -1,7 +1,7 @@
 Jep 3.8 Release Notes
 *********************
-This release emphasized...
-It is compatible with Python 2.7, 3.3, 3.4, 3.5, 3.6, and 3.7.  
+This release is compatible with Python 2.7, 3.3, 3.4, 3.5, 3.6, and 3.7.
+It is compatible with Java versions >= 1.7.
 
 
 Maven layout
@@ -29,16 +29,18 @@ Smarter library loading
 Jep will try harder to find both the native Jep library and the Python library so
 LD_PRELOAD, LD_LIBRARY_PATH and java.library.path are not needed in many
 environments. There are 2 different changes that help with this:
+
 1. Jep will now try to load the Python library globally which is required by some
    Python modules. Previously this global loading could be forced on Unix by using
    LD_PRELOAD.
 2. If the native Jep Library is not found, then Jep will attempt to find it in
-   the jep module. To find the Jep module it looks in the locations in the
+   the jep module. To find the jep module it looks in the locations in the
    PYTHONPATH environmental variable and also in the site-packages directory
    which is found relative to the PYTHONHOME environmental variable. If the Jep
    Library can be found in one of those locations then it is no longer necessary
    to set the LD_LIBRARY_PATH and/or java.library.path to the location of the
    Jep library.
+
 
 PYTHONHOME can be set from Java
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -47,21 +49,42 @@ same purpose as the PYTHONHOME environmental variable. This value can be used by
 Jep when trying to find the Jep native library and it is also used by Python to 
 find the standard Python libraries.
 
+
 Interface default methods can be called on JProxy objects
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-When a Python object is wrapped in a Java interface(using jproxy) it will now
-correctly call default methods on the Java interface that are not overriden by
+When a Python object is wrapped in a Java interface (using jproxy) it will now
+correctly call default methods on the Java interface that are not overridden by
 the Python object.
+
 
 Allow creation of Jep without a sub-interpreter
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 A new subclass of Jep has been created called SharedInterpreter. Instances of
 this class can be used the same as an ordinary Jep instance but it will not use
-a Python sub-interpreter. This is intended to improve compatibility with Python
+a Python sub-interpreter. This is intended to improve compatibility with CPython
 extension modules. For simple use cases this can provide an alternative to using
 shared modules. Creating a SharedInterpreter is equivalent to sharing all
 modules. See the JavaDoc on SharedInterpreter for more information on the
 limitations and capabilities of this new mode.
+
+
+Python Objects in Java (beta)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Wrapped Python objects can now be retrieved through the use of the new method
+Jep.getValue(String, Class).  Provide the class of jep.python.PyObject or
+jep.python.PyCallable to retrieve a Python object wrapped as a Java object.
+These wrapped Python objects provide the methods getAttr(String),
+getAttr(String, Class), setAttr(String, Object), and delAttr(String).  You can
+creatively use and manipulate Python objects from Java by using
+PyObject.getAttr(String, Class) repeatedly to access fields and methods and
+PyCallable.call(...) to invoke retrieved methods.  The methods on a PyObject
+can only be called from the Thread that created the PyObject.  Please see the
+javadoc on the classes PyObject and PyCallable and their methods for more
+information.  This feature is still considered to be in beta, it works well in
+isolated testing but needs more real world testing in a variety of environments
+to ensure it works consistently.  It is possible that the API may change in
+future releases.
+
 
 Compatibility Notes
 *******************
@@ -103,4 +126,19 @@ enable the printing of stacktraces to stdout when Java exceptions occur in
 Python.  JepException has supported stacktraces since Jep 3.3 so the
 printStack(bool) function was no longer as useful as it originally was and
 hence it has been removed.
+
+
+Jep Script Engine deprecated
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The classes JepScriptEngine and JepScriptEngineFactory have been deprecated since
+they are not being used by the community.
+
+
+Deprecations of PyModule and PyClass
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The Java classes PyModule and PyClass have been deprecated in favor of the new
+beta PyObject API.  In addition to this, the old set(String, Object) methods on
+PyObject have been deprecated in favor of using setAttr(String, Object).  Also
+Jep.createModule(String) has been deprecated as it will likely be replaced as
+the new PyObject API evolves.
 
