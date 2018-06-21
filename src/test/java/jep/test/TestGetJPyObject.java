@@ -155,25 +155,16 @@ public class TestGetJPyObject {
     public static void testEquals(Jep jep) throws JepException {
         jep.eval("s = 'my python string'");
         PyObject pystr = jep.getValue("s", PyObject.class);
-        // Python object must be on the left
         if (pystr.equals("my python string")) {
             throw new IllegalStateException(
                     "JPyObject equals() does not work as expected");
         }
 
-        /*
-         * since Python object is on the left, will use PyObject.equals(obj)
-         * which ignores class types
-         */
         if (jep.getValue("1", PyObject.class).equals(1)) {
             throw new IllegalStateException(
                     "JPyObject equals() does not work as expected");
         }
 
-        /*
-         * since Java object is on the left, will use Integer.equals(obj) and
-         * not be equals since Java compares class types
-         */
         if ((Integer.valueOf(1)).equals(jep.getValue("1", PyObject.class))) {
             throw new IllegalStateException(
                     "Java equals(JPyObject) does not work as expected");
