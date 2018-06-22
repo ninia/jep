@@ -10,6 +10,8 @@
 .. image:: https://img.shields.io/badge/docs-wiki-orange.svg
     :target: https://github.com/ninia/jep/wiki
 
+.. image:: https://img.shields.io/badge/docs-javadoc-orange.svg
+    :target: https://ninia.github.io/jep/javadoc
 
 Jep - Java Embedded Python
 ===========================
@@ -55,6 +57,7 @@ Notable features
 Help
 ----
 * `Documentation <https://github.com/ninia/jep/wiki>`_
+* `JavaDoc <https://ninia.github.io/jep/javadoc>`_
 * `Mailing List <https://groups.google.com/d/forum/jep-project>`_
 * `Known Issues <https://github.com/ninia/jep/issues>`_
 * `Project Page <https://github.com/ninia/jep>`_

@@ -28,6 +28,7 @@ class javadoc(Command):
         self.java_files = self.distribution.java_files
 
     def run(self):
-        spawn([self.javadoc, '-d', os.path.join(javadoc.outdir, self.version), 
+        spawn([self.javadoc, '-public', '-notimestamp',
+                             '-d', os.path.join(javadoc.outdir, self.version), 
                              '-sourcepath', 'src/main/java',
-                             'jep', 'jep.python' ])
+                             '-subpackages', 'jep' ])

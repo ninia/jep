@@ -159,11 +159,10 @@ public class ClassList implements ClassEnquirer {
         }
     }
 
-    /**
+    /*
      * the jre will tell us about what jar files it has open. use that facility
      * to get a list of packages. then read the files ourselves since java won't
      * share.
-     * 
      */
     private void loadPackages() throws JepException {
         ClassLoader cl = this.getClass().getClassLoader();
@@ -194,10 +193,9 @@ public class ClassList implements ClassEnquirer {
         return name.substring(0, name.length() - 6);
     }
 
-    /**
+    /*
      * The jre keeps a list of classes in the lib folder. We don't have a better
      * way to figure out what's in the java package, so this is my little hack.
-     * 
      */
     private void loadClassList() throws JepException {
         String version = System.getProperty("java.version");
