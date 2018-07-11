@@ -82,7 +82,7 @@ if __name__ == '__main__':
           url='https://github.com/ninia/jep',
           packages=['jep'],
           package_dir={'': 'src/main/python'},
-          scripts=['src/main/resources/scripts/jep'],
+          scripts=['src/main/scripts/jep'],
           keywords='java',
           license='zlib/libpng',
           classifiers=[
@@ -116,10 +116,10 @@ if __name__ == '__main__':
 
           # my hacks to compile java files
           java_files=get_files('.java'),
-          extra_jar_files=['src/main/resources/classlist/classlist_7.txt',
-                           'src/main/resources/classlist/classlist_8.txt',
-                           'src/main/resources/classlist/classlist_9.txt',
-                           'src/main/resources/classlist/classlist_10.txt'],
+          extra_jar_files=['src/main/resources/jep/classlist_7.txt',
+                           'src/main/resources/jep/classlist_8.txt',
+                           'src/main/resources/jep/classlist_9.txt',
+                           'src/main/resources/jep/classlist_10.txt'],
           javah_files=['jep.Jep',
                        'jep.MainInterpreter',
                        'jep.python.InvocationHandler',
