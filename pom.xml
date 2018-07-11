@@ -6,12 +6,13 @@
 
   <groupId>black.ninia</groupId>
   <artifactId>jep</artifactId>
-  <version>3.8.0-SNAPSHOT</version>
+  <version>3.8.0</version>
   <packaging>jar</packaging>
 
   <name>Java Embedded Python</name>
   <description>Jep embeds CPython in Java through JNI.</description>
   <url>https://github.com/ninia/jep</url>
+  <inceptionYear>2004</inceptionYear>
 
   <licenses>
     <license>
@@ -38,7 +39,12 @@
   <scm>
     <connection>scm:git:git://github.com/ninia/jep.git</connection>
     <developerConnection>scm:git:ssh://github.com:ninia/jep.git</developerConnection>
-    <url>https://github.com/ninia/jep/tree/dev_3.8</url>
+    <url>https://github.com/ninia/jep/tree/v3.8.0</url>
    </scm>
+
+  <properties>
+    <maven.compiler.source>1.7</maven.compiler.source>
+    <maven.compiler.target>1.7</maven.compiler.target>
+  </properties>
 
 </project>
