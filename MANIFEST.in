@@ -6,3 +6,4 @@ include src/test/python/lib/*.jar
 include LICENSE
 include AUTHORS
 include README.rst
+include pom.xml
