@@ -1,11 +1,8 @@
-recursive-include src *.c *.h *.java
-recursive-include tests *.py
-recursive-include javadoc *.html *.css *.gif
+recursive-include src *.c *.h *.java *.txt *.py
 recursive-include commands *.py
-include ChangeLog
+recursive-include release_notes *.rst
+include src/main/scripts/*
+include src/test/python/lib/*.jar
 include LICENSE
 include AUTHORS
-include runtests.py
 include README.rst
-include src/jep/classlist_*.txt
-include src/scripts/jep.bat
