@@ -250,6 +250,18 @@ public class Test implements Runnable {
         return;
     }
 
+    public String[] testAllVarArgs(String... args){
+        return args;
+    }
+
+    public String[] testMixedVarArgs(String regArg1, String regArg2, String... args){
+        String[] result = new String[args.length + 2];
+        result[0] = regArg1;
+        result[1] = regArg2;
+        System.arraycopy(args, 0, result, 2, args.length);
+        return result;
+    }
+
     public static Object[] test20Args(Object arg1, Object arg2, Object arg3,
             Object arg4, Object arg5, Object arg6, Object arg7, Object arg8,
             Object arg9, Object arg10, Object arg11, Object arg12,

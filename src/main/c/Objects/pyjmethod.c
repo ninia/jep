@@ -250,7 +250,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
             return NULL;
         }
         /* The last argument will be handled as varargs, so not a normal arg */
-        lenJArgsNormal -= lenJArgsExpected - 1;
+        lenJArgsNormal = lenJArgsExpected - 1;
     } else {
         /* No varargs, all args are normal */
         lenJArgsNormal = lenJArgsExpected;

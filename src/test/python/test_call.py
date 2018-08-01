@@ -122,4 +122,12 @@ class TestTypes(unittest.TestCase):
         self.assertSequenceEqual((), Arrays.asList())
         self.assertSequenceEqual(("1"), Arrays.asList("1"))
         self.assertSequenceEqual(("1","2"), Arrays.asList("1","2"))
+        # Passing a tuple should convert the tuple elemnts to the varargs array.
         self.assertSequenceEqual(("1","2"), Arrays.asList(("1","2")))
+        # instance method as opposed to static method above
+        self.assertSequenceEqual(("1","2"), self.test.testAllVarArgs("1","2"))
+        # Multiple varargs goes through a different path then just one vararg so be sure to hit both.
+        self.assertSequenceEqual(("1"), self.test.testAllVarArgs("1"))
+        # mixing normal args with varargs
+        self.assertSequenceEqual(("1","2", "3"), self.test.testMixedVarArgs("1","2", "3"))
+        self.assertSequenceEqual(("1","2", "3", "4"), self.test.testMixedVarArgs("1","2", "3", "4"))
