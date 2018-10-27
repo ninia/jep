@@ -39,7 +39,7 @@
   <scm>
     <connection>scm:git:git://github.com/ninia/jep.git</connection>
     <developerConnection>scm:git:ssh://github.com:ninia/jep.git</developerConnection>
-    <url>https://github.com/ninia/jep/tree/dev_3.8</url>
+    <url>https://github.com/ninia/jep/tree/dev_3.9</url>
    </scm>
 
   <properties>
