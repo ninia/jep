@@ -44,6 +44,8 @@
 #if JEP_NUMPY_ENABLED
 
     /* methods to support numpy <-> java conversion */
+    int npy_scalar_check(PyObject*);
+    jobject convert_npy_scalar_jobject(JNIEnv*, PyObject*, jclass);
     int npy_array_check(PyObject*);
     int jndarray_check(JNIEnv*, jobject);
     jobject convert_pyndarray_jobject(JNIEnv*, PyObject*, jclass);

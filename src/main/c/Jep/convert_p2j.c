@@ -873,6 +873,15 @@ jobject PyObject_As_jobject(JNIEnv *env, PyObject *pyobject,
         return pyunicode_as_jobject(env, pyobject, expectedType);
     } else if (PyBool_Check(pyobject)) {
         return pybool_as_jobject(env, pyobject, expectedType);
+#if JEP_NUMPY_ENABLED
+    } else if (npy_scalar_check(pyobject)) {
+        jobject result = convert_npy_scalar_jobject(env, pyobject, expectedType);
+        if (result != NULL || PyErr_Occurred()) {
+            return result;
+        } else if ((*env)->IsAssignableFrom(env, JPYOBJECT_TYPE, expectedType)) {
+            return PyObject_As_JPyObject(env, pyobject);
+        }
+#endif
     } else if (PyLong_Check(pyobject)) {
         return pylong_as_jobject(env, pyobject, expectedType);
 #if PY_MAJOR_VERSION < 3

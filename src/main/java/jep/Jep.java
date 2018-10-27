@@ -615,6 +615,33 @@ public class Jep implements AutoCloseable {
      *   <td>Only if Jep was built with numpy support</td>
      *  </tr>
      *  <tr>
+     *   <td>numpy.float64</td>
+     *   <td>{@link Double}, {@link Float}</td>
+     *  </tr>
+     *  <tr>
+     *   <td>numpy.float32</td>
+     *   <td>{@link Float}, {@link Double}</td>
+     *  </tr>
+     *  <tr>
+     *   <td>numpy.int64</td>
+     *   <td>{@link Long}, {@link Integer}, {@link Short}, {@link Byte}</td>
+     *   <td>Conversion fails if the number is outside the valid range for the Java type</td>
+     *  </tr>
+     *  <tr>
+     *   <td>numpy.int32</td>
+     *   <td>{@link Integer}, {@link Long}, {@link Short}, {@link Byte}</td>
+     *   <td>Conversion fails if the number is outside the valid range for the Java type</td>
+     *  </tr>
+     *  <tr>
+     *   <td>numpy.int16</td>
+     *   <td>{@link Short}, {@link Integer}, {@link Long}, {@link Byte}</td>
+     *   <td>Conversion fails if the number is outside the valid range for the Java type</td>
+     *  </tr>
+     *  <tr>
+     *   <td>numpy.int8</td>
+     *   <td>{@link Byte}. {@link Short}, {@link Integer}, {@link Long}</td>
+     *  </tr>
+     *  <tr>
      *   <td>NoneType</td>
      *   <td>Any(null)</td>
      *  </tr>

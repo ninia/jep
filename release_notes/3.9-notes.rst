@@ -1,0 +1,25 @@
+Jep 3.8 Release Notes
+*********************
+This release is compatible with Python 2.7, 3.3, 3.4, 3.5, 3.6, and 3.7.
+It is compatible with Java versions >= 1.7.
+
+
+Numpy scalar types can be converted to equivalent Java boxed primitives
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The numpy types float64, float32, int64, int32, int16, and int8 can now be
+converted to the appropriate java.lang equivalents of Double, Float, Long,
+Integer, Short, and Byte, respectively.
+
+Compatibility Notes
+*******************
+
+Default Java conversion for some numpy scalars changed on some platforms.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In previous versions of Jep numpy scalar conversion was platform dependent. On
+some platforms a numpy int32 and a float32 would be converted to a java.lang 
+Long and Double, respectively. In this version the conversion is consistent
+across platforms, a numpy.int32 will default to a java.lang.Integer and a
+numpy.float32 will default to a java.lang.Float. The old conversions are still
+possible if they are explicitly needed. For example a Java method taking a
+Double can still take a numpy.float32, however a Java method taking an Object
+or Number will now get a Float whereas previously it might be a Double.

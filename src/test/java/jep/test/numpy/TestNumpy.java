@@ -296,6 +296,10 @@ public class TestNumpy {
         }
     }
 
+    public static Class<?> getDefaultConversionClass(Object obj){
+       return obj.getClass();
+    }
+
     public static void main(String[] args) {
         try (Jep jep = new Jep(new JepConfig().addIncludePaths("."))) {
             TestNumpy test = new TestNumpy();

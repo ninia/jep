@@ -210,3 +210,23 @@ class TestNumpy(unittest.TestCase):
         self.assertEquals(1, ndarray2[0])
         ndarray2[0] = 2
         self.assertEquals(2, ndarray[0])
+
+    def testScalarBoxing(self):
+        import numpy
+        getClass = self.test.getDefaultConversionClass
+        TestClass = jep.findClass('jep.test.Test')
+        test = TestClass()
+        getConvert = test.testObjectPassThrough
+        self.assertEquals('java.lang.Float', getClass(numpy.float32(1.5)).java_name)
+        self.assertEquals(1.5, getConvert(numpy.float32(1.5)))
+        self.assertEquals('java.lang.Double', getClass(numpy.float64(1.5)).java_name)
+        self.assertEquals(1.5, getConvert(numpy.float64(1.5)))
+        self.assertEquals('java.lang.Long', getClass(numpy.int64(7)).java_name)
+        self.assertEquals(7, getConvert(numpy.int64(7)))
+        self.assertEquals('java.lang.Integer', getClass(numpy.int32(7)).java_name)
+        self.assertEquals(7, getConvert(numpy.int32(7)))
+        self.assertEquals('java.lang.Short', getClass(numpy.int16(7)).java_name)
+        self.assertEquals(7, getConvert(numpy.int16(7)))
+        self.assertEquals('java.lang.Byte', getClass(numpy.int8(7)).java_name)
+        self.assertEquals(7, getConvert(numpy.int8(7)))
+          

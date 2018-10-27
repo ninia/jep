@@ -97,6 +97,120 @@ static int init_numpy(void)
     return numpyInitialized;
 }
 
+int npy_scalar_check(PyObject *obj)
+{
+    if (!init_numpy()) {
+        PyErr_Clear();
+        return 0;
+    }
+    return PyArray_IsScalar(obj, Number);
+}
+
+jobject convert_npy_scalar_jobject(JNIEnv* env, PyObject *pyobject,
+                                   jclass expectedType)
+{
+    jobject result = NULL;
+    if (!init_numpy()) {
+        return NULL;
+    } else if (!PyArray_IsScalar(pyobject, Number)) {
+        return NULL;
+    } else if (PyArray_IsScalar(pyobject, Float64)) {
+        npy_float64 d;
+        if ((*env)->IsAssignableFrom(env, JDOUBLE_OBJ_TYPE, expectedType)) {
+            PyArray_ScalarAsCtype(pyobject, &d);
+            result = java_lang_Double_new_D(env, (jdouble) d);
+        } else if ((*env)->IsAssignableFrom(env, JFLOAT_OBJ_TYPE, expectedType)) {
+            PyArray_ScalarAsCtype(pyobject, &d);
+            result = java_lang_Float_new_F(env, (jfloat) d);
+        }
+    } else if (PyArray_IsScalar(pyobject, Float32)) {
+        npy_float32 f;
+        if ((*env)->IsAssignableFrom(env, JFLOAT_OBJ_TYPE, expectedType)) {
+            PyArray_ScalarAsCtype(pyobject, &f);
+            result = java_lang_Float_new_F(env, (jfloat) f);
+        } else if ((*env)->IsAssignableFrom(env, JDOUBLE_OBJ_TYPE, expectedType)) {
+            PyArray_ScalarAsCtype(pyobject, &f);
+            result = java_lang_Double_new_D(env, (jdouble) f);
+        }
+    } else if (PyArray_IsScalar(pyobject, Int64)) {
+        if ((*env)->IsAssignableFrom(env, JLONG_OBJ_TYPE, expectedType)) {
+            npy_int64 j;
+            PyArray_ScalarAsCtype(pyobject, &j);
+            result = java_lang_Long_new_J(env, (jlong) j);
+        } else if ((*env)->IsAssignableFrom(env, JINT_OBJ_TYPE, expectedType)) {
+            /* Use generic conversion to get range checking. */
+            jint i = PyObject_As_jint(pyobject);
+            if (i != -1 || !PyErr_Occurred()) {
+                result = java_lang_Integer_new_I(env, i);
+            }
+        } else if ((*env)->IsAssignableFrom(env, JSHORT_OBJ_TYPE, expectedType)) {
+            jshort s = PyObject_As_jshort(pyobject);
+            if (s != -1 || !PyErr_Occurred()) {
+                result = java_lang_Short_new_S(env, s);
+            }
+        } else if ((*env)->IsAssignableFrom(env, JBYTE_OBJ_TYPE, expectedType)) {
+            jbyte b = PyObject_As_jbyte(pyobject);
+            if (b != -1 || !PyErr_Occurred()) {
+                result = java_lang_Byte_new_B(env, b);
+            }
+        }
+    } else if (PyArray_IsScalar(pyobject, Int32)) {
+        npy_int32 i;
+        if ((*env)->IsAssignableFrom(env, JINT_OBJ_TYPE, expectedType)) {
+            PyArray_ScalarAsCtype(pyobject, &i);
+            result = java_lang_Integer_new_I(env, (jint) i);
+        } else if ((*env)->IsAssignableFrom(env, JLONG_OBJ_TYPE, expectedType)) {
+            PyArray_ScalarAsCtype(pyobject, &i);
+            result = java_lang_Long_new_J(env, (jlong) i);
+        } else if ((*env)->IsAssignableFrom(env, JSHORT_OBJ_TYPE, expectedType)) {
+            jshort s = PyObject_As_jshort(pyobject);
+            if (s != -1 || !PyErr_Occurred()) {
+                result = java_lang_Short_new_S(env, s);
+            }
+        } else if ((*env)->IsAssignableFrom(env, JBYTE_OBJ_TYPE, expectedType)) {
+            jbyte b = PyObject_As_jbyte(pyobject);
+            if (b != -1 || !PyErr_Occurred()) {
+                result = java_lang_Byte_new_B(env, b);
+            }
+        }
+    } else if (PyArray_IsScalar(pyobject, Int16)) {
+        npy_int16 s;
+        if ((*env)->IsAssignableFrom(env, JSHORT_OBJ_TYPE, expectedType)) {
+            PyArray_ScalarAsCtype(pyobject, &s);
+            result = java_lang_Short_new_S(env, (jshort) s);
+        } else if ((*env)->IsAssignableFrom(env, JINT_OBJ_TYPE, expectedType)) {
+            PyArray_ScalarAsCtype(pyobject, &s);
+            result = java_lang_Integer_new_I(env, (jint) s);
+        } else if ((*env)->IsAssignableFrom(env, JLONG_OBJ_TYPE, expectedType)) {
+            PyArray_ScalarAsCtype(pyobject, &s);
+            result = java_lang_Long_new_J(env, (jlong) s);
+        } else if ((*env)->IsAssignableFrom(env, JBYTE_OBJ_TYPE, expectedType)) {
+            jbyte b = PyObject_As_jbyte(pyobject);
+            if (b != -1 || !PyErr_Occurred()) {
+                result = java_lang_Byte_new_B(env, b);
+            }
+        }
+    } else if (PyArray_IsScalar(pyobject, Int8)) {
+        npy_int8 b;
+        if ((*env)->IsAssignableFrom(env, JBYTE_OBJ_TYPE, expectedType)) {
+            PyArray_ScalarAsCtype(pyobject, &b);
+            result = java_lang_Byte_new_B(env, (jbyte) b);
+        } else if ((*env)->IsAssignableFrom(env, JSHORT_OBJ_TYPE, expectedType)) {
+            PyArray_ScalarAsCtype(pyobject, &b);
+            result = java_lang_Short_new_S(env, (jshort) b);
+        } else if ((*env)->IsAssignableFrom(env, JINT_OBJ_TYPE, expectedType)) {
+            PyArray_ScalarAsCtype(pyobject, &b);
+            result = java_lang_Integer_new_I(env, (jint) b);
+        } else if ((*env)->IsAssignableFrom(env, JLONG_OBJ_TYPE, expectedType)) {
+            PyArray_ScalarAsCtype(pyobject, &b);
+            result = java_lang_Long_new_J(env, (jlong) b);
+        }
+    }
+    if (!result) {
+        process_java_exception(env);
+    }
+    return result;
+}
 
 int npy_array_check(PyObject *obj)
 {
