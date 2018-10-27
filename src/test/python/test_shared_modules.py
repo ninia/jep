@@ -25,9 +25,9 @@ class TestSharedModules(unittest.TestCase):
 
     def test_unshared(self):
         # The default jep has no shared modules so it should not be possible
-        # to access topInterpreterModules
+        # to access mainInterpreterModules
         with self.assertRaises(AttributeError):
-            jep.topInterpreterModules
+            jep.mainInterpreterModules
     
     def test_shared_argv(self):
         jep_pipe(build_java_process_cmd('jep.test.TestSharedArgv'))

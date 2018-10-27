@@ -503,7 +503,7 @@ PyObject* convert_jdndarray_pyndarray(JNIEnv *env, PyObject* pyobj)
     if (!init_numpy()) {
         return NULL;
     }
-    if (!JNI_METHOD(dndarrayGetDims, env, JEP_NDARRAY_TYPE, "getDimensions",
+    if (!JNI_METHOD(dndarrayGetDims, env, JEP_DNDARRAY_TYPE, "getDimensions",
                     "()[I")) {
         process_java_exception(env);
         return NULL;

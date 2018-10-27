@@ -226,7 +226,7 @@ PyObject* jobject_As_PyObject(JNIEnv *env, jobject jobj)
     }
     class = (*env)->GetObjectClass(env, jobj);
     if ((*env)->IsSameObject(env, class, JSTRING_TYPE)) {
-        result = jstring_As_PyString(env, jobj);
+        result = jstring_As_PyString(env, (jstring) jobj);
     } else if ((*env)->IsAssignableFrom(env, class, JNUMBER_TYPE)) {
         result = jnumber_As_PyObject(env, jobj, class);
     } else if ((*env)->IsSameObject(env, class, JBOOL_OBJ_TYPE)) {

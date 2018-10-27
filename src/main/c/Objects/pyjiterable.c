@@ -47,7 +47,7 @@ static PyObject* pyjiterable_getiter(PyObject* obj)
         goto FINALLY;
     } else if (!iter) {
         PyErr_SetString(PyExc_TypeError,
-                        "java.util.Iterable returned a null value from iterator()");
+                        "java.lang.Iterable returned a null value from iterator()");
         goto FINALLY;
     }
     result = jobject_As_PyObject(env, iter);

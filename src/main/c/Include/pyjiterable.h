@@ -28,7 +28,7 @@
 /*
  * A PyJIterableObject is a PyJObject that has tp_iter implemented to support iteration. It should
  * only be used where the underlying jobject of the PyJObject is an
- * implementation of java.util.Iterable.
+ * implementation of java.lang.Iterable.
  */
 
 #include "jep_platform.h"
