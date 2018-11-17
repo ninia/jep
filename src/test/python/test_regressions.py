@@ -1,6 +1,9 @@
 from __future__ import print_function
 import unittest
+import sys
 
+from jep_pipe import jep_pipe
+from jep_pipe import build_java_process_cmd
 import jep
 TestFieldTypes = jep.findClass('jep.test.types.TestFieldTypes')
 
@@ -21,3 +24,8 @@ class TestRegressions(unittest.TestCase):
     def test_static_access_to_nonstatic_field(self):
         with self.assertRaises(TypeError):
             TestFieldTypes.objectString = ""
+
+    @unittest.skipIf(sys.platform.startswith("win"), "subprocess complications on Windows")
+    def test_close_with_threads(self):
+        jep_pipe(build_java_process_cmd('jep.test.TestCloseWithThreads'))
+

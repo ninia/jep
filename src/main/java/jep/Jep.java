@@ -72,6 +72,8 @@ public class Jep implements AutoCloseable {
 
     private final MemoryManager memoryManager = new MemoryManager();
 
+    private final boolean isSubInterpreter;
+
     // windows requires this as unix newline...
     private static final String LINE_SEP = "\n";
 
@@ -238,6 +240,8 @@ public class Jep implements AutoCloseable {
                     .append("Please close() the previous Jep instance to ensure stability.");
             throw new JepException(warning.toString());
         }
+
+        this.isSubInterpreter = useSubInterpreter;
 
         if (config.classLoader == null) {
             this.classLoader = this.getClass().getClassLoader();
@@ -1168,16 +1172,25 @@ public class Jep implements AutoCloseable {
             throw new JepException(warning.toString());
         }
 
-        getMemoryManager().cleanupReferences();
+        if (isSubInterpreter) {
+            eval("import sys");
+            Boolean hasThreads = getValue("'threading' in sys.modules", Boolean.class);
+            if (hasThreads.booleanValue()) {
+                Integer count = getValue("sys.modules['threading'].active_count()", Integer.class);
+                if (count.intValue() > 1) {
+                     throw new JepException("All threads must be stopped before closing Jep.");
+                }
+            }
+        }
+
+	getMemoryManager().cleanupReferences();
 
         // don't attempt close twice if something goes wrong
         this.closed = true;
 
-        try {
+        if (isSubInterpreter) {
             eval(this.tstate, "import jep");
             eval(this.tstate, "jep.shared_modules_hook.teardownImporter()");
-        } catch (JepException e) {
-            throw new RuntimeException(e);
         }
 
         this.close(tstate);
