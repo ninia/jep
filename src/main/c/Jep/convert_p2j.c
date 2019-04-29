@@ -865,6 +865,16 @@ jobject PyObject_As_jobject(JNIEnv *env, PyObject *pyobject,
         if ((*env)->IsAssignableFrom(env, pyjobject->clazz, expectedType)) {
             return (*env)->NewLocalRef(env, pyjobject->object);
         }
+    } else if (PyCallable_Check(pyobject)) {
+        if (isFunctionalInterfaceType(env, expectedType)) {
+            return PyCallable_as_functional_interface(env, pyobject, expectedType);
+        } else if (PyErr_Occurred()) {
+            return NULL;
+        } else if ((*env)->IsAssignableFrom(env, JPYCALLABLE_TYPE, expectedType)) {
+            return PyCallable_As_JPyCallable(env, pyobject);
+        }
+    } else if ((*env)->IsAssignableFrom(env, expectedType, JPYOBJECT_TYPE)) {
+        return PyObject_As_JPyObject(env, pyobject);
 #if PY_MAJOR_VERSION < 3
     } else if (PyString_Check(pyobject)) {
         return pystring_as_jobject(env, pyobject, expectedType);
@@ -900,14 +910,6 @@ jobject PyObject_As_jobject(JNIEnv *env, PyObject *pyobject,
         return pyfastsequence_as_jobject(env, pyobject, expectedType);
     } else if (PyDict_Check(pyobject)) {
         return pydict_as_jobject(env, pyobject, expectedType);
-    } else if (PyCallable_Check(pyobject)) {
-        if (isFunctionalInterfaceType(env, expectedType)) {
-            return PyCallable_as_functional_interface(env, pyobject, expectedType);
-        } else if (PyErr_Occurred()) {
-            return NULL;
-        } else if ((*env)->IsAssignableFrom(env, JPYCALLABLE_TYPE, expectedType)) {
-            return PyCallable_As_JPyCallable(env, pyobject);
-        }
 #if JEP_NUMPY_ENABLED
     } else if (npy_array_check(pyobject)) {
         return convert_pyndarray_jobject(env, pyobject, expectedType);
