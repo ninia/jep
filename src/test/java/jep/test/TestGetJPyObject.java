@@ -155,6 +155,25 @@ public class TestGetJPyObject {
             throw new IllegalStateException(
                     "JPyCallable list.count does not work as expected.");
         }
+
+        // test that the requested return type is actually respected - if not, this would return String instead of PyObject
+        PyCallable str = jep.getValue("str", PyCallable.class);
+        PyObject typedResultObj = str.callAs(PyObject.class, 12342);
+        count = typedResultObj.getAttr("count", PyCallable.class);
+        typedResultLong = count.callAs(Long.class, "2");
+
+        if (typedResultLong.intValue() != 2) {
+            throw new IllegalStateException(
+                    "JPyCallable str.count does not work as expected.");
+        }
+
+        typedResultLong = count.callAs(Long.class, "1");
+
+        if (typedResultLong.intValue() != 1) {
+            throw new IllegalStateException(
+                    "JPyCallable str.count does not work as expected.");
+        }
+        
     }
 
     public static void testToString(Jep jep) throws JepException {
