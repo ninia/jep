@@ -135,10 +135,23 @@ public class TestGetJPyObject {
             throw new IllegalStateException(
                     "JPyCallable chr does not work as expected.");
         }
+        
+        String typedResultStr = chr.callAs(String.class, 32);
+        if (!" ".equals(typedResultStr)) {
+            throw new IllegalStateException(
+                    "JPyCallable chr does not work as expected.");
+        }
+
         PyCallable count = jep.getValue("[1,2,1,4,1,4].count",
                 PyCallable.class);
         result = count.call(1);
         if (((Number) result).intValue() != 3) {
+            throw new IllegalStateException(
+                    "JPyCallable list.count does not work as expected.");
+        }
+
+        Long typedResultLong = count.callAs(Long.class, 4);
+        if (typedResultLong.intValue() != 2) {
             throw new IllegalStateException(
                     "JPyCallable list.count does not work as expected.");
         }
