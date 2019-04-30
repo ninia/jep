@@ -87,7 +87,7 @@ public class PyCallable extends PyObject {
      *            The expected return type of the invocation
      * @param args
      *            args to pass to the function in order
-     * @return an value of the given type
+     * @return a value of the given type
      * @throws JepException
      *             if an error occurs
      */
@@ -110,13 +110,13 @@ public class PyCallable extends PyObject {
     }
 
     /**
-     * Invokes this callable with keyword args.
+     * Invokes this callable with keyword args, converting the return value to the given class.
      * 
      * @param expectedType
      *            The expected return type of the invocation
      * @param kwargs
      *            a Map of keyword args
-     * @return an {@link Object} value
+     * @return a value of the given type
      * @throws JepException
      *             if an error occurs
      */
@@ -141,8 +141,8 @@ public class PyCallable extends PyObject {
         return callAs(Object.class, args, kwargs);
     }
 
-        /**
-     * Invokes this callable with positional args and keyword args.
+    /**
+     * Invokes this callable with positional args and keyword args, converting the return value to the given class.
      * 
      * @param expectedType
      *            The expected return type of the invocation
@@ -150,7 +150,7 @@ public class PyCallable extends PyObject {
      *            args to pass to the function in order
      * @param kwargs
      *            a Map of keyword args
-     * @return an {@link Object} value
+     * @return a value of the given type
      * @throws JepException
      *             if an error occurs
      */
