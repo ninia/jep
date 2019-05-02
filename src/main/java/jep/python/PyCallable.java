@@ -77,8 +77,23 @@ public class PyCallable extends PyObject {
      *             if an error occurs
      */
     public Object call(Object... args) throws JepException {
+        return callAs(Object.class, args);
+    }
+
+    /**
+     * Invokes this callable with the args in order, converting the return value to the given class.
+     *
+     * @param expectedType
+     *            The expected return type of the invocation
+     * @param args
+     *            args to pass to the function in order
+     * @return a value of the given type
+     * @throws JepException
+     *             if an error occurs
+     */
+    public <T> T callAs(Class<T> expectedType, Object... args) throws JepException {
         checkValid();
-        return call(pointer.tstate, pointer.pyObject, args, null);
+        return expectedType.cast(call(pointer.tstate, pointer.pyObject, args, null, expectedType));
     }
 
     /**
@@ -91,8 +106,23 @@ public class PyCallable extends PyObject {
      *             if an error occurs
      */
     public Object call(Map<String, Object> kwargs) throws JepException {
+        return callAs(Object.class, kwargs);
+    }
+
+    /**
+     * Invokes this callable with keyword args, converting the return value to the given class.
+     * 
+     * @param expectedType
+     *            The expected return type of the invocation
+     * @param kwargs
+     *            a Map of keyword args
+     * @return a value of the given type
+     * @throws JepException
+     *             if an error occurs
+     */
+    public <T> T callAs(Class<T> expectedType, Map<String, Object> kwargs) throws JepException {
         checkValid();
-        return call(pointer.tstate, pointer.pyObject, null, kwargs);
+        return expectedType.cast(call(pointer.tstate, pointer.pyObject, null, kwargs, expectedType));
     }
 
     /**
@@ -108,11 +138,29 @@ public class PyCallable extends PyObject {
      */
     public Object call(Object[] args, Map<String, Object> kwargs)
             throws JepException {
+        return callAs(Object.class, args, kwargs);
+    }
+
+    /**
+     * Invokes this callable with positional args and keyword args, converting the return value to the given class.
+     * 
+     * @param expectedType
+     *            The expected return type of the invocation
+     * @param args
+     *            args to pass to the function in order
+     * @param kwargs
+     *            a Map of keyword args
+     * @return a value of the given type
+     * @throws JepException
+     *             if an error occurs
+     */
+    public <T> T callAs(Class<T> expectedType, Object[] args, Map<String, Object> kwargs)
+            throws JepException {
         checkValid();
-        return call(pointer.tstate, pointer.pyObject, args, kwargs);
+        return expectedType.cast(call(pointer.tstate, pointer.pyObject, args, kwargs, expectedType));
     }
 
     private native Object call(long tstate, long pyObject, Object[] args,
-            Map<String, Object> kwargs) throws JepException;
+            Map<String, Object> kwargs, Class expectedType) throws JepException;
 
 }

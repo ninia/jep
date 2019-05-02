@@ -36,7 +36,7 @@
  */
 JNIEXPORT jobject JNICALL Java_jep_python_PyCallable_call
 (JNIEnv *env, jobject this, jlong tstate, jlong pyobj, jobjectArray args,
- jobject kwargs)
+ jobject kwargs, jclass expectedType)
 {
 
     JepThread  *jepThread;
@@ -51,7 +51,7 @@ JNIEXPORT jobject JNICALL Java_jep_python_PyCallable_call
 
     pyObject = (PyObject*) pyobj;
     PyEval_AcquireThread(jepThread->tstate);
-    ret = pyembed_invoke(env, pyObject, args, kwargs);
+    ret = pyembed_invoke_as(env, pyObject, args, kwargs, expectedType);
     PyEval_ReleaseThread(jepThread->tstate);
     return ret;
 }

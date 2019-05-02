@@ -61,7 +61,10 @@ void pyembed_close(void);
 void pyembed_run(JNIEnv*, intptr_t, char*);
 jobject pyembed_invoke_method(JNIEnv*, intptr_t, const char*, jobjectArray,
                               jobject);
+jobject pyembed_invoke_method_as(JNIEnv*, intptr_t, const char*, jobjectArray,
+                              jobject, jclass);
 jobject pyembed_invoke(JNIEnv*, PyObject*, jobjectArray, jobject);
+jobject pyembed_invoke_as(JNIEnv*, PyObject*, jobjectArray, jobject, jclass);
 void pyembed_eval(JNIEnv*, intptr_t, char*);
 int pyembed_compile_string(JNIEnv*, intptr_t, char*);
 void pyembed_setloader(JNIEnv*, intptr_t, jobject);

@@ -1041,10 +1041,11 @@ static PyObject* pyembed_findclass(PyObject *self, PyObject *args)
 /*
  * Invoke callable object.  Hold the thread state lock before calling.
  */
-jobject pyembed_invoke(JNIEnv *env,
+jobject pyembed_invoke_as(JNIEnv *env,
                        PyObject *callable,
                        jobjectArray args,
-                       jobject kwargs)
+                       jobject kwargs,
+                       jclass expectedType)
 {
     jobject        ret      = NULL;
     PyObject      *pyargs   = NULL;    /* a tuple */
@@ -1169,7 +1170,7 @@ jobject pyembed_invoke(JNIEnv *env,
     }
 
     // handles errors
-    ret = PyObject_As_jobject(env, pyret, JOBJECT_TYPE);
+    ret = PyObject_As_jobject(env, pyret, expectedType);
     if (!ret) {
         process_py_exception(env);
     }
@@ -1182,12 +1183,21 @@ EXIT:
     return ret;
 }
 
+jobject pyembed_invoke(JNIEnv *env,
+                          PyObject *callable,
+                          jobjectArray args,
+                          jobject kwargs)
+{
+    return pyembed_invoke_as(env, callable, args, kwargs, JOBJECT_TYPE);
+}
 
-jobject pyembed_invoke_method(JNIEnv *env,
+
+jobject pyembed_invoke_method_as(JNIEnv *env,
                               intptr_t _jepThread,
                               const char *cname,
                               jobjectArray args,
-                              jobject kwargs)
+                              jobject kwargs,
+                              jclass expectedType)
 {
     PyObject  *callable;
     JepThread *jepThread;
@@ -1215,7 +1225,7 @@ jobject pyembed_invoke_method(JNIEnv *env,
             if (obj) {
                 callable = PyObject_GetAttrString(obj, dot + 1);
                 if (callable) {
-                    ret = pyembed_invoke(env, callable, args, kwargs);
+                    ret = pyembed_invoke_as(env, callable, args, kwargs, expectedType);
                     Py_DECREF(callable);
                 } else {
                     process_py_exception(env);
@@ -1231,12 +1241,21 @@ jobject pyembed_invoke_method(JNIEnv *env,
             THROW_JEP(env, errorBuf);
         }
     } else if (!process_py_exception(env)) {
-        ret = pyembed_invoke(env, callable, args, kwargs);
+        ret = pyembed_invoke_as(env, callable, args, kwargs, expectedType);
     }
 
     PyEval_ReleaseThread(jepThread->tstate);
 
     return ret;
+}
+
+jobject pyembed_invoke_method(JNIEnv *env,
+                                 intptr_t _jepThread,
+                                 const char *cname,
+                                 jobjectArray args,
+                                 jobject kwargs)
+{
+    return pyembed_invoke_method_as(env, _jepThread, cname, args, kwargs, JOBJECT_TYPE);
 }
 
 
