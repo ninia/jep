@@ -7,6 +7,7 @@ import jep.Jep;
 import jep.JepConfig;
 import jep.JepException;
 import jep.NDArray;
+import jep.python.PyObject;
 
 /**
  * Runs a variety of simple tests to verify numpy interactions are working
@@ -28,6 +29,7 @@ public class TestNumpy {
      */
     public void testSetAndGet(Jep jep) throws JepException {
         int[] dimensions = new int[] { 4 };
+	PyObject asPyObj;
 
         // test boolean[]
         NDArray<boolean[]> zarray = new NDArray<>(
@@ -46,6 +48,7 @@ public class TestNumpy {
             throw new AssertionError(
                     "boolean[].hashCode() before != boolean[].hasCode() after");
         }
+	asPyObj = jep.getValue("zarray", PyObject.class);
 
         // test byte[]
         NDArray<byte[]> barray = new NDArray<>(
@@ -64,6 +67,7 @@ public class TestNumpy {
             throw new AssertionError(
                     "byte[].hashCode() before != byte[].hasCode() after");
         }
+	asPyObj = jep.getValue("barray", PyObject.class);
 
         // test short[]
         NDArray<short[]> sarray = new NDArray<>(new short[] { 5, 3, 1, 8 },
@@ -82,6 +86,7 @@ public class TestNumpy {
             throw new AssertionError(
                     "short[].hashCode() before != short[].hasCode() after");
         }
+	asPyObj = jep.getValue("sarray", PyObject.class);
 
         // test int[]
         NDArray<int[]> iarray = new NDArray<>(new int[] { 547, 232, -675, 101 },
@@ -100,6 +105,7 @@ public class TestNumpy {
             throw new AssertionError(
                     "int[].hashCode() before != int[].hasCode() after");
         }
+	asPyObj = jep.getValue("iarray", PyObject.class);
 
         // test long[]
         NDArray<long[]> larray = new NDArray<>(
@@ -119,6 +125,7 @@ public class TestNumpy {
             throw new AssertionError(
                     "long[].hashCode() before != long[].hasCode() after");
         }
+	asPyObj = jep.getValue("larray", PyObject.class);
 
         // test float[]
         NDArray<float[]> farray = new NDArray<>(
@@ -137,6 +144,7 @@ public class TestNumpy {
             throw new AssertionError(
                     "float[].hashCode() before != float[].hasCode() after");
         }
+	asPyObj = jep.getValue("farray", PyObject.class);
 
         // test double[]
         NDArray<double[]> darray = new NDArray<>(
@@ -156,6 +164,7 @@ public class TestNumpy {
             throw new AssertionError(
                     "double[].hashCode() before != double[].hasCode() after");
         }
+	asPyObj = jep.getValue("darray", PyObject.class);
 
         // System.out.println("NDArray get/set checked out OK");
     }

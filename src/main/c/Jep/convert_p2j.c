@@ -865,6 +865,8 @@ jobject PyObject_As_jobject(JNIEnv *env, PyObject *pyobject,
         if ((*env)->IsAssignableFrom(env, pyjobject->clazz, expectedType)) {
             return (*env)->NewLocalRef(env, pyjobject->object);
         }
+    } else if ((*env)->IsSameObject(env, expectedType, JPYOBJECT_TYPE)) {
+        return PyObject_As_JPyObject(env, pyobject);
 #if PY_MAJOR_VERSION < 3
     } else if (PyString_Check(pyobject)) {
         return pystring_as_jobject(env, pyobject, expectedType);
