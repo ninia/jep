@@ -6,19 +6,19 @@
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any
  * damages arising from the use of this software.
- * 
+ *
  * Permission is granted to anyone to use this software for any
  * purpose, including commercial applications, and to alter it and
  * redistribute it freely, subject to the following restrictions:
- * 
+ *
  *     1. The origin of this software must not be misrepresented; you
  *     must not claim that you wrote the original software. If you use
  *     this software in a product, an acknowledgment in the product
  *     documentation would be appreciated but is not required.
- * 
+ *
  *     2. Altered source versions must be plainly marked as such, and
  *     must not be misrepresented as being the original software.
- * 
+ *
  *     3. This notice may not be removed or altered from any source
  *     distribution.
  */
@@ -34,7 +34,7 @@ import jep.python.MemoryManager;
  * SharedInterpreter instance and for interacting with the interpreter use the
  * interface Interpreter. If you previously used Jep instances, use
  * SubInterpreter instances to retain the same behavior.
- * 
+ *
  * <p>
  * Embeds CPython in Java. Each Jep provides access to a Python interpreter and
  * maintains an independent global namespace for Python variables. Values can be
@@ -43,7 +43,7 @@ import jep.python.MemoryManager;
  * used to execute Python code. Python variables can be accessed using
  * {@link #getValue(String)}.
  * </p>
- * 
+ *
  * <p>
  * In general, methods called on a Jep instance must be called from the same
  * thread that created the instance. To maintain stability, avoid having two Jep
@@ -52,7 +52,7 @@ import jep.python.MemoryManager;
  * thread. Jep instances should always be closed when no longer needed to
  * prevent memory leaks.
  * </p>
- * 
+ *
  */
 public class Jep implements Interpreter {
 
@@ -72,6 +72,10 @@ public class Jep implements Interpreter {
     private StringBuilder evalLines = null;
 
     private boolean interactive = false;
+
+    // stored to be able to postpone the init
+    private JepConfig config = null;
+    private boolean useSubInterpreter = false;
 
     private final MemoryManager memoryManager = new MemoryManager();
 
@@ -96,10 +100,10 @@ public class Jep implements Interpreter {
     /**
      * Sets interpreter settings for the top Python interpreter. This method
      * must be called before the first Jep instance is created in the process.
-     * 
+     *
      * @param config
      *            the python configuration to use.
-     * 
+     *
      * @throws JepException
      *             if an error occurs
      * @deprecated Please use {@link MainInterpreter#setInitParams(PyConfig)}
@@ -114,7 +118,7 @@ public class Jep implements Interpreter {
     /**
      * Sets the sys.argv values on the top interpreter. This is a workaround for
      * issues with shared modules and should be considered experimental.
-     * 
+     *
      * @param argv
      *            the arguments to be set on Python's sys.argv for the top/main
      *            interpreter
@@ -123,7 +127,7 @@ public class Jep implements Interpreter {
      * @deprecated Please use
      *             {@link MainInterpreter#setSharedModulesArgv(String...)}
      *             instead.
-     * 
+     *
      * @since 3.7
      */
     @Deprecated
@@ -136,11 +140,11 @@ public class Jep implements Interpreter {
 
     /**
      * Creates a new <code>Jep</code> instance and its associated interpreter.
-     * 
+     *
      * @deprecated Deprecated in 3.9. Use SubInterpreter or SharedInterpreter
      *             instead. If you used Jep objects in previous releases, use
      *             SubIntepreter for the same behavior.
-     * 
+     *
      * @throws JepException
      *             if an error occurs
      */
@@ -152,7 +156,7 @@ public class Jep implements Interpreter {
     /**
      * Creates a new <code>Jep</code> instance and its associated
      * sub-interpreter.
-     * 
+     *
      * @param interactive
      *            whether {@link #eval(String)} should support the slower
      *            behavior of potentially waiting for multiple statements
@@ -168,7 +172,7 @@ public class Jep implements Interpreter {
     /**
      * Creates a new <code>Jep</code> instance and its associated
      * sub-interpreter.
-     * 
+     *
      * @param interactive
      *            whether {@link #eval(String)} should support the slower
      *            behavior of potentially waiting for multiple statements
@@ -187,7 +191,7 @@ public class Jep implements Interpreter {
     /**
      * Creates a new <code>Jep</code> instance and its associated
      * sub-interpreter.
-     * 
+     *
      * @param interactive
      *            whether {@link #eval(String)} should support the slower
      *            behavior of potentially waiting for multiple statements
@@ -209,7 +213,7 @@ public class Jep implements Interpreter {
     /**
      * Creates a new <code>Jep</code> instance and its associated
      * sub-interpreter.
-     * 
+     *
      * @param interactive
      *            whether {@link #eval(String)} should support the slower
      *            behavior of potentially waiting for multiple statements
@@ -235,24 +239,26 @@ public class Jep implements Interpreter {
 
     /**
      * Creates a new <code>Jep</code> instance and its associated interpreter.
-     * 
+     *
      * @param config
      *            the configuration for the Jep instance
-     * 
+     *
      * @deprecated Deprecated in 3.9. Use SubInterpreter or SharedInterpreter
      *             instead. If you used Jep objects in previous releases, use
      *             SubIntepreter for the same behavior.
-     * 
+     *
      * @throws JepException
      *             if an error occurs
      */
     @Deprecated
     public Jep(JepConfig config) throws JepException {
-        this(config, true);
+        this(config, false, true);
+    }
+    public Jep(JepConfig config, boolean postponeInit) throws JepException {
+        this(config, postponeInit, true);
     }
 
-    protected Jep(JepConfig config, boolean useSubInterpreter)
-            throws JepException {
+    protected Jep(JepConfig config, boolean postponeInit, boolean useSubInterpreter) throws JepException {
         MainInterpreter mainInterpreter = MainInterpreter.getMainInterpreter();
         if (threadUsed.get()) {
             Thread current = Thread.currentThread();
@@ -270,17 +276,28 @@ public class Jep implements Interpreter {
         } else {
             this.classLoader = config.classLoader;
         }
-
-        boolean hasSharedModules = config.sharedModules != null
-                && !config.sharedModules.isEmpty();
+        this.config = config;
+        this.useSubInterpreter = useSubInterpreter;
 
         this.interactive = config.interactive;
+        if (!postponeInit) {
+            init();
+        }
+    }
+
+    public boolean isInitialized(){ return threadUsed.get(); }
+
+    public void init() throws JepException {
+        boolean hasSharedModules = this.config.sharedModules != null
+                && !this.config.sharedModules.isEmpty();
+
         this.tstate = init(this.classLoader, hasSharedModules,
-                useSubInterpreter);
+                this.useSubInterpreter);
         threadUsed.set(true);
         this.thread = Thread.currentThread();
-        configureInterpreter(config);
+        configureInterpreter(this.config);
     }
+
 
     protected void configureInterpreter(JepConfig config) throws JepException {
         // why write C code if you don't have to? :-)
@@ -332,11 +349,11 @@ public class Jep implements Interpreter {
     /**
      * Checks if the current thread is valid for the method call. All calls must
      * check the thread.
-     * 
+     *
      * @deprecated For internal usage only.
-     * 
+     *
      *             <b>Internal Only</b>
-     * 
+     *
      * @throws JepException
      *             if an error occurs
      */
@@ -357,11 +374,11 @@ public class Jep implements Interpreter {
 
     /**
      * Runs a Python script.
-     * 
+     *
      * @deprecated This may be removed in a future version of Jep, as Jep does
      *             not fully support changing the ClassLoader after
      *             construction.
-     * 
+     *
      * @param script
      *            a <code>String</code> absolute path to script file.
      * @param cl
@@ -502,7 +519,7 @@ public class Jep implements Interpreter {
      *             {@link #getValue(String,Class)} with byte[].class
      *
      *             Retrieves a Python string object as a Java byte[].
-     * 
+     *
      * @param str
      *            the name of the Python variable to get from the
      *            sub-interpreter's global scope
@@ -527,10 +544,10 @@ public class Jep implements Interpreter {
 
     /**
      * Sets the default classloader.
-     * 
+     *
      * @deprecated This may be removed in a future version of Jep. Jep does not
      *             fully support changing the ClassLoader after construction.
-     * 
+     *
      * @param cl
      *            a <code>ClassLoader</code> value
      */
@@ -549,9 +566,9 @@ public class Jep implements Interpreter {
      * Changes behavior of {@link #eval(String)}. Interactive mode can wait for
      * further Python statements to be evaled, while non-interactive mode can
      * only execute complete Python statements.
-     * 
+     *
      * @deprecated This may be removed in a future version of Jep.
-     * 
+     *
      * @param v
      *            if the sub-interpreter should run in interactive mode
      */
@@ -562,9 +579,9 @@ public class Jep implements Interpreter {
 
     /**
      * Gets whether or not this sub-interpreter is interactive.
-     * 
+     *
      * @deprecated This may be removed in a future version of Jep.
-     * 
+     *
      * @return whether or not the sub-interpreter is interactive
      */
     @Deprecated
@@ -608,9 +625,9 @@ public class Jep implements Interpreter {
     /**
      * Sets the Java String into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @deprecated Use {@link #set(String, Object)} instead.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -631,9 +648,9 @@ public class Jep implements Interpreter {
     /**
      * Sets the Java boolean into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @deprecated Use {@link #set(String, Object)} instead.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -654,9 +671,9 @@ public class Jep implements Interpreter {
     /**
      * Sets the Java int into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @deprecated Use {@link #set(String, Object)} instead.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -674,9 +691,9 @@ public class Jep implements Interpreter {
     /**
      * Sets the Java short into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @deprecated Use {@link #set(String, Object)} instead.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -697,9 +714,9 @@ public class Jep implements Interpreter {
     /**
      * Sets the Java char[] into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @deprecated Use {@link #set(String, Object)} instead.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -717,9 +734,9 @@ public class Jep implements Interpreter {
     /**
      * Sets the Java char into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @deprecated Use {@link #set(String, Object)} instead.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -737,9 +754,9 @@ public class Jep implements Interpreter {
     /**
      * Sets the Java byte into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @deprecated Use {@link #set(String, Object)} instead.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param b
@@ -757,9 +774,9 @@ public class Jep implements Interpreter {
     /**
      * Sets the Java long into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @deprecated Use {@link #set(String, Object)} instead.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -780,9 +797,9 @@ public class Jep implements Interpreter {
     /**
      * Sets the Java double into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @deprecated Use {@link #set(String, Object)} instead.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -803,9 +820,9 @@ public class Jep implements Interpreter {
     /**
      * Sets the Java float into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @deprecated Use {@link #set(String, Object)} instead.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -828,9 +845,9 @@ public class Jep implements Interpreter {
     /**
      * Sets the Java boolean[] into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @deprecated Use {@link #set(String, Object)} instead.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -851,9 +868,9 @@ public class Jep implements Interpreter {
     /**
      * Sets the Java int[] into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @deprecated Use {@link #set(String, Object)} instead.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -874,9 +891,9 @@ public class Jep implements Interpreter {
     /**
      * Sets the Java short[] into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @deprecated Use {@link #set(String, Object)} instead.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -897,9 +914,9 @@ public class Jep implements Interpreter {
     /**
      * Sets the Java byte[] into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @deprecated Use {@link #set(String, Object)} instead.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -920,9 +937,9 @@ public class Jep implements Interpreter {
     /**
      * Sets the Java long[] into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @deprecated Use {@link #set(String, Object)} instead.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -943,9 +960,9 @@ public class Jep implements Interpreter {
     /**
      * Sets the Java double[] into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @deprecated Use {@link #set(String, Object)} instead.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -966,9 +983,9 @@ public class Jep implements Interpreter {
     /**
      * Sets the Java float[] into the sub-interpreter's global scope with the
      * specified variable name.
-     * 
+     *
      * @deprecated Use {@link #set(String, Object)} instead.
-     * 
+     *
      * @param name
      *            the Python name for the variable
      * @param v
@@ -991,7 +1008,7 @@ public class Jep implements Interpreter {
     /**
      * Gets the memory manager associated with this Jep instance. The memory
      * manager attempts to track native memory usage of PyObjects.
-     * 
+     *
      * @return the memory manager
      */
     protected MemoryManager getMemoryManager() {
@@ -1004,7 +1021,7 @@ public class Jep implements Interpreter {
 
     /**
      * Gets the class loader associated with this Jep instance.
-     * 
+     *
      * @return the class loader
      */
     protected ClassLoader getClassLoader() {
@@ -1014,7 +1031,7 @@ public class Jep implements Interpreter {
     /**
      * Shuts down the Python interpreter. Make sure you call this to prevent
      * memory leaks.
-     * 
+     *
      */
     @Override
     public synchronized void close() throws JepException {
