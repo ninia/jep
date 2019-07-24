@@ -813,3 +813,13 @@ class TestTypes(unittest.TestCase):
                 self.fields.intArray = l
             with self.assertRaises(TypeError):
                 self.staticFields.intArray = l
+
+    def test_byte_array(self):
+        from java.nio import ByteBuffer
+        l = [1,2,3,4]
+        bb = ByteBuffer.wrap(bytearray(l))
+        self.assertSequenceEqual(bb.array(), l)
+        if sys.version_info.major > 2:
+            bb = ByteBuffer.wrap(bytes(l))
+            self.assertSequenceEqual(bb.array(), l)
+        

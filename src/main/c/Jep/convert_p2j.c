@@ -333,8 +333,57 @@ static jobject pystring_as_jobject(JNIEnv *env, PyObject *pyobject,
     raiseTypeError(env, pyobject, expectedType);
     return NULL;
 }
+#else
+static jobject pybytes_as_jobject(JNIEnv *env, PyObject *pybytes,
+                                   jclass expectedType)
+{
+    if ((*env)->IsAssignableFrom(env, JBYTE_ARRAY_TYPE, expectedType)) {
+        char*      cstr   = NULL;
+        Py_ssize_t length = 0;
+        jbyteArray bytes  = NULL;
+        cstr = PyBytes_AsString(pybytes);
+        if (cstr == NULL) {
+            return NULL;
+        }
+        length = PyBytes_Size(pybytes);
+        bytes = (*env)->NewByteArray(env, (jsize) length);
+        if (process_java_exception(env)) {
+            return NULL;
+        }
+        (*env)->SetByteArrayRegion(env, bytes, 0, (jsize) length, (jbyte*) cstr);
+        return (jobject) bytes;
+    } else if ((*env)->IsAssignableFrom(env, JPYOBJECT_TYPE, expectedType)) {
+        return PyObject_As_JPyObject(env, pybytes);
+    }
+    raiseTypeError(env, pybytes, expectedType);
+    return NULL;
+}
 #endif
 
+static jobject pybytearray_as_jobject(JNIEnv *env, PyObject *pybytearray,
+                                   jclass expectedType)
+{
+    if ((*env)->IsAssignableFrom(env, JBYTE_ARRAY_TYPE, expectedType)) {
+        char*      cstr   = NULL;
+        Py_ssize_t length = 0;
+        jbyteArray bytes  = NULL;
+        cstr = PyByteArray_AsString(pybytearray);
+        if (cstr == NULL) {
+            return NULL;
+        }
+        length = PyByteArray_Size(pybytearray);
+        bytes = (*env)->NewByteArray(env, (jsize) length);
+        if (process_java_exception(env)) {
+            return NULL;
+        }
+        (*env)->SetByteArrayRegion(env, bytes, 0, (jsize) length, (jbyte*) cstr);
+        return (jobject) bytes;
+    } else if ((*env)->IsAssignableFrom(env, JPYOBJECT_TYPE, expectedType)) {
+        return PyObject_As_JPyObject(env, pybytearray);
+    }
+    raiseTypeError(env, pybytearray, expectedType);
+    return NULL;
+}
 
 jchar PyObject_As_jchar(PyObject *pyobject)
 {
@@ -870,7 +919,12 @@ jobject PyObject_As_jobject(JNIEnv *env, PyObject *pyobject,
 #if PY_MAJOR_VERSION < 3
     } else if (PyString_Check(pyobject)) {
         return pystring_as_jobject(env, pyobject, expectedType);
+#else
+    } else if (PyBytes_Check(pyobject)) {
+        return pybytes_as_jobject(env, pyobject, expectedType);
 #endif
+    } else if (PyByteArray_Check(pyobject)) {
+        return pybytearray_as_jobject(env, pyobject, expectedType);
     } else if (PyUnicode_Check(pyobject)) {
         return pyunicode_as_jobject(env, pyobject, expectedType);
     } else if (PyBool_Check(pyobject)) {
