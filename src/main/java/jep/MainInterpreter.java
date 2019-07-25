@@ -69,6 +69,8 @@ public final class MainInterpreter implements AutoCloseable {
 
     private static String[] sharedModulesArgv = null;
 
+    private static String jepLibraryPath = null;
+
     private Thread thread;
 
     private BlockingQueue<String> importQueue = new SynchronousQueue<>();
@@ -117,11 +119,15 @@ public final class MainInterpreter implements AutoCloseable {
      *             if an error occurs
      */
     protected void initialize() throws Error {
-        try {
-            System.loadLibrary("jep");
-        } catch (UnsatisfiedLinkError e) {
-            if (!LibraryLocator.findJepLibrary(pyConfig)) {
-                throw e;
+        if (jepLibraryPath != null ) {
+            System.load(jepLibraryPath);
+        } else {
+            try {
+                System.loadLibrary("jep");
+            } catch (UnsatisfiedLinkError e) {
+                if (!LibraryLocator.findJepLibrary(pyConfig)) {
+                    throw e;
+                }
             }
         }
 
@@ -257,6 +263,29 @@ public final class MainInterpreter implements AutoCloseable {
         }
         sharedModulesArgv = argv;
     }
+
+    /**
+     * Sets the path of the jep native library. The location should be a
+     * path that can be passed to {@link System#load(String)}. This method must
+     * be called before the first Jep instance is created in the process.
+     * 
+     * @param jepLibraryPath
+     *            the path of the jep native library, an absolute path leading
+     *            to a file that is often named libjep.so or libjep.dll.
+     * @throws JepException
+     *             if an error occurs
+     * 
+     * @since 3.9
+     */
+    public static void setJepLibraryPath(String path)
+            throws JepException {
+        if (instance != null) {
+            throw new JepException(
+                    "Jep.setJepLibraryPath(...) called after initializing python interpreter.");
+        }
+        jepLibraryPath = path;
+    }
+ 
 
     private static native void setInitParams(int noSiteFlag,
             int noUserSiteDiretory, int ignoreEnvironmentFlag, int verboseFlag,
