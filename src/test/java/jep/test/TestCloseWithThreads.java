@@ -31,6 +31,7 @@ public class TestCloseWithThreads {
                 closeExceptionCaught = true;
             }
 	    done.countDown();
+            jep.eval("t.join()");
             if (!closeExceptionCaught){
                 throw new Exception("Close worked.");
             }
