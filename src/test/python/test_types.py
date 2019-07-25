@@ -793,7 +793,15 @@ class TestTypes(unittest.TestCase):
                 self.staticFields.stringArray = l
 
     def test_int_array(self):
-        for l in ([], (), [1, 2, 3], (1, 2, 3)):
+        examples = [[], (), [1, 2, 3], (1, 2, 3)]
+        if sys.version_info.major > 2:
+            import array
+            a = array.array('i', [1,2,3,4])
+            examples.append(a)
+            v = memoryview(a)
+            v = v[::2]
+            examples.append(v)
+        for l in examples:
             self.assertSequenceEqual(l, self.methods.intArray(l))
             self.assertSequenceEqual(l, self.staticMethods.intArray(l))
             self.fields.intArray = l
@@ -804,7 +812,11 @@ class TestTypes(unittest.TestCase):
             self.staticFields.verify()
 
     def test_int_array_coercion(self):
-        for l in (["1", "2", "3"], ("1", "2", "3")):
+        examples = [["1", "2", "3"], ("1", "2", "3")]
+        if sys.version_info.major > 2:
+            import array
+            examples.append(array.array('f', [1,2,3,4]))
+        for l in examples:
             with self.assertRaises(TypeError):
                 self.methods.intArray(l)
             with self.assertRaises(TypeError):
@@ -816,10 +828,48 @@ class TestTypes(unittest.TestCase):
 
     def test_byte_array(self):
         from java.nio import ByteBuffer
+        import array
         l = [1,2,3,4]
         bb = ByteBuffer.wrap(bytearray(l))
         self.assertSequenceEqual(bb.array(), l)
         if sys.version_info.major > 2:
             bb = ByteBuffer.wrap(bytes(l))
             self.assertSequenceEqual(bb.array(), l)
+            bb = ByteBuffer.wrap(array.array('b', l))
+            self.assertSequenceEqual(bb.array(), l)
+            bb = ByteBuffer.wrap(array.array('B', l))
+            self.assertSequenceEqual(bb.array(), l)
+            v = memoryview(array.array('B', l))
+            v = v[::2]
+            bb = ByteBuffer.wrap(v)
+            self.assertSequenceEqual(bb.array(), v)
+            with self.assertRaises(TypeError):
+                ByteBuffer.wrap(array.array('f', [1,2,3,4]))
         
+    @unittest.skipIf(sys.version_info.major < 3, 'Python 2 arrays do not ahve the buffer interface')
+    def test_float_array(self):
+        from java.nio import FloatBuffer
+        import array
+        a = array.array('f', [1,2,3,4])
+        fb = FloatBuffer.wrap(a)
+        self.assertSequenceEqual(fb.array(), a)
+        v = memoryview(a)
+        v = v[::2]
+        fb = FloatBuffer.wrap(v)
+        self.assertSequenceEqual(fb.array(), v)
+        with self.assertRaises(TypeError):
+            FloatBuffer.wrap(array.array('i', [1,2,3,4]))
+
+    @unittest.skipIf(sys.version_info.major < 3, 'Python 2 arrays do not ahve the buffer interface')
+    def test_long_array(self):
+        from java.nio import LongBuffer
+        import array
+        a = array.array('q', [1,2,3,4])
+        lb = LongBuffer.wrap(a)
+        self.assertSequenceEqual(lb.array(), a)
+        v = memoryview(a)
+        v = v[::2]
+        lb = LongBuffer.wrap(v)
+        self.assertSequenceEqual(lb.array(), v)
+        with self.assertRaises(TypeError):
+            LongBuffer.wrap(array.array('f', [1,2,3,4]))
