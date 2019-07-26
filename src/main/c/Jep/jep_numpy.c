@@ -51,22 +51,7 @@ jmethodID dndarrayGetDims    = NULL;
 jmethodID dndarrayGetData    = NULL;
 jmethodID dndarrayIsUnsigned = NULL;
 
-static jclass JBYTE_BUFFER_TYPE   = NULL;
-static jclass JSHORT_BUFFER_TYPE  = NULL;
-static jclass JINT_BUFFER_TYPE    = NULL;
-static jclass JLONG_BUFFER_TYPE   = NULL;
-static jclass JFLOAT_BUFFER_TYPE  = NULL;
-static jclass JDOUBLE_BUFFER_TYPE = NULL;
-
 static jobject NATIVE_BYTE_ORDER  = NULL;
-
-static jmethodID byteBuffer_getOrder   = NULL;
-static jmethodID shortBuffer_getOrder  = NULL;
-static jmethodID intBuffer_getOrder    = NULL;
-static jmethodID longBuffer_getOrder   = NULL;
-static jmethodID floatBuffer_getOrder  = NULL;
-static jmethodID doubleBuffer_getOrder = NULL;
-
 
 /*
  * Initializes the numpy extension library.  This is required to be called
@@ -478,106 +463,49 @@ static jobject convert_pyndarray_jndarray(JNIEnv *env, PyObject *pyobj)
     return result;
 }
 
-#define CACHE_BUFFER_CLASS(buffer_type_var, getOrder_var, name)\
-    bufferClass = (*env)->FindClass(env, name);\
-    if(!bufferClass){\
-         process_java_exception(env);\
-         (*env)->PopLocalFrame(env, NULL);\
-         return 1;\
-    }\
-    getOrder_var =(*env)->GetMethodID(env, bufferClass, "order", "()Ljava/nio/ByteOrder;");\
-    if(!getOrder_var){\
-         process_java_exception(env);\
-         (*env)->PopLocalFrame(env, NULL);\
-         return 1;\
-    }\
-    buffer_type_var = (*env)->NewGlobalRef(env, bufferClass);
-
-/*
- * Load all the static variables that hold the classes and methodIDs for the
- * various Java buffer types. Returns 0 on success and 1 on failure.
- */
-static int load_jdirectbuffer_classes(JNIEnv *env)
-{
-    jclass    byteOrder       = NULL;
-    jmethodID nativeOrder     = NULL;
-    jobject   nativeByteOrder = NULL;
-    jclass    bufferClass     = NULL;
-    (*env)->PushLocalFrame(env, JLOCAL_REFS);
-    byteOrder = (*env)->FindClass(env, "java/nio/ByteOrder");
-    if (!byteOrder) {
-        process_java_exception(env);
-        (*env)->PopLocalFrame(env, NULL);
-        return 1;
-    }
-    nativeOrder = (*env)->GetStaticMethodID(env, byteOrder, "nativeOrder",
-                                            "()Ljava/nio/ByteOrder;");
-    if (!nativeOrder) {
-        process_java_exception(env);
-        (*env)->PopLocalFrame(env, NULL);
-        return 1;
-    }
-    nativeByteOrder = (*env)->CallStaticObjectMethod(env, byteOrder, nativeOrder);
-    if (process_java_exception(env) || !nativeByteOrder) {
-        (*env)->PopLocalFrame(env, NULL);
-        return 1;
-    }
-    NATIVE_BYTE_ORDER = (*env)->NewGlobalRef(env, nativeByteOrder);
-
-    CACHE_BUFFER_CLASS(JBYTE_BUFFER_TYPE, byteBuffer_getOrder,
-                       "java/nio/ByteBuffer")
-    CACHE_BUFFER_CLASS(JSHORT_BUFFER_TYPE, shortBuffer_getOrder,
-                       "java/nio/ShortBuffer")
-    CACHE_BUFFER_CLASS(JINT_BUFFER_TYPE, intBuffer_getOrder, "java/nio/IntBuffer")
-    CACHE_BUFFER_CLASS(JLONG_BUFFER_TYPE, longBuffer_getOrder,
-                       "java/nio/LongBuffer")
-    CACHE_BUFFER_CLASS(JFLOAT_BUFFER_TYPE, floatBuffer_getOrder,
-                       "java/nio/FloatBuffer")
-    CACHE_BUFFER_CLASS(JDOUBLE_BUFFER_TYPE, doubleBuffer_getOrder,
-                       "java/nio/DoubleBuffer")
-
-    (*env)->PopLocalFrame(env, NULL);
-    return 0;
-}
-
 PyObject* convert_jdirectbuffer_pyndarray(JNIEnv *env, jobject jo, int ndims,
         npy_intp *dims, int usigned)
 {
     int typenum;
-    jmethodID getOrder;
+    jobject (*getOrder)(JNIEnv*, jobject);
     jobject jbyteorder;
     void* data = NULL;
     PyArray_Descr* descr;
     PyObject *pyob = NULL;
     /* JDOUBLE_BUFFER_TYPE is checked because it is the last type loaded */
-    if (JDOUBLE_BUFFER_TYPE == NULL && load_jdirectbuffer_classes(env)) {
-        return NULL;
+    if (NATIVE_BYTE_ORDER == NULL) {
+        jobject   nativeByteOrder = NULL;
+        nativeByteOrder = java_nio_ByteOrder_nativeOrder(env);
+        if (process_java_exception(env) || !nativeByteOrder) {
+            return NULL;
+        }
+        NATIVE_BYTE_ORDER = (*env)->NewGlobalRef(env, nativeByteOrder);
     }
-    if ((*env)->IsInstanceOf(env, jo, JBYTE_BUFFER_TYPE)) {
+    if ((*env)->IsInstanceOf(env, jo, JBYTEBUFFER_TYPE)) {
         typenum = usigned ? NPY_UBYTE : NPY_BYTE;
-        getOrder = byteBuffer_getOrder;
-    } else if ((*env)->IsInstanceOf(env, jo, JSHORT_BUFFER_TYPE)) {
+        getOrder = java_nio_ByteBuffer_order;
+    } else if ((*env)->IsInstanceOf(env, jo, JSHORTBUFFER_TYPE)) {
         typenum = usigned ? NPY_UINT16 : NPY_INT16;
-        getOrder = shortBuffer_getOrder;
-    } else if ((*env)->IsInstanceOf(env, jo, JINT_BUFFER_TYPE)) {
+        getOrder = java_nio_ShortBuffer_order;
+    } else if ((*env)->IsInstanceOf(env, jo, JINTBUFFER_TYPE)) {
         typenum = usigned ? NPY_UINT32 : NPY_INT32;
-        getOrder = intBuffer_getOrder;
-    } else if ((*env)->IsInstanceOf(env, jo, JLONG_BUFFER_TYPE)) {
+        getOrder = java_nio_IntBuffer_order;
+    } else if ((*env)->IsInstanceOf(env, jo, JLONGBUFFER_TYPE)) {
         typenum = usigned ? NPY_UINT64 : NPY_INT64;
-        getOrder = longBuffer_getOrder;
-    } else if ((*env)->IsInstanceOf(env, jo, JFLOAT_BUFFER_TYPE)) {
+        getOrder = java_nio_LongBuffer_order;
+    } else if ((*env)->IsInstanceOf(env, jo, JFLOATBUFFER_TYPE)) {
         typenum = NPY_FLOAT32;
-        getOrder = floatBuffer_getOrder;
-    } else if ((*env)->IsInstanceOf(env, jo, JDOUBLE_BUFFER_TYPE)) {
+        getOrder = java_nio_FloatBuffer_order;
+    } else if ((*env)->IsInstanceOf(env, jo, JDOUBLEBUFFER_TYPE)) {
         typenum = NPY_FLOAT64;
-        getOrder = doubleBuffer_getOrder;
+        getOrder = java_nio_DoubleBuffer_order;
     } else {
         PyErr_SetString(PyExc_TypeError,
                         "Unexpected buffer type cannot be converted to ndarray.");
         return NULL;
     }
 
-    jbyteorder = (*env)->CallObjectMethod(env, jo, getOrder);
+    jbyteorder = getOrder(env, jo);
     if (process_java_exception(env) || !jbyteorder) {
         return NULL;
     }

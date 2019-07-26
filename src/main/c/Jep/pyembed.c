@@ -319,6 +319,13 @@ static int pyjtypes_ready(void)
         return -1;
     }
 
+    if (!PyJBuffer_Type.tp_base) {
+        PyJBuffer_Type.tp_base = &PyJObject_Type;
+    }
+    if (PyType_Ready(&PyJBuffer_Type) < 0) {
+        return -1;
+    }
+
     // last do autocloseable
     if (!PyJAutoCloseable_Type.tp_base) {
         PyJAutoCloseable_Type.tp_base = &PyJObject_Type;

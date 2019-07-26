@@ -211,6 +211,8 @@ PyObject* jobject_As_PyJObject(JNIEnv *env, jobject jobj, jclass class)
         result = PyJClass_Wrap(env, jobj);
     } else if ((*env)->IsAssignableFrom(env, class, JNUMBER_TYPE)) {
         result = PyJNumber_Wrap(env, jobj, class);
+    } else if ((*env)->IsAssignableFrom(env, class, JBUFFER_TYPE)) {
+        result = PyJBuffer_Wrap(env, jobj, class);
     } else {
         result = PyJObject_Wrap(env, jobj, class);
     }

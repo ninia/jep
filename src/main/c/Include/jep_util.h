@@ -115,13 +115,22 @@ extern jclass JDOUBLE_ARRAY_TYPE;
     F(JCOMPARABLE_TYPE, "java/lang/Comparable") \
     F(JAUTOCLOSEABLE_TYPE, "java/lang/AutoCloseable") \
     F(JBOOL_OBJ_TYPE, "java/lang/Boolean") \
+    F(JBYTEBUFFER_TYPE, "java/nio/ByteBuffer") \
     F(JBYTE_OBJ_TYPE, "java/lang/Byte") \
+    F(JBYTEORDER_TYPE, "java/nio/ByteOrder") \
+    F(JBUFFER_TYPE, "java/nio/Buffer") \
     F(JSHORT_OBJ_TYPE, "java/lang/Short") \
+    F(JSHORTBUFFER_TYPE, "java/nio/ShortBuffer") \
     F(JINT_OBJ_TYPE, "java/lang/Integer") \
+    F(JINTBUFFER_TYPE, "java/nio/IntBuffer") \
     F(JLONG_OBJ_TYPE, "java/lang/Long") \
+    F(JLONGBUFFER_TYPE, "java/nio/LongBuffer") \
     F(JDOUBLE_OBJ_TYPE, "java/lang/Double") \
+    F(JDOUBLEBUFFER_TYPE, "java/nio/DoubleBuffer") \
     F(JFLOAT_OBJ_TYPE, "java/lang/Float") \
+    F(JFLOATBUFFER_TYPE, "java/nio/FloatBuffer") \
     F(JCHAR_OBJ_TYPE, "java/lang/Character") \
+    F(JCHARBUFFER_TYPE, "java/nio/CharBuffer") \
     F(JNUMBER_TYPE, "java/lang/Number") \
     F(JMEMBER_TYPE, "java/lang/reflect/Member") \
     F(JMETHOD_TYPE, "java/lang/reflect/Method") \

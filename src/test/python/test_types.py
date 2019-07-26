@@ -846,7 +846,7 @@ class TestTypes(unittest.TestCase):
             with self.assertRaises(TypeError):
                 ByteBuffer.wrap(array.array('f', [1,2,3,4]))
         
-    @unittest.skipIf(sys.version_info.major < 3, 'Python 2 arrays do not ahve the buffer interface')
+    @unittest.skipIf(sys.version_info.major < 3, 'Python 2 arrays do not have the buffer interface')
     def test_float_array(self):
         from java.nio import FloatBuffer
         import array
@@ -860,7 +860,7 @@ class TestTypes(unittest.TestCase):
         with self.assertRaises(TypeError):
             FloatBuffer.wrap(array.array('i', [1,2,3,4]))
 
-    @unittest.skipIf(sys.version_info.major < 3, 'Python 2 arrays do not ahve the buffer interface')
+    @unittest.skipIf(sys.version_info.major < 3, 'Python 2 arrays do not have the buffer interface')
     def test_long_array(self):
         from java.nio import LongBuffer
         import array
@@ -873,3 +873,55 @@ class TestTypes(unittest.TestCase):
         self.assertSequenceEqual(lb.array(), v)
         with self.assertRaises(TypeError):
             LongBuffer.wrap(array.array('f', [1,2,3,4]))
+
+    def test_buffers(self):
+        from java.nio import ByteBuffer, ByteOrder
+        b = ByteBuffer.allocateDirect(16).order(ByteOrder.nativeOrder())
+        v = memoryview(b)
+        v[0] = 7
+        self.assertEqual(v[0], b.get(0))
+        s = b.asShortBuffer();
+        v = memoryview(s)
+        self.assertEqual(v[0], s.get(0))
+        i = b.asIntBuffer()
+        v = memoryview(i)
+        self.assertEqual(v[0], i.get(0))
+        l = b.asLongBuffer()
+        v = memoryview(l)
+        self.assertEqual(v[0], l.get(0))
+        f = b.asFloatBuffer()
+        v = memoryview(f)
+        v[0] = -100
+        self.assertEqual(v[0], f.get(0))
+        d = b.asDoubleBuffer()
+        v = memoryview(d)
+        v[0] = -100
+        self.assertEqual(v[0], d.get(0))
+        try:
+           # memoryview only supports native order so numpy is required for the other one.
+            from numpy import asarray
+            for order in (ByteOrder.LITTLE_ENDIAN, ByteOrder.BIG_ENDIAN):
+                b = ByteBuffer.allocateDirect(16).order(order)
+                v = asarray(b)
+                v[0] = 7
+                self.assertEqual(v[0], b.get(0))
+                s = b.asShortBuffer();
+                v = asarray(s)
+                self.assertEqual(v[0], s.get(0))
+                i = b.asIntBuffer()
+                v = asarray(i)
+                self.assertEqual(v[0], i.get(0))
+                l = b.asLongBuffer()
+                v = asarray(l)
+                self.assertEqual(v[0], l.get(0))
+                f = b.asFloatBuffer()
+                v = asarray(f)
+                v[0] = -100
+                self.assertEqual(v[0], f.get(0))
+                d = b.asDoubleBuffer()
+                v = asarray(d)
+                v[0] = -100
+                self.assertEqual(v[0], d.get(0))
+        except ImportError:
+            pass # not built with numpy
+
