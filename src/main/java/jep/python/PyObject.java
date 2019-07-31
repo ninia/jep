@@ -27,6 +27,8 @@ package jep.python;
 import jep.Jep;
 import jep.JepException;
 
+import java.lang.reflect.Proxy;
+
 /**
  * A Java object that wraps a pointer to a Python object.
  * 
@@ -699,4 +701,60 @@ public class PyObject implements AutoCloseable {
 
     private native long hashCode(long tstate, long pyObject);
 
+
+    /**
+     * Create a dynamic proxy that implements the provided interfaces by
+     * calling the corresponding Python methods on this PyObject. This Python
+     * object must have methods matching those defined by the Java interfaces.
+     * Matching methods must have the same name, same number of arguments, and
+     * must return an object that can be converted to the correct return type.
+     * This method does not verify that this Python Object has methods matching
+     * the Java interfaces so if it is used incorrectly a RuntimeException will
+     * be thrown when the method is called.
+     * 
+     * @param <T>
+     *            the generic type of the return type
+     * @param primaryInterface
+     *            A interface the returned object will implement
+     * @param extraInterfaces
+     *            Optional additional interfaces the returned object will also
+     *            implement.
+     * @return a Java proxy implementing the speciefied interfaces
+     * @exception JepException
+     *                if an error occurs or the conversion is not possible
+     * @since 3.9
+     */
+    public <T> T proxy(Class<T> primaryInterface, Class<?>... extraInterfaces) throws JepException {
+        ClassLoader loader = jep.getClassLoader();
+        Class<?>[] interfaces = null;
+        if (extraInterfaces == null || extraInterfaces.length == 0) {
+            interfaces = new Class<?>[] { primaryInterface };
+        } else {
+            interfaces = new Class<?>[extraInterfaces.length + 1];
+            interfaces[0] = primaryInterface;
+            System.arraycopy(extraInterfaces, 0, interfaces, 1, extraInterfaces.length);
+        }
+        InvocationHandler ih = new InvocationHandler(this, false);
+        return primaryInterface.cast(Proxy.newProxyInstance(loader, interfaces, ih));
+    }
+
+    /**
+     * Attempt to convert this object to a Java equivalant using the builtin
+     * Jep conversions. The supported conversions are described in
+     * {@link Jep#getValue(String, Class)}.
+     * 
+     * @param <T>
+     *            the generic type of the return type
+     * @param clazz
+     *            the Java class of the return type.
+     * @return a Java version of this object
+     * @exception JepException
+     *                if an error occurs or the conversion is not possible
+     * @since 3.9
+     */
+    public <T> T as(Class<T> expectedType) throws JepException {
+        return expectedType.cast(as(pointer.tstate, pointer.pyObject, expectedType));
+    }
+
+    private native Object as(long tstate, long pyObject, Class expectedType) throws JepException;
 }

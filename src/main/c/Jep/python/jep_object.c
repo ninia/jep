@@ -567,3 +567,31 @@ JNIEXPORT jlong JNICALL Java_jep_python_PyObject_hashCode
     PyEval_ReleaseThread(jepThread->tstate);
     return (jlong) hash;
 }
+
+/*
+ * Class:     jep_python_PyObject
+ * Method:    as
+ * Signature: (Ljava/lang/Class;)Ljava/lang/Object;
+ */
+JNIEXPORT jobject JNICALL Java_jep_python_PyObject_as
+(JNIEnv *env, jobject obj, jlong tstate, jlong pyobj, jclass expectedType)
+{
+    JepThread  *jepThread;
+    PyObject   *pyObject;
+    jobject     ret       = NULL;
+
+    jepThread = (JepThread *) tstate;
+    if (!jepThread) {
+        THROW_JEP(env, "Couldn't get thread objects.");
+        return ret;
+    }
+
+    pyObject = (PyObject*) pyobj;
+    PyEval_AcquireThread(jepThread->tstate);
+    ret = PyObject_As_jobject(env, pyObject, expectedType);
+    if (!ret) { 
+        process_py_exception(env);
+    }
+    PyEval_ReleaseThread(jepThread->tstate);
+    return ret;
+}

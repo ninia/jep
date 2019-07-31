@@ -796,7 +796,6 @@ char isFunctionalInterfaceType(JNIEnv *env, jclass type)
 jobject PyCallable_as_functional_interface(JNIEnv *env, PyObject *callable,
         jclass expectedType)
 {
-    jclass clazz;
     jobject proxy;
 
     JepThread *jepThread = pyembed_get_jepthread();
@@ -808,11 +807,6 @@ jobject PyCallable_as_functional_interface(JNIEnv *env, PyObject *callable,
     }
 
     env = jepThread->env;
-
-    clazz = (*env)->FindClass(env, "jep/Proxy");
-    if (process_java_exception(env) || !clazz) {
-        return NULL;
-    }
 
     proxy = jep_Proxy_newDirectProxyInstance(env,
             (jlong) (intptr_t) jepThread,

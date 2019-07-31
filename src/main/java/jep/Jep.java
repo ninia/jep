@@ -1144,6 +1144,16 @@ public class Jep implements AutoCloseable {
     }
 
     /**
+     * Gets the class loader associated with this Jep instance. This should not
+     * be called outside of Jep and should be considered an internal method.
+     * 
+     * @return the class loader
+     */
+    public ClassLoader getClassLoader() {
+        return classLoader;
+    }
+
+    /**
      * Shuts down the Python sub-interpreter. Make sure you call this to prevent
      * memory leaks.
      * 

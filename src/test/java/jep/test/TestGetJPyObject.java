@@ -5,6 +5,11 @@ import jep.JepException;
 import jep.python.PyCallable;
 import jep.python.PyObject;
 
+import java.lang.reflect.UndeclaredThrowableException;
+
+import java.util.Deque;
+import java.util.Arrays;
+
 /**
  * @author bsteffen
  * @since 3.8
@@ -282,6 +287,36 @@ public class TestGetJPyObject {
         }
     }
 
+    public static void testProxy(Jep jep) throws JepException {
+        jep.eval("l = [7]");
+        PyObject list = jep.getValue("l", PyObject.class);
+        Deque q = list.proxy(Deque.class);
+        Number n = (Number) q.pop();
+        if (n.intValue() != 7) {
+            throw new IllegalStateException("list.pop returned wrong value");
+        }
+        /* Make sure it is empty now */
+        Boolean b = jep.getValue("len(l) == 0", Boolean.class);
+        if (!b.booleanValue()) {
+            throw new IllegalStateException("list.pop proxy failed");
+        }
+        try {
+            q.push(n);
+            throw new IllegalStateException("list.push worked");
+        }catch (UndeclaredThrowableException e) {
+            /* list doesn't have a push so this is correct*/
+        }
+    }
+
+    public static void testAs(Jep jep) throws JepException {
+        int[] test = {1, 2, 3};
+        jep.set("test", test);
+        PyObject list = jep.getValue("list(test)", PyObject.class);
+        if (!Arrays.equals(test, list.as(int[].class))) {
+            throw new IllegalStateException("PyObject.as did not work.");
+        }
+    }
+
     public static void main(String[] args) throws Exception {
         try (Jep jep = new Jep()) {
             testIdentity(jep);
@@ -294,6 +329,8 @@ public class TestGetJPyObject {
             testHashCode(jep);
             testThreading(jep);
             testClosing(jep);
+            testProxy(jep);
+            testAs(jep);
         }
         testClosingJep();
     }

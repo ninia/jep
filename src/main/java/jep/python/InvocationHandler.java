@@ -55,9 +55,24 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
      */
     public InvocationHandler(long tstate, long ltarget, Jep jep,
             final boolean functionalInterface) throws JepException {
-        this.functionalInterface = functionalInterface;
+        this(new PyObject(tstate, ltarget, jep), functionalInterface);
+    }
 
-        this.pyObject = new PyObject(tstate, ltarget, jep);
+    /**
+     * Creates a new <code>InvocationHandler</code> instance.
+     *
+     * @param pyObject
+     *            the pyObject
+     * @param functionalInterface
+     *            whether the target is a python callable that should be invoked
+     *            directly
+     * @exception JepException
+     *                if an error occurs
+     */
+    public InvocationHandler(final PyObject pyObject,
+            final boolean functionalInterface) throws JepException {
+        this.functionalInterface = functionalInterface;
+        this.pyObject = pyObject;
     }
 
     /**
