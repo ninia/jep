@@ -876,27 +876,28 @@ class TestTypes(unittest.TestCase):
 
     def test_buffers(self):
         from java.nio import ByteBuffer, ByteOrder
-        b = ByteBuffer.allocateDirect(16).order(ByteOrder.nativeOrder())
-        v = memoryview(b)
-        v[0] = 7
-        self.assertEqual(v[0], b.get(0))
-        s = b.asShortBuffer();
-        v = memoryview(s)
-        self.assertEqual(v[0], s.get(0))
-        i = b.asIntBuffer()
-        v = memoryview(i)
-        self.assertEqual(v[0], i.get(0))
-        l = b.asLongBuffer()
-        v = memoryview(l)
-        self.assertEqual(v[0], l.get(0))
-        f = b.asFloatBuffer()
-        v = memoryview(f)
-        v[0] = -100
-        self.assertEqual(v[0], f.get(0))
-        d = b.asDoubleBuffer()
-        v = memoryview(d)
-        v[0] = -100
-        self.assertEqual(v[0], d.get(0))
+        if sys.version_info.major > 3:
+            b = ByteBuffer.allocateDirect(16).order(ByteOrder.nativeOrder())
+            v = memoryview(b)
+            v[0] = 7
+            self.assertEqual(v[0], b.get(0))
+            s = b.asShortBuffer();
+            v = memoryview(s)
+            self.assertEqual(v[0], s.get(0))
+            i = b.asIntBuffer()
+            v = memoryview(i)
+            self.assertEqual(v[0], i.get(0))
+            l = b.asLongBuffer()
+            v = memoryview(l)
+            self.assertEqual(v[0], l.get(0))
+            f = b.asFloatBuffer()
+            v = memoryview(f)
+            v[0] = -100
+            self.assertEqual(v[0], f.get(0))
+            d = b.asDoubleBuffer()
+            v = memoryview(d)
+            v[0] = -100
+            self.assertEqual(v[0], d.get(0))
         try:
            # memoryview only supports native order so numpy is required for the other one.
             from numpy import asarray
