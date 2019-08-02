@@ -876,7 +876,7 @@ class TestTypes(unittest.TestCase):
 
     def test_buffers(self):
         from java.nio import ByteBuffer, ByteOrder
-        if sys.version_info.major > 3:
+        if sys.version_info.major > 2:
             b = ByteBuffer.allocateDirect(16).order(ByteOrder.nativeOrder())
             v = memoryview(b)
             v[0] = 7
