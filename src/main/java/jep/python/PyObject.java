@@ -25,6 +25,7 @@
 package jep.python;
 
 import jep.Jep;
+import jep.JepAccess;
 import jep.JepException;
 
 import java.lang.reflect.Proxy;
@@ -40,27 +41,24 @@ import java.lang.reflect.Proxy;
  * or changed in ways that are not backwards compatible in the future. When
  * using this class it may require extra effort to move to a new version of Jep.
  */
-public class PyObject implements AutoCloseable {
+public class PyObject extends JepAccess implements AutoCloseable {
 
     protected final PyPointer pointer;
 
-    protected final Jep jep;
 
     /**
      * Make a new PyObject
      * 
-     * @param tstate
-     *            a <code>long</code> value
-     * @param pyObject
-     *            the address of the python object
      * @param jep
      *            the instance of jep that created this object
+     * @param pyObject
+     *            the address of the python object
      * @exception JepException
      *                if an error occurs
      */
-    public PyObject(long tstate, long pyObject, Jep jep) throws JepException {
-        this.jep = jep;
-        this.pointer = new PyPointer(this, jep, tstate, pyObject);
+    protected PyObject(Jep jep, long pyObject) throws JepException {
+        super(jep);
+        this.pointer = new PyPointer(this, getMemoryManager(), getThreadState(), pyObject);
     }
 
     /**
@@ -725,7 +723,7 @@ public class PyObject implements AutoCloseable {
      * @since 3.9
      */
     public <T> T proxy(Class<T> primaryInterface, Class<?>... extraInterfaces) throws JepException {
-        ClassLoader loader = jep.getClassLoader();
+        ClassLoader loader = getClassLoader();
         Class<?>[] interfaces = null;
         if (extraInterfaces == null || extraInterfaces.length == 0) {
             interfaces = new Class<?>[] { primaryInterface };

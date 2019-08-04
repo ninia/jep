@@ -24,32 +24,28 @@
  */
 package jep;
 
-import java.lang.reflect.InvocationHandler;
+import jep.python.InvocationHandler;
 
 /**
- * Extends java.lang.reflect.Proxy for callbacks.
+ * Uses java.lang.reflect.Proxy to wrap Python objects.
  * 
  * @author Mike Johnson
  */
-public class Proxy extends java.lang.reflect.Proxy {
+class Proxy {
 
     private static final long serialVersionUID = 1L;
 
-    /**
-     * Constructs a new Proxy instance from a subclass (typically, a dynamic
-     * proxy class) with the specified value for its invocation handler.
-     * 
-     * @param h
-     *            an <code>InvocationHandler</code> value
-     */
-    protected Proxy(InvocationHandler h) {
-        super(h);
-    }
-
-    private static Object newDirectProxyInstance(long tstate, long ltarget,
-            Jep jep, ClassLoader loader, Class<?> targetInterface) {
-        return newProxyInstance(tstate, ltarget, jep, loader,
-                new String[] { targetInterface.getName() }, true);
+    protected static Object newDirectProxyInstance(Jep jep, long ltarget,
+            Class<?> targetInterface) {
+        ClassLoader loader = jep.getClassLoader();
+        InvocationHandler ih = null;
+        try {
+            ih = new InvocationHandler(jep, ltarget, true);
+        } catch (JepException e) {
+            throw new IllegalArgumentException(e);
+        }
+        Class classes[] = { targetInterface };
+        return java.lang.reflect.Proxy.newProxyInstance(loader, classes, ih);
     }
 
     /**
@@ -67,33 +63,21 @@ public class Proxy extends java.lang.reflect.Proxy {
      * same reasons that Proxy.getProxyClass does.
      * </pre>
      * 
-     * @param tstate
-     *            a <code>long</code> value
-     * @param ltarget
-     *            a <code>long</code> value
      * @param jep
      *            a <code>Jep</code> value
-     * @param loader
-     *            the class loader to define the proxy class
+     * @param ltarget
+     *            a <code>long</code> value
      * @param interfaces
      *            the list of interfaces to implement
      * @return an <code>Object</code> value
      * @exception IllegalArgumentException
      *                if an error occurs
      */
-    public static Object newProxyInstance(long tstate, long ltarget, Jep jep,
-            ClassLoader loader, String[] interfaces) {
-        return newProxyInstance(tstate, ltarget, jep, loader, interfaces,
-                false);
-    }
-
-    private static Object newProxyInstance(long tstate, long ltarget, Jep jep,
-            ClassLoader loader, String[] interfaces,
-            boolean functionalInterface) {
+    protected static Object newProxyInstance(Jep jep, long ltarget, String[] interfaces) {
+        ClassLoader loader = jep.getClassLoader();
         InvocationHandler ih = null;
         try {
-            ih = new jep.python.InvocationHandler(tstate, ltarget, jep,
-                    functionalInterface);
+            ih = new InvocationHandler(jep, ltarget, false);
         } catch (JepException e) {
             throw new IllegalArgumentException(e);
         }
@@ -105,7 +89,6 @@ public class Proxy extends java.lang.reflect.Proxy {
         } catch (ClassNotFoundException e) {
             throw new IllegalArgumentException(e);
         }
-
-        return Proxy.newProxyInstance(loader, classes, ih);
+        return java.lang.reflect.Proxy.newProxyInstance(loader, classes, ih);
     }
 }

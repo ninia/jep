@@ -28,9 +28,7 @@
 #ifndef _Included_jep_Proxy
 #define _Included_jep_Proxy
 
-jobject jep_Proxy_newProxyInstance(JNIEnv*, jlong, jlong, jobject,
-                                   jobject, jobjectArray);
-jobject jep_Proxy_newDirectProxyInstance(JNIEnv*, jlong, jlong, jobject,
-                                         jobject, jclass);
+jobject jep_Proxy_newProxyInstance(JNIEnv*, jobject, jlong, jobjectArray);
+jobject jep_Proxy_newDirectProxyInstance(JNIEnv*, jobject, jlong, jclass);
 
 #endif // ndef jep_Proxy

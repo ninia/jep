@@ -63,8 +63,8 @@ import jep.JepException;
  */
 public class PyCallable extends PyObject {
 
-    public PyCallable(long tstate, long pyObject, Jep jep) throws JepException {
-        super(tstate, pyObject, jep);
+    protected PyCallable(Jep jep, long pyObject) throws JepException {
+        super(jep, pyObject);
     }
 
     /**

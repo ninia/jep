@@ -31,31 +31,35 @@ static jmethodID newProxyInstance       = 0;
 static jmethodID newDirectProxyInstance = 0;
 
 
-jobject jep_Proxy_newProxyInstance(JNIEnv* env, jlong tstate, jlong ltarget,
-                                   jobject jep, jobject loader,
+jobject jep_Proxy_newProxyInstance(JNIEnv* env, jobject jep, jlong ltarget,
                                    jobjectArray interfaces)
 {
     jobject result = NULL;
     Py_BEGIN_ALLOW_THREADS
-    if (newProxyInstance || (newProxyInstance = (*env)->GetStaticMethodID(env, JPROXY_TYPE, "newProxyInstance",
-                   "(JJLjep/Jep;Ljava/lang/ClassLoader;[Ljava/lang/String;)Ljava/lang/Object;"))) {
+    if (newProxyInstance
+            || (newProxyInstance = (*env)->GetStaticMethodID(env, JPROXY_TYPE,
+                                   "newProxyInstance",
+                                   "(Ljep/Jep;J[Ljava/lang/String;)Ljava/lang/Object;"))) {
         result = (*env)->CallStaticObjectMethod(env, JPROXY_TYPE, newProxyInstance,
-                                          tstate, ltarget, jep, loader, interfaces);
+                                                jep, ltarget, interfaces);
     }
     Py_END_ALLOW_THREADS
     return result;
 }
 
-jobject jep_Proxy_newDirectProxyInstance(JNIEnv* env, jlong tstate,
-                                         jlong ltarget, jobject jep,
-                                         jobject loader, jclass targetInterface)
+jobject jep_Proxy_newDirectProxyInstance(JNIEnv* env, jobject jep,
+        jlong ltarget,
+        jclass targetInterface)
 {
     jobject result = NULL;
     Py_BEGIN_ALLOW_THREADS
-    if (newDirectProxyInstance || (newDirectProxyInstance = (*env)->GetStaticMethodID(env, JPROXY_TYPE, "newDirectProxyInstance",
-                   "(JJLjep/Jep;Ljava/lang/ClassLoader;Ljava/lang/Class;)Ljava/lang/Object;"))) {
-        result = (*env)->CallStaticObjectMethod(env, JPROXY_TYPE, newDirectProxyInstance,
-                                          tstate, ltarget, jep, loader, targetInterface);
+    if (newDirectProxyInstance
+            || (newDirectProxyInstance = (*env)->GetStaticMethodID(env, JPROXY_TYPE,
+                                         "newDirectProxyInstance",
+                                         "(Ljep/Jep;JLjava/lang/Class;)Ljava/lang/Object;"))) {
+        result = (*env)->CallStaticObjectMethod(env, JPROXY_TYPE,
+                                                newDirectProxyInstance,
+                                                jep, ltarget, targetInterface);
     }
     Py_END_ALLOW_THREADS
     return result;

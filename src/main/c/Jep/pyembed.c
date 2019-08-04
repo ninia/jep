@@ -222,19 +222,19 @@ void pyembed_preinit(JNIEnv *env,
     }
     if (pythonHome) {
         const char* homeAsUTF = (*env)->GetStringUTFChars(env, pythonHome, NULL);
-        #if PY_MAJOR_VERSION >= 3
-            #if PY_MINOR_VERSION >= 5
-                wchar_t* homeForPython = Py_DecodeLocale(homeAsUTF, NULL);
-            #else
-                int length = (*env)->GetStringUTFLength(env, pythonHome);
-                wchar_t* homeForPython = malloc((length + 1) * sizeof(wchar_t));
-                mbstowcs(homeForPython, homeAsUTF, length + 1);
-            #endif
-        #else
-            int length = (*env)->GetStringUTFLength(env, pythonHome);
-            char* homeForPython = malloc(length);
-            strncpy(homeForPython, homeAsUTF, length);
-        #endif
+#if PY_MAJOR_VERSION >= 3
+#if PY_MINOR_VERSION >= 5
+        wchar_t* homeForPython = Py_DecodeLocale(homeAsUTF, NULL);
+#else
+        int length = (*env)->GetStringUTFLength(env, pythonHome);
+        wchar_t* homeForPython = malloc((length + 1) * sizeof(wchar_t));
+        mbstowcs(homeForPython, homeAsUTF, length + 1);
+#endif
+#else
+        int length = (*env)->GetStringUTFLength(env, pythonHome);
+        char* homeForPython = malloc(length);
+        strncpy(homeForPython, homeAsUTF, length);
+#endif
         (*env)->ReleaseStringUTFChars(env, pythonHome, homeAsUTF);
 
         Py_SetPythonHome(homeForPython);
@@ -944,10 +944,8 @@ static PyObject* pyembed_jproxy(PyObject *self, PyObject *args)
 
     // do the deed
     proxy = jep_Proxy_newProxyInstance(env,
-                                       (jlong) (intptr_t) jepThread,
-                                       (jlong) (intptr_t) pytarget,
                                        jepThread->caller,
-                                       jepThread->classloader,
+                                       (jlong) (intptr_t) pytarget,
                                        classes);
     (*env)->DeleteLocalRef(env, classes);
     if (process_java_exception(env) || !proxy) {
@@ -1049,10 +1047,10 @@ static PyObject* pyembed_findclass(PyObject *self, PyObject *args)
  * Invoke callable object.  Hold the thread state lock before calling.
  */
 jobject pyembed_invoke_as(JNIEnv *env,
-                       PyObject *callable,
-                       jobjectArray args,
-                       jobject kwargs,
-                       jclass expectedType)
+                          PyObject *callable,
+                          jobjectArray args,
+                          jobject kwargs,
+                          jclass expectedType)
 {
     jobject        ret      = NULL;
     PyObject      *pyargs   = NULL;    /* a tuple */
@@ -1191,20 +1189,20 @@ EXIT:
 }
 
 jobject pyembed_invoke(JNIEnv *env,
-                          PyObject *callable,
-                          jobjectArray args,
-                          jobject kwargs)
+                       PyObject *callable,
+                       jobjectArray args,
+                       jobject kwargs)
 {
     return pyembed_invoke_as(env, callable, args, kwargs, JOBJECT_TYPE);
 }
 
 
 jobject pyembed_invoke_method_as(JNIEnv *env,
-                              intptr_t _jepThread,
-                              const char *cname,
-                              jobjectArray args,
-                              jobject kwargs,
-                              jclass expectedType)
+                                 intptr_t _jepThread,
+                                 const char *cname,
+                                 jobjectArray args,
+                                 jobject kwargs,
+                                 jclass expectedType)
 {
     PyObject  *callable;
     JepThread *jepThread;
@@ -1257,12 +1255,13 @@ jobject pyembed_invoke_method_as(JNIEnv *env,
 }
 
 jobject pyembed_invoke_method(JNIEnv *env,
-                                 intptr_t _jepThread,
-                                 const char *cname,
-                                 jobjectArray args,
-                                 jobject kwargs)
+                              intptr_t _jepThread,
+                              const char *cname,
+                              jobjectArray args,
+                              jobject kwargs)
 {
-    return pyembed_invoke_method_as(env, _jepThread, cname, args, kwargs, JOBJECT_TYPE);
+    return pyembed_invoke_method_as(env, _jepThread, cname, args, kwargs,
+                                    JOBJECT_TYPE);
 }
 
 

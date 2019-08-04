@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2006-2018 JEP AUTHORS.
+ * Copyright (c) 2019 JEP AUTHORS.
  *
  * This file is licensed under the the zlib/libpng License.
  *
@@ -22,34 +22,37 @@
  *     3. This notice may not be removed or altered from any source
  *     distribution.
  */
-package jep.python;
+package jep;
 
-import jep.Jep;
-import jep.JepException;
+import jep.python.MemoryManager;
 
 /**
- * PyClass.java - encapsulates a pointer to a class object
+ * <p>
+ * Allow access to Jep internal structure in sub-packages. This class should
+ * not be used outside of the Jep project.
+ * </p>
  * 
- * @deprecated Use {@link PyObject#getAttr(String)} and {@link PyObject#setAttr(String, Object)} instead.
+ * @author Ben Steffensmeier
  * 
- * @author Mike Johnson
+ * @since 3.9
  */
-@Deprecated
-public class PyClass extends PyObject {
+public abstract class JepAccess {
 
-    /**
-     * Make a new PyClass
-     * 
-     * @param tstate
-     *            a <code>long</code> value
-     * @param obj
-     *            the address of the python class
-     * @param jep
-     *            the jep instance which created this
-     * @exception JepException
-     *                if an error occurs
-     */
-    public PyClass(long tstate, long obj, Jep jep) throws JepException {
-        super(tstate, obj, jep);
+    protected final Jep jep;
+
+    protected JepAccess(Jep jep){
+        this.jep = jep;
+    }
+
+    protected long getThreadState(){
+        return jep.getThreadState();
+    }
+
+    protected ClassLoader getClassLoader(){
+        return jep.getClassLoader();
+    }
+
+    protected MemoryManager getMemoryManager(){
+        return jep.getMemoryManager();
     }
 }

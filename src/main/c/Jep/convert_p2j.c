@@ -85,8 +85,8 @@ static jobject PyObject_As_JPyObject(JNIEnv *env, PyObject *pyobject)
         return NULL;
     }
 
-    jpyobject = jep_python_PyObject_new_J_J_Jep(env, (jlong) jepThread,
-                (jlong) pyobject, jepThread->caller);
+    jpyobject = jep_python_PyObject_new_Jep_J(env, jepThread->caller,
+                (jlong) pyobject);
     if (process_java_exception(env) || !jpyobject) {
         return NULL;
     }
@@ -809,10 +809,8 @@ jobject PyCallable_as_functional_interface(JNIEnv *env, PyObject *callable,
     env = jepThread->env;
 
     proxy = jep_Proxy_newDirectProxyInstance(env,
-            (jlong) (intptr_t) jepThread,
-            (jlong) (intptr_t) callable,
             jepThread->caller,
-            jepThread->classloader,
+            (jlong) (intptr_t) callable,
             expectedType);
     if (process_java_exception(env) || !proxy) {
         return NULL;
@@ -836,8 +834,8 @@ static jobject PyCallable_As_JPyCallable(JNIEnv *env, PyObject *pyobject)
         return NULL;
     }
 
-    jpycallable = jep_python_PyCallable_new_J_J_Jep(env, (jlong) jepThread,
-                  (jlong) pyobject, jepThread->caller);
+    jpycallable = jep_python_PyCallable_new_Jep_J(env, jepThread->caller,
+                  (jlong) pyobject);
     if (process_java_exception(env) || !jpycallable) {
         return NULL;
     }

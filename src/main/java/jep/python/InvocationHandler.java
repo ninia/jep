@@ -41,21 +41,19 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
     /**
      * Creates a new <code>InvocationHandler</code> instance.
      *
-     * @param tstate
-     *            the thread state id
-     * @param ltarget
-     *            the python object's id
      * @param jep
      *            the jep interpreter
+     * @param ltarget
+     *            the python object's id
      * @param functionalInterface
      *            whether the target is a python callable that should be invoked
      *            directly
      * @exception JepException
      *                if an error occurs
      */
-    public InvocationHandler(long tstate, long ltarget, Jep jep,
+    public InvocationHandler(Jep jep, long ltarget,
             final boolean functionalInterface) throws JepException {
-        this(new PyObject(tstate, ltarget, jep), functionalInterface);
+        this(new PyObject(jep, ltarget), functionalInterface);
     }
 
     /**
@@ -122,7 +120,7 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args)
             throws Throwable {
-        pyObject.jep.isValidThread();
+        pyObject.checkValid();
 
         return invoke(proxy, pyObject.pointer.tstate, pyObject.pointer.pyObject,
                 method, args, this.functionalInterface);

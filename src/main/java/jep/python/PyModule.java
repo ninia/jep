@@ -39,17 +39,15 @@ public class PyModule extends PyObject {
     /**
      * Creates a new <code>PyModule</code> instance.
      *
-     * @param tstate
-     *            a <code>long</code> value
-     * @param obj
-     *            a <code>long</code> value
      * @param jep
      *            a <code>Jep</code> value
+     * @param obj
+     *            a <code>long</code> value
      * @exception JepException
      *                if an error occurs
      */
-    public PyModule(long tstate, long obj, Jep jep) throws JepException {
-        super(tstate, obj, jep);
+    public PyModule(Jep jep, long obj) throws JepException {
+        super(jep, obj);
     }
 
     /**
@@ -64,9 +62,7 @@ public class PyModule extends PyObject {
      */
     public PyModule createModule(String name) throws JepException {
         super.isValid();
-        return new PyModule(pointer.tstate,
-                super.createModule(pointer.tstate, pointer.pyObject, name),
-                super.jep);
+        return new PyModule(jep, createModule(pointer.tstate, pointer.pyObject, name));
     }
 
     /**

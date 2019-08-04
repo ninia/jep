@@ -26,7 +26,6 @@ package jep.python;
 
 import java.lang.ref.WeakReference;
 
-import jep.Jep;
 import jep.JepException;
 
 /**
@@ -52,8 +51,8 @@ public class PyPointer extends WeakReference<PyObject> {
      * 
      * @param referrent
      *            the PyObject (or subclass) corresponding to this PyPointer
-     * @param parent
-     *            the Jep instance that created this PyPointer
+     * @param memoryManager
+     *            the MemoryManager responsible for tracking this pointer
      * @param tstate
      *            the pointer to the JepThreadState
      * @param pyObject
@@ -61,12 +60,12 @@ public class PyPointer extends WeakReference<PyObject> {
      * @throws JepException
      *                if an error occurs
      */
-    protected PyPointer(PyObject referrent, Jep parent, long tstate,
-            long pyObject) throws JepException {
-        super(referrent, parent.getMemoryManager().getReferenceQueue());
+    protected PyPointer(PyObject referrent, MemoryManager memoryManager,
+            long tstate, long pyObject) throws JepException {
+        super(referrent, memoryManager.getReferenceQueue());
         this.tstate = tstate;
         this.pyObject = pyObject;
-        this.memoryManager = parent.getMemoryManager();
+        this.memoryManager = memoryManager;
         this.memoryManager.addReference(this);
         disposed = false;
     }

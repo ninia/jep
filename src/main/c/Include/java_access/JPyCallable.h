@@ -28,6 +28,6 @@
 #ifndef _Included_jep_python_PyCallable
 #define _Included_jep_python_PyCallable
 
-jobject jep_python_PyCallable_new_J_J_Jep(JNIEnv*, jlong, jlong, jobject);
+jobject jep_python_PyCallable_new_Jep_J(JNIEnv*, jobject, jlong);
 
 #endif // ndef jep_python_PyCallable

@@ -28,7 +28,7 @@
 #ifndef _Included_jep_python_PyObject
 #define _Included_jep_python_PyObject
 
-jobject jep_python_PyObject_new_J_J_Jep(JNIEnv*, jlong, jlong, jobject);
+jobject jep_python_PyObject_new_Jep_J(JNIEnv*, jobject, jlong);
 jlong jep_python_PyObject_getPyObject(JNIEnv*, jobject);
 
 #endif // ndef jep_python_PyObject

@@ -681,6 +681,9 @@ public class Jep implements AutoCloseable {
             throws JepException;
 
     /**
+     * @deprecated use Python 3 bytes object instead and 
+     * {@link #getValue(String,Class)} with byte[].class
+     *
      * Retrieves a Python string object as a Java byte[].
      * 
      * @param str
@@ -690,6 +693,7 @@ public class Jep implements AutoCloseable {
      * @exception JepException
      *                if an error occurs
      */
+    @Deprecated
     public byte[] getValue_bytearray(String str) throws JepException {
         isValidThread();
 
@@ -712,7 +716,7 @@ public class Jep implements AutoCloseable {
      */
     @Deprecated
     public jep.python.PyModule createModule(String name) throws JepException {
-        return new jep.python.PyModule(this.tstate, createModule(this.tstate, name), this);
+        return new jep.python.PyModule(this, createModule(this.tstate, name));
     }
 
     private native long createModule(long tstate, String name)
@@ -1134,22 +1138,24 @@ public class Jep implements AutoCloseable {
 
     /**
      * Gets the memory manager associated with this Jep instance. The memory
-     * manager attempts to track native memory usage of PyObjects. This should
-     * not be called outside of Jep and should be considered an internal method.
+     * manager attempts to track native memory usage of PyObjects.
      * 
      * @return the memory manager
      */
-    public MemoryManager getMemoryManager() {
+    protected MemoryManager getMemoryManager() {
         return memoryManager;
     }
 
+    protected long getThreadState() {
+        return tstate;
+    }
+
     /**
-     * Gets the class loader associated with this Jep instance. This should not
-     * be called outside of Jep and should be considered an internal method.
+     * Gets the class loader associated with this Jep instance.
      * 
      * @return the class loader
      */
-    public ClassLoader getClassLoader() {
+    protected ClassLoader getClassLoader() {
         return classLoader;
     }
 

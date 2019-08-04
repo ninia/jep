@@ -27,18 +27,16 @@
 
 #include "Jep.h"
 
-static jmethodID init_J_J_Jep = 0;
+static jmethodID init_Jep_J = 0;
 static jmethodID getPyObject  = 0;
 
 
-jobject jep_python_PyObject_new_J_J_Jep(JNIEnv* env, jlong tstate,
-                                        jlong pyObject, jobject jep)
+jobject jep_python_PyObject_new_Jep_J(JNIEnv* env, jobject jep, jlong pyObject)
 {
     jobject result = NULL;
     Py_BEGIN_ALLOW_THREADS
-    if (JNI_METHOD(init_J_J_Jep, env, JPYOBJECT_TYPE, "<init>", "(JJLjep/Jep;)V")) {
-        result = (*env)->NewObject(env, JPYOBJECT_TYPE, init_J_J_Jep, tstate, pyObject,
-                                   jep);
+    if (JNI_METHOD(init_Jep_J, env, JPYOBJECT_TYPE, "<init>", "(Ljep/Jep;J)V")) {
+        result = (*env)->NewObject(env, JPYOBJECT_TYPE, init_Jep_J, jep, pyObject);
     }
     Py_END_ALLOW_THREADS
 
