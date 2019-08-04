@@ -53,7 +53,11 @@ class test(Command):
         executable = sys.executable
         if executable:
             py_path = os.path.dirname(executable)
-            environment['PATH'] = py_path + os.pathsep + java_path + os.pathsep + os.environ['PATH']
+            # java_path before python_path because py_path might point to a
+            # default system path, like /usr/bin, which can contain other java
+            # executables. Since all the subprocesses are Java running jep it
+            # is very important to get the right java.
+            environment['PATH'] = java_path + os.pathsep + py_path + os.pathsep + os.environ['PATH']
         else:
             environment['PATH'] = java_path + os.pathsep + os.environ['PATH']
         prefix = sysconfig.get_config_var('prefix')

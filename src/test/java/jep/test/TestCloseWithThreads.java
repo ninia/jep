@@ -20,7 +20,8 @@ public class TestCloseWithThreads {
             CountDownLatch done = new CountDownLatch(1);
             jep.set("start", start);
             jep.set("done", done);
-            jep.eval("def run(start, done):\n  start.countDown()\n  done.await()");
+            // await is a keyword in python
+            jep.eval("def run(start, done):\n  start.countDown()\n  getattr(done,'await')()");
             jep.eval("import threading");
             jep.eval("t = threading.Thread(target=run, args=(start, done))");
             jep.eval("t.start()");

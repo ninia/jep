@@ -223,7 +223,7 @@ void pyembed_preinit(JNIEnv *env,
     if (pythonHome) {
         const char* homeAsUTF = (*env)->GetStringUTFChars(env, pythonHome, NULL);
 #if PY_MAJOR_VERSION >= 3
-#if PY_MINOR_VERSION >= 5
+#if PY_MAJOR_VERSION > 3 || PY_MINOR_VERSION >= 5
         wchar_t* homeForPython = Py_DecodeLocale(homeAsUTF, NULL);
 #else
         int length = (*env)->GetStringUTFLength(env, pythonHome);
@@ -1742,7 +1742,7 @@ static void pyembed_run_pyc(JepThread *jepThread,
     // Python 3.3 added an extra long containing the size of the source.
     // https://github.com/python/cpython/commit/5136ac0ca21a05691978df8d0650f902c8ca3463
     (void) PyMarshal_ReadLongFromFile(fp);
-#if PY_MINOR_VERSION >= 7
+#if PY_MAJOR_VERSION > 3 || PY_MINOR_VERSION >= 7
     // PEP 552 added another long
     (void) PyMarshal_ReadLongFromFile(fp);
 #endif
