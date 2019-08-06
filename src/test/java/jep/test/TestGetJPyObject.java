@@ -287,6 +287,14 @@ public class TestGetJPyObject {
         }
     }
 
+    private static interface PyInt{
+        public Byte bit_length();
+    }
+
+    private static interface PyInt2{
+        public byte bit_length();
+    }
+
     public static void testProxy(Jep jep) throws JepException {
         jep.eval("l = [7]");
         PyObject list = jep.getValue("l", PyObject.class);
@@ -305,6 +313,23 @@ public class TestGetJPyObject {
             throw new IllegalStateException("list.push worked");
         }catch (UndeclaredThrowableException e) {
             /* list doesn't have a push so this is correct*/
+        }
+
+        PyInt i = jep.getValue("1", PyObject.class).proxy(PyInt.class);
+        Byte bit_length = i.bit_length();
+        if (bit_length.intValue() != 1) {
+            throw new IllegalStateException("bit_length boxed is wrong: " + bit_length);
+        }
+        PyInt2 i2 = jep.getValue("1", PyObject.class).proxy(PyInt2.class);
+        bit_length = i2.bit_length();
+        if (bit_length.intValue() != 1) {
+            throw new IllegalStateException("bit_length primitive is wrong: " + bit_length);
+        }
+
+        jep.set("i", i);
+        bit_length = jep.getValue("int.bit_length(i)", Byte.class);
+        if (bit_length.intValue() != 1) {
+            throw new IllegalStateException("bit_length passback is wrong: " + bit_length);
         }
     }
 

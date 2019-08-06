@@ -25,6 +25,7 @@
 package jep;
 
 import jep.python.InvocationHandler;
+import jep.python.PyObject;
 
 /**
  * Uses java.lang.reflect.Proxy to wrap Python objects.
@@ -90,5 +91,23 @@ class Proxy {
             throw new IllegalArgumentException(e);
         }
         return java.lang.reflect.Proxy.newProxyInstance(loader, classes, ih);
+    }
+
+    /**
+     * If the object passed in is a proxy for a PyObject, then return the
+     * wrapped PyObject otherwise return null.
+     *
+     * @param proxy
+     *            the Object that may be a proxy
+     * @return the wrapped PyObject or null if there isn't one
+     */
+    protected static PyObject getPyObject(Object proxy) {
+        if (java.lang.reflect.Proxy.isProxyClass(proxy.getClass())) {
+            java.lang.reflect.InvocationHandler ih = java.lang.reflect.Proxy.getInvocationHandler(proxy);
+            if (ih instanceof InvocationHandler) {
+                return ((InvocationHandler) ih).getPyObject();
+            }
+        }
+        return null;
     }
 }

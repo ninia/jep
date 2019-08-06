@@ -126,6 +126,10 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
                 method, args, this.functionalInterface);
     }
 
+    public PyObject getPyObject(){
+        return pyObject;
+    }
+
     private static native Object invoke(Object proxy, long tstate, long target,
             Method method, Object[] args, boolean functionalInterface);
 }

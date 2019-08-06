@@ -245,27 +245,33 @@ PyObject* jobject_As_PyObject(JNIEnv *env, jobject jobj)
         jboolean array = java_lang_Class_isArray(env, class);
         if ((*env)->ExceptionCheck(env)) {
             process_java_exception(env);
-            result = NULL;
         } else if (array) {
             result = pyjarray_new(env, jobj);
         } else {
-            result = jobject_As_PyJObject(env, jobj, class);
+            jobject jpyObject = jep_Proxy_getPyObject(env, jobj);
+	    if (jpyObject) {
+                result = JPyObject_As_PyObject(env, jpyObject);
+            } else if ((*env)->ExceptionCheck(env)) {
+                process_java_exception(env);
+            }else {
+                result = jobject_As_PyJObject(env, jobj, class);
 #if JEP_NUMPY_ENABLED
-            /*
-             * check for jep/DirectNDArray and autoconvert to numpy.ndarray
-             * pyjobject
-             */
-            if (jdndarray_check(env, jobj)) {
-                PyObject* ndarray = convert_jdndarray_pyndarray(env, result);
-                if (ndarray) {
-                    result = ndarray;
-                } else {
+                /*
+                 * check for jep/DirectNDArray and autoconvert to numpy.ndarray
+                 * pyjobject
+                 */
+                if (jdndarray_check(env, jobj)) {
+                    PyObject* ndarray = convert_jdndarray_pyndarray(env, result);
+                    if (ndarray) {
+                        result = ndarray;
+                    } else {
+                        Py_CLEAR(result);
+                    }
+                } else if (PyErr_Occurred()) {
                     Py_CLEAR(result);
                 }
-            } else if (PyErr_Occurred()) {
-                Py_CLEAR(result);
-            }
 #endif
+            }
         }
     }
     (*env)->DeleteLocalRef(env, class);

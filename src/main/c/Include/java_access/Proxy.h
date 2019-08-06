@@ -30,5 +30,6 @@
 
 jobject jep_Proxy_newProxyInstance(JNIEnv*, jobject, jlong, jobjectArray);
 jobject jep_Proxy_newDirectProxyInstance(JNIEnv*, jobject, jlong, jclass);
+jobject jep_Proxy_getPyObject(JNIEnv*, jobject);
 
 #endif // ndef jep_Proxy

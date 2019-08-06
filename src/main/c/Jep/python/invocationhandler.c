@@ -142,6 +142,45 @@ static jobject invokeDefault(JNIEnv *env, jobject obj, jobject method,
     return result;
 }
 
+/**
+ * The return type for a method may be a primitive class but the interface for 
+ * InvocationHandler requires a boxed type, so this returns the box type for
+ * primitives so that the jep conversion has the right expected type.
+ */
+static jclass getObjectReturnType(JNIEnv *env, jclass retType)
+{
+    jclass result = NULL;
+    if ((*env)->IsAssignableFrom(env, retType, JOBJECT_TYPE)) {
+        result = retType;
+    } else if ((*env)->IsSameObject(env, retType, JBOOLEAN_TYPE)) {
+        result = JBOOL_OBJ_TYPE;
+    } else if ((*env)->IsSameObject(env, retType, JBYTE_TYPE)) {
+        result = JBYTE_OBJ_TYPE;
+    } else if ((*env)->IsSameObject(env, retType, JCHAR_TYPE)) {
+        result = JCHAR_OBJ_TYPE;
+    } else if ((*env)->IsSameObject(env, retType, JSHORT_TYPE)) {
+        result = JSHORT_OBJ_TYPE;
+    } else if ((*env)->IsSameObject(env, retType, JINT_TYPE)) {
+        result = JINT_OBJ_TYPE;
+    } else if ((*env)->IsSameObject(env, retType, JLONG_TYPE)) {
+        result = JLONG_OBJ_TYPE;
+    } else if ((*env)->IsSameObject(env, retType, JFLOAT_TYPE)) {
+        result = JFLOAT_OBJ_TYPE;
+    } else if ((*env)->IsSameObject(env, retType, JDOUBLE_TYPE)) {
+        result = JDOUBLE_OBJ_TYPE;
+    } else if ((*env)->IsSameObject(env, retType, JVOID_TYPE)) {
+        /* 
+	 * Maybe the jep conversion should require None for Void but
+	 * the Proxy code seems to accept anything so just go with that
+	 */
+        result = JOBJECT_TYPE;
+    } else {
+        /* Nothing should make it here but just in case. */
+        result = retType;
+    }
+    return result;
+}
+
 /*
  * Note that this function is called by java so it should throw java exceptions.
  *
@@ -157,6 +196,7 @@ JNIEXPORT jobject JNICALL Java_jep_python_InvocationHandler_invoke(JNIEnv *env,
     JepThread     *jepThread = NULL;
     PyObject      *target    = NULL;
     jobject        result    = NULL;
+    jclass         retType   = NULL;
     jint           modifiers;
     jboolean       abstract;
 
@@ -171,10 +211,15 @@ JNIEXPORT jobject JNICALL Java_jep_python_InvocationHandler_invoke(JNIEnv *env,
     if ((*env)->ExceptionOccurred(env)) {
         return NULL;
     }
+    retType = java_lang_reflect_Method_getReturnType(env, method);
+    if ((*env)->ExceptionOccurred(env)) {
+        return NULL;
+    }
+    retType = getObjectReturnType(env, retType);
 
     if (functionalInterface && abstract) {
         PyEval_AcquireThread(jepThread->tstate);
-        result = pyembed_invoke(env, target, args, NULL);
+        result = pyembed_invoke_as(env, target, args, NULL, retType);
         PyEval_ReleaseThread(jepThread->tstate);
     } else {
         const char* attrName;
@@ -189,7 +234,7 @@ JNIEXPORT jobject JNICALL Java_jep_python_InvocationHandler_invoke(JNIEnv *env,
             if (attr == NULL) {
                 process_py_exception(env);
             } else {
-                result = pyembed_invoke(env, attr, args, NULL);
+                result = pyembed_invoke_as(env, attr, args, NULL, retType);
                 Py_DecRef(attr);
             }
         } else {
