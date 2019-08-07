@@ -46,11 +46,9 @@ public class Run {
             + "  -s                         Run script in event dispatching thread (for use with Swing)\n";
 
     public static int run(boolean eventDispatch) {
-        Jep jep = null;
-        JepConfig cfg = new JepConfig().addIncludePaths(".");
-
-        try {
-            jep = new Jep(cfg);
+        try (Jep jep = new SharedInterpreter()) {
+            jep.eval("import sys");
+            jep.eval("sys.path.append('.')");
 
             // Windows file system compatibility
             if (scriptArgv.contains("\\")) {
@@ -61,8 +59,9 @@ public class Run {
             }
 
             // "set" by eval'ing it
-            jep.eval("import sys; sys.argv = argv = " + scriptArgv);
+            jep.eval("sys.argv = argv = " + scriptArgv);
             if (!file.endsWith("jep" + File.separator + "console.py")) {
+                jep.eval("__name__ = '__main__'");
                 jep.runScript(file);
             } else {
                 interactive = true;
@@ -75,14 +74,6 @@ public class Run {
             }
         } catch (Throwable t) {
             t.printStackTrace();
-            if (jep != null)
-                try {
-                    jep.close();
-                } catch (JepException e) {
-                    e.printStackTrace();
-                    return 1;
-                }
-
             return 1;
         }
 
@@ -92,12 +83,6 @@ public class Run {
             return 0;
         }
 
-        try {
-            jep.close();
-        } catch (JepException e) {
-            e.printStackTrace();
-            return 1;
-        }
         return 0;
     }
 
