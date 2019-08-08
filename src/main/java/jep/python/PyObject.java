@@ -706,10 +706,13 @@ public class PyObject extends JepAccess implements AutoCloseable {
      * object must have methods matching those defined by the Java interfaces.
      * Matching methods must have the same name, same number of arguments, and
      * must return an object that can be converted to the correct return type.
-     * This method does not verify that this Python Object has methods matching
-     * the Java interfaces so if it is used incorrectly a RuntimeException will
-     * be thrown when the method is called.
-     * 
+     * This method does not verify that this Python object has methods matching
+     * the Java interfaces. If a method is called on the proxy object that does
+     * not have a matching Python method a RuntimeException will be thrown. The
+     * returned proxy object can only be used when this PyObject is valid. It
+     * cannot be used on other threads or after the Jep instance that it
+     * originated from is closed.
+     *
      * @param <T>
      *            the generic type of the return type
      * @param primaryInterface
@@ -717,7 +720,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      * @param extraInterfaces
      *            Optional additional interfaces the returned object will also
      *            implement.
-     * @return a Java proxy implementing the speciefied interfaces
+     * @return a Java proxy implementing the provided interfaces.
      * @exception JepException
      *                if an error occurs or the conversion is not possible
      * @since 3.9
