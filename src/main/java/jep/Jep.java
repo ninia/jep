@@ -532,6 +532,22 @@ public class Jep implements AutoCloseable {
 
     private native void eval(long tstate, String str) throws JepException;
 
+    /*
+     * Execute an arbitrary number of Python statements in this interpreter.
+     * Similar to the Python builtin exec function.
+     *
+     * @param str
+     *            Python code to exececute
+     * @exception JepException
+     *                if an error occurs
+     */
+    public void exec(String str) throws JepException {
+        isValidThread();
+        exec(this.tstate, str);
+    }
+
+    private native void exec(long tstate, String str) throws JepException;
+
     /**
      * 
      * <p>

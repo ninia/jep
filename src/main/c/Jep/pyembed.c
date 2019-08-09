@@ -1343,6 +1343,32 @@ int pyembed_compile_string(JNIEnv *env,
     return ret;
 }
 
+void pyembed_exec(JNIEnv *env, intptr_t _jepThread, char *str)
+{
+    PyObject  *result=NULL;
+    JepThread *jepThread = (JepThread *) _jepThread;
+    if (!jepThread) {
+        THROW_JEP(env, "Couldn't get thread objects.");
+        return;
+    }
+
+    if (str == NULL) {
+        return;
+    }
+
+    PyEval_AcquireThread(jepThread->tstate);
+
+    result = PyRun_String(str, Py_file_input, jepThread->globals, jepThread->globals);
+    if (result) {
+        // Result is expected to be Py_None.
+        Py_DECREF(result);
+    } else {
+        process_py_exception(env);
+    }
+
+    PyEval_ReleaseThread(jepThread->tstate);
+}
+
 
 intptr_t pyembed_create_module(JNIEnv *env,
                                intptr_t _jepThread,

@@ -147,6 +147,22 @@ JNIEXPORT void JNICALL Java_jep_Jep_eval
 
 /*
  * Class:     jep_Jep
+ * Method:    eval
+ * Signature: (ILjava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_jep_Jep_exec
+(JNIEnv *env, jobject obj, jlong tstate, jstring jstr)
+{
+    const char *str;
+
+    str = jstring2char(env, jstr);
+    pyembed_exec(env, (intptr_t) tstate, (char *) str);
+    release_utf_char(env, jstr, str);
+}
+
+
+/*
+ * Class:     jep_Jep
  * Method:    getValue
  * Signature: (ILjava/lang/String;)Ljava/lang/Object;
  */
