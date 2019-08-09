@@ -511,18 +511,6 @@ int pyarg_matches_jtype(JNIEnv *env,
         case JCLASS_ID:
             return 1;
         }
-    } else if (pyjarray_check(param)) {
-        switch (paramTypeId) {
-        case JARRAY_ID:
-            if ((*env)->IsAssignableFrom(env,
-                                         ((PyJArrayObject *) param)->clazz,
-                                         paramType)) {
-                return 2;
-            }
-            break;
-        case JOBJECT_ID:
-            return 1;
-        }
     } else if (PyJClass_Check(param)) {
         switch (paramTypeId) {
         case JCLASS_ID:
@@ -536,6 +524,7 @@ int pyarg_matches_jtype(JNIEnv *env,
         }
     } else if (PyJObject_Check(param)) {
         switch (paramTypeId) {
+        case JARRAY_ID:
         case JOBJECT_ID:
             if ((*env)->IsSameObject(env,
                                      ((PyJObject *) param)->clazz,

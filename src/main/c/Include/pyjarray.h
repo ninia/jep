@@ -26,6 +26,7 @@
 */
 
 #include "jep_platform.h"
+#include "pyjobject.h"
 
 #ifndef _Included_pyjarray
 #define _Included_pyjarray
@@ -36,8 +37,7 @@ extern PyTypeObject PyJArray_Type;
 // c storage for our stuff, managed by python interpreter.
 typedef struct {
     PyObject_HEAD
-    jobjectArray     object;         /* array object */
-    jclass           clazz;          /* useful for later calls */
+    PyJObject_FIELDS
     int              componentType;  /* type of array elements */
     jclass
     componentClass; /* component type of object arrays, but not strings */

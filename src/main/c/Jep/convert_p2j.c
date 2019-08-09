@@ -1101,6 +1101,12 @@ jobject PyObject_As_jobject(JNIEnv *env, PyObject *pyobject,
         if ((*env)->IsAssignableFrom(env, JCLASS_TYPE, expectedType)) {
             return (*env)->NewLocalRef(env, ((PyJObject *) pyobject)->clazz);
         }
+    } else if (pyjarray_check(pyobject)) {
+        PyJObject *pyjarray = (PyJObject *) pyobject;
+        if ((*env)->IsAssignableFrom(env, pyjarray->clazz, expectedType)) {
+            pyjarray_release_pinned((PyJArrayObject *) pyjarray, JNI_COMMIT);
+            return (*env)->NewLocalRef(env, pyjarray->object);
+        }
     } else if (PyJObject_Check(pyobject)) {
         PyJObject *pyjobject = (PyJObject*) pyobject;
         if ((*env)->IsAssignableFrom(env, pyjobject->clazz, expectedType)) {
@@ -1133,12 +1139,6 @@ jobject PyObject_As_jobject(JNIEnv *env, PyObject *pyobject,
 #endif
     } else if (PyFloat_Check(pyobject)) {
         return pyfloat_as_jobject(env, pyobject, expectedType);
-    } else if (pyjarray_check(pyobject)) {
-        PyJArrayObject *pyjarray = (PyJArrayObject *) pyobject;
-        if ((*env)->IsAssignableFrom(env, pyjarray->clazz, expectedType)) {
-            pyjarray_release_pinned(pyjarray, JNI_COMMIT);
-            return (*env)->NewLocalRef(env, pyjarray->object);
-        }
     } else if (PyList_Check(pyobject) || PyTuple_Check(pyobject)) {
         return pyfastsequence_as_jobject(env, pyobject, expectedType);
     } else if (PyDict_Check(pyobject)) {

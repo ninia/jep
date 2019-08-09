@@ -42,8 +42,10 @@ static Py_ssize_t pyjarray_length(PyObject *self);
 PyObject* pyjarray_new(JNIEnv *env, jobjectArray obj)
 {
     PyJArrayObject  *pyarray;
-    jclass           clazz;
 
+    if (!PyJArray_Type.tp_base) {
+        PyJArray_Type.tp_base = &PyJObject_Type;
+    }
     if (PyType_Ready(&PyJArray_Type) < 0) {
         return NULL;
     }
@@ -52,17 +54,14 @@ PyObject* pyjarray_new(JNIEnv *env, jobjectArray obj)
         return NULL;
     }
 
-    clazz = (*env)->GetObjectClass(env, obj);
-
-    pyarray                 = PyObject_NEW(PyJArrayObject, &PyJArray_Type);
-    pyarray->object         = (*env)->NewGlobalRef(env, obj);
-    pyarray->clazz          = (*env)->NewGlobalRef(env, clazz);
-    pyarray->componentType  = -1;
-    pyarray->componentClass = NULL;
-    pyarray->length         = -1;
-    pyarray->pinnedArray    = NULL;
-
-    (*env)->DeleteLocalRef(env, clazz);
+    pyarray = (PyJArrayObject*) PyJObject_New(env, &PyJArray_Type, obj, NULL);
+    if (!pyarray) {
+        return NULL;
+    }
+    pyarray->componentType          = -1;
+    pyarray->componentClass         = NULL;
+    pyarray->length                 = -1;
+    pyarray->pinnedArray            = NULL;
 
     if (pyjarray_init(env, pyarray, 0, NULL)) {
         return (PyObject *) pyarray;
@@ -80,7 +79,7 @@ PyObject* pyjarray_new(JNIEnv *env, jobjectArray obj)
 PyObject* pyjarray_new_v(PyObject *isnull, PyObject *args)
 {
     PyJArrayObject  *pyarray;
-    jclass           clazz     = NULL, componentClass = NULL;
+    jclass           componentClass = NULL;
     JNIEnv          *env       = NULL;
     jobjectArray     arrayObj  = NULL;
     long             typeId    = -1;
@@ -90,6 +89,9 @@ PyObject* pyjarray_new_v(PyObject *isnull, PyObject *args)
     PyObject *one, *two, *three;
     one = two = three = NULL;
 
+    if (!PyJArray_Type.tp_base) {
+        PyJArray_Type.tp_base = &PyJObject_Type;
+    }
     if (PyType_Ready(&PyJArray_Type) < 0) {
         return NULL;
     }
@@ -162,15 +164,6 @@ PyObject* pyjarray_new_v(PyObject *isnull, PyObject *args)
                                               (jsize) size,
                                               componentClass,
                                               NULL);
-        } else if (pyjarray_check(two)) {
-            PyJArrayObject *pyarray = (PyJArrayObject *) two;
-            typeId = JARRAY_ID;
-
-            componentClass = pyarray->clazz;
-            arrayObj = (*env)->NewObjectArray(env,
-                                              (jsize) size,
-                                              componentClass,
-                                              NULL);
         } else {
             PyErr_SetString(PyExc_ValueError, "Unknown arg type: expected "
                             "one of: J<foo>_ID, pyjobject, jarray");
@@ -190,22 +183,20 @@ PyObject* pyjarray_new_v(PyObject *isnull, PyObject *args)
         return NULL;
     }
 
-    clazz = (*env)->GetObjectClass(env, arrayObj);
-
-    pyarray                 = PyObject_NEW(PyJArrayObject, &PyJArray_Type);
-    pyarray->object         = (*env)->NewGlobalRef(env, arrayObj);
-    pyarray->clazz          = (*env)->NewGlobalRef(env, clazz);
-    pyarray->componentType  = (int) typeId;
-    pyarray->componentClass = NULL;
-    pyarray->length         = -1;
-    pyarray->pinnedArray    = NULL;
+    pyarray = (PyJArrayObject*) PyJObject_New(env, &PyJArray_Type, arrayObj, NULL);
+    if (!pyarray) {
+        return NULL;
+    }
+    pyarray->componentType          = (int) typeId;
+    pyarray->componentClass         = NULL;
+    pyarray->length                 = -1;
+    pyarray->pinnedArray            = NULL;
 
     if (typeId == JOBJECT_ID || typeId == JARRAY_ID) {
         pyarray->componentClass = (*env)->NewGlobalRef(env, componentClass);
     }
 
     (*env)->DeleteLocalRef(env, arrayObj);
-    (*env)->DeleteLocalRef(env, clazz);
 
     if (pyjarray_init(env, pyarray, 1, three)) {
         return (PyObject *) pyarray;
@@ -490,30 +481,19 @@ void pyjarray_pin(PyJArrayObject *self)
     process_java_exception(env);
 }
 
-
 static void pyjarray_dealloc(PyJArrayObject *self)
 {
 #if USE_DEALLOC
     JNIEnv *env = pyembed_get_env();
     if (env) {
-        if (self->clazz) {
-            (*env)->DeleteGlobalRef(env, self->clazz);
-        }
         if (self->componentClass) {
             (*env)->DeleteGlobalRef(env, self->componentClass);
         }
 
         // can't guarantee mode 0 will work in this case...
         pyjarray_release_pinned(self, JNI_ABORT);
-
-        // pyjarray_release_pinned potentially uses self->object so we can
-        // only delete self->object afterwards
-        if (self->object) {
-            (*env)->DeleteGlobalRef(env, self->object);
-        }
-    } // if env
-
-    PyObject_Del(self);
+    }
+    PyJArray_Type.tp_base->tp_dealloc((PyObject*) self);
 #endif
 }
 
@@ -1797,7 +1777,7 @@ PyTypeObject PyJArrayIter_Type = {
     0,                                        /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
-    0,                                        /* tp_base */
+    0, // &PyJObject_Type                     /* tp_base */
     0,                                        /* tp_dict */
     0,                                        /* tp_descr_get */
     0,                                        /* tp_descr_set */

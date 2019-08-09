@@ -39,7 +39,7 @@
  *
  * @return NULL on errors, topClz if there are no errors
  */
-static PyObject* pyjclass_add_inner_class(JNIEnv *env, PyJObject *topClz,
+static PyObject* pyjclass_add_inner_class(JNIEnv *env, PyJClassObject *topClz,
         jclass innerClz)
 {
     jint      mods;
@@ -92,7 +92,7 @@ static PyObject* pyjclass_add_inner_class(JNIEnv *env, PyJObject *topClz,
  * @return topClz if successful, otherwise NULL
  */
 static PyObject* pyjclass_add_inner_classes(JNIEnv *env,
-        PyJObject *topClz)
+        PyJClassObject *topClz)
 {
     jobjectArray      innerArray    = NULL;
     jsize             innerSize     = 0;
@@ -144,7 +144,7 @@ static int pyjclass_init(JNIEnv *env, PyObject *pyjob)
      * code with public enum.  Note this will not allow the inner class to be
      * imported separately, it must be accessed through the enclosing class.
      */
-    if (!pyjclass_add_inner_classes(env, (PyJObject*) pyjob)) {
+    if (!pyjclass_add_inner_classes(env, (PyJClassObject*) pyjob)) {
         /*
          * let's just print the error to stderr and continue on without
          * inner class support, it's not the end of the world
@@ -184,14 +184,11 @@ static void pyjclass_dealloc(PyJClassObject *self)
  */
 static int pyjclass_init_constructors(PyJClassObject *pyc)
 {
-    jclass        clazz       = NULL;
     JNIEnv       *env         = NULL;
     jobjectArray  initArray   = NULL;
     int           initLen     = 0;
     PyObject     *pycallable  = NULL;
     int           i           = 0;
-
-    clazz = ((PyJObject *) pyc)->clazz;
 
     env = pyembed_get_env();
     if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
@@ -199,7 +196,7 @@ static int pyjclass_init_constructors(PyJClassObject *pyc)
         return -1;
     }
 
-    initArray = java_lang_Class_getConstructors(env, clazz);
+    initArray = java_lang_Class_getConstructors(env, pyc->clazz);
     if (process_java_exception(env) || !initArray) {
         goto EXIT_ERROR;
     }

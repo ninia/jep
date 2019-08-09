@@ -1345,7 +1345,7 @@ int pyembed_compile_string(JNIEnv *env,
 
 void pyembed_exec(JNIEnv *env, intptr_t _jepThread, char *str)
 {
-    PyObject  *result=NULL;
+    PyObject  *result = NULL;
     JepThread *jepThread = (JepThread *) _jepThread;
     if (!jepThread) {
         THROW_JEP(env, "Couldn't get thread objects.");
@@ -1358,7 +1358,8 @@ void pyembed_exec(JNIEnv *env, intptr_t _jepThread, char *str)
 
     PyEval_AcquireThread(jepThread->tstate);
 
-    result = PyRun_String(str, Py_file_input, jepThread->globals, jepThread->globals);
+    result = PyRun_String(str, Py_file_input, jepThread->globals,
+                          jepThread->globals);
     if (result) {
         // Result is expected to be Py_None.
         Py_DECREF(result);

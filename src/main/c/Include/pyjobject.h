@@ -33,16 +33,25 @@
 
 extern PyTypeObject PyJObject_Type;
 
-// c storage for our stuff, managed by python interpreter.
-// doesn't need much, just a dictionary for attributes and
-// a jobject reference.
+/*
+ * The common fields for PyJObject. The usage of this macro is similar to
+ * PyObject_HEAD. Any type which extends PyJObject and requires additional
+ * fields must start the struct definition with PyObject_HEAD followed
+ * immediatly by PyJObject_FIELDS and then any custom fields for the subtype.
+ *
+ * These fields are the JNI objects for the Java object and the Class of that
+ * object. As well as a Python dict for the attributes and a Python string
+ * containing the fully qualified java class name.
+ */
+#define PyJObject_FIELDS \
+    jobject   object;    \
+    jclass    clazz;     \
+    PyObject *attr;      \
+    PyObject *javaClassName;
+
 typedef struct {
     PyObject_HEAD
-    jobject          object;      /* the jni object */
-    jclass           clazz;       /* java class object */
-    PyObject        *attr;        /* dict for get/set attr */
-    PyObject        *javaClassName; /* string of the fully-qualified name of
-                                       the object's Java clazz */
+    PyJObject_FIELDS
 } PyJObject;
 
 /*

@@ -39,7 +39,8 @@
 extern PyTypeObject PyJClass_Type;
 
 typedef struct {
-    PyJObject  obj;            /* magic inheritance */
+    PyObject_HEAD
+    PyJObject_FIELDS
     /*
      * A python callable, either a PyJConstructor or PyJMultiMethod with many
      * PyJConstructors

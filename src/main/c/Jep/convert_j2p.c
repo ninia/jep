@@ -249,11 +249,11 @@ PyObject* jobject_As_PyObject(JNIEnv *env, jobject jobj)
             result = pyjarray_new(env, jobj);
         } else {
             jobject jpyObject = jep_Proxy_getPyObject(env, jobj);
-	    if (jpyObject) {
+            if (jpyObject) {
                 result = JPyObject_As_PyObject(env, jpyObject);
             } else if ((*env)->ExceptionCheck(env)) {
                 process_java_exception(env);
-            }else {
+            } else {
                 result = jobject_As_PyJObject(env, jobj, class);
 #if JEP_NUMPY_ENABLED
                 /*
