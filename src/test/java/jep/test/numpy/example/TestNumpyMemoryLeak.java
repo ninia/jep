@@ -1,7 +1,9 @@
 package jep.test.numpy.example;
 
+import jep.Interpreter;
 import jep.Jep;
 import jep.JepException;
+import jep.SubInterpreter;
 
 /**
  * Illustrates a tiny leak somewhere in numpy. This is really hard to spot but
@@ -34,13 +36,13 @@ public class TestNumpyMemoryLeak {
             @Override
             public void run() {
                 /*
-                 * do not close jep0, otherwise the test may not work with some
-                 * versions of numpy
+                 * do not close interp0, otherwise the test may not work with
+                 * some versions of numpy
                  */
-                Jep jep0 = null;
+                Interpreter interp0 = null;
                 try {
-                    jep0 = new Jep();
-                    jep0.eval("import numpy");
+                    interp0 = new SubInterpreter();
+                    interp0.eval("import numpy");
                 } catch (JepException e) {
                     e.printStackTrace();
                 }
@@ -52,8 +54,8 @@ public class TestNumpyMemoryLeak {
         Thread.currentThread().sleep(2000);
 
         for (int i = 0; i < REPEAT; i++) {
-            try (Jep jep = new Jep()) {
-                jep.eval("import numpy");
+            try (Jep interp = new SubInterpreter()) {
+                interp.eval("import numpy");
                 // jep.eval("import os");
             }
         }

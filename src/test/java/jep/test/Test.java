@@ -5,9 +5,11 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
 
+import jep.Interpreter;
 import jep.Jep;
 import jep.JepConfig;
 import jep.JepException;
+import jep.SubInterpreter;
 
 /**
  * Test.java
@@ -18,7 +20,7 @@ import jep.JepException;
  */
 public class Test implements Runnable {
 
-    private Jep jep = null;
+    private Interpreter interp = null;
 
     private boolean testEval = false;
 
@@ -53,51 +55,52 @@ public class Test implements Runnable {
             try {
                 File pwd = new File(".");
 
-                this.jep = new Jep(new JepConfig().setInteractive(this.testEval)
-                        .addIncludePaths(pwd.getAbsolutePath()));
-                jep.set("testo", this);
-                jep.set("test", "value from java.");
-                jep.set("testi", i);
-                jep.set("testb", true);
-                jep.set("testl", 123123122112L);
-                jep.set("testd", 123.123D);
-                jep.set("testf", 12312.123123F);
-                jep.set("testy", 127);
-                jep.set("testc", 't');
-                jep.set("testn", (String) null);
-                jep.set("testn", (Object) null);
-                jep.set("testz", this.getClass());
+                this.interp = new SubInterpreter(
+                        new JepConfig().setInteractive(this.testEval)
+                                .addIncludePaths(pwd.getAbsolutePath()));
+                interp.set("testo", this);
+                interp.set("test", "value from java.");
+                interp.set("testi", i);
+                interp.set("testb", true);
+                interp.set("testl", 123123122112L);
+                interp.set("testd", 123.123D);
+                interp.set("testf", 12312.123123F);
+                interp.set("testy", 127);
+                interp.set("testc", 't');
+                interp.set("testn", (String) null);
+                interp.set("testn", (Object) null);
+                interp.set("testz", this.getClass());
 
                 // arrays
                 int[] ia = new int[] { 3 };
                 double[] da = new double[] { 2.0 };
                 String[] sa = new String[] { "0" };
 
-                jep.eval("def manip(li, val):\n\tli[0]=val\n\tli.commit()");
-                jep.invoke("manip", ia, 1);
-                jep.invoke("manip", da, 1.0);
-                jep.invoke("manip", sa, "1");
+                interp.eval("def manip(li, val):\n\tli[0]=val\n\tli.commit()");
+                interp.invoke("manip", ia, 1);
+                interp.invoke("manip", da, 1.0);
+                interp.invoke("manip", sa, "1");
 
                 System.out.println(ia[0]);
                 System.out.println(da[0]);
                 System.out.println(sa[0]);
 
-                jep.set("x", da);
-                assert ((double[]) jep.getValue("x"))[0] == 1.0;
+                interp.set("x", da);
+                assert ((double[]) interp.getValue("x"))[0] == 1.0;
 
                 boolean[] ab = new boolean[10];
                 ab[1] = true;
-                jep.set("testab", ab);
+                interp.set("testab", ab);
 
                 double[] ad = new double[10];
                 ad[1] = 1.7976931348623157E308D;
-                jep.set("testad", ad);
+                interp.set("testad", ad);
 
                 if (!this.testEval)
-                    jep.runScript("test.py");
+                    interp.runScript("test.py");
                 else {
-                    BufferedReader buf = new BufferedReader(new FileReader(
-                            "test.py"));
+                    BufferedReader buf = new BufferedReader(
+                            new FileReader("test.py"));
 
                     String line = null;
                     while ((line = buf.readLine()) != null) {
@@ -105,45 +108,53 @@ public class Test implements Runnable {
                             continue;
 
                         System.out.println("Running line: " + line);
-                        jep.eval(line);
+                        interp.eval(line);
                     }
 
                     buf.close();
                 }
 
-                jep.invoke("testMethod", true);
-                jep.invoke("testMethod", 123);
-                jep.invoke("testMethod", 112L);
-                jep.invoke("testMethod", 112.23D);
-                jep.invoke("testMethod", 112.2312331F);
-                jep.invoke("testMethod", (byte) 211);
-                jep.invoke("testMethod", 't');
+                interp.invoke("testMethod", true);
+                interp.invoke("testMethod", 123);
+                interp.invoke("testMethod", 112L);
+                interp.invoke("testMethod", 112.23D);
+                interp.invoke("testMethod", 112.2312331F);
+                interp.invoke("testMethod", (byte) 211);
+                interp.invoke("testMethod", 't');
 
-                Object ret = jep
-                        .invoke("testMethod", "method called from Java");
+                Object ret = interp.invoke("testMethod",
+                        "method called from Java");
                 System.out.println("testMethod ret:   " + ret);
 
-                System.out.println("Test get object: " + jep.getValue("testo"));
-                System.out.println("Test get string: " + jep.getValue("test"));
-                System.out.println("Test get int: "
-                        + ((Integer) jep.getValue("testi")).intValue());
+                System.out.println(
+                        "Test get object: " + interp.getValue("testo"));
                 System.out
-                        .println("Test get boolean: " + jep.getValue("testb"));
-                System.out.println("Test get long: " + jep.getValue("testl"));
-                System.out.println("Test get double: " + jep.getValue("testd"));
-                System.out.println("Test get float: " + jep.getValue("testf"));
-                System.out.println("Test get short: " + jep.getValue("testy"));
-                System.out.println("Test get null: " + jep.getValue("testn"));
-                System.out.println("Test get class: " + jep.getValue("testz"));
+                        .println("Test get string: " + interp.getValue("test"));
+                System.out.println("Test get int: "
+                        + ((Integer) interp.getValue("testi")).intValue());
+                System.out.println(
+                        "Test get boolean: " + interp.getValue("testb"));
+                System.out
+                        .println("Test get long: " + interp.getValue("testl"));
+                System.out.println(
+                        "Test get double: " + interp.getValue("testd"));
+                System.out
+                        .println("Test get float: " + interp.getValue("testf"));
+                System.out
+                        .println("Test get short: " + interp.getValue("testy"));
+                System.out
+                        .println("Test get null: " + interp.getValue("testn"));
+                System.out
+                        .println("Test get class: " + interp.getValue("testz"));
 
-                jep.eval("testmap = {'blah': 'har'}");
+                interp.eval("testmap = {'blah': 'har'}");
                 System.out.println("Test get Python object: "
-                        + jep.getValue("testmap"));
+                        + interp.getValue("testmap"));
 
                 System.out.print("get unknown val:  ");
 
                 try {
-                    System.out.println(jep.getValue("_asdf"));
+                    System.out.println(interp.getValue("_asdf"));
                     System.out.println("whoops");
                 } catch (JepException e) {
                     System.out.println(e.getMessage());
@@ -154,10 +165,10 @@ public class Test implements Runnable {
                 break;
             } finally {
                 System.out.println("**** close me");
-                if (jep != null) {
+                if (interp != null) {
                     try {
-                        jep.close();
-                    } catch (JepException e) {
+                        interp.close();
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
@@ -166,8 +177,8 @@ public class Test implements Runnable {
     }
 
     // get the jep used for this class
-    public Jep getJep() {
-        return this.jep;
+    public Interpreter getJep() {
+        return this.interp;
     }
 
     @Override
@@ -222,16 +233,16 @@ public class Test implements Runnable {
         if (p == null)
             throw new NullPointerException("p is null?");
         for (int i = 0; i < p.length; i++)
-            System.out.println("                  " + "array[" + i + "] = "
-                    + p[i]);
+            System.out.println(
+                    "                  " + "array[" + i + "] = " + p[i]);
     }
 
     public void sendIntArray(int p[]) {
         if (p == null)
             throw new NullPointerException("p is null?");
         for (int i = 0; i < p.length; i++)
-            System.out.println("                  " + "array[" + i + "] = "
-                    + p[i]);
+            System.out.println(
+                    "                  " + "array[" + i + "] = " + p[i]);
     }
 
     public void sendMeSomeStuff(String v, ArrayList a) {
@@ -250,11 +261,12 @@ public class Test implements Runnable {
         return;
     }
 
-    public String[] testAllVarArgs(String... args){
+    public String[] testAllVarArgs(String... args) {
         return args;
     }
 
-    public String[] testMixedVarArgs(String regArg1, String regArg2, String... args){
+    public String[] testMixedVarArgs(String regArg1, String regArg2,
+            String... args) {
         String[] result = new String[args.length + 2];
         result[0] = regArg1;
         result[1] = regArg2;
@@ -264,9 +276,9 @@ public class Test implements Runnable {
 
     public static Object[] test20Args(Object arg1, Object arg2, Object arg3,
             Object arg4, Object arg5, Object arg6, Object arg7, Object arg8,
-            Object arg9, Object arg10, Object arg11, Object arg12,
-            Object arg13, Object arg14, Object arg15, Object arg16,
-            Object arg17, Object arg18, Object arg19, Object arg20) {
+            Object arg9, Object arg10, Object arg11, Object arg12, Object arg13,
+            Object arg14, Object arg15, Object arg16, Object arg17,
+            Object arg18, Object arg19, Object arg20) {
         return new Object[] { arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8,
                 arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17,
                 arg18, arg19, arg20 };
@@ -278,19 +290,19 @@ public class Test implements Runnable {
 
             @Override
             public void run() {
-                Jep jep = null;
+                Jep interp = null;
                 try {
                     JepConfig cfg = new JepConfig().setInteractive(true)
                             .setClassLoader(restrictedClassLoader);
-                    jep = new Jep(cfg);
-                    jep.eval("from java.io import File");
+                    interp = new SubInterpreter(cfg);
+                    interp.eval("from java.io import File");
                 } catch (Throwable th) {
                     t[0] = th;
                 } finally {
-                    if (jep != null) {
+                    if (interp != null) {
                         try {
-                            jep.close();
-                        } catch (JepException e) {
+                            interp.close();
+                        } catch (Exception e) {
                             throw new RuntimeException(
                                     "Error closing Jep instance", e);
                         }
@@ -319,11 +331,11 @@ public class Test implements Runnable {
     }
 
     public static void main(String argv[]) throws Throwable {
-        Jep jep = new Jep();
+        Interpreter interp = new SubInterpreter();
         try {
-            jep.runScript("runtests.py");
+            interp.runScript("runtests.py");
         } finally {
-            jep.close();
+            interp.close();
         }
     }
 } // Test

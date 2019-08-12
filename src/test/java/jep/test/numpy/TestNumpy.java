@@ -3,10 +3,11 @@ package jep.test.numpy;
 import java.nio.IntBuffer;
 
 import jep.DirectNDArray;
-import jep.Jep;
+import jep.Interpreter;
 import jep.JepConfig;
 import jep.JepException;
 import jep.NDArray;
+import jep.SubInterpreter;
 import jep.python.PyObject;
 
 /**
@@ -24,23 +25,23 @@ public class TestNumpy {
      * conversion in both directions is safe, ie produces a symmetrical object
      * despite a different reference/instance.
      * 
-     * @param jep
+     * @param interp
      * @throws JepException
      */
-    public void testSetAndGet(Jep jep) throws JepException {
+    public void testSetAndGet(Interpreter interp) throws JepException {
         int[] dimensions = new int[] { 4 };
-	PyObject asPyObj;
+        PyObject asPyObj;
 
         // test boolean[]
         NDArray<boolean[]> zarray = new NDArray<>(
                 new boolean[] { true, false, true, true }, dimensions);
-        jep.set("zarray", zarray);
-        String z_dtype = (String) jep.getValue("zarray.dtype");
+        interp.set("zarray", zarray);
+        String z_dtype = (String) interp.getValue("zarray.dtype");
         if (!"bool".equals(z_dtype)) {
             throw new AssertionError(
                     "boolean ndarray set failed, dtype = " + z_dtype);
         }
-        NDArray<?> retZ = (NDArray<?>) jep.getValue("zarray");
+        NDArray<?> retZ = (NDArray<?>) interp.getValue("zarray");
         if (!zarray.equals(retZ)) {
             throw new AssertionError("boolean[] before != boolean[] after");
         }
@@ -48,18 +49,18 @@ public class TestNumpy {
             throw new AssertionError(
                     "boolean[].hashCode() before != boolean[].hasCode() after");
         }
-	asPyObj = jep.getValue("zarray", PyObject.class);
+        asPyObj = interp.getValue("zarray", PyObject.class);
 
         // test byte[]
         NDArray<byte[]> barray = new NDArray<>(
                 new byte[] { 0x10, 0x00, 0x54, 032 }, dimensions);
-        jep.set("barray", barray);
-        String b_dtype = (String) jep.getValue("barray.dtype");
+        interp.set("barray", barray);
+        String b_dtype = (String) interp.getValue("barray.dtype");
         if (!"int8".equals(b_dtype)) {
             throw new AssertionError(
                     "byte ndarray set failed, dtype = " + b_dtype);
         }
-        NDArray<?> retB = (NDArray<?>) jep.getValue("barray");
+        NDArray<?> retB = (NDArray<?>) interp.getValue("barray");
         if (!barray.equals(retB)) {
             throw new AssertionError("byte[] before != byte[] after");
         }
@@ -67,18 +68,18 @@ public class TestNumpy {
             throw new AssertionError(
                     "byte[].hashCode() before != byte[].hasCode() after");
         }
-	asPyObj = jep.getValue("barray", PyObject.class);
+        asPyObj = interp.getValue("barray", PyObject.class);
 
         // test short[]
         NDArray<short[]> sarray = new NDArray<>(new short[] { 5, 3, 1, 8 },
                 dimensions);
-        jep.set("sarray", sarray);
-        String s_dtype = (String) jep.getValue("sarray.dtype");
+        interp.set("sarray", sarray);
+        String s_dtype = (String) interp.getValue("sarray.dtype");
         if (!"int16".equals(s_dtype)) {
             throw new AssertionError(
                     "short ndarray set failed, dtype = " + s_dtype);
         }
-        NDArray<?> retS = (NDArray<?>) jep.getValue("sarray");
+        NDArray<?> retS = (NDArray<?>) interp.getValue("sarray");
         if (!sarray.equals(retS)) {
             throw new AssertionError("short[] before != short[] after");
         }
@@ -86,18 +87,18 @@ public class TestNumpy {
             throw new AssertionError(
                     "short[].hashCode() before != short[].hasCode() after");
         }
-	asPyObj = jep.getValue("sarray", PyObject.class);
+        asPyObj = interp.getValue("sarray", PyObject.class);
 
         // test int[]
         NDArray<int[]> iarray = new NDArray<>(new int[] { 547, 232, -675, 101 },
                 dimensions);
-        jep.set("iarray", iarray);
-        String i_dtype = (String) jep.getValue("iarray.dtype");
+        interp.set("iarray", iarray);
+        String i_dtype = (String) interp.getValue("iarray.dtype");
         if (!"int32".equals(i_dtype)) {
             throw new AssertionError(
                     "int ndarray set failed, dtype = " + i_dtype);
         }
-        NDArray<?> retI = (NDArray<?>) jep.getValue("iarray");
+        NDArray<?> retI = (NDArray<?>) interp.getValue("iarray");
         if (!iarray.equals(retI)) {
             throw new AssertionError("int[] before != int[] after");
         }
@@ -105,19 +106,19 @@ public class TestNumpy {
             throw new AssertionError(
                     "int[].hashCode() before != int[].hasCode() after");
         }
-	asPyObj = jep.getValue("iarray", PyObject.class);
+        asPyObj = interp.getValue("iarray", PyObject.class);
 
         // test long[]
         NDArray<long[]> larray = new NDArray<>(
                 new long[] { 62724764L, 3424637L, 3426734242L, -3429234L },
                 dimensions);
-        jep.set("larray", larray);
-        String l_dtype = (String) jep.getValue("larray.dtype");
+        interp.set("larray", larray);
+        String l_dtype = (String) interp.getValue("larray.dtype");
         if (!"int64".equals(l_dtype)) {
             throw new AssertionError(
                     "long ndarray set failed, dtype = " + l_dtype);
         }
-        NDArray<?> retL = (NDArray<?>) jep.getValue("larray");
+        NDArray<?> retL = (NDArray<?>) interp.getValue("larray");
         if (!larray.equals(retL)) {
             throw new AssertionError("long[] before != long[] after");
         }
@@ -125,18 +126,18 @@ public class TestNumpy {
             throw new AssertionError(
                     "long[].hashCode() before != long[].hasCode() after");
         }
-	asPyObj = jep.getValue("larray", PyObject.class);
+        asPyObj = interp.getValue("larray", PyObject.class);
 
         // test float[]
         NDArray<float[]> farray = new NDArray<>(
                 new float[] { 4.32f, -0.0001f, 349.285f, 3201.0f }, dimensions);
-        jep.set("farray", farray);
-        String f_dtype = (String) jep.getValue("farray.dtype");
+        interp.set("farray", farray);
+        String f_dtype = (String) interp.getValue("farray.dtype");
         if (!"float32".equals(f_dtype)) {
             throw new AssertionError(
                     "float ndarray set failed, dtype = " + f_dtype);
         }
-        NDArray<?> retF = (NDArray<?>) jep.getValue("farray");
+        NDArray<?> retF = (NDArray<?>) interp.getValue("farray");
         if (!farray.equals(retF)) {
             throw new AssertionError("float[] before != float[] after");
         }
@@ -144,19 +145,19 @@ public class TestNumpy {
             throw new AssertionError(
                     "float[].hashCode() before != float[].hasCode() after");
         }
-	asPyObj = jep.getValue("farray", PyObject.class);
+        asPyObj = interp.getValue("farray", PyObject.class);
 
         // test double[]
         NDArray<double[]> darray = new NDArray<>(
                 new double[] { 0.44321, 0.00015, -9.34278, 235574.53 },
                 dimensions);
-        jep.set("darray", darray);
-        String d_dtype = (String) jep.getValue("darray.dtype");
+        interp.set("darray", darray);
+        String d_dtype = (String) interp.getValue("darray.dtype");
         if (!"float64".equals(d_dtype)) {
             throw new AssertionError(
                     "double ndarray set failed, dtype = " + d_dtype);
         }
-        NDArray<?> retD = (NDArray<?>) jep.getValue("darray");
+        NDArray<?> retD = (NDArray<?>) interp.getValue("darray");
         if (!darray.equals(retD)) {
             throw new AssertionError("double[] before != double[] after");
         }
@@ -164,7 +165,7 @@ public class TestNumpy {
             throw new AssertionError(
                     "double[].hashCode() before != double[].hasCode() after");
         }
-	asPyObj = jep.getValue("darray", PyObject.class);
+        asPyObj = interp.getValue("darray", PyObject.class);
 
         // System.out.println("NDArray get/set checked out OK");
     }
@@ -305,15 +306,16 @@ public class TestNumpy {
         }
     }
 
-    public static Class<?> getDefaultConversionClass(Object obj){
-       return obj.getClass();
+    public static Class<?> getDefaultConversionClass(Object obj) {
+        return obj.getClass();
     }
 
     public static void main(String[] args) {
-        try (Jep jep = new Jep(new JepConfig().addIncludePaths("."))) {
+        try (Interpreter interp = new SubInterpreter(
+                new JepConfig().addIncludePaths("."))) {
             TestNumpy test = new TestNumpy();
             test.testNDArraySafety();
-            test.testSetAndGet(jep);
+            test.testSetAndGet(interp);
         } catch (Throwable e) {
             e.printStackTrace();
             System.exit(1);

@@ -1,8 +1,10 @@
 package jep.test.numpy;
 
+import jep.Interpreter;
 import jep.Jep;
 import jep.JepConfig;
 import jep.JepException;
+import jep.SubInterpreter;
 
 /**
  * Tests closing a sub-interpreter with numpy and then trying to use a new
@@ -18,33 +20,34 @@ import jep.JepException;
 public class TestNumpyArrayToString {
 
     public static void main(String[] args) throws InterruptedException {
-        Jep jep0 = null;
+        Interpreter interp0 = null;
 
         try {
-            jep0 = new Jep(new JepConfig().addIncludePaths(".")
+            interp0 = new SubInterpreter(new JepConfig().addIncludePaths(".")
                     .addSharedModules("numpy"));
-            jep0.eval("import numpy");
+            interp0.eval("import numpy");
 
             Thread t = new Thread() {
                 @Override
                 public void run() {
-                    Jep jep1 = null;
+                    Jep interp1 = null;
                     try {
-                        jep1 = new Jep(new JepConfig().addIncludePaths(".")
-                                .addSharedModules("numpy"));
-                        jep1.eval("import numpy");
+                        interp1 = new SubInterpreter(
+                                new JepConfig().addIncludePaths(".")
+                                        .addSharedModules("numpy"));
+                        interp1.eval("import numpy");
                     } catch (JepException e) {
                         e.printStackTrace();
                         try {
-                            jep1.close();
+                            interp1.close();
                         } catch (JepException e1) {
                             e1.printStackTrace();
                         }
                         System.exit(1);
                     } finally {
-                        if (jep1 != null) {
+                        if (interp1 != null) {
                             try {
-                                jep1.close();
+                                interp1.close();
                             } catch (JepException e) {
                                 e.printStackTrace();
                                 System.exit(1);
@@ -59,19 +62,19 @@ public class TestNumpyArrayToString {
             t.join();
 
             // this line no longer fails due to the usage of shared modules
-            jep0.eval("str(numpy.ndarray([1]))");
+            interp0.eval("str(numpy.ndarray([1]))");
         } catch (JepException e) {
             e.printStackTrace();
             try {
-                jep0.close();
+                interp0.close();
             } catch (JepException e1) {
                 e.printStackTrace();
             }
             System.exit(1);
         } finally {
-            if (jep0 != null) {
+            if (interp0 != null) {
                 try {
-                    jep0.close();
+                    interp0.close();
                 } catch (JepException e) {
                     e.printStackTrace();
                     System.exit(1);

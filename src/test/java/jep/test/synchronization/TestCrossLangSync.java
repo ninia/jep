@@ -2,9 +2,10 @@ package jep.test.synchronization;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import jep.Jep;
+import jep.Interpreter;
 import jep.JepConfig;
 import jep.JepException;
+import jep.SubInterpreter;
 
 /**
  * Tests that you can lock a PyJObject from within Python just like a
@@ -58,11 +59,12 @@ public class TestCrossLangSync {
         @Override
         public void run() {
             try {
-                try (Jep jep = new Jep(new JepConfig().addIncludePaths("."))) {
-                    jep.eval(PY_CODE);
-                    jep.set("lock", lock);
-                    jep.set("atom", atomicInt);
-                    jep.eval("doIt(lock, atom, " + count + ")");
+                try (Interpreter interp = new SubInterpreter(
+                        new JepConfig().addIncludePaths("."))) {
+                    interp.eval(PY_CODE);
+                    interp.set("lock", lock);
+                    interp.set("atom", atomicInt);
+                    interp.eval("doIt(lock, atom, " + count + ")");
                 } catch (JepException e) {
                     throw new RuntimeException("Synchronization failed", e);
                 }

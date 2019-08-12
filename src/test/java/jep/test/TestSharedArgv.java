@@ -2,10 +2,11 @@ package jep.test;
 
 import java.util.List;
 
-import jep.Jep;
+import jep.Interpreter;
 import jep.JepConfig;
 import jep.JepException;
 import jep.MainInterpreter;
+import jep.SubInterpreter;
 
 /**
  * Tests that shared modules can have sys.argv set before they are imported as
@@ -28,14 +29,14 @@ public class TestSharedArgv {
         cfg.addSharedModules("logging");
         cfg.addIncludePaths(".");
 
-        try (Jep jep = new Jep(cfg)) {
+        try (Interpreter interp = new SubInterpreter(cfg)) {
             /*
              * since logging is a shared module in this test it will
              * automatically import and get its sys.argv setup in the Jep
              * constructor call
              */
-            jep.eval("import logging");
-            List<String> result = (List<String>) jep
+            interp.eval("import logging");
+            List<String> result = (List<String>) interp
                     .getValue("logging.sys.argv");
             for (int i = 0; i < result.size(); i++) {
                 if (!result.get(i).equals(argv[i])) {

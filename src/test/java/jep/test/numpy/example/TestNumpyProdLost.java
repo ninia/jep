@@ -1,8 +1,9 @@
 package jep.test.numpy.example;
 
-import jep.Jep;
+import jep.Interpreter;
 import jep.JepConfig;
 import jep.JepException;
+import jep.SubInterpreter;
 
 /**
  * Tests closing a sub-interpreter with numpy and then trying to use a new
@@ -27,34 +28,34 @@ import jep.JepException;
 public class TestNumpyProdLost {
 
     public static void main(String[] args) {
-        Jep jep = null;
+        Interpreter interp = null;
         try {
-            jep = new Jep(new JepConfig().addIncludePaths("."));
-            jep.eval("import numpy");
-            jep.eval("numpy.ndarray([1]).prod()");
-            jep.close();
+            interp = new SubInterpreter(new JepConfig().addIncludePaths("."));
+            interp.eval("import numpy");
+            interp.eval("numpy.ndarray([1]).prod()");
+            interp.close();
 
-            jep = new Jep(new JepConfig().addIncludePaths("."));
-            jep.eval("import numpy");
+            interp = new SubInterpreter(new JepConfig().addIncludePaths("."));
+            interp.eval("import numpy");
 
             // this line will fail and throw an exception
-            jep.eval("numpy.ndarray([1]).prod()");
-            jep.close();
+            interp.eval("numpy.ndarray([1]).prod()");
+            interp.close();
         } catch (Throwable e) {
             /*
              * we expected a failure, usually it is 'NoneType' object is not
              * callable
              */
             try {
-                jep.close();
+                interp.close();
             } catch (JepException e1) {
                 e.printStackTrace();
             }
             System.exit(0);
         } finally {
-            if (jep != null) {
+            if (interp != null) {
                 try {
-                    jep.close();
+                    interp.close();
                 } catch (JepException e) {
                     e.printStackTrace();
                     System.exit(1);

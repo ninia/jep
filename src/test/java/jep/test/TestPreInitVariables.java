@@ -1,10 +1,11 @@
 package jep.test;
 
-import jep.Jep;
+import jep.Interpreter;
 import jep.JepConfig;
 import jep.JepException;
 import jep.MainInterpreter;
 import jep.PyConfig;
+import jep.SubInterpreter;
 
 /**
  * A test class for verifying that Jep can correctly configure the global Python
@@ -26,7 +27,7 @@ public class TestPreInitVariables {
 
     public static void main(String[] args) throws JepException {
         PyConfig pyConfig = new PyConfig();
-        //pyConfig.setIgnoreEnvironmentFlag(1);
+        // pyConfig.setIgnoreEnvironmentFlag(1);
         // TODO fix test so no site flag can be tested
         // pyConfig.setNoSiteFlag(1);
         pyConfig.setNoUserSiteDirectory(1);
@@ -36,19 +37,21 @@ public class TestPreInitVariables {
         pyConfig.setDontWriteBytecodeFlag(1);
         pyConfig.setHashRandomizationFlag(1);
         MainInterpreter.setInitParams(pyConfig);
-        try (Jep jep = new Jep(new JepConfig().addIncludePaths("."))) {
-            jep.eval("import sys");
-            //assert 1 == ((Number) jep.getValue("sys.flags.ignore_environment"))
-            //        .intValue();
-            assert 0 == ((Number) jep.getValue("sys.flags.no_site")).intValue();
-            assert 1 == ((Number) jep.getValue("sys.flags.no_user_site"))
+        try (Interpreter interp = new SubInterpreter(
+                new JepConfig().addIncludePaths("."))) {
+            interp.eval("import sys");
+            // assert 1 == ((Number)
+            // jep.getValue("sys.flags.ignore_environment"))
+            // .intValue();
+            assert 0 == ((Number) interp.getValue("sys.flags.no_site")).intValue();
+            assert 1 == ((Number) interp.getValue("sys.flags.no_user_site"))
                     .intValue();
-            assert 0 == ((Number) jep.getValue("sys.flags.verbose")).intValue();
-            assert 1 == ((Number) jep.getValue("sys.flags.optimize"))
+            assert 0 == ((Number) interp.getValue("sys.flags.verbose")).intValue();
+            assert 1 == ((Number) interp.getValue("sys.flags.optimize"))
                     .intValue();
-            assert 1 == ((Number) jep.getValue("sys.flags.dont_write_bytecode"))
+            assert 1 == ((Number) interp.getValue("sys.flags.dont_write_bytecode"))
                     .intValue();
-            assert 1 == ((Number) jep.getValue("sys.flags.hash_randomization"))
+            assert 1 == ((Number) interp.getValue("sys.flags.hash_randomization"))
                     .intValue();
         } catch (Throwable e) {
             e.printStackTrace();

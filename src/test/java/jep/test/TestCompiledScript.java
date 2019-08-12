@@ -1,8 +1,9 @@
 package jep.test;
 
-import jep.Jep;
+import jep.Interpreter;
 import jep.JepConfig;
 import jep.JepException;
+import jep.SubInterpreter;
 
 /**
  * Tests that a compiled script can be loaded by Jep.runscript()
@@ -18,13 +19,13 @@ public class TestCompiledScript {
         Object result = null;
         JepConfig config = new JepConfig();
         config.addIncludePaths(".");
-        try (Jep jep = new Jep(config)) {
-            jep.eval("import py_compile");
-            jep.eval(
+        try (Interpreter interp = new SubInterpreter(config)) {
+            interp.eval("import py_compile");
+            interp.eval(
                     "py_compile.compile(file='build/testScript.py', cfile='build/testScript.pyc')");
-            jep.eval(null);
-            jep.runScript("build/testScript.pyc");
-            result = jep.getValue("isGood()");
+            interp.eval(null);
+            interp.runScript("build/testScript.pyc");
+            result = interp.getValue("isGood()");
         }
         if (!Boolean.TRUE.equals(result)) {
             throw new IllegalStateException("isGood() returned " + result);

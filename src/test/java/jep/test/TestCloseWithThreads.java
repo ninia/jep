@@ -2,9 +2,10 @@ package jep.test;
 
 import java.util.concurrent.CountDownLatch;
 
-import jep.Jep;
+import jep.Interpreter;
 import jep.JepConfig;
 import jep.JepException;
+import jep.SubInterpreter;
 
 /**
  * A test to verify calling close with active python threads does not crash.
@@ -15,25 +16,26 @@ public class TestCloseWithThreads {
 
     public static void main(String[] args) throws Exception {
         boolean closeExceptionCaught = false;
-        try (Jep jep = new Jep(new JepConfig())){
+        try (Interpreter interp = new SubInterpreter(new JepConfig())) {
             CountDownLatch start = new CountDownLatch(1);
             CountDownLatch done = new CountDownLatch(1);
-            jep.set("start", start);
-            jep.set("done", done);
+            interp.set("start", start);
+            interp.set("done", done);
             // await is a keyword in python
-            jep.eval("def run(start, done):\n  start.countDown()\n  getattr(done,'await')()");
-            jep.eval("import threading");
-            jep.eval("t = threading.Thread(target=run, args=(start, done))");
-            jep.eval("t.start()");
-	    start.await();
-            try{
-                jep.close();
-            }catch (JepException e){
+            interp.eval(
+                    "def run(start, done):\n  start.countDown()\n  getattr(done,'await')()");
+            interp.eval("import threading");
+            interp.eval("t = threading.Thread(target=run, args=(start, done))");
+            interp.eval("t.start()");
+            start.await();
+            try {
+                interp.close();
+            } catch (JepException e) {
                 closeExceptionCaught = true;
             }
-	    done.countDown();
-            jep.eval("t.join()");
-            if (!closeExceptionCaught){
+            done.countDown();
+            interp.eval("t.join()");
+            if (!closeExceptionCaught) {
                 throw new Exception("Close worked.");
             }
         }

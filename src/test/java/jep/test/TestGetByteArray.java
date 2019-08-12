@@ -4,8 +4,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Random;
 
-import jep.Jep;
 import jep.JepConfig;
+import jep.SubInterpreter;
 
 /**
  * A test class for verifying that Jep.getValue_bytearray() is working
@@ -15,7 +15,7 @@ import jep.JepConfig;
  * 
  * @author Nate Jensen
  */
-@SuppressWarnings( "deprecation" )
+@SuppressWarnings("deprecation")
 public class TestGetByteArray {
 
     protected static final int SIZE = 1024;
@@ -43,11 +43,12 @@ public class TestGetByteArray {
         }
 
         byte[] b2 = null;
-        try (Jep jep = new Jep(new JepConfig().addIncludePaths("."))) {
-            jep.eval("f = open('" + output.getAbsolutePath() + "', 'rb')");
-            jep.eval("x = f.read()");
-            jep.eval("f.close()");
-            b2 = jep.getValue_bytearray("x");
+        try (SubInterpreter interp = new SubInterpreter(
+                new JepConfig().addIncludePaths("."))) {
+            interp.eval("f = open('" + output.getAbsolutePath() + "', 'rb')");
+            interp.eval("x = f.read()");
+            interp.eval("f.close()");
+            b2 = interp.getValue_bytearray("x");
         }
 
         if (b2 == null) {

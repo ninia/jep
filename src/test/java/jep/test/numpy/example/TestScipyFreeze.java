@@ -1,8 +1,9 @@
 package jep.test.numpy.example;
 
-import jep.Jep;
+import jep.Interpreter;
 import jep.JepConfig;
 import jep.JepException;
+import jep.SubInterpreter;
 
 /**
  * A test class that illustrates scipy locking up the thread when there are two
@@ -21,12 +22,14 @@ import jep.JepException;
 public class TestScipyFreeze {
 
     public static void main(String[] args) {
-        try (Jep jep0 = new Jep(new JepConfig().setInteractive(true));
-                Jep jep = new Jep(new JepConfig().setInteractive(true))) {
-            jep0.eval("from scipy.special import erf");
+        try (Interpreter interp0 = new SubInterpreter(
+                new JepConfig().setInteractive(true));
+                Interpreter interp = new SubInterpreter(
+                        new JepConfig().setInteractive(true))) {
+            interp0.eval("from scipy.special import erf");
 
             // this line will freeze
-            jep.eval("from scipy.special import erf");
+            interp.eval("from scipy.special import erf");
             System.out.println("returned from python interpreters");
         } catch (JepException e) {
             e.printStackTrace();

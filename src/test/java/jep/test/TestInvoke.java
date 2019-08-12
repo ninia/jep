@@ -5,9 +5,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jep.Jep;
+import jep.Interpreter;
 import jep.JepConfig;
 import jep.JepException;
+import jep.SubInterpreter;
 
 /**
  * Tests that the variations of the Jep.invoke(...) method work correctly. Also
@@ -24,32 +25,32 @@ public class TestInvoke {
         JepConfig config = new JepConfig();
         config.addIncludePaths("src/test/python/subprocess");
 
-        try (Jep jep = new Jep(config)) {
-            jep.eval("from invoke_args import *");
+        try (Interpreter interp = new SubInterpreter(config)) {
+            interp.eval("from invoke_args import *");
 
             // test a basic invoke with no args
-            Object result = jep.invoke("invokeNoArgs");
+            Object result = interp.invoke("invokeNoArgs");
             if (result != null) {
                 throw new IllegalStateException(
                         "Received " + result + " but expected null");
             }
 
             // test a basic invoke with arguments
-            result = jep.invoke("invokeArgs", "a", null, 5.4);
+            result = interp.invoke("invokeArgs", "a", null, 5.4);
             if (result == null || !result.equals(Boolean.TRUE)) {
                 throw new IllegalStateException(
                         "Received " + result + " but expected true");
             }
 
             // test that args are passed in order
-            result = jep.invoke("invokeVarArgsExplicit", true, null, 2, "xyz");
+            result = interp.invoke("invokeVarArgsExplicit", true, null, 2, "xyz");
             if (result != null) {
                 throw new IllegalStateException(
                         "Received " + result + " but expected null");
             }
 
             // test *args
-            result = jep.invoke("invokeVarArgs", true, null, 2, "xyz");
+            result = interp.invoke("invokeVarArgs", true, null, 2, "xyz");
             if (result == null || !result.equals("xyz")) {
                 throw new IllegalStateException(
                         "Received " + result + " but expected xyz");
@@ -61,21 +62,21 @@ public class TestInvoke {
             kwMap.put("argnull", null);
 
             // test that keys/values are mapped to correct arguments
-            result = jep.invoke("invokeKeywordArgsExplicit", kwMap);
+            result = interp.invoke("invokeKeywordArgsExplicit", kwMap);
             if (result == null || !(result instanceof ArrayList)) {
                 throw new IllegalStateException(
                         "Received " + result + " but expected ArrayList");
             }
 
             // test **kwargs
-            result = jep.invoke("invokeKeywordArgs", kwMap);
+            result = interp.invoke("invokeKeywordArgs", kwMap);
             if (result != null) {
                 throw new IllegalStateException(
                         "Received " + result + " but expected null");
             }
 
             // test a mixture of varargs and kwargs
-            result = jep.invoke("invokeArgsAndKeywordArgs",
+            result = interp.invoke("invokeArgsAndKeywordArgs",
                     new Object[] { 15, "add", false }, kwMap);
             if (result == null || !(result instanceof List)) {
                 throw new IllegalStateException(
@@ -85,7 +86,7 @@ public class TestInvoke {
             // keywords must be strings
             try {
                 kwMap.put(null, "default");
-                result = jep.invoke("invokeArgsAndKeywordArgs",
+                result = interp.invoke("invokeArgsAndKeywordArgs",
                         new Object[] { 15, "add", false }, kwMap);
             } catch (JepException e) {
                 if (!e.getMessage().contains("TypeError")) {
@@ -96,7 +97,7 @@ public class TestInvoke {
 
             // test that you can't call an Object that doesn't exist
             try {
-                result = jep.invoke("anything");
+                result = interp.invoke("anything");
             } catch (JepException e) {
                 if (!e.getMessage().contains("anything")) {
                     throw new IllegalStateException(
@@ -105,11 +106,11 @@ public class TestInvoke {
             }
 
             // allow attribute lookup
-            result = jep.invoke("objectWithMethod.theMethod", new Object());
+            result = interp.invoke("objectWithMethod.theMethod", new Object());
 
             // test that you can't call attributes that don't exist.
             try {
-                result = jep.invoke("objectWithMethod.anything");
+                result = interp.invoke("objectWithMethod.anything");
             } catch (JepException e) {
                 if (!e.getMessage().contains("anything")) {
                     throw new IllegalStateException(

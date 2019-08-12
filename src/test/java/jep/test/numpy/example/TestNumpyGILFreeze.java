@@ -1,8 +1,9 @@
 package jep.test.numpy.example;
 
-import jep.Jep;
+import jep.Interpreter;
 import jep.JepConfig;
 import jep.JepException;
+import jep.SubInterpreter;
 
 /**
  * A test class that illustrates how numpy's floating point error handling can
@@ -29,30 +30,29 @@ public class TestNumpyGILFreeze {
             + "   for i in xrange(10):\n" + "      a /= 10000\n"
             + "   print 'python method complete'\n";
 
-
     public static void main(String[] args) throws JepException {
         JepConfig cfg = new JepConfig().setInteractive(true);
-        Jep jep = null;
+        Interpreter interp = null;
         try {
-            Jep jep0 = new Jep(cfg);
-            jep = new Jep(cfg);
-            jep0.close();
-            jep.eval("import numpy");
+            Interpreter interp0 = new SubInterpreter(cfg);
+            interp = new SubInterpreter(cfg);
+            interp0.close();
+            interp.eval("import numpy");
             /*
              * If error conditions are set to ignore, we will not reach the
              * point in ufunc_object.c where NPY_ALLOW_C_API will cause the GIL
              * to hang.
              */
-            jep.eval("numpy.seterr(under='warn')");
-            jep.eval(UNDERFLOW);
-            jep.eval("forceUnderflow()"); // this line will freeze
+            interp.eval("numpy.seterr(under='warn')");
+            interp.eval(UNDERFLOW);
+            interp.eval("forceUnderflow()"); // this line will freeze
             System.out.println("returned from python interpreter");
         } catch (JepException e) {
             e.printStackTrace();
         } finally {
-            if (jep != null) {
+            if (interp != null) {
                 System.out.println("closing jep interpreter");
-                jep.close();
+                interp.close();
             }
         }
         System.out.println("java main() finished");

@@ -325,4 +325,7 @@ public interface Interpreter extends AutoCloseable {
      */
     public void set(String name, Object v) throws JepException;
 
+    @Override
+    public void close() throws JepException;
+
 }

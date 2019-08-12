@@ -1,6 +1,6 @@
 package jep.test;
 
-import jep.Jep;
+import jep.Interpreter;
 import jep.JepException;
 import jep.SharedInterpreter;
 
@@ -18,7 +18,7 @@ public class TestExec {
         script.append("a = 'Passed'\n");
         script.append("b = 'Failed'\n");
         script.append("result = max(a,b)");
-        try (Jep interp = new SharedInterpreter()) {
+        try (Interpreter interp = new SharedInterpreter()) {
             interp.exec(script.toString());
             String result = interp.getValue("result", String.class);
             if (!"Passed".equals(result)) {
