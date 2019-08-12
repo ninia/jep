@@ -86,7 +86,8 @@ public final class MainInterpreter implements AutoCloseable {
     /**
      * Creates the MainInterpreter instance that will be used by Jep. This
      * should be called from all Jep constructors to ensure the native module
-     * has been loaded and initialized before a valid Jep instance is produced.
+     * has been loaded and initialized before a valid Interpreter instance is
+     * produced.
      * 
      * @return the main interpreter
      * @throws Error
@@ -194,7 +195,7 @@ public final class MainInterpreter implements AutoCloseable {
     /**
      * Import a module into the main interpreter on the correct thread for that
      * interpreter. This is called from the Python shared modules import hook to
-     * create a module needed by a Jep interpreter.
+     * create a module needed by a SubInterpreter.
      * 
      * @param module
      *            the name of the module to import
@@ -227,7 +228,8 @@ public final class MainInterpreter implements AutoCloseable {
 
     /**
      * Sets interpreter settings for the main Python interpreter. This method
-     * must be called before the first Jep instance is created in the process.
+     * must be called before the first Interpreter instance is created in the
+     * process.
      * 
      * @param config
      *            the python configuration to use.
@@ -246,7 +248,7 @@ public final class MainInterpreter implements AutoCloseable {
 
     /**
      * Sets the sys.argv values on the main interpreter. This method must be
-     * called before the first Jep instance is created in the process.
+     * called before the first Interpreter instance is created in the process.
      * 
      * @param argv
      *            the arguments to be set on Python's sys.argv for the main
@@ -268,7 +270,7 @@ public final class MainInterpreter implements AutoCloseable {
     /**
      * Sets the path of the jep native library. The location should be a path
      * that can be passed to {@link System#load(String)}. This method must be
-     * called before the first Jep instance is created in the process.
+     * called before the first Interpreter instance is created in the process.
      * 
      * @param jepLibraryPath
      *            the path of the jep native library, an absolute path leading

@@ -35,8 +35,8 @@ package jep;
  * behavior of all SharedInterpreters.
  *
  * Within a single Java process it is valid to mix Interpreter instances that
- * use SubInterpreters with SharedInterpreters. The SubInterpreter instanceswill
- * remain isolated from SubInterpreter instances and from any
+ * use SubInterpreters with SharedInterpreters. The SubInterpreter instances
+ * will remain isolated from SubInterpreter instances and from any
  * SharedInterpreters. To maintain stability, it is not possible to have
  * multiple Interpreter instances active on the same Thread at the same time and
  * this limitation includes SharedInterpreters.
