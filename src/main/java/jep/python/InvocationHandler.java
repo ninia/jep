@@ -48,7 +48,7 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
      * @param functionalInterface
      *            whether the target is a python callable that should be invoked
      *            directly
-     * @exception JepException
+     * @throws JepException
      *                if an error occurs
      */
     public InvocationHandler(Jep jep, long ltarget,
@@ -64,7 +64,7 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
      * @param functionalInterface
      *            whether the target is a python callable that should be invoked
      *            directly
-     * @exception JepException
+     * @throws JepException
      *                if an error occurs
      */
     public InvocationHandler(final PyObject pyObject,
@@ -104,7 +104,7 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
      *         otherwise not compatible with the interface method's declared
      *         return type as described above, a ClassCastException will be
      *         thrown by the method invocation on the proxy instance.
-     * @exception Throwable
+     * @throws Throwable
      *                the exception to throw from the method invocation on the
      *                proxy instance. The exception's type must be assignable
      *                either to any of the exception types declared in the

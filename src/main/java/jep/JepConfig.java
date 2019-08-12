@@ -183,16 +183,32 @@ public class JepConfig {
     }
 
     /**
-     * Creates a new Jep instance and its associated sub-interpreter with this
-     * JepConfig.
+     * Creates a new SubInterpreter instance and its associated sub-interpreter
+     * with this JepConfig.
+     * 
+     * @deprecated Use {@link #createSubInterpreter()} instead.
      * 
      * @return a new Jep instance
      * @throws JepException
      *             if an error occurs
      * @since 3.8
      */
+    @Deprecated
     public Jep createJep() throws JepException {
-        return new Jep(this);
+        return new SubInterpreter(this);
+    }
+
+    /**
+     * Creates a new Jep instance and its associated sub-interpreter with this
+     * JepConfig.
+     * 
+     * @return a new SubInterpreter instance
+     * @throws JepException
+     *             if an error occurs
+     * @since 3.9
+     */
+    public SubInterpreter createSubInterpreter() throws JepException {
+        return new SubInterpreter(this);
     }
 
 }

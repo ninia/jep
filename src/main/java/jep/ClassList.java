@@ -356,7 +356,7 @@ public class ClassList implements ClassEnquirer {
      * get ClassList instance
      * 
      * @return <code>ClassList</code> instance
-     * @exception JepException
+     * @throws JepException
      *                if an error occurs
      */
     public static synchronized ClassList getInstance() throws JepException {

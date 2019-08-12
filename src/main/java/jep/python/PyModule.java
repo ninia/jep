@@ -43,7 +43,7 @@ public class PyModule extends PyObject {
      *            a <code>Jep</code> value
      * @param obj
      *            a <code>long</code> value
-     * @exception JepException
+     * @throws JepException
      *                if an error occurs
      */
     public PyModule(Jep jep, long obj) throws JepException {
@@ -57,7 +57,7 @@ public class PyModule extends PyObject {
      * @param name
      *            a <code>String</code> value
      * @return a <code>PyModule</code> value
-     * @exception JepException
+     * @throws JepException
      *                if an error occurs
      */
     public PyModule createModule(String name) throws JepException {
@@ -82,7 +82,7 @@ public class PyModule extends PyObject {
      * @param str
      *            a <code>String</code> value
      * @return an <code>Object</code> value
-     * @exception JepException
+     * @throws JepException
      *                if an error occurs
      */
     public Object getValue(String str) throws JepException {

@@ -24,30 +24,22 @@
  */
 package jep;
 
-
 /**
- * Class for creating instances of Jep which do not use sub-interpreters. 
- * Typically each Jep instance creates a unique Python sub-interpreter.
- * Sub-interpreters isolate different Jep instances, allowing them to be used
- * safely from multiple unrelated pieces of a Java application without any risk
- * that the Jep instances will impact each other.
+ * Class for creating instances of Interpreters which share all imported
+ * modules. In this case each SharedInterpreter still maintains distinct global
+ * variables but some interpreter state will be shared. This is equivalent to
+ * using shared modules to share every Python package in Jep. Anything that
+ * changes the way a module behaves will impact all SharedInterpreters so care
+ * must be taken to ensure that different SharedInterpreters aren't conflicting.
+ * For example sys.path, time.tzset(), and numpy.seterr() will change the
+ * behavior of all SharedInterpreters.
  *
- * This class allows creation of a Jep instance that does not use
- * sub-interpreters. In this case each SharedInterpreter still maintains
- * distinct global variables but some interpreter state will be shared. The
- * primary impact is that SharedInterpreters will share any imported modules.
- * This is equivalent to using shared modules to share every python package in
- * Jep. Anything that changes the way a module behaves will impact all
- * SharedInterpreters so care must be taken to ensure that different
- * SharedInterpreters aren't conflicting. For example sys.path, time.tzset(),
- * and numpy.seterr() will change the behavior of all SharedInterpreters.
- *
- * Within a single Java process it is valid to mix Jep instances that use
- * sub-interpreters with SharedInterpreters. The sub-interpreter instances of
- * Jep will remain isolated from other Jep instances and from any
+ * Within a single Java process it is valid to mix Interpreter instances that
+ * use SubInterpreters with SharedInterpreters. The SubInterpreter instanceswill
+ * remain isolated from SubInterpreter instances and from any
  * SharedInterpreters. To maintain stability, it is not possible to have
- * multiple Jep instances active on the same Thread at the same time and this
- * limitation includes SharedInterpreters.
+ * multiple Interpreter instances active on the same Thread at the same time and
+ * this limitation includes SharedInterpreters.
  *
  *
  * @author Ben Steffensmeier
@@ -58,14 +50,14 @@ public class SharedInterpreter extends Jep {
 
     private static boolean initialized = false;
 
-    public SharedInterpreter() throws JepException{
+    public SharedInterpreter() throws JepException {
         super(new JepConfig(), false);
     }
 
     @Override
     protected void configureInterpreter(JepConfig config) throws JepException {
         synchronized (SharedInterpreter.class) {
-            if(!initialized){
+            if (!initialized) {
                 setupJavaImportHook(config.classEnquirer);
                 initialized = true;
             }

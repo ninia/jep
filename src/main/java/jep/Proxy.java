@@ -71,7 +71,7 @@ class Proxy {
      * @param interfaces
      *            the list of interfaces to implement
      * @return an <code>Object</code> value
-     * @exception IllegalArgumentException
+     * @throws IllegalArgumentException
      *                if an error occurs
      */
     protected static Object newProxyInstance(Jep jep, long ltarget, String[] interfaces) {

@@ -91,9 +91,9 @@ public class Run {
      * 
      * @param args
      *            a <code>String</code> value
-     * @exception Throwable
+     * @throws Throwable
      *                if an error occurs
-     * @exception Exception
+     * @throws Exception
      *                if an error occurs
      */
     public static void main(String args[]) throws Throwable {

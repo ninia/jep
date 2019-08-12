@@ -25,13 +25,16 @@
 package jep;
 
 import java.io.File;
-import java.util.List;
 import java.util.Map;
 
 import jep.python.MemoryManager;
-import jep.python.PyObject;
 
 /**
+ * As of Jep 3.9, you should strive to instantiate either a SubInterpreter or a
+ * SharedInterpreter instance and for interacting with the interpreter use the
+ * interface Interpreter. If you previously used Jep instances, use
+ * SubInterpreter instances to retain the same behavior.
+ * 
  * <p>
  * Embeds CPython in Java. Each Jep provides access to a Python interpreter and
  * maintains an independent global namespace for Python variables. Values can be
@@ -51,7 +54,7 @@ import jep.python.PyObject;
  * </p>
  * 
  */
-public class Jep implements AutoCloseable {
+public class Jep implements Interpreter {
 
     private static final String THREAD_WARN = "JEP THREAD WARNING: ";
 
@@ -132,12 +135,16 @@ public class Jep implements AutoCloseable {
     // -------------------------------------------------- constructors
 
     /**
-     * Creates a new <code>Jep</code> instance and its associated
-     * sub-interpreter.
+     * Creates a new <code>Jep</code> instance and its associated interpreter.
      * 
-     * @exception JepException
-     *                if an error occurs
+     * @deprecated Deprecated in 3.9. Use SubInterpreter or SharedInterpreter
+     *             instead. If you used Jep objects in previous releases, use
+     *             SubIntepreter for the same behavior.
+     * 
+     * @throws JepException
+     *             if an error occurs
      */
+    @Deprecated
     public Jep() throws JepException {
         this(new JepConfig());
     }
@@ -149,8 +156,8 @@ public class Jep implements AutoCloseable {
      * @param interactive
      *            whether {@link #eval(String)} should support the slower
      *            behavior of potentially waiting for multiple statements
-     * @exception JepException
-     *                if an error occurs
+     * @throws JepException
+     *             if an error occurs
      * @deprecated Please use {@link #Jep(JepConfig)} instead.
      */
     @Deprecated
@@ -168,8 +175,8 @@ public class Jep implements AutoCloseable {
      * @param includePath
      *            a path of directories separated by File.pathSeparator that
      *            will be appended to the sub-intepreter's <code>sys.path</code>
-     * @exception JepException
-     *                if an error occurs
+     * @throws JepException
+     *             if an error occurs
      * @deprecated Please use {@link #Jep(JepConfig)} instead.
      */
     @Deprecated
@@ -189,8 +196,8 @@ public class Jep implements AutoCloseable {
      *            will be appended to the sub-intepreter's <code>sys.path</code>
      * @param cl
      *            the ClassLoader to use when importing Java classes from Python
-     * @exception JepException
-     *                if an error occurs
+     * @throws JepException
+     *             if an error occurs
      * @deprecated Please use {@link #Jep(JepConfig)} instead.
      */
     @Deprecated
@@ -214,8 +221,8 @@ public class Jep implements AutoCloseable {
      * @param ce
      *            a <code>ClassEnquirer</code> to determine which imports are
      *            Python vs Java, or null for the default {@link ClassList}
-     * @exception JepException
-     *                if an error occurs
+     * @throws JepException
+     *             if an error occurs
      * @deprecated Please use {@link #Jep(JepConfig)} instead.
      */
     @Deprecated
@@ -226,11 +233,26 @@ public class Jep implements AutoCloseable {
                 .setClassEnquirer(ce));
     }
 
+    /**
+     * Creates a new <code>Jep</code> instance and its associated interpreter.
+     * 
+     * @param config
+     *            the configuration for the Jep instance
+     * 
+     * @deprecated Deprecated in 3.9. Use SubInterpreter or SharedInterpreter
+     *             instead. If you used Jep objects in previous releases, use
+     *             SubIntepreter for the same behavior.
+     * 
+     * @throws JepException
+     *             if an error occurs
+     */
+    @Deprecated
     public Jep(JepConfig config) throws JepException {
         this(config, true);
     }
 
-    protected Jep(JepConfig config, boolean useSubInterpreter) throws JepException {
+    protected Jep(JepConfig config, boolean useSubInterpreter)
+            throws JepException {
         MainInterpreter mainInterpreter = MainInterpreter.getMainInterpreter();
         if (threadUsed.get()) {
             Thread current = Thread.currentThread();
@@ -294,7 +316,8 @@ public class Jep implements AutoCloseable {
         }
     }
 
-    protected void setupJavaImportHook(ClassEnquirer enquirer) throws JepException {
+    protected void setupJavaImportHook(ClassEnquirer enquirer)
+            throws JepException {
         if (enquirer == null) {
             enquirer = ClassList.getInstance();
         }
@@ -313,11 +336,14 @@ public class Jep implements AutoCloseable {
      * Checks if the current thread is valid for the method call. All calls must
      * check the thread.
      * 
-     * <b>Internal Only</b>
+     * @deprecated For internal usage only.
      * 
-     * @exception JepException
-     *                if an error occurs
+     *             <b>Internal Only</b>
+     * 
+     * @throws JepException
+     *             if an error occurs
      */
+    @Deprecated
     public void isValidThread() throws JepException {
         if (this.thread != Thread.currentThread())
             throw new JepException("Invalid thread access.");
@@ -327,14 +353,7 @@ public class Jep implements AutoCloseable {
             throw new JepException("Initialization failed.");
     }
 
-    /**
-     * Runs a Python script.
-     * 
-     * @param script
-     *            a <code>String</code> absolute path to script file.
-     * @exception JepException
-     *                if an error occurs
-     */
+    @Override
     public void runScript(String script) throws JepException {
         runScript(script, null);
     }
@@ -342,13 +361,18 @@ public class Jep implements AutoCloseable {
     /**
      * Runs a Python script.
      * 
+     * @deprecated This may be removed in a future version of Jep, as Jep does
+     *             not fully support changing the ClassLoader after
+     *             construction.
+     * 
      * @param script
      *            a <code>String</code> absolute path to script file.
      * @param cl
      *            a <code>ClassLoader</code> value, may be null.
-     * @exception JepException
-     *                if an error occurs
+     * @throws JepException
+     *             if an error occurs
      */
+    @Deprecated
     public void runScript(String script, ClassLoader cl) throws JepException {
         isValidThread();
 
@@ -365,18 +389,7 @@ public class Jep implements AutoCloseable {
 
     private native void run(long tstate, String script) throws JepException;
 
-    /**
-     * Invokes a Python function.
-     * 
-     * @param name
-     *            a Python function name in globals dict or the name of a global
-     *            object and method using dot notation.
-     * @param args
-     *            args to pass to the function in order
-     * @return an <code>Object</code> value
-     * @exception JepException
-     *                if an error occurs
-     */
+    @Override
     public Object invoke(String name, Object... args) throws JepException {
         isValidThread();
         if (name == null || name.trim().equals("")) {
@@ -386,19 +399,7 @@ public class Jep implements AutoCloseable {
         return invoke(this.tstate, name, args, null);
     }
 
-    /**
-     * Invokes a Python function.
-     * 
-     * @param name
-     *            a Python function name in globals dict or the name of a global
-     *            object and method using dot notation.
-     * @param kwargs
-     *            a Map of keyword args
-     * @return an {@link Object} value
-     * @throws JepException
-     *             if an error occurs
-     * @since 3.8
-     */
+    @Override
     public Object invoke(String name, Map<String, Object> kwargs)
             throws JepException {
         isValidThread();
@@ -409,20 +410,7 @@ public class Jep implements AutoCloseable {
         return invoke(this.tstate, name, null, kwargs);
     }
 
-    /**
-     * Invokes a Python function.
-     * 
-     * @param name
-     *            must be a valid Python function name in globals dict
-     * @param args
-     *            args to pass to the function in order
-     * @param kwargs
-     *            a Map of keyword args
-     * @return an {@link Object} value
-     * @throws JepException
-     *             if an error occurs
-     * @since 3.8
-     */
+    @Override
     public Object invoke(String name, Object[] args, Map<String, Object> kwargs)
             throws JepException {
         isValidThread();
@@ -436,52 +424,7 @@ public class Jep implements AutoCloseable {
     private native Object invoke(long tstate, String name, Object[] args,
             Map<String, Object> kwargs);
 
-    /**
-     * <p>
-     * Evaluate Python statements.
-     * </p>
-     * 
-     * <p>
-     * In interactive mode, Jep may not immediately execute the given lines of
-     * code. In that case, eval() returns false and the statement is stored and
-     * is appended to the next incoming string.
-     * </p>
-     * 
-     * <p>
-     * If you're running an unknown number of statements, finish with
-     * <code>eval(null)</code> to flush the statement buffer.
-     * </p>
-     * 
-     * <p>
-     * Interactive mode is slower than a straight eval call since it has to
-     * compile the code strings to detect the end of the block. Non-interactive
-     * mode is faster, but code blocks must be complete. For example:
-     * </p>
-     * 
-     * <pre>
-     * interactive mode == false
-     * <code>jep.eval("if(Test):\n    print('Hello world')");</code>
-     * </pre>
-     * 
-     * <pre>
-     * interactive mode == true
-     * <code>jep.eval("if(Test):");
-     * jep.eval("    print('Hello world')");
-     * jep.eval(null);
-     * </code>
-     * </pre>
-     * 
-     * <p>
-     * Also, Python does not readily return object values from eval(). Use
-     * {@link #getValue(String)} instead.
-     * </p>
-     * 
-     * @param str
-     *            a <code>String</code> statement to eval
-     * @return true if statement complete and was executed.
-     * @exception JepException
-     *                if an error occurs
-     */
+    @Override
     public boolean eval(String str) throws JepException {
         isValidThread();
 
@@ -532,15 +475,7 @@ public class Jep implements AutoCloseable {
 
     private native void eval(long tstate, String str) throws JepException;
 
-    /*
-     * Execute an arbitrary number of Python statements in this interpreter.
-     * Similar to the Python builtin exec function.
-     *
-     * @param str
-     *            Python code to exececute
-     * @exception JepException
-     *                if an error occurs
-     */
+    @Override
     public void exec(String str) throws JepException {
         isValidThread();
         exec(this.tstate, str);
@@ -548,145 +483,14 @@ public class Jep implements AutoCloseable {
 
     private native void exec(long tstate, String str) throws JepException;
 
-    /**
-     * 
-     * <p>
-     * Retrieves a value from this Python sub-interpreter. Supports retrieving:
-     * <ul>
-     * <li>Java objects</li>
-     * <li>Python None (null)</li>
-     * <li>Python strings</li>
-     * <li>Python True and False</li>
-     * <li>Python numbers</li>
-     * <li>Python lists</li>
-     * <li>Python tuples</li>
-     * <li>Python dictionaries</li>
-     * </ul>
-     * 
-     * <p>
-     * For Python containers, such as lists and dictionaries, getValue will
-     * recursively move through the container and convert each item. If the type
-     * of the value retrieved is not supported, Jep will fall back to returning
-     * a String representation of the object. This fallback behavior will
-     * probably change in the future and should not be relied upon.
-     * </p>
-     * 
-     * @param str
-     *            the name of the Python variable to get from the interpreter's
-     *            global scope
-     * @return an <code>Object</code> value
-     * @exception JepException
-     *                if an error occurs
-     */
+    @Override
     public Object getValue(String str) throws JepException {
         isValidThread();
 
         return getValue(this.tstate, str, Object.class);
     }
 
-    /**
-     * Like {@link #getValue(String)} but allows specifying the return type. If
-     * Jep cannot convert the variable to the specified type then a JepException
-     * is thrown. This can be used to safely ensure that the return value is an
-     * expected type. The following table describes what conversions are
-     * currently possible.
-     *
-     * <table border="1">
-     *  <caption>The valid classes for Python to Java conversions</caption>
-     *  <tr>
-     *   <th>Python Class</th>
-     *   <th>Java Classes</th>
-     *   <th>Notes</th>
-     *  </tr>
-     *  <tr>
-     *   <td>str/unicode</td>
-     *   <td>{@link String}, {@link Character}</td>
-     *   <td>Character conversion will fail if the str is longer than 1.</td>
-     *  </tr>
-     *  <tr>
-     *   <td>bool</td>
-     *   <td>{@link Boolean}</td>
-     *  </tr>
-     *  <tr>
-     *   <td>int/long</td>
-     *   <td>{@link Long}, {@link Integer}, {@link Short}, {@link Byte}</td>
-     *   <td>Conversion fails if the number is outside the valid range for the Java type</td>
-     *  </tr>
-     *  <tr>
-     *   <td>float</td>
-     *   <td>{@link Double}, {@link Float}</td>
-     *  </tr>
-     *  <tr>
-     *   <td>list, tuple</td>
-     *   <td>{@link List}, array</td>
-     *   <td>When a tuple is converted to a List it is unmodifiable.</td>
-     *  </tr>
-     *  <tr>
-     *   <td>dict</td>
-     *   <td>{@link Map}</td>
-     *  </tr>
-     *  <tr>
-     *   <td>function, method</td>
-     *   <td>Any FunctionalInterface</td>
-     *  </tr>
-     *  <tr>
-     *   <td>numpy.ndarray</td>
-     *   <td>{@link NDArray}</td>
-     *   <td>Only if Jep was built with numpy support</td>
-     *  </tr>
-     *  <tr>
-     *   <td>numpy.float64</td>
-     *   <td>{@link Double}, {@link Float}</td>
-     *  </tr>
-     *  <tr>
-     *   <td>numpy.float32</td>
-     *   <td>{@link Float}, {@link Double}</td>
-     *  </tr>
-     *  <tr>
-     *   <td>numpy.int64</td>
-     *   <td>{@link Long}, {@link Integer}, {@link Short}, {@link Byte}</td>
-     *   <td>Conversion fails if the number is outside the valid range for the Java type</td>
-     *  </tr>
-     *  <tr>
-     *   <td>numpy.int32</td>
-     *   <td>{@link Integer}, {@link Long}, {@link Short}, {@link Byte}</td>
-     *   <td>Conversion fails if the number is outside the valid range for the Java type</td>
-     *  </tr>
-     *  <tr>
-     *   <td>numpy.int16</td>
-     *   <td>{@link Short}, {@link Integer}, {@link Long}, {@link Byte}</td>
-     *   <td>Conversion fails if the number is outside the valid range for the Java type</td>
-     *  </tr>
-     *  <tr>
-     *   <td>numpy.int8</td>
-     *   <td>{@link Byte}. {@link Short}, {@link Integer}, {@link Long}</td>
-     *  </tr>
-     *  <tr>
-     *   <td>NoneType</td>
-     *   <td>Any(null)</td>
-     *  </tr>
-     *  <tr>
-         <td colspan="3">Jep objects such as PyJObjects and jarrays will be returned if the Java type of the wrapped object is compatible.</td>
-     *  <tr>
-     *  <tr>
-     *   <td>Anything else</td>
-     *   <td>{@link String}, {@link PyObject}</td>
-     *   <td>String conversion will likely be removed in future versions of Jep so it is unsafe to depend on this behavior.</td>
-     *  </tr>
-     * </table>
-     *
-     * @param <T>
-     *            the generic type of the return type
-     * @param str
-     *            the name of the Python variable to get from the interpreter's
-     *            global scope
-     * @param clazz
-     *            the Java class of the return type.
-     * @return a Java version of the variable
-     * @exception JepException
-     *                if an error occurs
-     * @since 3.8
-     */
+    @Override
     public <T> T getValue(String str, Class<T> clazz) throws JepException {
         isValidThread();
 
@@ -697,17 +501,17 @@ public class Jep implements AutoCloseable {
             throws JepException;
 
     /**
-     * @deprecated use Python 3 bytes object instead and 
-     * {@link #getValue(String,Class)} with byte[].class
+     * @deprecated use Python 3 bytes object instead and
+     *             {@link #getValue(String,Class)} with byte[].class
      *
-     * Retrieves a Python string object as a Java byte[].
+     *             Retrieves a Python string object as a Java byte[].
      * 
      * @param str
      *            the name of the Python variable to get from the
      *            sub-interpreter's global scope
      * @return an <code>Object</code> array
-     * @exception JepException
-     *                if an error occurs
+     * @throws JepException
+     *             if an error occurs
      */
     @Deprecated
     public byte[] getValue_bytearray(String str) throws JepException {
@@ -727,8 +531,8 @@ public class Jep implements AutoCloseable {
      * @param name
      *            a <code>String</code> value
      * @return a <code>PyModule</code> value
-     * @exception JepException
-     *                if an error occurs
+     * @throws JepException
+     *             if an error occurs
      */
     @Deprecated
     public jep.python.PyModule createModule(String name) throws JepException {
@@ -743,9 +547,13 @@ public class Jep implements AutoCloseable {
     /**
      * Sets the default classloader.
      * 
+     * @deprecated This may be removed in a future version of Jep. Jep does not
+     *             fully support changing the ClassLoader after construction.
+     * 
      * @param cl
      *            a <code>ClassLoader</code> value
      */
+    @Deprecated
     public void setClassLoader(ClassLoader cl) {
         if (cl != null && cl != this.classLoader) {
             this.classLoader = cl;
@@ -761,9 +569,12 @@ public class Jep implements AutoCloseable {
      * further Python statements to be evaled, while non-interactive mode can
      * only execute complete Python statements.
      * 
+     * @deprecated This may be removed in a future version of Jep.
+     * 
      * @param v
      *            if the sub-interpreter should run in interactive mode
      */
+    @Deprecated
     public void setInteractive(boolean v) {
         this.interactive = v;
     }
@@ -771,23 +582,16 @@ public class Jep implements AutoCloseable {
     /**
      * Gets whether or not this sub-interpreter is interactive.
      * 
+     * @deprecated This may be removed in a future version of Jep.
+     * 
      * @return whether or not the sub-interpreter is interactive
      */
+    @Deprecated
     public boolean isInteractive() {
         return this.interactive;
     }
 
-    /**
-     * Sets the Java Object into the sub-interpreter's global scope with the
-     * specified variable name.
-     * 
-     * @param name
-     *            the Python name for the variable
-     * @param v
-     *            an <code>Object</code> value
-     * @exception JepException
-     *                if an error occurs
-     */
+    @Override
     public void set(String name, Object v) throws JepException {
         isValidThread();
 
@@ -824,13 +628,16 @@ public class Jep implements AutoCloseable {
      * Sets the Java String into the sub-interpreter's global scope with the
      * specified variable name.
      * 
+     * @deprecated Use {@link #set(String, Object)} instead.
+     * 
      * @param name
      *            the Python name for the variable
      * @param v
      *            a <code>String</code> value
-     * @exception JepException
-     *                if an error occurs
+     * @throws JepException
+     *             if an error occurs
      */
+    @Deprecated
     public void set(String name, String v) throws JepException {
         isValidThread();
 
@@ -844,13 +651,16 @@ public class Jep implements AutoCloseable {
      * Sets the Java boolean into the sub-interpreter's global scope with the
      * specified variable name.
      * 
+     * @deprecated Use {@link #set(String, Object)} instead.
+     * 
      * @param name
      *            the Python name for the variable
      * @param v
      *            a <code>boolean</code> value
-     * @exception JepException
-     *                if an error occurs
+     * @throws JepException
+     *             if an error occurs
      */
+    @Deprecated
     public void set(String name, boolean v) throws JepException {
         isValidThread();
 
@@ -864,13 +674,16 @@ public class Jep implements AutoCloseable {
      * Sets the Java int into the sub-interpreter's global scope with the
      * specified variable name.
      * 
+     * @deprecated Use {@link #set(String, Object)} instead.
+     * 
      * @param name
      *            the Python name for the variable
      * @param v
      *            an <code>int</code> value
-     * @exception JepException
-     *                if an error occurs
+     * @throws JepException
+     *             if an error occurs
      */
+    @Deprecated
     public void set(String name, int v) throws JepException {
         isValidThread();
 
@@ -881,13 +694,16 @@ public class Jep implements AutoCloseable {
      * Sets the Java short into the sub-interpreter's global scope with the
      * specified variable name.
      * 
+     * @deprecated Use {@link #set(String, Object)} instead.
+     * 
      * @param name
      *            the Python name for the variable
      * @param v
      *            an <code>int</code> value
-     * @exception JepException
-     *                if an error occurs
+     * @throws JepException
+     *             if an error occurs
      */
+    @Deprecated
     public void set(String name, short v) throws JepException {
         isValidThread();
 
@@ -901,13 +717,16 @@ public class Jep implements AutoCloseable {
      * Sets the Java char[] into the sub-interpreter's global scope with the
      * specified variable name.
      * 
+     * @deprecated Use {@link #set(String, Object)} instead.
+     * 
      * @param name
      *            the Python name for the variable
      * @param v
      *            a <code>char[]</code> value
-     * @exception JepException
-     *                if an error occurs
+     * @throws JepException
+     *             if an error occurs
      */
+    @Deprecated
     public void set(String name, char[] v) throws JepException {
         isValidThread();
 
@@ -918,13 +737,16 @@ public class Jep implements AutoCloseable {
      * Sets the Java char into the sub-interpreter's global scope with the
      * specified variable name.
      * 
+     * @deprecated Use {@link #set(String, Object)} instead.
+     * 
      * @param name
      *            the Python name for the variable
      * @param v
      *            a <code>char</code> value
-     * @exception JepException
-     *                if an error occurs
+     * @throws JepException
+     *             if an error occurs
      */
+    @Deprecated
     public void set(String name, char v) throws JepException {
         isValidThread();
 
@@ -935,13 +757,16 @@ public class Jep implements AutoCloseable {
      * Sets the Java byte into the sub-interpreter's global scope with the
      * specified variable name.
      * 
+     * @deprecated Use {@link #set(String, Object)} instead.
+     * 
      * @param name
      *            the Python name for the variable
      * @param b
      *            a <code>byte</code> value
-     * @exception JepException
-     *                if an error occurs
+     * @throws JepException
+     *             if an error occurs
      */
+    @Deprecated
     public void set(String name, byte b) throws JepException {
         isValidThread();
 
@@ -952,13 +777,16 @@ public class Jep implements AutoCloseable {
      * Sets the Java long into the sub-interpreter's global scope with the
      * specified variable name.
      * 
+     * @deprecated Use {@link #set(String, Object)} instead.
+     * 
      * @param name
      *            the Python name for the variable
      * @param v
      *            a <code>long</code> value
-     * @exception JepException
-     *                if an error occurs
+     * @throws JepException
+     *             if an error occurs
      */
+    @Deprecated
     public void set(String name, long v) throws JepException {
         isValidThread();
 
@@ -972,13 +800,16 @@ public class Jep implements AutoCloseable {
      * Sets the Java double into the sub-interpreter's global scope with the
      * specified variable name.
      * 
+     * @deprecated Use {@link #set(String, Object)} instead.
+     * 
      * @param name
      *            the Python name for the variable
      * @param v
      *            a <code>double</code> value
-     * @exception JepException
-     *                if an error occurs
+     * @throws JepException
+     *             if an error occurs
      */
+    @Deprecated
     public void set(String name, double v) throws JepException {
         isValidThread();
 
@@ -992,13 +823,16 @@ public class Jep implements AutoCloseable {
      * Sets the Java float into the sub-interpreter's global scope with the
      * specified variable name.
      * 
+     * @deprecated Use {@link #set(String, Object)} instead.
+     * 
      * @param name
      *            the Python name for the variable
      * @param v
      *            a <code>float</code> value
-     * @exception JepException
-     *                if an error occurs
+     * @throws JepException
+     *             if an error occurs
      */
+    @Deprecated
     public void set(String name, float v) throws JepException {
         isValidThread();
 
@@ -1014,13 +848,16 @@ public class Jep implements AutoCloseable {
      * Sets the Java boolean[] into the sub-interpreter's global scope with the
      * specified variable name.
      * 
+     * @deprecated Use {@link #set(String, Object)} instead.
+     * 
      * @param name
      *            the Python name for the variable
      * @param v
      *            a <code>boolean[]</code> value
-     * @exception JepException
-     *                if an error occurs
+     * @throws JepException
+     *             if an error occurs
      */
+    @Deprecated
     public void set(String name, boolean[] v) throws JepException {
         isValidThread();
 
@@ -1034,13 +871,16 @@ public class Jep implements AutoCloseable {
      * Sets the Java int[] into the sub-interpreter's global scope with the
      * specified variable name.
      * 
+     * @deprecated Use {@link #set(String, Object)} instead.
+     * 
      * @param name
      *            the Python name for the variable
      * @param v
      *            an <code>int[]</code> value
-     * @exception JepException
-     *                if an error occurs
+     * @throws JepException
+     *             if an error occurs
      */
+    @Deprecated
     public void set(String name, int[] v) throws JepException {
         isValidThread();
 
@@ -1054,13 +894,16 @@ public class Jep implements AutoCloseable {
      * Sets the Java short[] into the sub-interpreter's global scope with the
      * specified variable name.
      * 
+     * @deprecated Use {@link #set(String, Object)} instead.
+     * 
      * @param name
      *            the Python name for the variable
      * @param v
      *            a <code>short[]</code> value
-     * @exception JepException
-     *                if an error occurs
+     * @throws JepException
+     *             if an error occurs
      */
+    @Deprecated
     public void set(String name, short[] v) throws JepException {
         isValidThread();
 
@@ -1074,13 +917,16 @@ public class Jep implements AutoCloseable {
      * Sets the Java byte[] into the sub-interpreter's global scope with the
      * specified variable name.
      * 
+     * @deprecated Use {@link #set(String, Object)} instead.
+     * 
      * @param name
      *            the Python name for the variable
      * @param v
      *            a <code>byte[]</code> value
-     * @exception JepException
-     *                if an error occurs
+     * @throws JepException
+     *             if an error occurs
      */
+    @Deprecated
     public void set(String name, byte[] v) throws JepException {
         isValidThread();
 
@@ -1094,13 +940,16 @@ public class Jep implements AutoCloseable {
      * Sets the Java long[] into the sub-interpreter's global scope with the
      * specified variable name.
      * 
+     * @deprecated Use {@link #set(String, Object)} instead.
+     * 
      * @param name
      *            the Python name for the variable
      * @param v
      *            a <code>long[]</code> value
-     * @exception JepException
-     *                if an error occurs
+     * @throws JepException
+     *             if an error occurs
      */
+    @Deprecated
     public void set(String name, long[] v) throws JepException {
         isValidThread();
 
@@ -1114,13 +963,16 @@ public class Jep implements AutoCloseable {
      * Sets the Java double[] into the sub-interpreter's global scope with the
      * specified variable name.
      * 
+     * @deprecated Use {@link #set(String, Object)} instead.
+     * 
      * @param name
      *            the Python name for the variable
      * @param v
      *            a <code>double[]</code> value
-     * @exception JepException
-     *                if an error occurs
+     * @throws JepException
+     *             if an error occurs
      */
+    @Deprecated
     public void set(String name, double[] v) throws JepException {
         isValidThread();
 
@@ -1134,13 +986,16 @@ public class Jep implements AutoCloseable {
      * Sets the Java float[] into the sub-interpreter's global scope with the
      * specified variable name.
      * 
+     * @deprecated Use {@link #set(String, Object)} instead.
+     * 
      * @param name
      *            the Python name for the variable
      * @param v
      *            a <code>float[]</code> value
-     * @exception JepException
-     *                if an error occurs
+     * @throws JepException
+     *             if an error occurs
      */
+    @Deprecated
     public void set(String name, float[] v) throws JepException {
         isValidThread();
 
@@ -1176,7 +1031,7 @@ public class Jep implements AutoCloseable {
     }
 
     /**
-     * Shuts down the Python sub-interpreter. Make sure you call this to prevent
+     * Shuts down the Python interpreter. Make sure you call this to prevent
      * memory leaks.
      * 
      */
@@ -1197,8 +1052,8 @@ public class Jep implements AutoCloseable {
              * crashes.
              */
             Thread current = Thread.currentThread();
-            StringBuilder warning = new StringBuilder(THREAD_WARN)
-                    .append("Unsafe close() of Python sub-interpreter by thread ")
+            StringBuilder warning = new StringBuilder(THREAD_WARN).append(
+                    "Unsafe close() of Python sub-interpreter by thread ")
                     .append(current.getName())
                     .append(".\nPlease close() from the creating thread to ensure stability.");
             throw new JepException(warning.toString());
@@ -1206,16 +1061,20 @@ public class Jep implements AutoCloseable {
 
         if (isSubInterpreter) {
             eval("import sys");
-            Boolean hasThreads = getValue("'threading' in sys.modules", Boolean.class);
+            Boolean hasThreads = getValue("'threading' in sys.modules",
+                    Boolean.class);
             if (hasThreads.booleanValue()) {
-                Integer count = getValue("sys.modules['threading'].active_count()", Integer.class);
+                Integer count = getValue(
+                        "sys.modules['threading'].active_count()",
+                        Integer.class);
                 if (count.intValue() > 1) {
-                     throw new JepException("All threads must be stopped before closing Jep.");
+                    throw new JepException(
+                            "All threads must be stopped before closing Jep.");
                 }
             }
         }
 
-	getMemoryManager().cleanupReferences();
+        getMemoryManager().cleanupReferences();
 
         // don't attempt close twice if something goes wrong
         this.closed = true;

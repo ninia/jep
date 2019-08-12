@@ -31,8 +31,8 @@ import java.util.concurrent.SynchronousQueue;
  * The main Python interpreter that all sub-interpreters will be created from.
  * In a simpler embedded Python project, a single Python interpreter would be
  * used and all would be good. However, since Jep supports multithreading with
- * multiple sub-interpreters (Jep instances), we need the MainInterpreter to
- * work around some issues.
+ * multiple sub-interpreters, we need the MainInterpreter to work around some
+ * issues.
  * 
  * The MainInterpreter is used to avoid potential deadlocks. Python can deadlock
  * when trying to acquire the GIL through methods such as <a href=
@@ -87,9 +87,10 @@ public final class MainInterpreter implements AutoCloseable {
      * Creates the MainInterpreter instance that will be used by Jep. This
      * should be called from all Jep constructors to ensure the native module
      * has been loaded and initialized before a valid Jep instance is produced.
-     * @return the main interpreter 
+     * 
+     * @return the main interpreter
      * @throws Error
-     *                if an error occurs
+     *             if an error occurs
      */
     protected synchronized static MainInterpreter getMainInterpreter()
             throws Error {
@@ -119,7 +120,7 @@ public final class MainInterpreter implements AutoCloseable {
      *             if an error occurs
      */
     protected void initialize() throws Error {
-        if (jepLibraryPath != null ) {
+        if (jepLibraryPath != null) {
             System.load(jepLibraryPath);
         } else {
             try {
@@ -265,9 +266,9 @@ public final class MainInterpreter implements AutoCloseable {
     }
 
     /**
-     * Sets the path of the jep native library. The location should be a
-     * path that can be passed to {@link System#load(String)}. This method must
-     * be called before the first Jep instance is created in the process.
+     * Sets the path of the jep native library. The location should be a path
+     * that can be passed to {@link System#load(String)}. This method must be
+     * called before the first Jep instance is created in the process.
      * 
      * @param jepLibraryPath
      *            the path of the jep native library, an absolute path leading
@@ -277,15 +278,13 @@ public final class MainInterpreter implements AutoCloseable {
      * 
      * @since 3.9
      */
-    public static void setJepLibraryPath(String path)
-            throws JepException {
+    public static void setJepLibraryPath(String path) throws JepException {
         if (instance != null) {
             throw new JepException(
                     "Jep.setJepLibraryPath(...) called after initializing python interpreter.");
         }
         jepLibraryPath = path;
     }
- 
 
     private static native void setInitParams(int noSiteFlag,
             int noUserSiteDiretory, int ignoreEnvironmentFlag, int verboseFlag,
