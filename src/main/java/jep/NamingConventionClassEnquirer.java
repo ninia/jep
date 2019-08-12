@@ -124,7 +124,7 @@ public class NamingConventionClassEnquirer implements ClassEnquirer {
      * @param pkgStart
      *            the start of a java package name to check, e.g. com, gov, us,
      *            it, fr
-     * @return this instance of the NamingConventionClassEnquirer to support the builder pattern
+     * @return this instance of the NamingConventionClassEnquirer to support the fluent interface pattern
      */
     public NamingConventionClassEnquirer addTopLevelPackageName(String pkgStart) {
         javaNames.add(pkgStart);
