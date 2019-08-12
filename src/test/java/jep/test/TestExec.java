@@ -23,7 +23,7 @@ public class TestExec {
             String result = interp.getValue("result", String.class);
             if (!"Passed".equals(result)) {
                 throw new IllegalStateException(
-                        "multine exex returned " + result);
+                        "multi-line exec returned " + result);
             }
         }
     }
