@@ -69,72 +69,73 @@ public class TestGetWithClass {
         }
     }
 
-    public static void testFloat(Jep jep) throws JepException {
-        Float f = jep.getValue("1.5", Float.class);
+    public static void testFloat(Interpreter interp) throws JepException {
+        Float f = interp.getValue("1.5", Float.class);
         if (f.floatValue() != 1.5f) {
             throw new IllegalStateException(f + " is not 1.5");
         }
-        Double d = jep.getValue("1.5", Double.class);
+        Double d = interp.getValue("1.5", Double.class);
         if (d.doubleValue() != 1.5) {
             throw new IllegalStateException(d + " is not 1.5");
         }
     }
 
-    public static void testSeq(Jep jep) throws JepException {
-        List l = jep.getValue("[True]", List.class);
+    public static void testSeq(Interpreter interp) throws JepException {
+        List l = interp.getValue("[True]", List.class);
         if (l.size() != 1 || !l.get(0).equals(Boolean.TRUE)) {
             throw new IllegalStateException(l + " is not [True]");
         }
-        l = jep.getValue("(True,)", List.class);
+        l = interp.getValue("(True,)", List.class);
         if (l.size() != 1 || !l.get(0).equals(Boolean.TRUE)) {
             throw new IllegalStateException(l + " is not [True]");
         }
-        Boolean[] a = jep.getValue("(True,)", Boolean[].class);
+        Boolean[] a = interp.getValue("(True,)", Boolean[].class);
         if (a.length != 1 || !a[0].booleanValue()) {
             throw new IllegalStateException(a + " is not [True]");
         }
-        boolean[] a2 = jep.getValue("[True]", boolean[].class);
+        boolean[] a2 = interp.getValue("[True]", boolean[].class);
         if (a2.length != 1 || !a2[0]) {
             throw new IllegalStateException(a + " is not [True]");
         }
     }
 
-    public static void testDict(Jep jep) throws JepException {
-        Map m = jep.getValue("{'abc':'def'}", Map.class);
+    public static void testDict(Interpreter interp) throws JepException {
+        Map m = interp.getValue("{'abc':'def'}", Map.class);
         if (m.size() != 1 || !m.get("abc").equals("def")) {
             throw new IllegalStateException(m + " is not {'abc':'def'}");
         }
     }
 
-    public static void testNone(Jep jep) throws JepException {
-        Object o = jep.getValue("None", Object.class);
+    public static void testNone(Interpreter interp) throws JepException {
+        Object o = interp.getValue("None", Object.class);
         if (o != null) {
             throw new IllegalStateException(o + " is not null");
         }
-        Double d = jep.getValue("None", Double.class);
+        Double d = interp.getValue("None", Double.class);
         if (d != null) {
             throw new IllegalStateException(d + " is not null");
         }
-        String s = jep.getValue("None", String.class);
+        String s = interp.getValue("None", String.class);
         if (s != null) {
             throw new IllegalStateException(s + " is not null");
         }
-        Jep j = jep.getValue("None", Jep.class);
+        Jep j = interp.getValue("None", Jep.class);
         if (j != null) {
             throw new IllegalStateException(j + " is not null");
         }
     }
 
-    public static void testIncompatible(Jep jep) throws JepException {
+    public static void testIncompatible(Interpreter interp)
+            throws JepException {
         try {
-            Integer i = jep.getValue("object", Integer.class);
+            Integer i = interp.getValue("object", Integer.class);
             throw new IllegalStateException(
                     "object is not a Integer(" + i + ")");
         } catch (JepException e) {
             /* This is what should happen. */
         }
         try {
-            Integer i = jep.getValue("object()", Integer.class);
+            Integer i = interp.getValue("object()", Integer.class);
             throw new IllegalStateException(
                     "object() is not a Integer(" + i + ")");
         } catch (JepException e) {
@@ -143,15 +144,15 @@ public class TestGetWithClass {
     }
 
     public static void main(String[] args) throws JepException {
-        try (Jep jep = new SubInterpreter()) {
-            testStr(jep);
-            testBool(jep);
-            testInt(jep);
-            testFloat(jep);
-            testSeq(jep);
-            testDict(jep);
-            testNone(jep);
-            testIncompatible(jep);
+        try (Interpreter interp = new SubInterpreter()) {
+            testStr(interp);
+            testBool(interp);
+            testInt(interp);
+            testFloat(interp);
+            testSeq(interp);
+            testDict(interp);
+            testNone(interp);
+            testIncompatible(interp);
         }
     }
 
