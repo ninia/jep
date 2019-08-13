@@ -1,7 +1,20 @@
-Jep 3.8 Release Notes
+Jep 3.9 Release Notes
 *********************
-This release is compatible with Python 2.7, 3.3, 3.4, 3.5, 3.6, and 3.7.
-It is compatible with Java versions >= 1.7.
+This release is compatible with Python 2.7, 3.3, 3.4, 3.5, 3.6, 3.7, and 3.8.
+It is compatible with Java versions >= 1.7. This will be the last release
+to support Python 2. It may also be the last release to support Python 3.3,
+3.4, and 3.5 and Java 1.7.
+
+
+New interface Interpreter and new class SubInterpreter
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+A new interface jep.Interpreter and new class jep.SubInterpreter are provided
+to better distinguish a SubInterpreter from a SharedInterpreter. The use of
+the interface also allows a developer to more quickly switch between the
+concrete types for testing which interpreter to use. Where possible a
+developer should strive to use the interface and only specify the 
+implementation at construction.  Alongside this change, many methods on
+the Jep class have been deprecated in preparation for a future release.
 
 
 Numpy scalar types can be converted to equivalent Java boxed primitives
@@ -9,6 +22,66 @@ Numpy scalar types can be converted to equivalent Java boxed primitives
 The numpy types float64, float32, int64, int32, int16, and int8 can now be
 converted to the appropriate java.lang equivalents of Double, Float, Long,
 Integer, Short, and Byte, respectively.
+
+
+Jep.getValue(String, Class) supports returning PyObject and PyCallable
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Jep.getValue(String, Class) supports passing in a PyObject or PyCallable
+as the class argument and returning the Object cast to the specified class.
+*Contributed by Jeremy Smith.*
+
+
+New methods PyCallable.callAs(Class, args)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PyCallable has new methods callAs(Class, args) where the return object will
+match the expected type, the Class argument.
+*Contributed by Jeremy Smith.*
+
+
+Jep supports exec method
+~~~~~~~~~~~~~~~~~~~~~~~~
+Jep now supports using the Python exec method from Java with the new method
+Jep.exec(String).
+
+
+LibraryLocator supports loading the jep native library from an absolute path
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The class LibraryLocator now supports specifying an absolute path from which
+the jep library (libjep.so, libjep.dll, libjep.dylib, libjep.jnilib) will be
+loaded. Using this method will take precedence over other methods of
+finding the location of the library.
+
+
+Conversion of Python bytes and bytearray to Java byte[]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Jep now supports the conversion of a Python bytes or bytearray object to a
+Java byte[] object.
+
+
+PyBuffers can be converted to Java arrays
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Python objects that implement the Buffer Protocol can now be converted into
+Java arrays.
+
+
+Direct memory java.nio.Buffer objects can share memory as Python Buffers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The java.nio classes ByteBuffer, CharBuffer, DoubleBuffer, FloatBuffer,
+IntBuffer, LongBuffer, and ShortBuffer can be wrapped as PyJObjects. If
+they are direct (i.e. use direct memory) they can share memory with Python
+objects through the use of the Python Buffer Protocol.
+
+
+PyObject can now implement Java interfaces
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PyObject has a new method proxy(Class, Class...) that provides creation of
+a Proxy to a Python object that matches a Java interface. These interfaces
+only work correctly if the Python method names match the Java method names,
+but they can be used to invoke Python methods from Java. For example, a Java
+interface DataFrame could be used to invoke methods on a Python pandas
+DataFrame, if the Java interface had some or all of the methods on a pandas
+DataFrame.
+
 
 Compatibility Notes
 *******************
@@ -23,3 +96,9 @@ numpy.float32 will default to a java.lang.Float. The old conversions are still
 possible if they are explicitly needed. For example a Java method taking a
 Double can still take a numpy.float32, however a Java method taking an Object
 or Number will now get a Float whereas previously it might be a Double.
+
+
+javax.script support removed
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The Jep classes implementing the javax.script classes have been removed.
+
