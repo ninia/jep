@@ -435,26 +435,6 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_delAttr
 }
 
 
-
-/*
- * Class:     jep_python_PyObject
- * Method:    createModule
- * Signature: (JJLjava/lang/String;)J
- */
-JNIEXPORT jlong JNICALL Java_jep_python_PyObject_createModule
-(JNIEnv *env, jobject obj, jlong tstate, jlong module, jstring jstr)
-{
-    const char *str;
-    jlong ret;
-
-    str = jstring2char(env, jstr);
-    ret = pyembed_create_module_on(env, (intptr_t) tstate, (intptr_t) module,
-                                   (char *) str);
-    release_utf_char(env, jstr, str);
-    return ret;
-}
-
-
 /*
  * Class:     jep_python_PyObject
  * Method:    getValue

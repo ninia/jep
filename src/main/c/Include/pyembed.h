@@ -76,9 +76,6 @@ jobject pyembed_getvalue_on(JNIEnv*, intptr_t, intptr_t, char*);
 JNIEnv* pyembed_get_env(void);
 JepThread* pyembed_get_jepthread(void);
 
-intptr_t pyembed_create_module(JNIEnv*, intptr_t, char*);
-intptr_t pyembed_create_module_on(JNIEnv*, intptr_t, intptr_t, char*);
-
 // -------------------------------------------------- set() methods
 
 void pyembed_setparameter_object(JNIEnv*, intptr_t, intptr_t, const char*,

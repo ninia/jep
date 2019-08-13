@@ -523,22 +523,6 @@ public class Jep implements Interpreter {
     private native byte[] getValue_bytearray(long tstate, String str)
             throws JepException;
 
-    /**
-     * Create a Python module on the interpreter. If the given name is valid,
-     * imported module, this method will return that module.
-     * 
-     * @deprecated This will be removed in a future release.
-     * @param name
-     *            a <code>String</code> value
-     * @return a <code>PyModule</code> value
-     * @throws JepException
-     *             if an error occurs
-     */
-    @Deprecated
-    public jep.python.PyModule createModule(String name) throws JepException {
-        return new jep.python.PyModule(this, createModule(this.tstate, name));
-    }
-
     private native long createModule(long tstate, String name)
             throws JepException;
 

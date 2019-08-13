@@ -198,25 +198,6 @@ JNIEXPORT jobject JNICALL Java_jep_Jep_getValue_1bytearray
 }
 
 
-
-/*
- * Class:     jep_Jep
- * Method:    createModule
- * Signature: (JLjava/lang/String;)J
- */
-JNIEXPORT jlong JNICALL Java_jep_Jep_createModule
-(JNIEnv *env, jobject obj, jlong tstate, jstring jstr)
-{
-    const char *str;
-    jlong ret;
-
-    str = jstring2char(env, jstr);
-    ret = pyembed_create_module(env, (intptr_t) tstate, (char *) str);
-    release_utf_char(env, jstr, str);
-    return ret;
-}
-
-
 /*
  * Class:     jep_Jep
  * Method:    setClassLoader

@@ -92,6 +92,12 @@ Double can still take a numpy.float32, however a Java method taking an Object
 or Number will now get a Float whereas previously it might be a Double.
 
 
+set methods on PyObject removed
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The set(args) methods on PyObject have been removed in favor of using
+setAttr(String, Object).
+
+
 javax.script support removed
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The Jep classes implementing the javax.script classes have been removed.
