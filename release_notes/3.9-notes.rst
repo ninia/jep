@@ -24,38 +24,19 @@ converted to the appropriate java.lang equivalents of Double, Float, Long,
 Integer, Short, and Byte, respectively.
 
 
-Jep.getValue(String, Class) supports returning PyObject and PyCallable
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Jep.getValue(String, Class) supports passing in a PyObject or PyCallable
-as the class argument and returning the Object cast to the specified class.
-*Contributed by Jeremy Smith.*
-
-
-New methods PyCallable.callAs(Class, args)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-PyCallable has new methods callAs(Class, args) where the return object will
-match the expected type, the Class argument.
-*Contributed by Jeremy Smith.*
-
-
 Jep supports exec method
 ~~~~~~~~~~~~~~~~~~~~~~~~
-Jep now supports using the Python exec method from Java with the new method
-Jep.exec(String).
+Jep now supports executing multiple Python statements from a single Java
+String using the new Jep.exec(String) method which works similar to the
+Python builtin exec(string).
 
 
 LibraryLocator supports loading the jep native library from an absolute path
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The class LibraryLocator now supports specifying an absolute path from which
-the jep library (libjep.so, libjep.dll, libjep.dylib, libjep.jnilib) will be
-loaded. Using this method will take precedence over other methods of
-finding the location of the library.
-
-
-Conversion of Python bytes and bytearray to Java byte[]
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Jep now supports the conversion of a Python bytes or bytearray object to a
-Java byte[] object.
+the jep library (libjep.so, libjep.dll, libjep.jnilib) will be loaded.
+Using this method will take precedence over other methods of finding the
+location of the library.
 
 
 PyBuffers can be converted to Java arrays
@@ -70,6 +51,19 @@ The java.nio classes ByteBuffer, CharBuffer, DoubleBuffer, FloatBuffer,
 IntBuffer, LongBuffer, and ShortBuffer can be wrapped as PyJObjects. If
 they are direct (i.e. use direct memory) they can share memory with Python
 objects through the use of the Python Buffer Protocol.
+
+
+New methods PyCallable.callAs(Class, args)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PyCallable has new methods callAs(Class, args) where the return object will
+match the expected type, the Class argument.
+*Contributed by Jeremy Smith.*
+
+
+New method PyObject.as(Class)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+A method PyObject.as(Class) has been that will use Jep's builtin conversions
+to return a Java representation of the PyObject.
 
 
 PyObject can now implement Java interfaces
