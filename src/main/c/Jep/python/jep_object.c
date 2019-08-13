@@ -30,49 +30,6 @@
 
 /*
  * Class:     jep_python_PyObject
- * Method:    decref
- * Signature: (J)V
- */
-JNIEXPORT void JNICALL Java_jep_python_PyObject_decref
-(JNIEnv *env, jobject jobj, jlong tstate, jlong ptr)
-{
-    PyObject *o = (PyObject *) ptr;
-    JepThread* jepThread = (JepThread *) tstate;
-
-    if (ptr == 0) {
-        THROW_JEP(env, "jep_object: Invalid object");
-    } else {
-        PyEval_AcquireThread(jepThread->tstate);
-        Py_DECREF(o);
-        process_py_exception(env);
-        PyEval_ReleaseThread(jepThread->tstate);
-    }
-}
-
-
-/*
- * Class:     jep_python_PyObject
- * Method:    incref
- * Signature: (J)V
- */
-JNIEXPORT void JNICALL Java_jep_python_PyObject_incref
-(JNIEnv *env, jobject jobj, jlong tstate, jlong ptr)
-{
-    PyObject *o = (PyObject *) ptr;
-    JepThread* jepThread = (JepThread *) tstate;
-
-    if (ptr == 0) {
-        THROW_JEP(env, "jep_object: Invalid object");
-    } else {
-        PyEval_AcquireThread(jepThread->tstate);
-        Py_INCREF(o);
-        PyEval_ReleaseThread(jepThread->tstate);
-    }
-}
-
-
-/*
- * Class:     jep_python_PyObject
  * Method:    set
  * Signature: (JJLjava/lang/String;Ljava/lang/Object;)V
  */

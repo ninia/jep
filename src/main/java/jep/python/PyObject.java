@@ -113,34 +113,6 @@ public class PyObject extends JepAccess implements AutoCloseable {
         }
     }
 
-    /**
-     * @deprecated internal use only
-     *
-     * @throws JepException
-     *             if an error occurs
-     */
-    @Deprecated
-    public void decref() throws JepException {
-        isValid();
-        this.decref(pointer.tstate, pointer.pyObject);
-    }
-
-    private native void decref(long tstate, long ptr) throws JepException;
-
-    /**
-     * @deprecated internal use only
-     *
-     * @throws JepException
-     *             if an error occurs
-     */
-    @Deprecated
-    public void incref() throws JepException {
-        isValid();
-        this.incref(pointer.tstate, pointer.pyObject);
-    }
-
-    private native void incref(long tstate, long ptr) throws JepException;
-
     @Override
     public void close() throws JepException {
         /*
