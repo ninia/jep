@@ -28,8 +28,8 @@ import jep.python.MemoryManager;
 
 /**
  * <p>
- * Allow access to Jep internal structure in sub-packages. This class should
- * not be used outside of the Jep project.
+ * Allow access to Jep internal structure in sub-packages. This class should not
+ * be used outside of the Jep project.
  * </p>
  * 
  * @author Ben Steffensmeier
@@ -40,19 +40,19 @@ public abstract class JepAccess {
 
     protected final Jep jep;
 
-    protected JepAccess(Jep jep){
+    protected JepAccess(Jep jep) {
         this.jep = jep;
     }
 
-    protected long getThreadState(){
+    protected long getThreadState() {
         return jep.getThreadState();
     }
 
-    protected ClassLoader getClassLoader(){
+    protected ClassLoader getClassLoader() {
         return jep.getClassLoader();
     }
 
-    protected MemoryManager getMemoryManager(){
+    protected MemoryManager getMemoryManager() {
         return jep.getMemoryManager();
     }
 }

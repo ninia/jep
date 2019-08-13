@@ -31,9 +31,9 @@ String using the new Jep.exec(String) method which works similar to the
 Python builtin exec(string).
 
 
-LibraryLocator supports loading the jep native library from an absolute path
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The class LibraryLocator now supports specifying an absolute path from which
+MainInterpreter supports loading the jep native library from an absolute path
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The class MainInterpreter now supports specifying an absolute path from which
 the jep library (libjep.so, libjep.dll, libjep.jnilib) will be loaded.
 Using this method will take precedence over other methods of finding the
 location of the library.

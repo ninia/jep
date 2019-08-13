@@ -269,10 +269,11 @@ public final class MainInterpreter implements AutoCloseable {
 
     /**
      * Sets the path of the jep native library. The location should be a path
-     * that can be passed to {@link System#load(String)}. This method must be
-     * called before the first Interpreter instance is created in the process.
+     * that can be passed to {@link java.lang.System#load(String)}. This method
+     * must be called before the first Interpreter instance is created in the
+     * process.
      * 
-     * @param jepLibraryPath
+     * @param path
      *            the path of the jep native library, an absolute path leading
      *            to a file that is often named libjep.so or libjep.dll.
      * @throws JepException

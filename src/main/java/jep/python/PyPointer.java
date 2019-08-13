@@ -58,7 +58,7 @@ public class PyPointer extends WeakReference<PyObject> {
      * @param pyObject
      *            the pointer to the PyObject*
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      */
     protected PyPointer(PyObject referrent, MemoryManager memoryManager,
             long tstate, long pyObject) throws JepException {
@@ -76,7 +76,7 @@ public class PyPointer extends WeakReference<PyObject> {
      * collection.
      * 
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      */
     protected synchronized void dispose() throws JepException {
         if (!disposed) {

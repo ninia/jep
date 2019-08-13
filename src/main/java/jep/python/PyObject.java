@@ -34,8 +34,8 @@ import jep.JepException;
  * A Java object that wraps a pointer to a Python object.
  * 
  * This class is not thread safe and PyObjects can only be used on the Thread
- * where they were created. When an Interpreter instance is closed all PyObjects from
- * that instance will be invalid and can no longer be used.
+ * where they were created. When an Interpreter instance is closed all PyObjects
+ * from that instance will be invalid and can no longer be used.
  *
  * This class is in the process of a redesign so methods may be added, removed,
  * or changed in ways that are not backwards compatible in the future. When
@@ -45,7 +45,6 @@ public class PyObject extends JepAccess implements AutoCloseable {
 
     protected final PyPointer pointer;
 
-
     /**
      * Make a new PyObject
      * 
@@ -54,11 +53,12 @@ public class PyObject extends JepAccess implements AutoCloseable {
      * @param pyObject
      *            the address of the python object
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      */
     protected PyObject(Jep jep, long pyObject) throws JepException {
         super(jep);
-        this.pointer = new PyPointer(this, getMemoryManager(), getThreadState(), pyObject);
+        this.pointer = new PyPointer(this, getMemoryManager(), getThreadState(),
+                pyObject);
     }
 
     /**
@@ -117,7 +117,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      * @deprecated internal use only
      *
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      */
     @Deprecated
     public void decref() throws JepException {
@@ -131,7 +131,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      * @deprecated internal use only
      *
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      */
     @Deprecated
     public void incref() throws JepException {
@@ -163,7 +163,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      * @param v
      *            an <code>Object</code> value
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      */
     @Deprecated
     public void set(String name, Object v) throws JepException {
@@ -184,7 +184,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      * @param v
      *            a <code>String</code> value
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      */
     @Deprecated
     public void set(String name, String v) throws JepException {
@@ -205,7 +205,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      * @param v
      *            a <code>boolean</code> value
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      */
     @Deprecated
     public void set(String name, boolean v) throws JepException {
@@ -227,7 +227,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      * @param v
      *            an <code>int</code> value
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      */
     @Deprecated
     public void set(String name, int v) throws JepException {
@@ -245,7 +245,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      * @param v
      *            an <code>int</code> value
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      */
     @Deprecated
     public void set(String name, short v) throws JepException {
@@ -266,7 +266,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      * @param v
      *            a <code>char[]</code> value
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      */
     @Deprecated
     public void set(String name, char[] v) throws JepException {
@@ -284,7 +284,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      * @param v
      *            a <code>char</code> value
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      */
     @Deprecated
     public void set(String name, char v) throws JepException {
@@ -303,7 +303,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      * @param b
      *            a <code>byte</code> value
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      */
     @Deprecated
     public void set(String name, byte b) throws JepException {
@@ -321,7 +321,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      * @param v
      *            a <code>long</code> value
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      */
     @Deprecated
     public void set(String name, long v) throws JepException {
@@ -342,7 +342,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      * @param v
      *            a <code>double</code> value
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      */
     @Deprecated
     public void set(String name, double v) throws JepException {
@@ -363,7 +363,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      * @param v
      *            a <code>float</code> value
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      */
     @Deprecated
     public void set(String name, float v) throws JepException {
@@ -386,7 +386,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      * @param v
      *            a <code>boolean[]</code> value
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      */
     @Deprecated
     public void set(String name, boolean[] v) throws JepException {
@@ -407,7 +407,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      * @param v
      *            an <code>int[]</code> value
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      */
     @Deprecated
     public void set(String name, int[] v) throws JepException {
@@ -428,7 +428,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      * @param v
      *            a <code>short[]</code> value
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      */
     @Deprecated
     public void set(String name, short[] v) throws JepException {
@@ -449,7 +449,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      * @param v
      *            a <code>byte[]</code> value
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      */
     @Deprecated
     public void set(String name, byte[] v) throws JepException {
@@ -470,7 +470,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      * @param v
      *            a <code>long[]</code> value
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      */
     @Deprecated
     public void set(String name, long[] v) throws JepException {
@@ -491,7 +491,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      * @param v
      *            a <code>double[]</code> value
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      */
     @Deprecated
     public void set(String name, double[] v) throws JepException {
@@ -512,7 +512,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      * @param v
      *            a <code>float[]</code> value
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      */
     @Deprecated
     public void set(String name, float[] v) throws JepException {
@@ -532,7 +532,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      *            the attribute name
      * @return a Java version of the attribute
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      * @since 3.8
      */
     public Object getAttr(String attr_name) throws JepException {
@@ -555,7 +555,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      *            the Java class of the return type.
      * @return a Java version of the attribute
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      * @since 3.8
      */
     public <T> T getAttr(String attr_name, Class<T> clazz) throws JepException {
@@ -621,7 +621,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      *            a <code>String</code> value
      * @return a <code>long</code> value
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      */
     protected native long createModule(long tstate, long onModule, String name)
             throws JepException;
@@ -639,7 +639,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      *            a <code>String</code> value
      * @return an <code>Object</code> value
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      */
     protected native Object getValue(long tstate, long onModule, String str)
             throws JepException;
@@ -699,16 +699,15 @@ public class PyObject extends JepAccess implements AutoCloseable {
 
     private native long hashCode(long tstate, long pyObject);
 
-
     /**
-     * Create a dynamic proxy that implements the provided interfaces by
-     * calling the corresponding Python methods on this PyObject. This Python
-     * object must have methods matching those defined by the Java interfaces.
-     * Matching methods must have the same name, same number of arguments, and
-     * must return an object that can be converted to the correct return type.
-     * This method does not verify that this Python object has methods matching
-     * the Java interfaces. If a method is called on the proxy object that does
-     * not have a matching Python method a RuntimeException will be thrown. The
+     * Create a dynamic proxy that implements the provided interfaces by calling
+     * the corresponding Python methods on this PyObject. This Python object
+     * must have methods matching those defined by the Java interfaces. Matching
+     * methods must have the same name, same number of arguments, and must
+     * return an object that can be converted to the correct return type. This
+     * method does not verify that this Python object has methods matching the
+     * Java interfaces. If a method is called on the proxy object that does not
+     * have a matching Python method a RuntimeException will be thrown. The
      * returned proxy object can only be used when this PyObject is valid. It
      * cannot be used on other threads or after the Jep instance that it
      * originated from is closed.
@@ -722,10 +721,11 @@ public class PyObject extends JepAccess implements AutoCloseable {
      *            implement.
      * @return a Java proxy implementing the provided interfaces.
      * @throws JepException
-     *                if an error occurs or the conversion is not possible
+     *             if an error occurs or the conversion is not possible
      * @since 3.9
      */
-    public <T> T proxy(Class<T> primaryInterface, Class<?>... extraInterfaces) throws JepException {
+    public <T> T proxy(Class<T> primaryInterface, Class<?>... extraInterfaces)
+            throws JepException {
         ClassLoader loader = getClassLoader();
         Class<?>[] interfaces = null;
         if (extraInterfaces == null || extraInterfaces.length == 0) {
@@ -733,29 +733,33 @@ public class PyObject extends JepAccess implements AutoCloseable {
         } else {
             interfaces = new Class<?>[extraInterfaces.length + 1];
             interfaces[0] = primaryInterface;
-            System.arraycopy(extraInterfaces, 0, interfaces, 1, extraInterfaces.length);
+            System.arraycopy(extraInterfaces, 0, interfaces, 1,
+                    extraInterfaces.length);
         }
         InvocationHandler ih = new InvocationHandler(this, false);
-        return primaryInterface.cast(Proxy.newProxyInstance(loader, interfaces, ih));
+        return primaryInterface
+                .cast(Proxy.newProxyInstance(loader, interfaces, ih));
     }
 
     /**
-     * Attempt to convert this object to a Java equivalant using the builtin
-     * Jep conversions. The supported conversions are described in
-     * {@link Jep#getValue(String, Class)}.
+     * Attempt to convert this object to a Java equivalant using the builtin Jep
+     * conversions. The supported conversions are described in
+     * {@link jep.Interpreter#getValue(String, Class)}.
      * 
      * @param <T>
      *            the generic type of the return type
-     * @param clazz
+     * @param expectedType
      *            the Java class of the return type.
      * @return a Java version of this object
      * @throws JepException
-     *                if an error occurs or the conversion is not possible
+     *             if an error occurs or the conversion is not possible
      * @since 3.9
      */
     public <T> T as(Class<T> expectedType) throws JepException {
-        return expectedType.cast(as(pointer.tstate, pointer.pyObject, expectedType));
+        return expectedType
+                .cast(as(pointer.tstate, pointer.pyObject, expectedType));
     }
 
-    private native Object as(long tstate, long pyObject, Class expectedType) throws JepException;
+    private native Object as(long tstate, long pyObject, Class expectedType)
+            throws JepException;
 }

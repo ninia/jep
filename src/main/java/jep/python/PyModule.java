@@ -30,7 +30,8 @@ import jep.JepException;
 /**
  * PyModule.java - encapsulates a pointer to a PyModule
  * 
- * @deprecated Use {@link PyObject#getAttr(String)} and {@link PyObject#setAttr(String, Object)} instead.
+ * @deprecated Use {@link PyObject#getAttr(String)} and
+ *             {@link PyObject#setAttr(String, Object)} instead.
  *
  * @author Mike Johnson
  */
@@ -44,7 +45,7 @@ public class PyModule extends PyObject {
      * @param obj
      *            a <code>long</code> value
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      */
     public PyModule(Jep jep, long obj) throws JepException {
         super(jep, obj);
@@ -58,11 +59,12 @@ public class PyModule extends PyObject {
      *            a <code>String</code> value
      * @return a <code>PyModule</code> value
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      */
     public PyModule createModule(String name) throws JepException {
         super.isValid();
-        return new PyModule(jep, createModule(pointer.tstate, pointer.pyObject, name));
+        return new PyModule(jep,
+                createModule(pointer.tstate, pointer.pyObject, name));
     }
 
     /**
@@ -83,7 +85,7 @@ public class PyModule extends PyObject {
      *            a <code>String</code> value
      * @return an <code>Object</code> value
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      */
     public Object getValue(String str) throws JepException {
         super.isValid();

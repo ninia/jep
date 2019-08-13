@@ -49,7 +49,7 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
      *            whether the target is a python callable that should be invoked
      *            directly
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      */
     public InvocationHandler(Jep jep, long ltarget,
             final boolean functionalInterface) throws JepException {
@@ -65,7 +65,7 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
      *            whether the target is a python callable that should be invoked
      *            directly
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      */
     public InvocationHandler(final PyObject pyObject,
             final boolean functionalInterface) throws JepException {
@@ -105,17 +105,17 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
      *         return type as described above, a ClassCastException will be
      *         thrown by the method invocation on the proxy instance.
      * @throws Throwable
-     *                the exception to throw from the method invocation on the
-     *                proxy instance. The exception's type must be assignable
-     *                either to any of the exception types declared in the
-     *                throws clause of the interface method or to the unchecked
-     *                exception types java.lang.RuntimeException or
-     *                java.lang.Error. If a checked exception is thrown by this
-     *                method that is not assignable to any of the exception
-     *                types declared in the throws clause of the interface
-     *                method, then an UndeclaredThrowableException containing
-     *                the exception that was thrown by this method will be
-     *                thrown by the method invocation on the proxy instance.
+     *             the exception to throw from the method invocation on the
+     *             proxy instance. The exception's type must be assignable
+     *             either to any of the exception types declared in the throws
+     *             clause of the interface method or to the unchecked exception
+     *             types java.lang.RuntimeException or java.lang.Error. If a
+     *             checked exception is thrown by this method that is not
+     *             assignable to any of the exception types declared in the
+     *             throws clause of the interface method, then an
+     *             UndeclaredThrowableException containing the exception that
+     *             was thrown by this method will be thrown by the method
+     *             invocation on the proxy instance.
      */
     @Override
     public Object invoke(Object proxy, Method method, Object[] args)
@@ -126,7 +126,7 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
                 method, args, this.functionalInterface);
     }
 
-    public PyObject getPyObject(){
+    public PyObject getPyObject() {
         return pyObject;
     }
 

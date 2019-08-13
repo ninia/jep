@@ -72,9 +72,10 @@ class Proxy {
      *            the list of interfaces to implement
      * @return an <code>Object</code> value
      * @throws IllegalArgumentException
-     *                if an error occurs
+     *             if an error occurs
      */
-    protected static Object newProxyInstance(Jep jep, long ltarget, String[] interfaces) {
+    protected static Object newProxyInstance(Jep jep, long ltarget,
+            String[] interfaces) {
         ClassLoader loader = jep.getClassLoader();
         InvocationHandler ih = null;
         try {
@@ -103,7 +104,8 @@ class Proxy {
      */
     protected static PyObject getPyObject(Object proxy) {
         if (java.lang.reflect.Proxy.isProxyClass(proxy.getClass())) {
-            java.lang.reflect.InvocationHandler ih = java.lang.reflect.Proxy.getInvocationHandler(proxy);
+            java.lang.reflect.InvocationHandler ih = java.lang.reflect.Proxy
+                    .getInvocationHandler(proxy);
             if (ih instanceof InvocationHandler) {
                 return ((InvocationHandler) ih).getPyObject();
             }
