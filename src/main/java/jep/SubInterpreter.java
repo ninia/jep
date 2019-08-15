@@ -53,10 +53,12 @@ public class SubInterpreter extends Jep {
      * @throws JepException
      *             if an error occurs
      */
+    @SuppressWarnings("deprecation")
     public SubInterpreter() throws JepException {
         super();
     }
 
+    @SuppressWarnings("deprecation")
     public SubInterpreter(JepConfig config) throws JepException {
         super(config);
     }

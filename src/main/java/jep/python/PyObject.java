@@ -90,6 +90,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      * @throws JepException
      *             if it is not safe to use this python object
      */
+    @SuppressWarnings("deprecation")
     protected void checkValid() throws JepException {
         jep.isValidThread();
         if (this.pointer.isDisposed()) {
@@ -114,6 +115,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public void close() throws JepException {
         /*
          * Do not use isValid() because there should be no exception if this is
