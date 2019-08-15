@@ -20,10 +20,16 @@ environment:
     - PYTHON: "C:\\Python36-x64"
       JAVA_HOME: "C:\\Program Files\\Java\\jdk1.8.0"
 
-    - PYTHON: "C:\\Python35-x64"
-      JAVA_HOME: "C:\\Program Files\\Java\\jdk9"
     - PYTHON: "C:\\Python36-x64"
       JAVA_HOME: "C:\\Program Files\\Java\\jdk9"
+    - PYTHON: "C:\\Python36-x64"
+      JAVA_HOME: "C:\\Program Files\\Java\\jdk10"
+    - PYTHON: "C:\\Python36-x64"
+      JAVA_HOME: "C:\\Program Files\\Java\\jdk11"
+    - PYTHON: "C:\\Python37-x64"
+      JAVA_HOME: "C:\\Program Files\\Java\\jdk11"
+    - PYTHON: "C:\\Python37-x64"
+      JAVA_HOME: "C:\\Program Files\\Java\\jdk12"
 
 build: off
 
