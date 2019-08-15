@@ -61,7 +61,6 @@ public class Run {
             // "set" by eval'ing it
             jep.eval("sys.argv = argv = " + scriptArgv);
             if (!file.endsWith("jep" + File.separator + "console.py")) {
-                jep.eval("__name__ = '__main__'");
                 jep.runScript(file);
             } else {
                 interactive = true;
