@@ -210,14 +210,16 @@ public class ClassList implements ClassEnquirer {
                 Thread.currentThread().getContextClassLoader(),
                 Jep.class.getClassLoader() };
         String rsc = "jep/classlist_";
-        if (version.startsWith("10.")) {
-            rsc += "10";
-        } else if (version.startsWith("9.")) {
-            rsc += "9";
+        if (version.startsWith("1.7")) {
+            rsc += "7";
         } else if (version.startsWith("1.8")) {
             rsc += "8";
+        } else if (version.startsWith("9")) {
+            rsc += "9";
+        } else if (version.startsWith("10")) {
+            rsc += "10";
         } else {
-            rsc += "7";
+            rsc += "11";
         }
         rsc += ".txt";
 
@@ -357,7 +359,7 @@ public class ClassList implements ClassEnquirer {
      * 
      * @return <code>ClassList</code> instance
      * @throws JepException
-     *                if an error occurs
+     *             if an error occurs
      */
     public static synchronized ClassList getInstance() throws JepException {
         if (ClassList.inst == null)
