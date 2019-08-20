@@ -214,9 +214,9 @@ public class ClassList implements ClassEnquirer {
             rsc += "7";
         } else if (version.startsWith("1.8")) {
             rsc += "8";
-        } else if (version.startsWith("9")) {
+        } else if (version.startsWith("9.")) {
             rsc += "9";
-        } else if (version.startsWith("10")) {
+        } else if (version.startsWith("10.")) {
             rsc += "10";
         } else {
             rsc += "11";
