@@ -68,7 +68,6 @@ public class Run {
             if (interactive) {
                 jep.set("jepInstance", jep);
                 jep.eval("from jep import console");
-                jep.setInteractive(true);
                 jep.eval("console.prompt(jepInstance)");
             }
         } catch (Throwable t) {

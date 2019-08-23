@@ -86,6 +86,26 @@ if has_readline:
 PS1 = ">>> "
 PS2 = "... "
 
+evalLines = []
+
+def jepeval(line):
+    global evalLines
+    if not line:
+        if evalLines:
+            code = "\n".join(evalLines)
+            evalLines = None
+            exec(compile(code, '<stdin>', 'single'), globals(), globals())
+        return True
+    elif not evalLines:
+        try:
+            exec(compile(line, '<stdin>', 'single'), globals(), globals())
+            return True
+        except SyntaxError as err:
+            evalLines = [line]
+            return False
+    else:
+        evalLines.append(line)
+        return False
 
 def prompt(jep):
     try:
@@ -93,7 +113,7 @@ def prompt(jep):
         while True:
             ran = True
             try:
-                ran = jep.eval(line)
+                ran = jepeval(line)
             except Exception as err:
                 printedErr = False
                 try:

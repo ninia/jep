@@ -58,10 +58,15 @@ public class JepConfig {
      * Sets whether <code>Jep.eval(String)</code> should support the slower
      * behavior of potentially waiting for multiple statements
      * 
+     * @deprecated Interactive mode will be removed in a future release. See
+     *             console.py for an example of how to interactively execute
+     *             Python using the builtin compile() and exec() functions.
+     *
      * @param interactive
      *            whether the Jep instance should be interactive
      * @return a reference to this JepConfig
      */
+    @Deprecated
     public JepConfig setInteractive(boolean interactive) {
         this.interactive = interactive;
         return this;

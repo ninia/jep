@@ -292,8 +292,8 @@ public class Jep implements Interpreter {
                 includePath = includePath.replace("\\", "\\\\");
             }
 
-            eval("import sys");
-            eval("sys.path += '" + includePath + "'.split('"
+            exec("import sys");
+            exec("sys.path += '" + includePath + "'.split('"
                     + File.pathSeparator + "')");
         }
         boolean hasSharedModules = config.sharedModules != null
@@ -303,16 +303,14 @@ public class Jep implements Interpreter {
         if (hasSharedModules) {
             set("sharedModules", config.sharedModules);
             set("sharedImporter", MainInterpreter.getMainInterpreter());
-            eval("jep.shared_modules_hook.setupImporter(sharedModules,sharedImporter)");
-            eval("del sharedModules");
-            eval("del sharedImporter");
-            eval(null); // flush
+            exec("jep.shared_modules_hook.setupImporter(sharedModules,sharedImporter)");
+            exec("del sharedModules");
+            exec("del sharedImporter");
         }
         setupJavaImportHook(config.classEnquirer);
         if (config.redirectOutputStreams) {
-            eval("from jep import redirect_streams");
-            eval("redirect_streams.setup()");
-            eval(null); // flush
+            exec("from jep import redirect_streams");
+            exec("redirect_streams.setup()");
         }
     }
 
@@ -322,11 +320,10 @@ public class Jep implements Interpreter {
             enquirer = ClassList.getInstance();
         }
         set("classlist", enquirer);
-        eval("from jep import java_import_hook");
-        eval("java_import_hook.setupImporter(classlist)");
-        eval("del classlist");
-        eval("del java_import_hook");
-        eval(null); // flush
+        exec("from jep import java_import_hook");
+        exec("java_import_hook.setupImporter(classlist)");
+        exec("del classlist");
+        exec("del java_import_hook");
     }
 
     private native long init(ClassLoader classloader, boolean hasSharedModules,
@@ -1044,7 +1041,7 @@ public class Jep implements Interpreter {
         }
 
         if (isSubInterpreter) {
-            eval("import sys");
+            exec("import sys");
             Boolean hasThreads = getValue("'threading' in sys.modules",
                     Boolean.class);
             if (hasThreads.booleanValue()) {
@@ -1064,8 +1061,8 @@ public class Jep implements Interpreter {
         this.closed = true;
 
         if (isSubInterpreter) {
-            eval(this.tstate, "import jep");
-            eval(this.tstate, "jep.shared_modules_hook.teardownImporter()");
+            exec(this.tstate, "import jep");
+            exec(this.tstate, "jep.shared_modules_hook.teardownImporter()");
         }
 
         this.close(tstate);

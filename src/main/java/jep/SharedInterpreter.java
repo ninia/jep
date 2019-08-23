@@ -52,7 +52,7 @@ public class SharedInterpreter extends Jep {
 
     public SharedInterpreter() throws JepException {
         super(new JepConfig(), false);
-	eval("__name__ = '__main__'");
+	exec("__name__ = '__main__'");
     }
 
     @Override

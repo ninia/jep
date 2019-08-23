@@ -31,11 +31,10 @@ public class TestNumpyGILFreeze {
             + "   print 'python method complete'\n";
 
     public static void main(String[] args) throws JepException {
-        JepConfig cfg = new JepConfig().setInteractive(true);
         Interpreter interp = null;
         try {
-            Interpreter interp0 = new SubInterpreter(cfg);
-            interp = new SubInterpreter(cfg);
+            Interpreter interp0 = new SubInterpreter();
+            interp = new SubInterpreter();
             interp0.close();
             interp.eval("import numpy");
             /*

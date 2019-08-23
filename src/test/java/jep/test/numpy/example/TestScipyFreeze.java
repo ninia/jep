@@ -22,10 +22,8 @@ import jep.SubInterpreter;
 public class TestScipyFreeze {
 
     public static void main(String[] args) {
-        try (Interpreter interp0 = new SubInterpreter(
-                new JepConfig().setInteractive(true));
-                Interpreter interp = new SubInterpreter(
-                        new JepConfig().setInteractive(true))) {
+        try (Interpreter interp0 = new SubInterpreter();
+                Interpreter interp = new SubInterpreter()) {
             interp0.eval("from scipy.special import erf");
 
             // this line will freeze

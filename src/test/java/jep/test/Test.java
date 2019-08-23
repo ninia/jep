@@ -56,7 +56,7 @@ public class Test implements Runnable {
                 File pwd = new File(".");
 
                 this.interp = new SubInterpreter(
-                        new JepConfig().setInteractive(this.testEval)
+                        new JepConfig()
                                 .addIncludePaths(pwd.getAbsolutePath()));
                 interp.set("testo", this);
                 interp.set("test", "value from java.");
@@ -292,7 +292,7 @@ public class Test implements Runnable {
             public void run() {
                 Jep interp = null;
                 try {
-                    JepConfig cfg = new JepConfig().setInteractive(true)
+                    JepConfig cfg = new JepConfig()
                             .setClassLoader(restrictedClassLoader);
                     interp = new SubInterpreter(cfg);
                     interp.eval("from java.io import File");

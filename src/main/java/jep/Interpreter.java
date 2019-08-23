@@ -141,6 +141,13 @@ public interface Interpreter extends AutoCloseable {
      * {@link #getValue(String)} instead.
      * </p>
      * 
+     * <p>
+     * Note: Interactive mode will be removed in a future release. This method
+     * may still be used for executing individual statements. See console.py
+     * for an example of how to interactively execute Python using the builtin
+     * compile() and exec() functions.
+     * </p>
+     *
      * @param str
      *            a <code>String</code> statement to eval
      * @return true if statement complete and was executed.
