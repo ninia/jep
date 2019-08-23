@@ -299,7 +299,8 @@ public class TestGetJPyObject {
     public static void testProxy(Interpreter interp) throws JepException {
         interp.eval("l = [7]");
         PyObject list = interp.getValue("l", PyObject.class);
-        Deque q = list.proxy(Deque.class);
+	@SuppressWarnings("unchecked")
+        Deque<Number> q = list.proxy(Deque.class);
         Number n = (Number) q.pop();
         if (n.intValue() != 7) {
             throw new IllegalStateException("list.pop returned wrong value");
