@@ -143,8 +143,8 @@ public interface Interpreter extends AutoCloseable {
      * 
      * <p>
      * Note: Interactive mode will be removed in a future release. This method
-     * may still be used for executing individual statements. See console.py
-     * for an example of how to interactively execute Python using the builtin
+     * may still be used for executing individual statements. See console.py for
+     * an example of how to interactively execute Python using the builtin
      * compile() and exec() functions.
      * </p>
      *

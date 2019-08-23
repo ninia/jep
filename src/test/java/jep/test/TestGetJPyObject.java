@@ -22,7 +22,8 @@ public class TestGetJPyObject {
         PyObject[] diverseTypes = interp.getValue("t", PyObject[].class);
         for (int i = 0; i < diverseTypes.length; i += 1) {
             interp.set("t2", diverseTypes[i]);
-            Boolean b = interp.getValue("t[" + i + "] is not t2", Boolean.class);
+            Boolean b = interp.getValue("t[" + i + "] is not t2",
+                    Boolean.class);
             if (b.booleanValue()) {
                 throw new IllegalStateException(
                         "JPyObject " + i + " is not preserving identity.");
@@ -299,9 +300,9 @@ public class TestGetJPyObject {
     public static void testProxy(Interpreter interp) throws JepException {
         interp.eval("l = [7]");
         PyObject list = interp.getValue("l", PyObject.class);
-	@SuppressWarnings("unchecked")
+        @SuppressWarnings("unchecked")
         Deque<Number> q = list.proxy(Deque.class);
-        Number n = (Number) q.pop();
+        Number n = q.pop();
         if (n.intValue() != 7) {
             throw new IllegalStateException("list.pop returned wrong value");
         }

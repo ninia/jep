@@ -56,8 +56,7 @@ public class Test implements Runnable {
                 File pwd = new File(".");
 
                 this.interp = new SubInterpreter(
-                        new JepConfig()
-                                .addIncludePaths(pwd.getAbsolutePath()));
+                        new JepConfig().addIncludePaths(pwd.getAbsolutePath()));
                 interp.set("testo", this);
                 interp.set("test", "value from java.");
                 interp.set("testi", i);

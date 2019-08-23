@@ -54,7 +54,7 @@ public class SharedInterpreter extends Jep {
 
     public SharedInterpreter() throws JepException {
         super(config, false);
-	exec("__name__ = '__main__'");
+        exec("__name__ = '__main__'");
     }
 
     @Override
@@ -81,9 +81,11 @@ public class SharedInterpreter extends Jep {
      */
     public static void setConfig(JepConfig config) throws JepException {
         if (initialized) {
-            throw new JepException("JepConfig must be set before creating any SharedInterpreters");
-        }else if (config.sharedModules != null) {
-            throw new JepException("sharedModules cannot be used with SharedInterpreters");
+            throw new JepException(
+                    "JepConfig must be set before creating any SharedInterpreters");
+        } else if (config.sharedModules != null) {
+            throw new JepException(
+                    "sharedModules cannot be used with SharedInterpreters");
         }
         SharedInterpreter.config = config;
     }

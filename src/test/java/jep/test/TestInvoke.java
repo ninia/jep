@@ -43,7 +43,8 @@ public class TestInvoke {
             }
 
             // test that args are passed in order
-            result = interp.invoke("invokeVarArgsExplicit", true, null, 2, "xyz");
+            result = interp.invoke("invokeVarArgsExplicit", true, null, 2,
+                    "xyz");
             if (result != null) {
                 throw new IllegalStateException(
                         "Received " + result + " but expected null");

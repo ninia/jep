@@ -53,16 +53,16 @@ public class TestStaticMethodTypes {
 
     public static Byte objectByte(Byte b) {
         if (b != null && b.getClass() != Byte.class) {
-            throw new RuntimeException("Byte argument is actually an "
-                    + b.getClass().getName());
+            throw new RuntimeException(
+                    "Byte argument is actually an " + b.getClass().getName());
         }
         return b;
     }
 
     public static Short objectShort(Short s) {
         if (s != null && s.getClass() != Short.class) {
-            throw new RuntimeException("Short argument is actually an "
-                    + s.getClass().getName());
+            throw new RuntimeException(
+                    "Short argument is actually an " + s.getClass().getName());
         }
         return s;
     }
@@ -85,40 +85,40 @@ public class TestStaticMethodTypes {
 
     public static Float objectFloat(Float f) {
         if (f != null && f.getClass() != Float.class) {
-            throw new RuntimeException("Float argument is actually an "
-                    + f.getClass().getName());
+            throw new RuntimeException(
+                    "Float argument is actually an " + f.getClass().getName());
         }
         return f;
     }
 
     public static Long objectLong(Long l) {
         if (l != null && l.getClass() != Long.class) {
-            throw new RuntimeException("Long argument is actually an "
-                    + l.getClass().getName());
+            throw new RuntimeException(
+                    "Long argument is actually an " + l.getClass().getName());
         }
         return l;
     }
 
     public static Double objectDouble(Double d) {
         if (d != null && d.getClass() != Double.class) {
-            throw new RuntimeException("Double argument is actually an "
-                    + d.getClass().getName());
+            throw new RuntimeException(
+                    "Double argument is actually an " + d.getClass().getName());
         }
         return d;
     }
 
     public static String objectString(String s) {
         if (s != null && s.getClass() != String.class) {
-            throw new RuntimeException("String argument is actually an "
-                    + s.getClass().getName());
+            throw new RuntimeException(
+                    "String argument is actually an " + s.getClass().getName());
         }
         return s;
     }
 
     public static Class objectClass(Class c) {
         if (c != null && c.getClass() != Class.class) {
-            throw new RuntimeException("Class argument is actually an "
-                    + c.getClass().getName());
+            throw new RuntimeException(
+                    "Class argument is actually an " + c.getClass().getName());
         }
         return c;
     }
@@ -129,8 +129,8 @@ public class TestStaticMethodTypes {
 
     public static List<?> list(List<?> l) {
         if (l != null && !List.class.isAssignableFrom(l.getClass())) {
-            throw new RuntimeException("List argument is actually an "
-                    + l.getClass().getName());
+            throw new RuntimeException(
+                    "List argument is actually an " + l.getClass().getName());
         }
         return l;
     }
@@ -143,16 +143,15 @@ public class TestStaticMethodTypes {
         return l;
     }
 
-    public static Map<?,?> map(Map<?,?> m) {
+    public static Map<?, ?> map(Map<?, ?> m) {
         if (m != null && !Map.class.isAssignableFrom(m.getClass())) {
-            throw new RuntimeException("Map argument is actually an "
-                    + m.getClass().getName());
+            throw new RuntimeException(
+                    "Map argument is actually an " + m.getClass().getName());
         }
         return m;
     }
 
-
-   public static String[] stringArray(String[] a) {
+    public static String[] stringArray(String[] a) {
         if (a != null && a.getClass() != String[].class) {
             throw new RuntimeException("String[] argument is actually an "
                     + a.getClass().getName());
@@ -162,8 +161,8 @@ public class TestStaticMethodTypes {
 
     public static int[] intArray(int[] a) {
         if (a != null && a.getClass() != int[].class) {
-            throw new RuntimeException("int[] argument is actually an "
-                    + a.getClass().getName());
+            throw new RuntimeException(
+                    "int[] argument is actually an " + a.getClass().getName());
         }
         return a;
     }

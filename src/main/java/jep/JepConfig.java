@@ -200,7 +200,7 @@ public class JepConfig {
      */
     @Deprecated
     public Jep createJep() throws JepException {
-        return new SubInterpreter(this);
+        return createSubInterpreter();
     }
 
     /**

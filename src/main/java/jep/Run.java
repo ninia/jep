@@ -90,9 +90,9 @@ public class Run {
      * @param args
      *            a <code>String</code> value
      * @throws Throwable
-     *                if an error occurs
+     *             if an error occurs
      * @throws Exception
-     *                if an error occurs
+     *             if an error occurs
      */
     public static void main(String args[]) throws Throwable {
         String scriptArgs[] = new String[args.length];
