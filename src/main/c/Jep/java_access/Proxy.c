@@ -71,8 +71,8 @@ jobject jep_Proxy_getPyObject(JNIEnv* env, jobject object)
     Py_BEGIN_ALLOW_THREADS
     if (getPyObject
             || (getPyObject = (*env)->GetStaticMethodID(env, JPROXY_TYPE,
-                                         "getPyObject",
-                                         "(Ljava/lang/Object;)Ljep/python/PyObject;"))) {
+                              "getPyObject",
+                              "(Ljava/lang/Object;)Ljep/python/PyObject;"))) {
         result = (*env)->CallStaticObjectMethod(env, JPROXY_TYPE, getPyObject, object);
     }
     Py_END_ALLOW_THREADS

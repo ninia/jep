@@ -526,7 +526,7 @@ JNIEXPORT jobject JNICALL Java_jep_python_PyObject_as
     pyObject = (PyObject*) pyobj;
     PyEval_AcquireThread(jepThread->tstate);
     ret = PyObject_As_jobject(env, pyObject, expectedType);
-    if (!ret) { 
+    if (!ret) {
         process_py_exception(env);
     }
     PyEval_ReleaseThread(jepThread->tstate);

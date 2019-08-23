@@ -33,7 +33,8 @@ jobject java_nio_FloatBuffer_order(JNIEnv* env, jobject this)
 {
     jobject result = NULL;
     Py_BEGIN_ALLOW_THREADS
-    if (JNI_METHOD(order, env, JFLOATBUFFER_TYPE, "order", "()Ljava/nio/ByteOrder;")) {
+    if (JNI_METHOD(order, env, JFLOATBUFFER_TYPE, "order",
+                   "()Ljava/nio/ByteOrder;")) {
         result = (*env)->CallObjectMethod(env, this, order);
     }
     Py_END_ALLOW_THREADS

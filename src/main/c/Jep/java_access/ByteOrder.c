@@ -35,7 +35,7 @@ jobject java_nio_ByteOrder_nativeOrder(JNIEnv* env)
     Py_BEGIN_ALLOW_THREADS
     if (nativeOrder
             || (nativeOrder = (*env)->GetStaticMethodID(env, JBYTEORDER_TYPE, "nativeOrder",
-                           "()Ljava/nio/ByteOrder;"))) {
+                              "()Ljava/nio/ByteOrder;"))) {
         result = (*env)->CallStaticObjectMethod(env, JBYTEORDER_TYPE, nativeOrder);
     }
     Py_END_ALLOW_THREADS

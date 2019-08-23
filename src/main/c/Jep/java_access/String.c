@@ -30,12 +30,13 @@
 static jmethodID init     = 0;
 static jmethodID getBytes = 0;
 
-jstring java_lang_String_new_BArray_String(JNIEnv* env, jbyteArray bytes, jstring charsetName)
+jstring java_lang_String_new_BArray_String(JNIEnv* env, jbyteArray bytes,
+        jstring charsetName)
 {
     jstring result = NULL;
     Py_BEGIN_ALLOW_THREADS
     if (JNI_METHOD(init, env, JSTRING_TYPE, "<init>",
-                    "([BLjava/lang/String;)V")) {
+                   "([BLjava/lang/String;)V")) {
         result = (*env)->NewObject(env, JSTRING_TYPE, init, bytes, charsetName);
     }
     Py_END_ALLOW_THREADS

@@ -143,7 +143,7 @@ static jobject invokeDefault(JNIEnv *env, jobject obj, jobject method,
 }
 
 /**
- * The return type for a method may be a primitive class but the interface for 
+ * The return type for a method may be a primitive class but the interface for
  * InvocationHandler requires a boxed type, so this returns the box type for
  * primitives so that the jep conversion has the right expected type.
  */
@@ -169,10 +169,10 @@ static jclass getObjectReturnType(JNIEnv *env, jclass retType)
     } else if ((*env)->IsSameObject(env, retType, JDOUBLE_TYPE)) {
         result = JDOUBLE_OBJ_TYPE;
     } else if ((*env)->IsSameObject(env, retType, JVOID_TYPE)) {
-        /* 
-	 * Maybe the jep conversion should require None for Void but
-	 * the Proxy code seems to accept anything so just go with that
-	 */
+        /*
+         * Maybe the jep conversion should require None for Void but
+         * the Proxy code seems to accept anything so just go with that
+         */
         result = JOBJECT_TYPE;
     } else {
         /* Nothing should make it here but just in case. */
@@ -191,7 +191,7 @@ static jclass getObjectReturnType(JNIEnv *env, jclass retType)
 JNIEXPORT jobject JNICALL Java_jep_python_InvocationHandler_invoke(JNIEnv *env,
         jclass class, jobject obj, jlong _jepThread, jlong _target, jobject method,
         jobjectArray args, jboolean functionalInterface
-                                                           )
+                                                                  )
 {
     JepThread     *jepThread = NULL;
     PyObject      *target    = NULL;

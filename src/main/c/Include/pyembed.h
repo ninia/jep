@@ -49,7 +49,8 @@ struct __JepThread {
 typedef struct __JepThread JepThread;
 
 
-void pyembed_preinit(JNIEnv*, jint, jint, jint, jint, jint, jint, jint, jstring);
+void pyembed_preinit(JNIEnv*, jint, jint, jint, jint, jint, jint, jint,
+                     jstring);
 void pyembed_startup(JNIEnv*, jobjectArray);
 void pyembed_shutdown(JavaVM*);
 void pyembed_shared_import(JNIEnv*, jstring);
@@ -62,7 +63,7 @@ void pyembed_run(JNIEnv*, intptr_t, char*);
 jobject pyembed_invoke_method(JNIEnv*, intptr_t, const char*, jobjectArray,
                               jobject);
 jobject pyembed_invoke_method_as(JNIEnv*, intptr_t, const char*, jobjectArray,
-                              jobject, jclass);
+                                 jobject, jclass);
 jobject pyembed_invoke(JNIEnv*, PyObject*, jobjectArray, jobject);
 jobject pyembed_invoke_as(JNIEnv*, PyObject*, jobjectArray, jobject, jclass);
 void pyembed_eval(JNIEnv*, intptr_t, char*);
