@@ -48,10 +48,12 @@ package jep;
  */
 public class SharedInterpreter extends Jep {
 
+    private static JepConfig config = new JepConfig();
+
     private static boolean initialized = false;
 
     public SharedInterpreter() throws JepException {
-        super(new JepConfig(), false);
+        super(config, false);
 	exec("__name__ = '__main__'");
     }
 
@@ -59,11 +61,31 @@ public class SharedInterpreter extends Jep {
     protected void configureInterpreter(JepConfig config) throws JepException {
         synchronized (SharedInterpreter.class) {
             if (!initialized) {
-                setupJavaImportHook(config.classEnquirer);
+                super.configureInterpreter(config);
                 initialized = true;
             }
         }
+    }
 
+    /**
+     * Sets interpreter settings for the all SharedInterpreters. This method
+     * must be called before the first SharedInterpreter is created in the
+     * process.
+     * 
+     * @param config
+     *            the jep configuration to use.
+     * 
+     * @throws JepException
+     *             if an error occurs
+     * @since 3.9
+     */
+    public static void setConfig(JepConfig config) throws JepException {
+        if (initialized) {
+            throw new JepException("JepConfig must be set before creating any SharedInterpreters");
+        }else if (config.sharedModules != null) {
+            throw new JepException("sharedModules cannot be used with SharedInterpreters");
+        }
+        SharedInterpreter.config = config;
     }
 
 }
