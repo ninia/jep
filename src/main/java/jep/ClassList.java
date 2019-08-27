@@ -48,7 +48,7 @@ import java.util.jar.Manifest;
 /**
  * A singleton that searches for loaded classes from the JRE and the Java
  * classpath. This is the default ClassEnquirer that is used if no ClassEnquirer
- * is specified when constructing Jep instances. ClassList is also used by the
+ * is specified when constructing an Interpreter. ClassList is also used by the
  * command line <code>jep</code> script.
  * 
  * @author Mike Johnson

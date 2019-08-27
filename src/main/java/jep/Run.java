@@ -27,7 +27,7 @@ package jep;
 import java.io.File;
 
 /**
- * Executes a Python script in a Jep sub-interpreter.
+ * Executes a Python script in a Jep Interpreter.
  * 
  * @author Mike Johnson
  */
@@ -47,8 +47,8 @@ public class Run {
 
     public static int run(boolean eventDispatch) {
         try (Jep jep = new SharedInterpreter()) {
-            jep.eval("import sys");
-            jep.eval("sys.path.append('.')");
+            jep.exec("import sys");
+            jep.exec("sys.path.append('.')");
 
             // Windows file system compatibility
             if (scriptArgv.contains("\\")) {
@@ -59,7 +59,7 @@ public class Run {
             }
 
             // "set" by eval'ing it
-            jep.eval("sys.argv = argv = " + scriptArgv);
+            jep.exec("sys.argv = argv = " + scriptArgv);
             if (!file.endsWith("jep" + File.separator + "console.py")) {
                 jep.runScript(file);
             } else {
@@ -67,8 +67,8 @@ public class Run {
             }
             if (interactive) {
                 jep.set("jepInstance", jep);
-                jep.eval("from jep import console");
-                jep.eval("console.prompt(jepInstance)");
+                jep.exec("from jep import console");
+                jep.exec("console.prompt(jepInstance)");
             }
         } catch (Throwable t) {
             t.printStackTrace();

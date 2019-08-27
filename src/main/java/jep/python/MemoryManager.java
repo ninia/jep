@@ -33,8 +33,8 @@ import java.util.Set;
 import jep.JepException;
 
 /**
- * Manages the native memory associated with PyObjects in a Jep instance.
- * 
+ * Manages the native memory associated with PyObjects in an Interpreter.
+ *
  * @see <a href=
  *      "http://www.oracle.com/technetwork/articles/java/finalization-137655.html">How
  *      to Handle Java Finalization's Memory-Retention Issues</a>
@@ -63,7 +63,7 @@ public final class MemoryManager {
 
     /**
      * Cleans out all the known references to PyPointers associated with this
-     * Jep instance.
+     * Interpreter.
      * 
      * @throws JepException
      *             if an error occurs
@@ -82,8 +82,8 @@ public final class MemoryManager {
     }
 
     /**
-     * Cleans out weak references to PyPointers associated with this Jep
-     * instance. Attempts to free memory earlier than a Jep.close() if the
+     * Cleans out weak references to PyPointers associated with this
+     * Interpreter. Attempts to free memory earlier than a Jep.close() if the
      * developer did not explicitly free the memory with PyObject.close().
      * 
      * @throws JepException

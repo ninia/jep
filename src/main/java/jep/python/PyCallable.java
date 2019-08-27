@@ -39,12 +39,12 @@ import jep.JepException;
  *
  * <pre>
  * {@code
- *     jep.eval("class Example(object):\n" +
+ *     jep.exec("class Example(object):\n" +
  *              "    def __init__(self):\n" +
  *              "        pass\n" +
  *              "    def helloWorld(self):\n" +
  *              "        return 'Hello World'\n");
- *     jep.eval("instance = Example()");
+ *     jep.exec("instance = Example()");
  *     PyObject pyobj = jep.getValue("instance", PyObject.class);
  *     PyCallable pyHelloWorld = PyObject.getAttr("helloWorld", PyCallable.class);
  *     String result = (String) pyHelloWorld.call();
@@ -55,7 +55,7 @@ import jep.JepException;
  *
  * <pre>
  * {@code
- *     jep.eval("def hello(arg):\n" +
+ *     jep.exec("def hello(arg):\n" +
  *              "    return 'Hello ' +  str(arg)");
  *     PyCallable pyHello = jep.getValue("hello", PyCallable.class);
  *     String result = (String) pyHello.call("World");

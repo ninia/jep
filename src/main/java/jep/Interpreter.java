@@ -37,7 +37,7 @@ import jep.python.PyObject;
  * interpreter and maintains an independent global namespace for Python
  * variables. Values can be passed from Java to Python using the
  * {@link #set(String, Object)} method. Various methods, such as
- * {@link #eval(String)} and {@link #invoke(String, Object...)} can be used to
+ * {@link #exec(String)} and {@link #invoke(String, Object...)} can be used to
  * execute Python code. Python variables can be accessed using
  * {@link #getValue(String)} and {@link #getValue(String, Class)}.
  * </p>
@@ -180,7 +180,7 @@ public interface Interpreter extends AutoCloseable {
     /**
      * 
      * <p>
-     * Retrieves a value from this Python sub-interpreter. Supports retrieving:
+     * Retrieves a value from this Python interpreter. Supports retrieving:
      * <ul>
      * <li>Java objects</li>
      * <li>Python None (null)</li>
@@ -254,6 +254,12 @@ public interface Interpreter extends AutoCloseable {
      * <tr>
      * <td>function, method</td>
      * <td>Any FunctionalInterface</td>
+     * </tr>
+     * <tr>
+     * <td>Buffer Protocol</td>
+     * <td>array</td>
+     * <td>This includes Python classes such as bytes, bytearray and
+     * array.array</td>
      * </tr>
      * <tr>
      * <td>numpy.ndarray</td>

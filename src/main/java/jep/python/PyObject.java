@@ -36,10 +36,6 @@ import jep.JepException;
  * This class is not thread safe and PyObjects can only be used on the Thread
  * where they were created. When an Interpreter instance is closed all PyObjects
  * from that instance will be invalid and can no longer be used.
- *
- * This class is in the process of a redesign so methods may be added, removed,
- * or changed in ways that are not backwards compatible in the future. When
- * using this class it may require extra effort to move to a new version of Jep.
  */
 public class PyObject extends JepAccess implements AutoCloseable {
 
@@ -293,7 +289,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      * Java interfaces. If a method is called on the proxy object that does not
      * have a matching Python method a RuntimeException will be thrown. The
      * returned proxy object can only be used when this PyObject is valid. It
-     * cannot be used on other threads or after the Jep instance that it
+     * cannot be used on other threads or after the Interpreter that it
      * originated from is closed.
      *
      * @param <T>

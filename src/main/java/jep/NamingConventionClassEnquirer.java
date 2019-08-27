@@ -34,7 +34,7 @@ import java.util.Set;
 /**
  * <p>
  * A simple {@link ClassEnquirer} to see if the package/class to be imported in
- * a Python sub-interpreter should be considered as a Java package/class. This
+ * a Python interpreter should be considered as a Java package/class. This
  * enquirer can check for import statements beginning with java, com, gov, etc
  * and country codes such as us, uk, fr, ch, etc.
  * </p>
