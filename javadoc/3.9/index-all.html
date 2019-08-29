@@ -136,12 +136,12 @@
 <dt><span class="memberNameLink"><a href="jep/python/MemoryManager.html#cleanupReferences--">cleanupReferences()</a></span> - Method in class jep.python.<a href="jep/python/MemoryManager.html" title="class in jep.python">MemoryManager</a></dt>
 <dd>
 <div class="block">Cleans out all the known references to PyPointers associated with this
- Jep instance.</div>
+ Interpreter.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="jep/python/MemoryManager.html#cleanupWeakReferences--">cleanupWeakReferences()</a></span> - Method in class jep.python.<a href="jep/python/MemoryManager.html" title="class in jep.python">MemoryManager</a></dt>
 <dd>
-<div class="block">Cleans out weak references to PyPointers associated with this Jep
- instance.</div>
+<div class="block">Cleans out weak references to PyPointers associated with this
+ Interpreter.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="jep/Interpreter.html#close--">close()</a></span> - Method in interface jep.<a href="jep/Interpreter.html" title="interface in jep">Interpreter</a></dt>
 <dd>&nbsp;</dd>
@@ -275,7 +275,7 @@
 <dt><span class="memberNameLink"><a href="jep/Interpreter.html#getValue-java.lang.String-">getValue(String)</a></span> - Method in interface jep.<a href="jep/Interpreter.html" title="interface in jep">Interpreter</a></dt>
 <dd>
 <div class="block">
- Retrieves a value from this Python sub-interpreter.</div>
+ Retrieves a value from this Python interpreter.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="jep/Interpreter.html#getValue-java.lang.String-java.lang.Class-">getValue(String, Class&lt;T&gt;)</a></span> - Method in interface jep.<a href="jep/Interpreter.html" title="interface in jep">Interpreter</a></dt>
 <dd>
@@ -493,7 +493,7 @@
 </dd>
 <dt><a href="jep/python/MemoryManager.html" title="class in jep.python"><span class="typeNameLink">MemoryManager</span></a> - Class in <a href="jep/python/package-summary.html">jep.python</a></dt>
 <dd>
-<div class="block">Manages the native memory associated with PyObjects in a Jep instance.</div>
+<div class="block">Manages the native memory associated with PyObjects in an Interpreter.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="jep/python/MemoryManager.html#MemoryManager--">MemoryManager()</a></span> - Constructor for class jep.python.<a href="jep/python/MemoryManager.html" title="class in jep.python">MemoryManager</a></dt>
 <dd>&nbsp;</dd>
@@ -507,7 +507,7 @@
 <dd>
 <div class="block">
  A simple <a href="jep/ClassEnquirer.html" title="interface in jep"><code>ClassEnquirer</code></a> to see if the package/class to be imported in
- a Python sub-interpreter should be considered as a Java package/class.</div>
+ a Python interpreter should be considered as a Java package/class.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="jep/NamingConventionClassEnquirer.html#NamingConventionClassEnquirer--">NamingConventionClassEnquirer()</a></span> - Constructor for class jep.<a href="jep/NamingConventionClassEnquirer.html" title="class in jep">NamingConventionClassEnquirer</a></dt>
 <dd>
@@ -587,7 +587,7 @@
 </dd>
 <dt><a href="jep/Run.html" title="class in jep"><span class="typeNameLink">Run</span></a> - Class in <a href="jep/package-summary.html">jep</a></dt>
 <dd>
-<div class="block">Executes a Python script in a Jep sub-interpreter.</div>
+<div class="block">Executes a Python script in a Jep Interpreter.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="jep/Run.html#run-boolean-">run(boolean)</a></span> - Static method in class jep.<a href="jep/Run.html" title="class in jep">Run</a></dt>
 <dd>&nbsp;</dd>
@@ -741,6 +741,10 @@
 <dd>
 <div class="block">Sets the ClassLoader to use when importing Java classes from Python</div>
 </dd>
+<dt><span class="memberNameLink"><a href="jep/SharedInterpreter.html#setConfig-jep.JepConfig-">setConfig(JepConfig)</a></span> - Static method in class jep.<a href="jep/SharedInterpreter.html" title="class in jep">SharedInterpreter</a></dt>
+<dd>
+<div class="block">Sets interpreter settings for the all SharedInterpreters.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="jep/PyConfig.html#setDontWriteBytecodeFlag-int-">setDontWriteBytecodeFlag(int)</a></span> - Method in class jep.<a href="jep/PyConfig.html" title="class in jep">PyConfig</a></dt>
 <dd>
 <div class="block">Set the Py_DontWriteBytecodeFlag variable on the python interpreter.</div>
@@ -777,8 +781,11 @@
 </dd>
 <dt><span class="memberNameLink"><a href="jep/JepConfig.html#setInteractive-boolean-">setInteractive(boolean)</a></span> - Method in class jep.<a href="jep/JepConfig.html" title="class in jep">JepConfig</a></dt>
 <dd>
-<div class="block">Sets whether <code>Jep.eval(String)</code> should support the slower
- behavior of potentially waiting for multiple statements</div>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>
+<div class="block"><span class="deprecationComment">Interactive mode will be removed in a future release. See
+             console.py for an example of how to interactively execute
+             Python using the builtin compile() and exec() functions.</span></div>
+</div>
 </dd>
 <dt><span class="memberNameLink"><a href="jep/MainInterpreter.html#setJepLibraryPath-java.lang.String-">setJepLibraryPath(String)</a></span> - Static method in class jep.<a href="jep/MainInterpreter.html" title="class in jep">MainInterpreter</a></dt>
 <dd>

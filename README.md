@@ -1,9 +1,9 @@
 Jep - Java Embedded Python
 ===========================
 
-[![Python: 2.7, 3.3, 3.4, 3.5, 3.6, 3.7](https://img.shields.io/pypi/pyversions/Jep.svg)](https://pypi.python.org/pypi/jep)
+[![Python: 2.7, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8](https://img.shields.io/pypi/pyversions/Jep.svg)](https://pypi.python.org/pypi/jep)
 [![License: zlib/libpng](https://img.shields.io/pypi/l/Jep.svg)](https://pypi.python.org/pypi/jep)
-[![Pypi: v3.8.0](https://img.shields.io/pypi/v/Jep.svg)](https://pypie.python.org/pypi/jep)
+[![Pypi: v3.9.0](https://img.shields.io/pypi/v/Jep.svg)](https://pypie.python.org/pypi/jep)
 [![Docs: wiki](https://img.shields.io/badge/docs-wiki-orange.svg)](https://github.com/ninia/jep/wiki)
 [![Docs: JavaDoc](https://img.shields.io/badge/docs-javadoc-orange.svg)](javadoc)
 
@@ -35,14 +35,14 @@ Building and installing require the JDK, Python, and optionally numpy to be inst
 
 Dependencies
 ------------
-* Python 2.7, 3.3, 3.4, 3.5, 3.6 or 3.7
+* Python 2.7, 3.3, 3.4, 3.5, 3.6, 3.7 or 3.8
 * Java >= 1.7
 * NumPy >= 1.7 (optional)
 
 Notable features
 ----------------
 * Interactive Jep console much like Python's interactive console
-* Supports multiple, simultaneous, mostly sandboxed sub-interpreters
+* Supports multiple, simultaneous, mostly sandboxed sub-interpreters or shared interpreters
 * Numpy support for Java primitive arrays
 
 Help

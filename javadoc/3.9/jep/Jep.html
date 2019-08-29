@@ -258,7 +258,7 @@ implements <a href="../jep/Interpreter.html" title="interface in jep">Interprete
 <td class="colFirst"><code>java.lang.Object</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../jep/Jep.html#getValue-java.lang.String-">getValue</a></span>(java.lang.String&nbsp;str)</code>
 <div class="block">
- Retrieves a value from this Python sub-interpreter.</div>
+ Retrieves a value from this Python interpreter.</div>
 </td>
 </tr>
 <tr id="i5" class="rowColor">
@@ -926,6 +926,13 @@ public&nbsp;void&nbsp;runScript(java.lang.String&nbsp;script,
  <p>
  Also, Python does not readily return object values from eval(). Use
  <a href="../jep/Interpreter.html#getValue-java.lang.String-"><code>Interpreter.getValue(String)</code></a> instead.
+ </p>
+ 
+ <p>
+ Note: Interactive mode will be removed in a future release. This method
+ may still be used for executing individual statements. See console.py for
+ an example of how to interactively execute Python using the builtin
+ compile() and exec() functions.
  </p></div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
@@ -970,7 +977,7 @@ public&nbsp;void&nbsp;runScript(java.lang.String&nbsp;script,
                           throws <a href="../jep/JepException.html" title="class in jep">JepException</a></pre>
 <div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../jep/Interpreter.html#getValue-java.lang.String-">Interpreter</a></code></span></div>
 <div class="block"><p>
- Retrieves a value from this Python sub-interpreter. Supports retrieving:
+ Retrieves a value from this Python interpreter. Supports retrieving:
  <ul>
  <li>Java objects</li>
  <li>Python None (null)</li>
@@ -1056,6 +1063,12 @@ public&nbsp;void&nbsp;runScript(java.lang.String&nbsp;script,
  <tr>
  <td>function, method</td>
  <td>Any FunctionalInterface</td>
+ </tr>
+ <tr>
+ <td>Buffer Protocol</td>
+ <td>array</td>
+ <td>This includes Python classes such as bytes, bytearray and
+ array.array</td>
  </tr>
  <tr>
  <td>numpy.ndarray</td>

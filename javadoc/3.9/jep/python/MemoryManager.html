@@ -109,7 +109,7 @@ var activeTableTab = "activeTableTab";
 <br>
 <pre>public final class <span class="typeNameLabel">MemoryManager</span>
 extends java.lang.Object</pre>
-<div class="block">Manages the native memory associated with PyObjects in a Jep instance.</div>
+<div class="block">Manages the native memory associated with PyObjects in an Interpreter.</div>
 <dl>
 <dt><span class="simpleTagLabel">Since:</span></dt>
 <dd>3.8</dd>
@@ -157,14 +157,14 @@ extends java.lang.Object</pre>
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../jep/python/MemoryManager.html#cleanupReferences--">cleanupReferences</a></span>()</code>
 <div class="block">Cleans out all the known references to PyPointers associated with this
- Jep instance.</div>
+ Interpreter.</div>
 </td>
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../jep/python/MemoryManager.html#cleanupWeakReferences--">cleanupWeakReferences</a></span>()</code>
-<div class="block">Cleans out weak references to PyPointers associated with this Jep
- instance.</div>
+<div class="block">Cleans out weak references to PyPointers associated with this
+ Interpreter.</div>
 </td>
 </tr>
 </table>
@@ -215,7 +215,7 @@ extends java.lang.Object</pre>
 <pre>public&nbsp;void&nbsp;cleanupReferences()
                        throws <a href="../../jep/JepException.html" title="class in jep">JepException</a></pre>
 <div class="block">Cleans out all the known references to PyPointers associated with this
- Jep instance.</div>
+ Interpreter.</div>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="../../jep/JepException.html" title="class in jep">JepException</a></code> - if an error occurs</dd>
@@ -230,8 +230,8 @@ extends java.lang.Object</pre>
 <h4>cleanupWeakReferences</h4>
 <pre>public&nbsp;void&nbsp;cleanupWeakReferences()
                            throws <a href="../../jep/JepException.html" title="class in jep">JepException</a></pre>
-<div class="block">Cleans out weak references to PyPointers associated with this Jep
- instance. Attempts to free memory earlier than a Jep.close() if the
+<div class="block">Cleans out weak references to PyPointers associated with this
+ Interpreter. Attempts to free memory earlier than a Jep.close() if the
  developer did not explicitly free the memory with PyObject.close().</div>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>

@@ -116,7 +116,7 @@ extends java.lang.AutoCloseable</pre>
  interpreter and maintains an independent global namespace for Python
  variables. Values can be passed from Java to Python using the
  <a href="../jep/Interpreter.html#set-java.lang.String-java.lang.Object-"><code>set(String, Object)</code></a> method. Various methods, such as
- <a href="../jep/Interpreter.html#eval-java.lang.String-"><code>eval(String)</code></a> and <a href="../jep/Interpreter.html#invoke-java.lang.String-java.lang.Object...-"><code>invoke(String, Object...)</code></a> can be used to
+ <a href="../jep/Interpreter.html#exec-java.lang.String-"><code>exec(String)</code></a> and <a href="../jep/Interpreter.html#invoke-java.lang.String-java.lang.Object...-"><code>invoke(String, Object...)</code></a> can be used to
  execute Python code. Python variables can be accessed using
  <a href="../jep/Interpreter.html#getValue-java.lang.String-"><code>getValue(String)</code></a> and <a href="../jep/Interpreter.html#getValue-java.lang.String-java.lang.Class-"><code>getValue(String, Class)</code></a>.
  </p>
@@ -172,7 +172,7 @@ extends java.lang.AutoCloseable</pre>
 <td class="colFirst"><code>java.lang.Object</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../jep/Interpreter.html#getValue-java.lang.String-">getValue</a></span>(java.lang.String&nbsp;str)</code>
 <div class="block">
- Retrieves a value from this Python sub-interpreter.</div>
+ Retrieves a value from this Python interpreter.</div>
 </td>
 </tr>
 <tr id="i4" class="altColor">
@@ -346,6 +346,13 @@ extends java.lang.AutoCloseable</pre>
  <p>
  Also, Python does not readily return object values from eval(). Use
  <a href="../jep/Interpreter.html#getValue-java.lang.String-"><code>getValue(String)</code></a> instead.
+ </p>
+ 
+ <p>
+ Note: Interactive mode will be removed in a future release. This method
+ may still be used for executing individual statements. See console.py for
+ an example of how to interactively execute Python using the builtin
+ compile() and exec() functions.
  </p></div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
@@ -401,7 +408,7 @@ extends java.lang.AutoCloseable</pre>
 <pre>java.lang.Object&nbsp;getValue(java.lang.String&nbsp;str)
                    throws <a href="../jep/JepException.html" title="class in jep">JepException</a></pre>
 <div class="block"><p>
- Retrieves a value from this Python sub-interpreter. Supports retrieving:
+ Retrieves a value from this Python interpreter. Supports retrieving:
  <ul>
  <li>Java objects</li>
  <li>Python None (null)</li>
@@ -484,6 +491,12 @@ extends java.lang.AutoCloseable</pre>
  <tr>
  <td>function, method</td>
  <td>Any FunctionalInterface</td>
+ </tr>
+ <tr>
+ <td>Buffer Protocol</td>
+ <td>array</td>
+ <td>This includes Python classes such as bytes, bytearray and
+ array.array</td>
  </tr>
  <tr>
  <td>numpy.ndarray</td>

@@ -17,7 +17,7 @@
     catch(err) {
     }
 //-->
-var methods = {"i0":10,"i1":10,"i2":42,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10};
+var methods = {"i0":10,"i1":10,"i2":42,"i3":10,"i4":10,"i5":10,"i6":10,"i7":42,"i8":10,"i9":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"],32:["t6","Deprecated Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -205,8 +205,11 @@ extends java.lang.Object</pre>
 <tr id="i7" class="rowColor">
 <td class="colFirst"><code><a href="../jep/JepConfig.html" title="class in jep">JepConfig</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../jep/JepConfig.html#setInteractive-boolean-">setInteractive</a></span>(boolean&nbsp;interactive)</code>
-<div class="block">Sets whether <code>Jep.eval(String)</code> should support the slower
- behavior of potentially waiting for multiple statements</div>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;
+<div class="block"><span class="deprecationComment">Interactive mode will be removed in a future release. See
+             console.py for an example of how to interactively execute
+             Python using the builtin compile() and exec() functions.</span></div>
+</div>
 </td>
 </tr>
 <tr id="i8" class="altColor">
@@ -268,7 +271,11 @@ extends java.lang.Object</pre>
 <ul class="blockList">
 <li class="blockList">
 <h4>setInteractive</h4>
-<pre>public&nbsp;<a href="../jep/JepConfig.html" title="class in jep">JepConfig</a>&nbsp;setInteractive(boolean&nbsp;interactive)</pre>
+<pre>@Deprecated
+public&nbsp;<a href="../jep/JepConfig.html" title="class in jep">JepConfig</a>&nbsp;setInteractive(boolean&nbsp;interactive)</pre>
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>&nbsp;<span class="deprecationComment">Interactive mode will be removed in a future release. See
+             console.py for an example of how to interactively execute
+             Python using the builtin compile() and exec() functions.</span></div>
 <div class="block">Sets whether <code>Jep.eval(String)</code> should support the slower
  behavior of potentially waiting for multiple statements</div>
 <dl>
