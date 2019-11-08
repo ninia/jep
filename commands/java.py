@@ -208,7 +208,7 @@ class setup_java(Command):
                     'INFO: the MACOSX_DEPLOYMENT_TARGET environment variable is set:', target)
 
                 result = shell('sw_vers -productVersion')
-                if target.split('.')[:2] != result.stdout.split('.')[:2]:
+                if target.split('.')[:2] != result.stdout.decode("utf-8").split('.')[:2]:
                     warning(
                         'This target appears to be incorrect for the system version:', result.stdout)
 
