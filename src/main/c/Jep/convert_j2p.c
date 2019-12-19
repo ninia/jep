@@ -248,12 +248,18 @@ PyObject* jobject_As_PyObject(JNIEnv *env, jobject jobj)
         } else if (array) {
             result = pyjarray_new(env, jobj);
         } else {
-            jobject jpyObject = jep_Proxy_getPyObject(env, jobj);
-            if (jpyObject) {
-                result = JPyObject_As_PyObject(env, jpyObject);
-            } else if ((*env)->ExceptionCheck(env)) {
-                process_java_exception(env);
-            } else {
+            int proxy_exc_occurred = 0;
+            if ((*env)->IsAssignableFrom(env, class, JAVA_PROXY_TYPE)) {
+                jobject jpyObject = jep_Proxy_getPyObject(env, jobj);
+                if (jpyObject) {
+                    result = JPyObject_As_PyObject(env, jpyObject);
+                } else if ((*env)->ExceptionCheck(env)) {
+                    proxy_exc_occurred = 1;
+                    process_java_exception(env);
+                }
+            }
+
+            if (!result && !proxy_exc_occurred) {
                 result = jobject_As_PyJObject(env, jobj, class);
 #if JEP_NUMPY_ENABLED
                 /*

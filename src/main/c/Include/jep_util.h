@@ -135,6 +135,7 @@ extern jclass JDOUBLE_ARRAY_TYPE;
     F(JMEMBER_TYPE, "java/lang/reflect/Member") \
     F(JMETHOD_TYPE, "java/lang/reflect/Method") \
     F(JFIELD_TYPE, "java/lang/reflect/Field") \
+    F(JAVA_PROXY_TYPE, "java/lang/reflect/Proxy") \
     F(JCONSTRUCTOR_TYPE, "java/lang/reflect/Constructor") \
     F(JTHROWABLE_TYPE, "java/lang/Throwable") \
     F(JMODIFIER_TYPE, "java/lang/reflect/Modifier") \
@@ -142,7 +143,7 @@ extern jclass JDOUBLE_ARRAY_TYPE;
     F(JHASHMAP_TYPE, "java/util/HashMap") \
     F(JCOLLECTIONS_TYPE, "java/util/Collections") \
     F(JCLASSLOADER_TYPE, "java/lang/ClassLoader") \
-    F(JPROXY_TYPE, "jep/Proxy") \
+    F(JEP_PROXY_TYPE, "jep/Proxy") \
     F(CLASSNOTFOUND_EXC_TYPE, "java/lang/ClassNotFoundException") \
     F(INDEX_EXC_TYPE, "java/lang/IndexOutOfBoundsException") \
     F(IO_EXC_TYPE, "java/io/IOException") \
