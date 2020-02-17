@@ -30,6 +30,18 @@ def get_java_home():
     if _java_home is not None:
         return _java_home
 
+    env_home = os.environ.get('JAVA_HOME')
+    if env_home:
+        if is_windows():
+           # remove quotes from each end if necessary
+            env_home = env_home.strip('"')
+        if os.path.exists(env_home):
+            _java_home = env_home
+            return env_home
+        else:
+            configure_error('Path ' + env_home +
+                            ' indicated by JAVA_HOME does not exist.')
+
     if is_osx():
         # newer macs have an executable to help us
         try:
@@ -46,18 +58,6 @@ def get_java_home():
         if os.path.exists(MAC_JAVA_HOME):
             _java_home = MAC_JAVA_HOME
             return _java_home
-
-    env_home = os.environ.get('JAVA_HOME')
-    if env_home:
-        if is_windows():
-           # remove quotes from each end if necessary
-            env_home = env_home.strip('"')
-        if os.path.exists(env_home):
-            _java_home = env_home
-            return env_home
-        else:
-            configure_error('Path ' + env_home +
-                            ' indicated by JAVA_HOME does not exist.')
 
     configure_error(
         'Please set the environment variable JAVA_HOME to a path containing the JDK.')
