@@ -49,7 +49,6 @@ public class TestSharedModulesThreads extends Thread {
             testFunction.append("    success = True");
             interp.eval(testFunction.toString());
             interp.eval("t = threading.Thread(target=testFunction)");
-            interp.eval("t.daemon = True");
             interp.eval("t.start()");
             interp.eval("t.join()");
             /*
