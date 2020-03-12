@@ -74,6 +74,12 @@ except OSError as e:
 
 if has_readline:
     try:
+        import rlcompleter
+        readline.set_completer(rlcompleter.Completer(locals()).complete)
+        readline.parse_and_bind("tab: complete")
+    except:
+        pass
+    try:
         history_file = os.path.join(os.path.expanduser('~'), '.jep')
         if not os.path.exists(history_file):
             readline.write_history_file(history_file)
