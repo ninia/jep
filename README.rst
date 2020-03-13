@@ -60,6 +60,7 @@ Help
 * `JavaDoc <https://ninia.github.io/jep/javadoc>`_
 * `Mailing List <https://groups.google.com/d/forum/jep-project>`_
 * `Known Issues <https://github.com/ninia/jep/issues>`_
+* `Contribution Guidelines <https://github.com/ninia/jep/blob/master/.github/CONTRIBUTING.md>`_
 * `Project Page <https://github.com/ninia/jep>`_
 
 We welcome comments, contributions, bug reports, wiki documentation, etc.
