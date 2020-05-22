@@ -60,13 +60,15 @@ class test(Command):
             environment['PATH'] = java_path + os.pathsep + py_path + os.pathsep + os.environ['PATH']
         else:
             environment['PATH'] = java_path + os.pathsep + os.environ['PATH']
-        prefix = sysconfig.get_config_var('prefix')
-        exec_prefix = sysconfig.get_config_var('exec_prefix')
-        if prefix == exec_prefix:
-            environment['PYTHONHOME'] = prefix
-        else:
-            environment['PYTHONHOME'] = prefix + ':' + exec_prefix
-
+        venv = hasattr(sys, 'real_prefix') or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix)
+        if not venv:
+            # PYTHONHOME helps locate libraries but should not be set in a virtual env
+            prefix = sysconfig.get_config_var('prefix')
+            exec_prefix = sysconfig.get_config_var('exec_prefix')
+            if prefix == exec_prefix:
+                environment['PYTHONHOME'] = prefix
+            else:
+                environment['PYTHONHOME'] = prefix + ':' + exec_prefix
 
         # find the jep library and makes sure it's named correctly
         build_ext = self.get_finalized_command('build_ext')
