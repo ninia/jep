@@ -5,7 +5,7 @@
     :target: https://pypi.python.org/pypi/jep
 
 .. image:: https://img.shields.io/pypi/v/Jep.svg
-    :target: https://pypie.python.org/pypi/jep
+    :target: https://pypi.python.org/pypi/jep
 	
 .. image:: https://img.shields.io/badge/docs-wiki-orange.svg
     :target: https://github.com/ninia/jep/wiki
