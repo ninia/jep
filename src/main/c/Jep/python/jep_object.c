@@ -391,26 +391,6 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_delAttr
     release_utf_char(env, str, attrName);
 }
 
-
-/*
- * Class:     jep_python_PyObject
- * Method:    getValue
- * Signature: (JJLjava/lang/String;)Ljava/lang/Object;
- */
-JNIEXPORT jobject JNICALL Java_jep_python_PyObject_getValue
-(JNIEnv *env, jobject obj, jlong tstate, jlong onModule, jstring jstr)
-{
-    const char *str;
-    jobject ret;
-
-    str = jstring2char(env, jstr);
-    ret = pyembed_getvalue_on(env, (intptr_t) tstate, (intptr_t) onModule,
-                              (char *) str);
-    release_utf_char(env, jstr, str);
-    return ret;
-}
-
-
 /*
  * Class:     jep_python_PyObject
  * Method:    equals

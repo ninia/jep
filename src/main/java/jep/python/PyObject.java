@@ -185,7 +185,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
     }
 
     private native void setAttr(long tstate, long pyObject, String attr_name,
-            Object o);
+            Object o) throws JepException;
 
     /**
      * Deletes an attribute on the wrapped Python object, similar to the Python
@@ -204,24 +204,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
         delAttr(pointer.tstate, pointer.pyObject, attr_name);
     }
 
-    private native void delAttr(long tstate, long pyObject, String attr_name);
-
-    /**
-     * Get a string value from a module.
-     *
-     * <b>Internal use only.</b>
-     *
-     * @param tstate
-     *            a <code>long</code> value
-     * @param onModule
-     *            a <code>long</code> value
-     * @param str
-     *            a <code>String</code> value
-     * @return an <code>Object</code> value
-     * @throws JepException
-     *             if an error occurs
-     */
-    protected native Object getValue(long tstate, long onModule, String str)
+    private native void delAttr(long tstate, long pyObject, String attr_name)
             throws JepException;
 
     /**
