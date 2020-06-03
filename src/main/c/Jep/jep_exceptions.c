@@ -94,13 +94,6 @@ int process_py_exception(JNIEnv *env)
                  * there is an except: block even if the error is not actually
                  * caught.
                  */
-#if PY_MAJOR_VERSION < 3
-                PyObject *message = PyObject_GetAttrString(pvalue, "message");
-                if (message != NULL && PyJObject_Check(message)) {
-                    Py_DECREF(pvalue);
-                    pvalue = message;
-                }
-#else
                 PyObject *args = PyObject_GetAttrString(pvalue, "args");
                 if (args != NULL && PyTuple_Check(args) && PyTuple_Size(args) > 0) {
                     PyObject *message = PyTuple_GetItem(args, 0);
@@ -109,7 +102,6 @@ int process_py_exception(JNIEnv *env)
                     Py_DECREF(args);
                     pvalue = message;
                 }
-#endif
             }
 
 
@@ -139,12 +131,7 @@ int process_py_exception(JNIEnv *env)
 
             if (v != NULL && PyString_Check(v)) {
                 PyObject *t;
-#if PY_MAJOR_VERSION >= 3
                 t = PyUnicode_FromFormat("%U: %U", message, v);
-#else
-                t = PyString_FromFormat("%s: %s", PyString_AsString(message),
-                                        PyString_AsString(v));
-#endif
                 Py_DECREF(v);
                 Py_DECREF(message);
                 message = t;

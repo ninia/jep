@@ -1492,25 +1492,11 @@ static PyObject* pyjarray_subscript(PyJArrayObject *self, PyObject *item)
         return pyjarray_item(self, (Py_ssize_t) i);
     } else if (PySlice_Check(item)) {
         Py_ssize_t start, stop, step, slicelength;
-
-#if PY_MAJOR_VERSION >= 3
         if (PySlice_GetIndicesEx(item, pyjarray_length((PyObject*) self), &start, &stop,
                                  &step, &slicelength) < 0) {
             // error will already be set
             return NULL;
         }
-#else
-        /*
-         * This silences a compile warning on PySlice_GetIndicesEx by casting
-         * item.  Python fixed the method signature in 3.2 to take item as a
-         * PyObject*
-         */
-        if (PySlice_GetIndicesEx((PySliceObject *) item,
-                                 pyjarray_length((PyObject*) self), &start, &stop, &step, &slicelength) < 0) {
-            // error will already be set
-            return NULL;
-        }
-#endif
 
         if (slicelength <= 0) {
             return pyjarray_slice((PyObject*) self, 0, 0);
@@ -1531,30 +1517,10 @@ static PyObject* pyjarray_subscript(PyJArrayObject *self, PyObject *item)
 static PyObject* pyjarray_str(PyJArrayObject *self)
 {
     PyObject *ret;
-#if PY_MAJOR_VERSION >= 3
     JNIEnv   *env = pyembed_get_env();
 
     ret = jobject_As_PyString(env, self->object);
     return ret;
-#else
-    // retained to not break former behavior
-    if (!self->pinnedArray) {
-        PyErr_SetString(PyExc_RuntimeError, "No pinned array.");
-        return NULL;
-    }
-
-    switch (self->componentType) {
-    case JBYTE_ID:
-        ret = PyBytes_FromStringAndSize((const char *) self->pinnedArray,
-                                        self->length);
-        return ret;
-
-    default:
-        PyErr_SetString(PyExc_TypeError,
-                        "Unsupported type for str operation.");
-        return NULL;
-    }
-#endif
 }
 
 

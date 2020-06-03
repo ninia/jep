@@ -38,16 +38,9 @@
 #define _Included_convert_j2p
 
 #define jboolean_As_PyObject PyBool_FromLong
-
-#if PY_MAJOR_VERSION >= 3
-    #define jbyte_As_PyObject PyLong_FromLong
-    #define jshort_As_PyObject PyLong_FromLong
-    #define jint_As_PyObject PyLong_FromLong
-#else
-    #define jbyte_As_PyObject PyInt_FromLong
-    #define jshort_As_PyObject PyInt_FromLong
-    #define jint_As_PyObject PyInt_FromLong
-#endif
+#define jbyte_As_PyObject PyLong_FromLong
+#define jshort_As_PyObject PyLong_FromLong
+#define jint_As_PyObject PyLong_FromLong
 
 #define jlong_As_PyObject PyLong_FromLongLong
 

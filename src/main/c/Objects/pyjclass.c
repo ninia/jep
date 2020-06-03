@@ -270,12 +270,7 @@ static PyObject* pyjclass_call(PyJClassObject *self,
      * Bind the constructor to the class so that the class will
      * be the first arg when constructor is called.
      */
-#if PY_MAJOR_VERSION >= 3
     boundConstructor = PyMethod_New(self->constructor, (PyObject*) self);
-#else
-    boundConstructor = PyMethod_New(self->constructor, (PyObject*) self,
-                                    (PyObject*) Py_TYPE((PyObject*)self));
-#endif
     result = PyObject_Call(boundConstructor, args, keywords);
     Py_DECREF(boundConstructor);
     return result;

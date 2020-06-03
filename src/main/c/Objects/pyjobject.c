@@ -337,10 +337,7 @@ static PyObject* pyjobject_richcompare(PyJObject *self,
              * raise a TypeError.
              */
             jint result;
-#if PY_MAJOR_VERSION >= 3
             jthrowable exc;
-#endif
-
             if (!(*env)->IsInstanceOf(env, self->object, JCOMPARABLE_TYPE)) {
                 const char* jname = PyString_AsString(self->javaClassName);
                 PyErr_Format(PyExc_TypeError, "Invalid comparison operation for Java type %s",
@@ -349,7 +346,6 @@ static PyObject* pyjobject_richcompare(PyJObject *self,
             }
 
             result = java_lang_Comparable_compareTo(env, target, other_target);
-#if PY_MAJOR_VERSION >= 3
             exc = (*env)->ExceptionOccurred(env);
             if (exc != NULL) {
                 if ((*env)->IsInstanceOf(env, exc, CLASSCAST_EXC_TYPE)) {
@@ -365,7 +361,6 @@ static PyObject* pyjobject_richcompare(PyJObject *self,
                     return Py_NotImplemented;
                 }
             }
-#endif
             if (process_java_exception(env)) {
                 return NULL;
             }
@@ -410,12 +405,7 @@ static PyObject* pyjobject_getattro(PyObject *obj, PyObject *name)
          * TODO Should not bind non-static methods to pyjclass objects, but not
          * sure yet how to handle multimethods and static methods.
          */
-#if PY_MAJOR_VERSION >= 3
         PyObject* wrapper = PyMethod_New(ret, (PyObject*) obj);
-#else
-        PyObject* wrapper = PyMethod_New(ret, (PyObject*) obj,
-                                         (PyObject*) Py_TYPE(obj));
-#endif
         Py_DECREF(ret);
         return wrapper;
     } else if (PyJField_Check(ret)) {

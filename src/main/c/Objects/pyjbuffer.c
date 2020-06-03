@@ -153,12 +153,6 @@ getbuf(PyObject* self, Py_buffer *view, int flags)
 
 
 static PyBufferProcs buffer_as_buffer = {
-#if PY_MAJOR_VERSION < 3
-    (readbufferproc)NULL,
-    (writebufferproc)NULL,
-    (segcountproc)NULL,
-    (charbufferproc)NULL,
-#endif
     (getbufferproc)getbuf,
     (releasebufferproc)NULL
 };
@@ -189,9 +183,6 @@ PyTypeObject PyJBuffer_Type = {
     0,                                        /* tp_setattro */
     &buffer_as_buffer,                        /* tp_as_buffer */
     Py_TPFLAGS_DEFAULT |
-#if PY_MAJOR_VERSION < 3
-    Py_TPFLAGS_HAVE_NEWBUFFER |
-#endif
     Py_TPFLAGS_BASETYPE,                      /* tp_flags */
     "jbuffer",                                /* tp_doc */
     0,                                        /* tp_traverse */

@@ -74,34 +74,23 @@
     */
     #define JLOCAL_REFS 16
 
-    /* Python 2 compatibility */
-    #if PY_MAJOR_VERSION < 3
-        #define Py_hash_t long
-    #endif
+    // see https://mail.python.org/pipermail/python-porting/2012-April/000289.html
+    #define Py_TPFLAGS_HAVE_ITER 0
 
-    /* Python 3 compatibility */
-    #if PY_MAJOR_VERSION >= 3
+    /* Python 3 does not support integers, only longs */
+    #define PyInt_AsLong(i)                   PyLong_AsLongLong(i)
+    #define PyInt_AS_LONG(i)                  PyLong_AsLongLong(i)
+    #define PyInt_Check(i)                    PyLong_Check(i)
+    #define PyInt_FromLong(i)                 PyLong_FromLongLong(i)
 
-        // see https://mail.python.org/pipermail/python-porting/2012-April/000289.html
-        #define Py_TPFLAGS_HAVE_ITER 0
+    /* Python 3 separated Strings into PyBytes and PyUnicode */
+    #define PyString_FromString(str)          PyUnicode_FromString(str)
+    #define PyString_Check(str)               PyUnicode_Check(str)
+    #define PyString_FromFormat(fmt, ...)     PyUnicode_FromFormat(fmt, ##__VA_ARGS__)
 
-        /* Python 3 does not support integers, only longs */
-        #define PyInt_AsLong(i)                   PyLong_AsLongLong(i)
-        #define PyInt_AS_LONG(i)                  PyLong_AsLongLong(i)
-        #define PyInt_Check(i)                    PyLong_Check(i)
-        #define PyInt_FromLong(i)                 PyLong_FromLongLong(i)
-
-        /* Python 3 separated Strings into PyBytes and PyUnicode */
-        #define PyString_FromString(str)          PyUnicode_FromString(str)
-        #define PyString_Check(str)               PyUnicode_Check(str)
-        #define PyString_FromFormat(fmt, ...)     PyUnicode_FromFormat(fmt, ##__VA_ARGS__)
-
-        #define PyString_AsString(str)            PyUnicode_AsUTF8(str)
-        #define PyString_AS_STRING(str)           PyUnicode_AsUTF8(str)
-        #define PyString_Size(str)                PyUnicode_GetLength(str)
-        #define PyString_GET_SIZE(str)            PyUnicode_GET_LENGTH(str)
-
-    #endif // Python 3 compatibility
-
+    #define PyString_AsString(str)            PyUnicode_AsUTF8(str)
+    #define PyString_AS_STRING(str)           PyUnicode_AsUTF8(str)
+    #define PyString_Size(str)                PyUnicode_GetLength(str)
+    #define PyString_GET_SIZE(str)            PyUnicode_GET_LENGTH(str)
 
 #endif // ifndef _Included_jep_platform

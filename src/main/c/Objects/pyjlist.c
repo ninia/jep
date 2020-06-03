@@ -400,25 +400,11 @@ static PyObject* pyjlist_subscript(PyObject *self, PyObject *item)
         return pyjlist_getitem(self, (Py_ssize_t) i);
     } else if (PySlice_Check(item)) {
         Py_ssize_t start, stop, step, slicelength;
-
-#if PY_MAJOR_VERSION >= 3
         if (PySlice_GetIndicesEx(item, PyObject_Size(self), &start, &stop, &step,
                                  &slicelength) < 0) {
             // error will already be set
             return NULL;
         }
-#else
-        /*
-         * This silences a compile warning on PySlice_GetIndicesEx by casting
-         * item.  Python fixed the method signature in 3.2 to take item as a
-         * PyObject*
-         */
-        if (PySlice_GetIndicesEx((PySliceObject *) item, PyObject_Size(self), &start,
-                                 &stop, &step, &slicelength) < 0) {
-            // error will already be set
-            return NULL;
-        }
-#endif
 
         if (slicelength <= 0) {
             return pyjlist_getslice(self, 0, 0);
@@ -455,25 +441,11 @@ static int pyjlist_set_subscript(PyObject* self, PyObject* item,
         return pyjlist_setitem(self, (Py_ssize_t) i, value);
     } else if (PySlice_Check(item)) {
         Py_ssize_t start, stop, step, slicelength;
-
-#if PY_MAJOR_VERSION >= 3
         if (PySlice_GetIndicesEx(item, PyObject_Size(self), &start, &stop, &step,
                                  &slicelength) < 0) {
             // error will already be set
             return -1;
         }
-#else
-        /*
-         * This silences a compile warning on PySlice_GetIndicesEx by casting
-         * item.  Python fixed the method signature in 3.2 to take item as a
-         * PyObject*
-         */
-        if (PySlice_GetIndicesEx((PySliceObject *) item, PyObject_Size(self), &start,
-                                 &stop, &step, &slicelength) < 0) {
-            // error will already be set
-            return -1;
-        }
-#endif
 
         if (slicelength <= 0) {
             return 0;
