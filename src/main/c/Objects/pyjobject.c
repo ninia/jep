@@ -133,7 +133,7 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
              * so, turn it into a PyJMultiMethod or add it to the existing
              * PyJMultiMethod.
              */
-            if (pymethod->pyMethodName && PyString_Check(pymethod->pyMethodName)) {
+            if (pymethod->pyMethodName && PyUnicode_Check(pymethod->pyMethodName)) {
                 PyObject* cached = PyDict_GetItem(cachedAttrs, pymethod->pyMethodName);
                 if (cached == NULL) {
                     if (PyDict_SetItem(cachedAttrs, pymethod->pyMethodName,
@@ -174,7 +174,7 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
                 continue;
             }
 
-            if (pyjfield->pyFieldName && PyString_Check(pyjfield->pyFieldName)) {
+            if (pyjfield->pyFieldName && PyUnicode_Check(pyjfield->pyFieldName)) {
                 if (PyDict_SetItem(cachedAttrs, pyjfield->pyFieldName,
                                    (PyObject*) pyjfield) != 0) {
                     goto EXIT_ERROR;
@@ -339,7 +339,7 @@ static PyObject* pyjobject_richcompare(PyJObject *self,
             jint result;
             jthrowable exc;
             if (!(*env)->IsInstanceOf(env, self->object, JCOMPARABLE_TYPE)) {
-                const char* jname = PyString_AsString(self->javaClassName);
+                const char* jname = PyUnicode_AsUTF8(self->javaClassName);
                 PyErr_Format(PyExc_TypeError, "Invalid comparison operation for Java type %s",
                              jname);
                 return NULL;
@@ -435,18 +435,18 @@ static int pyjobject_setattro(PyJObject *obj, PyObject *name, PyObject *v)
 
     if (cur == NULL) {
         PyErr_Format(PyExc_AttributeError, "'%s' object has no attribute '%s'.",
-                     PyString_AsString(obj->javaClassName), PyString_AsString(name));
+                     PyUnicode_AsUTF8(obj->javaClassName), PyUnicode_AsUTF8(name));
         return -1;
     }
 
     if (!PyJField_Check(cur)) {
         if (PyJMethod_Check(cur) || PyJMultiMethod_Check(cur)) {
             PyErr_Format(PyExc_AttributeError, "'%s' object cannot assign to method '%s'.",
-                         PyString_AsString(obj->javaClassName), PyString_AsString(name));
+                         PyUnicode_AsUTF8(obj->javaClassName), PyUnicode_AsUTF8(name));
         } else {
             PyErr_Format(PyExc_AttributeError,
                          "'%s' object cannot assign to attribute '%s'.",
-                         PyString_AsString(obj->javaClassName), PyString_AsString(name));
+                         PyUnicode_AsUTF8(obj->javaClassName), PyUnicode_AsUTF8(name));
         }
         return -1;
     }

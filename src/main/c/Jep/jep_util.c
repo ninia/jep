@@ -427,7 +427,7 @@ int pyarg_matches_jtype(JNIEnv *env,
                 return 2;
             }
         }
-    } else if (PyInt_Check(param)) {
+    } else if (PyLong_Check(param)) {
         switch (paramTypeId) {
         case JINT_ID:
             return 11;
@@ -454,12 +454,12 @@ int pyarg_matches_jtype(JNIEnv *env,
                 return 2;
             }
         }
-    } else if (PyString_Check(param)) {
+    } else if (PyUnicode_Check(param)) {
         switch (paramTypeId) {
         case JSTRING_ID:
             return 3;
         case JCHAR_ID:
-            if (PyString_GET_SIZE(param) == 1) {
+            if (PyUnicode_GET_LENGTH(param) == 1) {
                 return 2;
             }
             break;
@@ -595,7 +595,7 @@ jvalue convert_pyarg_jvalue(JNIEnv *env, PyObject *param, jclass paramType,
             pvalue_string = PyObject_Str(pvalue);
         }
         PyErr_Format(PyExc_TypeError, "Error converting parameter %d: %s", pos + 1,
-                     PyString_AsString(pvalue_string));
+                     PyUnicode_AsUTF8(pvalue_string));
         Py_DECREF(pvalue_string);
         Py_DECREF(ptype);
         Py_XDECREF(pvalue);

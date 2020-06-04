@@ -129,14 +129,14 @@ int process_py_exception(JNIEnv *env)
                 v = PyObject_Str(pvalue);
             }
 
-            if (v != NULL && PyString_Check(v)) {
+            if (v != NULL && PyUnicode_Check(v)) {
                 PyObject *t;
                 t = PyUnicode_FromFormat("%U: %U", message, v);
                 Py_DECREF(v);
                 Py_DECREF(message);
                 message = t;
             }
-            m = PyString_AsString(message);
+            m = PyUnicode_AsUTF8(message);
 
             // make a JepException
             jmsg = (*env)->NewStringUTF(env, (const char *) m);
@@ -174,7 +174,7 @@ int process_py_exception(JNIEnv *env)
                 if (modTB == NULL) {
                     printf("Error importing python traceback module\n");
                 }
-                extract = PyString_FromString("extract_tb");
+                extract = PyUnicode_FromString("extract_tb");
                 if (extract == NULL) {
                     printf("Error making PyString 'extract_tb'\n");
                 }
@@ -236,11 +236,11 @@ int process_py_exception(JNIEnv *env)
                     stackEntry = PyList_GetItem(pystack, i);
                     // java order is classname, method name, filename, line number
                     // python order is filename, line number, function name, line
-                    charPyFile = PyString_AsString(
+                    charPyFile = PyUnicode_AsUTF8(
                                      PySequence_GetItem(stackEntry, 0));
-                    pyLineNum = (int) PyInt_AsLong(
+                    pyLineNum = (int) PyLong_AsLongLong(
                                     PySequence_GetItem(stackEntry, 1));
-                    charPyFunc = PyString_AsString(
+                    charPyFunc = PyUnicode_AsUTF8(
                                      PySequence_GetItem(stackEntry, 2));
                     pyLine = PySequence_GetItem(stackEntry, 3);
 
@@ -377,9 +377,9 @@ int process_py_exception(JNIEnv *env)
     if (jepException != NULL) {
         Py_DECREF(message);
         THROW_JEP_EXC(env, jepException);
-    } else if (message && PyString_Check(message)) {
+    } else if (message && PyUnicode_Check(message)) {
         // should only get here if there was a ptype but no pvalue
-        m = PyString_AsString(message);
+        m = PyUnicode_AsUTF8(message);
         THROW_JEP(env, m);
         Py_DECREF(message);
     }

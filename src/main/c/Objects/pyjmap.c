@@ -117,7 +117,7 @@ static PyObject* pyjmap_getitem(PyObject *o, PyObject *key)
             PyObject *pystr = PyObject_Str(key);
             PyErr_Format(PyExc_KeyError,
                          "KeyError: %s",
-                         PyString_AsString(pystr));
+                         PyUnicode_AsUTF8(pystr));
             Py_XDECREF(pystr);
             goto FINALLY;
         }
@@ -152,7 +152,7 @@ static int pyjmap_setitem(PyObject *o, PyObject *key, PyObject *v)
             PyObject *pystr = PyObject_Str(key);
             PyErr_Format(PyExc_KeyError,
                          "KeyError: %s",
-                         PyString_AsString(pystr));
+                         PyUnicode_AsUTF8(pystr));
             Py_XDECREF(pystr);
             goto FINALLY;
         }

@@ -633,7 +633,7 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller,
     if ((tdict = PyThreadState_GetDict()) != NULL) {
         PyObject *key, *t;
         t   = PyCapsule_New((void *) jepThread, NULL, NULL);
-        key = PyString_FromString(DICT_KEY);
+        key = PyUnicode_FromString(DICT_KEY);
 
         PyDict_SetItem(tdict, key, t);   /* takes ownership */
 
@@ -658,7 +658,7 @@ void pyembed_thread_close(JNIEnv *env, intptr_t _jepThread)
     }
 
     PyEval_AcquireThread(jepThread->tstate);
-    key = PyString_FromString(DICT_KEY);
+    key = PyUnicode_FromString(DICT_KEY);
     if ((tdict = PyThreadState_GetDict()) != NULL && key != NULL) {
         PyDict_DelItem(tdict, key);
     }
@@ -715,7 +715,7 @@ JepThread* pyembed_get_jepthread(void)
     PyObject  *tdict, *t, *key;
     JepThread *ret = NULL;
 
-    key = PyString_FromString(DICT_KEY);
+    key = PyUnicode_FromString(DICT_KEY);
     if ((tdict = PyThreadState_GetDict()) != NULL && key != NULL) {
         t = PyDict_GetItem(tdict, key); /* borrowed */
         if (t != NULL && !PyErr_Occurred()) {
@@ -776,11 +776,11 @@ static PyObject* pyembed_jproxy(PyObject *self, PyObject *args)
         PyObject   *item;
 
         item = PyList_GET_ITEM(interfaces, i);
-        if (!PyString_Check(item)) {
+        if (!PyUnicode_Check(item)) {
             return PyErr_Format(PyExc_ValueError, "Item %zd not a string.", i);
         }
 
-        str  = PyString_AsString(item);
+        str  = PyUnicode_AsUTF8(item);
         jstr = (*env)->NewStringUTF(env, (const char *) str);
 
         (*env)->SetObjectArrayElement(env, classes, (jsize) i, jstr);
@@ -1704,7 +1704,7 @@ void pyembed_setparameter_string(JNIEnv *env,
         Py_INCREF(Py_None);
         pyvalue = Py_None;
     } else {
-        pyvalue = PyString_FromString(value);
+        pyvalue = PyUnicode_FromString(value);
     }
 
     if (pyvalue) {
