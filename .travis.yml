@@ -1,9 +1,6 @@
 matrix:
  include:
   - os: linux
-    language: python
-    python: 2.7
-  - os: linux
     dist: trusty
     language: python
     python: 3.3
@@ -31,10 +28,6 @@ matrix:
     language: python
     python: 3.9-dev
   - os: linux
-    dist: trusty
-    language: java
-    jdk: openjdk7
-  - os: linux
     dist: xenial
     language: java
     jdk: openjdk8
@@ -50,13 +43,8 @@ matrix:
   - os: linux
     language: java
     jdk: openjdk12
-   # Force error for earlier detection of python 2.7 windows build problems
-  - os: linux
-    language: python
-    python: 2.7
-    env: CFLAGS="-Wdeclaration-after-statement -Werror=declaration-after-statement"
   - os: osx
     language: generic
 
-script: ./setup.py test
+script: python3 ./setup.py test
 
