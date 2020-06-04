@@ -84,7 +84,7 @@ PyObject* PyJConstructor_New(JNIEnv *env, jobject constructor)
     pym->isStatic      = 1;
     pym->returnTypeId  = JOBJECT_ID;
     if (!initMethodName) {
-        initMethodName = PyString_FromString("<init>");
+        initMethodName = PyUnicode_FromString("<init>");
     }
     Py_INCREF(initMethodName);
     pym->pyMethodName = initMethodName;

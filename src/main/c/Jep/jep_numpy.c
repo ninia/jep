@@ -55,22 +55,13 @@ static jobject NATIVE_BYTE_ORDER  = NULL;
 
 /*
  * Initializes the numpy extension library.  This is required to be called
- * once and only once, before any PyArray_ methods are called. Unfortunately
- * it needs to have a different return type in Python 2 vs Python 3.
+ * once and only once, before any PyArray_ methods are called.
  */
-#if PY_MAJOR_VERSION >= 3
 static PyObject* _init_numpy(void)
 {
     import_array();
     return NULL;
 }
-#else
-static void _init_numpy(void)
-{
-    import_array();
-}
-#endif // Python 3 compatibility
-
 static int init_numpy(void)
 {
     if (!numpyInitialized) {

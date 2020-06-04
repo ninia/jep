@@ -73,7 +73,7 @@ static PyObject* pyjclass_add_inner_class(JNIEnv *env, PyJClassObject *topClz,
         if (PyDict_SetItemString(topClz->attr, charName, attrClz) != 0) {
             printf("Error adding inner class %s\n", charName);
         } else {
-            PyObject *pyname = PyString_FromString(charName);
+            PyObject *pyname = PyUnicode_FromString(charName);
             Py_DECREF(pyname);
         }
         Py_DECREF(attrClz); // parent class will hold the reference
@@ -270,12 +270,7 @@ static PyObject* pyjclass_call(PyJClassObject *self,
      * Bind the constructor to the class so that the class will
      * be the first arg when constructor is called.
      */
-#if PY_MAJOR_VERSION >= 3
     boundConstructor = PyMethod_New(self->constructor, (PyObject*) self);
-#else
-    boundConstructor = PyMethod_New(self->constructor, (PyObject*) self,
-                                    (PyObject*) Py_TYPE((PyObject*)self));
-#endif
     result = PyObject_Call(boundConstructor, args, keywords);
     Py_DECREF(boundConstructor);
     return result;

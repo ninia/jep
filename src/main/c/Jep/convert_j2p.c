@@ -26,57 +26,6 @@
 */
 
 #include "Jep.h"
-
-#if PY_MAJOR_VERSION < 3
-static jobject UTF8;
-
-PyObject* jchar_As_PyObject(jchar jc)
-{
-    if (jc < 0xFF) {
-        char c = (char) jc;
-        return PyString_FromStringAndSize(&c, 1);
-    } else {
-        PyObject* pyunicode = NULL;
-        PyObject* pystring  = NULL;
-        pyunicode = PyUnicode_DecodeUTF16((const char*) &jc, 2, NULL, NULL);
-        if (pyunicode == NULL) {
-            return NULL;
-        }
-        pystring = PyUnicode_AsUTF8String(pyunicode);
-        Py_DECREF(pyunicode);
-        return pystring;
-    }
-}
-
-PyObject* jstring_As_PyString(JNIEnv *env, jstring jstr)
-{
-    PyObject* result;
-    // Do not use GetStringUTFChars because it does not return true UTF-8 and
-    // fails for some unicode input
-    jbyteArray stringJbytes = NULL;
-    jsize      length       = 0;
-    jbyte*     stringBytes  = NULL;
-    if ( UTF8 == NULL) {
-        jobject local = (*env)->NewStringUTF(env, "UTF-8");
-        UTF8 = (*env)->NewGlobalRef(env, local);
-        (*env)->DeleteLocalRef(env, local);
-    }
-
-    stringJbytes = java_lang_String_getBytes(env, jstr, UTF8);
-    if (process_java_exception(env)) {
-        return NULL;
-    }
-
-    length = (*env)->GetArrayLength(env, stringJbytes);
-    stringBytes = (*env)->GetByteArrayElements(env, stringJbytes, NULL);
-
-    result = PyString_FromStringAndSize((char *) stringBytes, length);
-
-    (*env)->ReleaseByteArrayElements(env, stringJbytes, stringBytes, JNI_ABORT);
-    (*env)->DeleteLocalRef(env, stringJbytes);
-    return result;
-}
-#else
 PyObject* jchar_As_PyObject(jchar c)
 {
     Py_UCS2 value = (Py_UCS2) c;
@@ -92,7 +41,6 @@ PyObject* jstring_As_PyString(JNIEnv *env, jstring jstr)
     (*env)->ReleaseStringChars(env, jstr, str);
     return result;
 }
-#endif
 
 PyObject* JPyObject_As_PyObject(JNIEnv *env, jobject jobj)
 {

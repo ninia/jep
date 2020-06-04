@@ -133,7 +133,7 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
              * so, turn it into a PyJMultiMethod or add it to the existing
              * PyJMultiMethod.
              */
-            if (pymethod->pyMethodName && PyString_Check(pymethod->pyMethodName)) {
+            if (pymethod->pyMethodName && PyUnicode_Check(pymethod->pyMethodName)) {
                 PyObject* cached = PyDict_GetItem(cachedAttrs, pymethod->pyMethodName);
                 if (cached == NULL) {
                     if (PyDict_SetItem(cachedAttrs, pymethod->pyMethodName,
@@ -174,7 +174,7 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
                 continue;
             }
 
-            if (pyjfield->pyFieldName && PyString_Check(pyjfield->pyFieldName)) {
+            if (pyjfield->pyFieldName && PyUnicode_Check(pyjfield->pyFieldName)) {
                 if (PyDict_SetItem(cachedAttrs, pyjfield->pyFieldName,
                                    (PyObject*) pyjfield) != 0) {
                     goto EXIT_ERROR;
@@ -337,19 +337,15 @@ static PyObject* pyjobject_richcompare(PyJObject *self,
              * raise a TypeError.
              */
             jint result;
-#if PY_MAJOR_VERSION >= 3
             jthrowable exc;
-#endif
-
             if (!(*env)->IsInstanceOf(env, self->object, JCOMPARABLE_TYPE)) {
-                const char* jname = PyString_AsString(self->javaClassName);
+                const char* jname = PyUnicode_AsUTF8(self->javaClassName);
                 PyErr_Format(PyExc_TypeError, "Invalid comparison operation for Java type %s",
                              jname);
                 return NULL;
             }
 
             result = java_lang_Comparable_compareTo(env, target, other_target);
-#if PY_MAJOR_VERSION >= 3
             exc = (*env)->ExceptionOccurred(env);
             if (exc != NULL) {
                 if ((*env)->IsInstanceOf(env, exc, CLASSCAST_EXC_TYPE)) {
@@ -365,7 +361,6 @@ static PyObject* pyjobject_richcompare(PyJObject *self,
                     return Py_NotImplemented;
                 }
             }
-#endif
             if (process_java_exception(env)) {
                 return NULL;
             }
@@ -410,12 +405,7 @@ static PyObject* pyjobject_getattro(PyObject *obj, PyObject *name)
          * TODO Should not bind non-static methods to pyjclass objects, but not
          * sure yet how to handle multimethods and static methods.
          */
-#if PY_MAJOR_VERSION >= 3
         PyObject* wrapper = PyMethod_New(ret, (PyObject*) obj);
-#else
-        PyObject* wrapper = PyMethod_New(ret, (PyObject*) obj,
-                                         (PyObject*) Py_TYPE(obj));
-#endif
         Py_DECREF(ret);
         return wrapper;
     } else if (PyJField_Check(ret)) {
@@ -445,18 +435,18 @@ static int pyjobject_setattro(PyJObject *obj, PyObject *name, PyObject *v)
 
     if (cur == NULL) {
         PyErr_Format(PyExc_AttributeError, "'%s' object has no attribute '%s'.",
-                     PyString_AsString(obj->javaClassName), PyString_AsString(name));
+                     PyUnicode_AsUTF8(obj->javaClassName), PyUnicode_AsUTF8(name));
         return -1;
     }
 
     if (!PyJField_Check(cur)) {
         if (PyJMethod_Check(cur) || PyJMultiMethod_Check(cur)) {
             PyErr_Format(PyExc_AttributeError, "'%s' object cannot assign to method '%s'.",
-                         PyString_AsString(obj->javaClassName), PyString_AsString(name));
+                         PyUnicode_AsUTF8(obj->javaClassName), PyUnicode_AsUTF8(name));
         } else {
             PyErr_Format(PyExc_AttributeError,
                          "'%s' object cannot assign to attribute '%s'.",
-                         PyString_AsString(obj->javaClassName), PyString_AsString(name));
+                         PyUnicode_AsUTF8(obj->javaClassName), PyUnicode_AsUTF8(name));
         }
         return -1;
     }

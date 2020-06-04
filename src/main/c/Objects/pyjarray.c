@@ -102,11 +102,11 @@ PyObject* pyjarray_new_v(PyObject *isnull, PyObject *args)
         return NULL;
     }
 
-    if (PyInt_Check(one)) {
-        size = (long) PyInt_AsLong(one);
+    if (PyLong_Check(one)) {
+        size = (long) PyLong_AsLongLong(one);
 
-        if (PyInt_Check(two)) {
-            typeId = (int) PyInt_AsLong(two);
+        if (PyLong_Check(two)) {
+            typeId = (int) PyLong_AsLongLong(two);
 
             if (size < 0) {
                 return PyErr_Format(PyExc_ValueError, "Invalid size %li", size);
@@ -251,8 +251,8 @@ static int pyjarray_init(JNIEnv *env,
             long  v  = 0;
             jint *ar = (jint *) pyarray->pinnedArray;
 
-            if (value && PyInt_Check(value)) {
-                v = (long) PyInt_AS_LONG(value);
+            if (value && PyLong_Check(value)) {
+                v = (long) PyLong_AsLongLong(value);
             }
 
             for (i = 0; i < pyarray->length; i++) {
@@ -267,9 +267,9 @@ static int pyjarray_init(JNIEnv *env,
             long  v = 0;
             const char *val;
             jchar *ar = (jchar *) pyarray->pinnedArray;
-            if (!value || !PyString_Check(value)) {
-                if (value && PyInt_Check(value)) {
-                    v = (long) PyInt_AS_LONG(value);
+            if (!value || !PyUnicode_Check(value)) {
+                if (value && PyLong_Check(value)) {
+                    v = (long) PyLong_AsLongLong(value);
                 }
 
                 for (i = 0; i < pyarray->length; i++) {
@@ -279,7 +279,7 @@ static int pyjarray_init(JNIEnv *env,
                 // it's a string, set the elements
                 // we won't throw an error for index, length problems. just deal...
 
-                val = PyString_AS_STRING(value);
+                val = PyUnicode_AsUTF8(value);
                 for (i = 0; i < pyarray->length && val[i] != '\0'; i++) {
                     ar[i] = (jchar) val[i];
                 }
@@ -293,8 +293,8 @@ static int pyjarray_init(JNIEnv *env,
             long   v  = 0;
             jbyte *ar = (jbyte *) pyarray->pinnedArray;
 
-            if (value && PyInt_Check(value)) {
-                v = (long) PyInt_AS_LONG(value);
+            if (value && PyLong_Check(value)) {
+                v = (long) PyLong_AsLongLong(value);
             }
 
             for (i = 0; i < pyarray->length; i++) {
@@ -314,8 +314,8 @@ static int pyjarray_init(JNIEnv *env,
             else {
                 if (PyLong_Check(value)) {
                     v = PyLong_AsLongLong(value);
-                } else if (PyInt_Check(value)) {
-                    v = PyInt_AS_LONG(value);
+                } else if (PyLong_Check(value)) {
+                    v = PyLong_AsLongLong(value);
                 }
             }
 
@@ -331,8 +331,8 @@ static int pyjarray_init(JNIEnv *env,
             long      v  = 0;
             jboolean *ar = (jboolean *) pyarray->pinnedArray;
 
-            if (value && PyInt_Check(value)) {
-                v = (long) PyInt_AS_LONG(value);
+            if (value && PyLong_Check(value)) {
+                v = (long) PyLong_AsLongLong(value);
             }
 
             for (i = 0; i < pyarray->length; i++) {
@@ -367,8 +367,8 @@ static int pyjarray_init(JNIEnv *env,
             long    v  = 0;
             jshort *ar = (jshort *) pyarray->pinnedArray;
 
-            if (value && PyInt_Check(value)) {
-                v  = (long) PyInt_AS_LONG(value);
+            if (value && PyLong_Check(value)) {
+                v  = (long) PyLong_AsLongLong(value);
             }
 
             for (i = 0; i < pyarray->length; i++) {
@@ -606,7 +606,7 @@ static int pyjarray_setitem(PyJArrayObject *self,
         if (newitem == Py_None)
             ; // setting NULL
         else {
-            if (!PyString_Check(newitem)) {
+            if (!PyUnicode_Check(newitem)) {
                 PyErr_SetString(PyExc_TypeError, "Expected string.");
                 return -1;
             }
@@ -677,28 +677,28 @@ static int pyjarray_setitem(PyJArrayObject *self,
     switch (self->componentType) {
 
     case JINT_ID:
-        if (!PyInt_Check(newitem)) {
+        if (!PyLong_Check(newitem)) {
             PyErr_SetString(PyExc_TypeError, "Expected int.");
             return -1;
         }
 
-        ((jint *) self->pinnedArray)[pos] = (jint) PyInt_AS_LONG(newitem);
+        ((jint *) self->pinnedArray)[pos] = (jint) PyLong_AsLongLong(newitem);
         return 0; /* success */
 
     case JBYTE_ID:
-        if (!PyInt_Check(newitem)) {
+        if (!PyLong_Check(newitem)) {
             PyErr_SetString(PyExc_TypeError, "Expected byte.");
             return -1;
         }
 
-        ((jbyte *) self->pinnedArray)[pos] = (jbyte) PyInt_AS_LONG(newitem);
+        ((jbyte *) self->pinnedArray)[pos] = (jbyte) PyLong_AsLongLong(newitem);
         return 0; /* success */
 
     case JCHAR_ID:
-        if (PyInt_Check(newitem)) {
-            ((jchar *) self->pinnedArray)[pos] = (jchar) PyInt_AS_LONG(newitem);
-        } else if (PyString_Check(newitem) && PyString_GET_SIZE(newitem) == 1) {
-            const char *val = PyString_AS_STRING(newitem);
+        if (PyLong_Check(newitem)) {
+            ((jchar *) self->pinnedArray)[pos] = (jchar) PyLong_AsLongLong(newitem);
+        } else if (PyUnicode_Check(newitem) && PyUnicode_GET_LENGTH(newitem) == 1) {
+            const char *val = PyUnicode_AsUTF8(newitem);
             ((jchar *) self->pinnedArray)[pos] = (jchar) val[0];
         } else {
             PyErr_SetString(PyExc_TypeError, "Expected char.");
@@ -717,12 +717,12 @@ static int pyjarray_setitem(PyJArrayObject *self,
         return 0; /* success */
 
     case JBOOLEAN_ID:
-        if (!PyInt_Check(newitem)) {
+        if (!PyLong_Check(newitem)) {
             PyErr_SetString(PyExc_TypeError, "Expected boolean.");
             return -1;
         }
 
-        if (PyInt_AS_LONG(newitem)) {
+        if (PyLong_AsLongLong(newitem)) {
             ((jboolean *) self->pinnedArray)[pos] = JNI_TRUE;
         } else {
             ((jboolean *) self->pinnedArray)[pos] = JNI_FALSE;
@@ -741,13 +741,13 @@ static int pyjarray_setitem(PyJArrayObject *self,
         return 0; /* success */
 
     case JSHORT_ID:
-        if (!PyInt_Check(newitem)) {
+        if (!PyLong_Check(newitem)) {
             PyErr_SetString(PyExc_TypeError, "Expected int.");
             return -1;
         }
 
         ((jshort *) self->pinnedArray)[pos] =
-            (jshort) PyInt_AS_LONG(newitem);
+            (jshort) PyLong_AsLongLong(newitem);
         return 0; /* success */
 
     case JFLOAT_ID:
@@ -900,7 +900,7 @@ static int pyjarray_index(PyJArrayObject *self, PyObject *el)
     case JSTRING_ID: {
         int i, ret = 0;
 
-        if (el != Py_None && !PyString_Check(el)) {
+        if (el != Py_None && !PyUnicode_Check(el)) {
             PyErr_SetString(PyExc_TypeError, "Expected str.");
             return -1;
         }
@@ -1020,12 +1020,12 @@ static int pyjarray_index(PyJArrayObject *self, PyObject *el)
         int       i;
         jboolean  v;
 
-        if (!PyInt_Check(el)) {
+        if (!PyLong_Check(el)) {
             PyErr_SetString(PyExc_TypeError, "Expected boolean.");
             return -1;
         }
 
-        if (PyInt_AS_LONG(el)) {
+        if (PyLong_AsLongLong(el)) {
             v = JNI_TRUE;
         } else {
             v = JNI_FALSE;
@@ -1045,12 +1045,12 @@ static int pyjarray_index(PyJArrayObject *self, PyObject *el)
         int     i;
         jshort  v;
 
-        if (!PyInt_Check(el)) {
+        if (!PyLong_Check(el)) {
             PyErr_SetString(PyExc_TypeError, "Expected int (short).");
             return -1;
         }
 
-        v = (jshort) PyInt_AS_LONG(el);
+        v = (jshort) PyLong_AsLongLong(el);
         for (i = 0; i < self->length; i++) {
             if (v == ar[i]) {
                 return i;
@@ -1065,12 +1065,12 @@ static int pyjarray_index(PyJArrayObject *self, PyObject *el)
         int   i;
         jint  v;
 
-        if (!PyInt_Check(el)) {
+        if (!PyLong_Check(el)) {
             PyErr_SetString(PyExc_TypeError, "Expected int.");
             return -1;
         }
 
-        v = (jint) PyInt_AS_LONG(el);
+        v = (jint) PyLong_AsLongLong(el);
         for (i = 0; i < self->length; i++) {
             if (v == ar[i]) {
                 return i;
@@ -1085,12 +1085,12 @@ static int pyjarray_index(PyJArrayObject *self, PyObject *el)
         int    i;
         jbyte  v;
 
-        if (!PyInt_Check(el)) {
+        if (!PyLong_Check(el)) {
             PyErr_SetString(PyExc_TypeError, "Expected byte.");
             return -1;
         }
 
-        v = (jbyte) PyInt_AS_LONG(el);
+        v = (jbyte) PyLong_AsLongLong(el);
         for (i = 0; i < self->length; i++) {
             if (v == ar[i]) {
                 return i;
@@ -1105,10 +1105,10 @@ static int pyjarray_index(PyJArrayObject *self, PyObject *el)
         int    i;
         jchar  v;
 
-        if (PyInt_Check(el)) {
-            v = (jchar) PyInt_AS_LONG(el);
-        } else if (PyString_Check(el) && PyString_GET_SIZE(el) == 1) {
-            const char *val = PyString_AS_STRING(el);
+        if (PyLong_Check(el)) {
+            v = (jchar) PyLong_AsLongLong(el);
+        } else if (PyUnicode_Check(el) && PyUnicode_GET_LENGTH(el) == 1) {
+            const char *val = PyUnicode_AsUTF8(el);
             v = (jchar) val[0];
         } else {
             PyErr_SetString(PyExc_TypeError, "Expected char.");
@@ -1208,7 +1208,7 @@ static PyObject* listindex(PyJArrayObject *self, PyObject *args)
     }
 
     if (pos >= 0) {
-        return PyInt_FromLong((long) pos);
+        return PyLong_FromLongLong((long) pos);
     }
 
     PyErr_SetString(PyExc_ValueError, "list.index(x): x not in array");
@@ -1475,8 +1475,8 @@ static PyObject* pyjarray_slice(PyObject *_self, Py_ssize_t ilow,
 // shamelessly taken from listobject.c
 static PyObject* pyjarray_subscript(PyJArrayObject *self, PyObject *item)
 {
-    if (PyInt_Check(item)) {
-        long i = (long) PyInt_AS_LONG(item);
+    if (PyLong_Check(item)) {
+        long i = (long) PyLong_AsLongLong(item);
         if (i < 0) {
             i += self->length;
         }
@@ -1492,25 +1492,11 @@ static PyObject* pyjarray_subscript(PyJArrayObject *self, PyObject *item)
         return pyjarray_item(self, (Py_ssize_t) i);
     } else if (PySlice_Check(item)) {
         Py_ssize_t start, stop, step, slicelength;
-
-#if PY_MAJOR_VERSION >= 3
         if (PySlice_GetIndicesEx(item, pyjarray_length((PyObject*) self), &start, &stop,
                                  &step, &slicelength) < 0) {
             // error will already be set
             return NULL;
         }
-#else
-        /*
-         * This silences a compile warning on PySlice_GetIndicesEx by casting
-         * item.  Python fixed the method signature in 3.2 to take item as a
-         * PyObject*
-         */
-        if (PySlice_GetIndicesEx((PySliceObject *) item,
-                                 pyjarray_length((PyObject*) self), &start, &stop, &step, &slicelength) < 0) {
-            // error will already be set
-            return NULL;
-        }
-#endif
 
         if (slicelength <= 0) {
             return pyjarray_slice((PyObject*) self, 0, 0);
@@ -1531,30 +1517,10 @@ static PyObject* pyjarray_subscript(PyJArrayObject *self, PyObject *item)
 static PyObject* pyjarray_str(PyJArrayObject *self)
 {
     PyObject *ret;
-#if PY_MAJOR_VERSION >= 3
     JNIEnv   *env = pyembed_get_env();
 
     ret = jobject_As_PyString(env, self->object);
     return ret;
-#else
-    // retained to not break former behavior
-    if (!self->pinnedArray) {
-        PyErr_SetString(PyExc_RuntimeError, "No pinned array.");
-        return NULL;
-    }
-
-    switch (self->componentType) {
-    case JBYTE_ID:
-        ret = PyBytes_FromStringAndSize((const char *) self->pinnedArray,
-                                        self->length);
-        return ret;
-
-    default:
-        PyErr_SetString(PyExc_TypeError,
-                        "Unsupported type for str operation.");
-        return NULL;
-    }
-#endif
 }
 
 
@@ -1635,8 +1601,7 @@ PyTypeObject PyJArray_Type = {
     0,                                        /* tp_getattro */
     0,                                        /* tp_setattro */
     0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT |
-    Py_TPFLAGS_HAVE_ITER,                     /* tp_flags */
+    Py_TPFLAGS_DEFAULT,                       /* tp_flags */
     list_doc,                                 /* tp_doc */
     0,                                        /* tp_traverse */
     0,                                        /* tp_clear */
@@ -1765,8 +1730,7 @@ PyTypeObject PyJArrayIter_Type = {
     (getattrofunc) pyjarrayiter_dealloc,      /* tp_getattro */
     0,                                        /* tp_setattro */
     0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT |
-    Py_TPFLAGS_HAVE_ITER,                     /* tp_flags */
+    Py_TPFLAGS_DEFAULT,                       /* tp_flags */
     0,                                        /* tp_doc */
     0,                                        /* tp_traverse */
     0,                                        /* tp_clear */

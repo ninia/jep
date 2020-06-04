@@ -34,18 +34,6 @@ static PyObject* java_number_to_pythonintlong(JNIEnv *env, PyObject* n)
     jlong      value;
     PyJObject *jnumber  = (PyJObject*) n;
 
-#if PY_MAJOR_VERSION < 3
-    if ((*env)->IsInstanceOf(env, jnumber->object, JBYTE_OBJ_TYPE) ||
-            (*env)->IsInstanceOf(env, jnumber->object, JSHORT_OBJ_TYPE) ||
-            (*env)->IsInstanceOf(env, jnumber->object, JINT_OBJ_TYPE)) {
-        jint result = java_lang_Number_intValue(env, jnumber->object);
-        if (process_java_exception(env)) {
-            return NULL;
-        }
-        return PyInt_FromSsize_t(result);
-    }
-#endif
-
     value = java_lang_Number_longValue(env, jnumber->object);
     if (process_java_exception(env)) {
         return NULL;
@@ -134,17 +122,6 @@ static PyObject* pyjnumber_multiply(PyObject *x, PyObject *y)
     CALL_BINARY(env, PyNumber_Multiply, x, y);
     return result;
 }
-
-#if PY_MAJOR_VERSION < 3
-static PyObject* pyjnumber_divide(PyObject *x, PyObject *y)
-{
-    PyObject *result = NULL;
-    JNIEnv   *env    = pyembed_get_env();
-
-    CALL_BINARY(env, PyNumber_Divide, x, y);
-    return result;
-}
-#endif
 
 static PyObject* pyjnumber_remainder(PyObject *x, PyObject *y)
 {
@@ -257,13 +234,6 @@ static PyObject* pyjnumber_index(PyObject *x)
         Py_DECREF(x);
         return result;
     }
-#if PY_MAJOR_VERSION < 3
-    else if (PyInt_Check(x)) {
-        result = PyNumber_Index(x);
-        Py_DECREF(x);
-        return result;
-    }
-#endif
     else {
         PyErr_Format(PyExc_TypeError, "list indices must be integers, not %s",
                      Py_TYPE(x)->tp_name);
@@ -277,23 +247,6 @@ static PyObject* pyjnumber_int(PyObject *x)
     return java_number_to_pythonintlong(env, x);
 }
 
-#if PY_MAJOR_VERSION < 3
-static PyObject* pyjnumber_long(PyObject *x)
-{
-    PyObject *result = NULL;
-    JNIEnv   *env    = pyembed_get_env();
-
-    result = java_number_to_pythonintlong(env, x);
-    if (result == NULL) {
-        return result;
-    } else if (PyInt_Check(result)) {
-        PyObject *longResult = PyLong_FromLong(PyInt_AS_LONG(result));
-        Py_DECREF(result);
-        return longResult;
-    }
-    return result;
-}
-#endif
 
 static PyObject* pyjnumber_float(PyObject *x)
 {
@@ -338,9 +291,6 @@ static PyNumberMethods pyjnumber_number_methods = {
     (binaryfunc) pyjnumber_add,                 /* nb_add */
     (binaryfunc) pyjnumber_subtract,            /* nb_subtract */
     (binaryfunc) pyjnumber_multiply,            /* nb_multiply */
-#if PY_MAJOR_VERSION < 3
-    (binaryfunc) pyjnumber_divide,              /* nb_divide */
-#endif
     (binaryfunc) pyjnumber_remainder,           /* nb_remainder */
     (binaryfunc) pyjnumber_divmod,              /* nb_divmod */
     (ternaryfunc) pyjnumber_power,              /* nb_power */
@@ -354,26 +304,12 @@ static PyNumberMethods pyjnumber_number_methods = {
     0,                                          /* nb_and */
     0,                                          /* nb_xor */
     0,                                          /* nb_or */
-#if PY_MAJOR_VERSION < 3
-    0,                                          /* nb_coerce */
-#endif
     (unaryfunc) pyjnumber_int,                  /* nb_int */
-#if PY_MAJOR_VERSION < 3
-    (unaryfunc) pyjnumber_long,                 /* nb_long */
-#else
     0,                                          /* nb_reserved */
-#endif
     (unaryfunc) pyjnumber_float,                /* nb_float */
-#if PY_MAJOR_VERSION < 3
-    0,                                          /* nb_oct */
-    0,                                          /* nb_hex */
-#endif
     0,                                          /* inplace_add */
     0,                                          /* inplace_subtract */
     0,                                          /* inplace_multiply */
-#if PY_MAJOR_VERSION < 3
-    0,                                          /* inplace_divide */
-#endif
     0,                                          /* inplace_remainder */
     0,                                          /* inplace_power */
     0,                                          /* inplace_lshift */
@@ -412,11 +348,7 @@ PyTypeObject PyJNumber_Type = {
     0,                                        /* tp_getattro */
     0,                                        /* tp_setattro */
     0,                                        /* tp_as_buffer */
-#if PY_MAJOR_VERSION < 3
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_CHECKTYPES,/* tp_flags */
-#else
     Py_TPFLAGS_DEFAULT,                       /* tp_flags */
-#endif
     "jnumber",                                /* tp_doc */
     0,                                        /* tp_traverse */
     0,                                        /* tp_clear */
