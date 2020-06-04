@@ -33,7 +33,9 @@
 
 // Python.h needs to be included first, see http://bugs.python.org/issue1045893
 #include <Python.h>
+#include <assert.h>
 
+static_assert(PY_MAJOR_VERSION >= 3,"There is no Python 2 support!");
 #ifdef WIN32
     #include "winconfig.h"
 #endif
