@@ -93,45 +93,6 @@ public class Jep implements Interpreter {
         }
     };
 
-    /**
-     * Sets interpreter settings for the top Python interpreter. This method
-     * must be called before the first Jep instance is created in the process.
-     * 
-     * @param config
-     *            the python configuration to use.
-     * 
-     * @throws JepException
-     *             if an error occurs
-     * @deprecated Please use {@link MainInterpreter#setInitParams(PyConfig)}
-     *             instead.
-     * @since 3.6
-     */
-    @Deprecated
-    public static void setInitParams(PyConfig config) throws JepException {
-        MainInterpreter.setInitParams(config);
-    }
-
-    /**
-     * Sets the sys.argv values on the top interpreter. This is a workaround for
-     * issues with shared modules and should be considered experimental.
-     * 
-     * @param argv
-     *            the arguments to be set on Python's sys.argv for the top/main
-     *            interpreter
-     * @throws JepException
-     *             if an error occurs
-     * @deprecated Please use
-     *             {@link MainInterpreter#setSharedModulesArgv(String...)}
-     *             instead.
-     * 
-     * @since 3.7
-     */
-    @Deprecated
-    public static void setSharedModulesArgv(String... argv)
-            throws JepException {
-        MainInterpreter.setSharedModulesArgv(argv);
-    }
-
     // -------------------------------------------------- constructors
 
     /**
@@ -147,90 +108,6 @@ public class Jep implements Interpreter {
     @Deprecated
     public Jep() throws JepException {
         this(new JepConfig());
-    }
-
-    /**
-     * Creates a new <code>Jep</code> instance and its associated
-     * sub-interpreter.
-     * 
-     * @param interactive
-     *            whether {@link #eval(String)} should support the slower
-     *            behavior of potentially waiting for multiple statements
-     * @throws JepException
-     *             if an error occurs
-     * @deprecated Please use {@link #Jep(JepConfig)} instead.
-     */
-    @Deprecated
-    public Jep(boolean interactive) throws JepException {
-        this(interactive, null, null);
-    }
-
-    /**
-     * Creates a new <code>Jep</code> instance and its associated
-     * sub-interpreter.
-     * 
-     * @param interactive
-     *            whether {@link #eval(String)} should support the slower
-     *            behavior of potentially waiting for multiple statements
-     * @param includePath
-     *            a path of directories separated by File.pathSeparator that
-     *            will be appended to the sub-intepreter's <code>sys.path</code>
-     * @throws JepException
-     *             if an error occurs
-     * @deprecated Please use {@link #Jep(JepConfig)} instead.
-     */
-    @Deprecated
-    public Jep(boolean interactive, String includePath) throws JepException {
-        this(interactive, includePath, null);
-    }
-
-    /**
-     * Creates a new <code>Jep</code> instance and its associated
-     * sub-interpreter.
-     * 
-     * @param interactive
-     *            whether {@link #eval(String)} should support the slower
-     *            behavior of potentially waiting for multiple statements
-     * @param includePath
-     *            a path of directories separated by File.pathSeparator that
-     *            will be appended to the sub-intepreter's <code>sys.path</code>
-     * @param cl
-     *            the ClassLoader to use when importing Java classes from Python
-     * @throws JepException
-     *             if an error occurs
-     * @deprecated Please use {@link #Jep(JepConfig)} instead.
-     */
-    @Deprecated
-    public Jep(boolean interactive, String includePath, ClassLoader cl)
-            throws JepException {
-        this(interactive, includePath, cl, null);
-    }
-
-    /**
-     * Creates a new <code>Jep</code> instance and its associated
-     * sub-interpreter.
-     * 
-     * @param interactive
-     *            whether {@link #eval(String)} should support the slower
-     *            behavior of potentially waiting for multiple statements
-     * @param includePath
-     *            a path of directories separated by File.pathSeparator that
-     *            will be appended to the sub-intepreter's <code>sys.path</code>
-     * @param cl
-     *            the ClassLoader to use when importing Java classes from Python
-     * @param ce
-     *            a <code>ClassEnquirer</code> to determine which imports are
-     *            Python vs Java, or null for the default {@link ClassList}
-     * @throws JepException
-     *             if an error occurs
-     * @deprecated Please use {@link #Jep(JepConfig)} instead.
-     */
-    @Deprecated
-    public Jep(boolean interactive, String includePath, ClassLoader cl,
-            ClassEnquirer ce) throws JepException {
-        this(new JepConfig().setInteractive(interactive)
-                .setIncludePath(includePath).setClassLoader(cl)
-                .setClassEnquirer(ce));
     }
 
     /**
@@ -352,25 +229,6 @@ public class Jep implements Interpreter {
 
     @Override
     public void runScript(String script) throws JepException {
-        runScript(script, null);
-    }
-
-    /**
-     * Runs a Python script.
-     * 
-     * @deprecated This may be removed in a future version of Jep, as Jep does
-     *             not fully support changing the ClassLoader after
-     *             construction.
-     * 
-     * @param script
-     *            a <code>String</code> absolute path to script file.
-     * @param cl
-     *            a <code>ClassLoader</code> value, may be null.
-     * @throws JepException
-     *             if an error occurs
-     */
-    @Deprecated
-    public void runScript(String script, ClassLoader cl) throws JepException {
         isValidThread();
 
         if (script == null)
@@ -379,8 +237,6 @@ public class Jep implements Interpreter {
         File file = new File(script);
         if (!file.exists() || !file.canRead())
             throw new JepException("Invalid file: " + file.getAbsolutePath());
-
-        setClassLoader(cl);
         run(this.tstate, script);
     }
 
@@ -546,21 +402,6 @@ public class Jep implements Interpreter {
     private native void setClassLoader(long tstate, ClassLoader cl);
 
     /**
-     * Changes behavior of {@link #eval(String)}. Interactive mode can wait for
-     * further Python statements to be evaled, while non-interactive mode can
-     * only execute complete Python statements.
-     * 
-     * @deprecated This may be removed in a future version of Jep.
-     * 
-     * @param v
-     *            if the sub-interpreter should run in interactive mode
-     */
-    @Deprecated
-    public void setInteractive(boolean v) {
-        this.interactive = v;
-    }
-
-    /**
      * Gets whether or not this sub-interpreter is interactive.
      * 
      * @deprecated This may be removed in a future version of Jep.
@@ -579,21 +420,21 @@ public class Jep implements Interpreter {
         if (v instanceof Class) {
             set(tstate, name, (Class<?>) v);
         } else if (v instanceof String) {
-            set(name, ((String) v));
+            set(tstate,name, ((String) v));
         } else if (v instanceof Float) {
-            set(name, ((Float) v).floatValue());
+            set(tstate,name, ((Float) v).floatValue());
         } else if (v instanceof Integer) {
-            set(name, ((Integer) v).intValue());
+            set(tstate,name, ((Integer) v).intValue());
         } else if (v instanceof Double) {
-            set(name, ((Double) v).doubleValue());
+            set(tstate,name, ((Double) v).doubleValue());
         } else if (v instanceof Long) {
-            set(name, ((Long) v).longValue());
+            set(tstate,name, ((Long) v).longValue());
         } else if (v instanceof Byte) {
-            set(name, ((Byte) v).byteValue());
+            set(tstate,name, ((Byte) v).byteValue());
         } else if (v instanceof Short) {
-            set(name, ((Short) v).shortValue());
+            set(tstate,name, ((Short) v).shortValue());
         } else if (v instanceof Boolean) {
-            set(name, ((Boolean) v).booleanValue());
+            set(tstate,name, ((Boolean) v).booleanValue());
         } else {
             set(tstate, name, v);
         }
@@ -605,383 +446,40 @@ public class Jep implements Interpreter {
     private native void set(long tstate, String name, Class<?> v)
             throws JepException;
 
-    /**
-     * Sets the Java String into the sub-interpreter's global scope with the
-     * specified variable name.
-     * 
-     * @deprecated Use {@link #set(String, Object)} instead.
-     * 
-     * @param name
-     *            the Python name for the variable
-     * @param v
-     *            a <code>String</code> value
-     * @throws JepException
-     *             if an error occurs
-     */
-    @Deprecated
-    public void set(String name, String v) throws JepException {
-        isValidThread();
-
-        set(tstate, name, v);
-    }
-
     private native void set(long tstate, String name, String v)
             throws JepException;
-
-    /**
-     * Sets the Java boolean into the sub-interpreter's global scope with the
-     * specified variable name.
-     * 
-     * @deprecated Use {@link #set(String, Object)} instead.
-     * 
-     * @param name
-     *            the Python name for the variable
-     * @param v
-     *            a <code>boolean</code> value
-     * @throws JepException
-     *             if an error occurs
-     */
-    @Deprecated
-    public void set(String name, boolean v) throws JepException {
-        isValidThread();
-
-        set(tstate, name, v);
-    }
-
-    private native void set(long tstate, String name, boolean v)
-            throws JepException;
-
-    /**
-     * Sets the Java int into the sub-interpreter's global scope with the
-     * specified variable name.
-     * 
-     * @deprecated Use {@link #set(String, Object)} instead.
-     * 
-     * @param name
-     *            the Python name for the variable
-     * @param v
-     *            an <code>int</code> value
-     * @throws JepException
-     *             if an error occurs
-     */
-    @Deprecated
-    public void set(String name, int v) throws JepException {
-        isValidThread();
-
-        set(tstate, name, v);
-    }
-
-    /**
-     * Sets the Java short into the sub-interpreter's global scope with the
-     * specified variable name.
-     * 
-     * @deprecated Use {@link #set(String, Object)} instead.
-     * 
-     * @param name
-     *            the Python name for the variable
-     * @param v
-     *            an <code>int</code> value
-     * @throws JepException
-     *             if an error occurs
-     */
-    @Deprecated
-    public void set(String name, short v) throws JepException {
-        isValidThread();
-
-        set(tstate, name, v);
-    }
 
     private native void set(long tstate, String name, int v)
             throws JepException;
 
-    /**
-     * Sets the Java char[] into the sub-interpreter's global scope with the
-     * specified variable name.
-     * 
-     * @deprecated Use {@link #set(String, Object)} instead.
-     * 
-     * @param name
-     *            the Python name for the variable
-     * @param v
-     *            a <code>char[]</code> value
-     * @throws JepException
-     *             if an error occurs
-     */
-    @Deprecated
-    public void set(String name, char[] v) throws JepException {
-        isValidThread();
-
-        set(tstate, name, new String(v));
-    }
-
-    /**
-     * Sets the Java char into the sub-interpreter's global scope with the
-     * specified variable name.
-     * 
-     * @deprecated Use {@link #set(String, Object)} instead.
-     * 
-     * @param name
-     *            the Python name for the variable
-     * @param v
-     *            a <code>char</code> value
-     * @throws JepException
-     *             if an error occurs
-     */
-    @Deprecated
-    public void set(String name, char v) throws JepException {
-        isValidThread();
-
-        set(tstate, name, new String(new char[] { v }));
-    }
-
-    /**
-     * Sets the Java byte into the sub-interpreter's global scope with the
-     * specified variable name.
-     * 
-     * @deprecated Use {@link #set(String, Object)} instead.
-     * 
-     * @param name
-     *            the Python name for the variable
-     * @param b
-     *            a <code>byte</code> value
-     * @throws JepException
-     *             if an error occurs
-     */
-    @Deprecated
-    public void set(String name, byte b) throws JepException {
-        isValidThread();
-
-        set(tstate, name, b);
-    }
-
-    /**
-     * Sets the Java long into the sub-interpreter's global scope with the
-     * specified variable name.
-     * 
-     * @deprecated Use {@link #set(String, Object)} instead.
-     * 
-     * @param name
-     *            the Python name for the variable
-     * @param v
-     *            a <code>long</code> value
-     * @throws JepException
-     *             if an error occurs
-     */
-    @Deprecated
-    public void set(String name, long v) throws JepException {
-        isValidThread();
-
-        set(tstate, name, v);
-    }
-
     private native void set(long tstate, String name, long v)
             throws JepException;
 
-    /**
-     * Sets the Java double into the sub-interpreter's global scope with the
-     * specified variable name.
-     * 
-     * @deprecated Use {@link #set(String, Object)} instead.
-     * 
-     * @param name
-     *            the Python name for the variable
-     * @param v
-     *            a <code>double</code> value
-     * @throws JepException
-     *             if an error occurs
-     */
-    @Deprecated
-    public void set(String name, double v) throws JepException {
-        isValidThread();
-
-        set(tstate, name, v);
-    }
-
     private native void set(long tstate, String name, double v)
             throws JepException;
-
-    /**
-     * Sets the Java float into the sub-interpreter's global scope with the
-     * specified variable name.
-     * 
-     * @deprecated Use {@link #set(String, Object)} instead.
-     * 
-     * @param name
-     *            the Python name for the variable
-     * @param v
-     *            a <code>float</code> value
-     * @throws JepException
-     *             if an error occurs
-     */
-    @Deprecated
-    public void set(String name, float v) throws JepException {
-        isValidThread();
-
-        set(tstate, name, v);
-    }
 
     private native void set(long tstate, String name, float v)
             throws JepException;
 
     // -------------------------------------------------- set arrays
 
-    /**
-     * Sets the Java boolean[] into the sub-interpreter's global scope with the
-     * specified variable name.
-     * 
-     * @deprecated Use {@link #set(String, Object)} instead.
-     * 
-     * @param name
-     *            the Python name for the variable
-     * @param v
-     *            a <code>boolean[]</code> value
-     * @throws JepException
-     *             if an error occurs
-     */
-    @Deprecated
-    public void set(String name, boolean[] v) throws JepException {
-        isValidThread();
-
-        set(tstate, name, v);
-    }
-
     private native void set(long tstate, String name, boolean[] v)
             throws JepException;
-
-    /**
-     * Sets the Java int[] into the sub-interpreter's global scope with the
-     * specified variable name.
-     * 
-     * @deprecated Use {@link #set(String, Object)} instead.
-     * 
-     * @param name
-     *            the Python name for the variable
-     * @param v
-     *            an <code>int[]</code> value
-     * @throws JepException
-     *             if an error occurs
-     */
-    @Deprecated
-    public void set(String name, int[] v) throws JepException {
-        isValidThread();
-
-        set(tstate, name, v);
-    }
 
     private native void set(long tstate, String name, int[] v)
             throws JepException;
 
-    /**
-     * Sets the Java short[] into the sub-interpreter's global scope with the
-     * specified variable name.
-     * 
-     * @deprecated Use {@link #set(String, Object)} instead.
-     * 
-     * @param name
-     *            the Python name for the variable
-     * @param v
-     *            a <code>short[]</code> value
-     * @throws JepException
-     *             if an error occurs
-     */
-    @Deprecated
-    public void set(String name, short[] v) throws JepException {
-        isValidThread();
-
-        set(tstate, name, v);
-    }
-
     private native void set(long tstate, String name, short[] v)
             throws JepException;
-
-    /**
-     * Sets the Java byte[] into the sub-interpreter's global scope with the
-     * specified variable name.
-     * 
-     * @deprecated Use {@link #set(String, Object)} instead.
-     * 
-     * @param name
-     *            the Python name for the variable
-     * @param v
-     *            a <code>byte[]</code> value
-     * @throws JepException
-     *             if an error occurs
-     */
-    @Deprecated
-    public void set(String name, byte[] v) throws JepException {
-        isValidThread();
-
-        set(tstate, name, v);
-    }
 
     private native void set(long tstate, String name, byte[] v)
             throws JepException;
 
-    /**
-     * Sets the Java long[] into the sub-interpreter's global scope with the
-     * specified variable name.
-     * 
-     * @deprecated Use {@link #set(String, Object)} instead.
-     * 
-     * @param name
-     *            the Python name for the variable
-     * @param v
-     *            a <code>long[]</code> value
-     * @throws JepException
-     *             if an error occurs
-     */
-    @Deprecated
-    public void set(String name, long[] v) throws JepException {
-        isValidThread();
-
-        set(tstate, name, v);
-    }
-
     private native void set(long tstate, String name, long[] v)
             throws JepException;
 
-    /**
-     * Sets the Java double[] into the sub-interpreter's global scope with the
-     * specified variable name.
-     * 
-     * @deprecated Use {@link #set(String, Object)} instead.
-     * 
-     * @param name
-     *            the Python name for the variable
-     * @param v
-     *            a <code>double[]</code> value
-     * @throws JepException
-     *             if an error occurs
-     */
-    @Deprecated
-    public void set(String name, double[] v) throws JepException {
-        isValidThread();
-
-        set(tstate, name, v);
-    }
-
     private native void set(long tstate, String name, double[] v)
             throws JepException;
-
-    /**
-     * Sets the Java float[] into the sub-interpreter's global scope with the
-     * specified variable name.
-     * 
-     * @deprecated Use {@link #set(String, Object)} instead.
-     * 
-     * @param name
-     *            the Python name for the variable
-     * @param v
-     *            a <code>float[]</code> value
-     * @throws JepException
-     *             if an error occurs
-     */
-    @Deprecated
-    public void set(String name, float[] v) throws JepException {
-        isValidThread();
-
-        set(tstate, name, v);
-    }
 
     private native void set(long tstate, String name, float[] v)
             throws JepException;

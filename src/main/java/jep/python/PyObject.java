@@ -69,20 +69,6 @@ public class PyObject extends JepAccess implements AutoCloseable {
     /**
      * Check if PyObject is valid.
      * 
-     * @deprecated In a future release this method will not be public and/or its
-     *             method signature may change.
-     * 
-     * @throws JepException
-     *             if it is not safe to use this python object
-     */
-    @Deprecated
-    public void isValid() throws JepException {
-        checkValid();
-    }
-
-    /**
-     * Check if PyObject is valid.
-     * 
      * @throws JepException
      *             if it is not safe to use this python object
      */
