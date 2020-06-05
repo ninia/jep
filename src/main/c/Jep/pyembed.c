@@ -205,13 +205,7 @@ void pyembed_preinit(JNIEnv *env,
     }
     if (pythonHome) {
         const char* homeAsUTF = (*env)->GetStringUTFChars(env, pythonHome, NULL);
-#if PY_MAJOR_VERSION > 3 || PY_MINOR_VERSION >= 5
         wchar_t* homeForPython = Py_DecodeLocale(homeAsUTF, NULL);
-#else
-        int length = (*env)->GetStringUTFLength(env, pythonHome);
-        wchar_t* homeForPython = malloc((length + 1) * sizeof(wchar_t));
-        mbstowcs(homeForPython, homeAsUTF, length + 1);
-#endif
         (*env)->ReleaseStringUTFChars(env, pythonHome, homeAsUTF);
 
         Py_SetPythonHome(homeForPython);
