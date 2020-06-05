@@ -8,12 +8,8 @@ TestOverload = jep.findClass('jep.test.TestOverload')
 class TestTypes(unittest.TestCase):
 
     def test_any_primitive(self):
-        if sys.version_info.major == 2:
-            self.assertEqual(TestOverload.any_primitive(0), 'int')
-            self.assertEqual(TestOverload.any_primitive(1), 'int')
-        else:
-            self.assertEqual(TestOverload.any_primitive(0), 'long')
-            self.assertEqual(TestOverload.any_primitive(1), 'long')
+        self.assertEqual(TestOverload.any_primitive(0), 'long')
+        self.assertEqual(TestOverload.any_primitive(1), 'long')
         self.assertIn(TestOverload.any_primitive(0.0), 'double')
         self.assertEqual(TestOverload.any_primitive(True), 'boolean')
         self.assertEqual(TestOverload.any_primitive(()), 'boolean')

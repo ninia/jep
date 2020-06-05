@@ -104,14 +104,6 @@ class JepSharedModuleImporter(object):
     def __init__(self, moduleList, sharedImporter):
         self.moduleList = list(moduleList)
         self.sharedImporter = sharedImporter
-        if sys.version_info.major <= 2:
-            # Python 2 will deadlock if you attempt to switch threads and import
-            # during an import so instead preemptively import everything shared
-            # https://docs.python.org/2/library/threading.html#threaded-imports
-            from _jep import mainInterpreterModules
-            for module in moduleList:
-                if module not in mainInterpreterModules:
-                    self.sharedImporter.sharedImport(module)
 
     def find_module(self, fullname, path=None):
         if fullname in self.moduleList:
@@ -125,7 +117,7 @@ class JepSharedModuleImporter(object):
         if fullname not in sys.modules:
             from _jep import mainInterpreterModules, mainInterpreterModulesLock
             with mainInterpreterModulesLock:
-                if fullname not in mainInterpreterModules and sys.version_info.major > 2:
+                if fullname not in mainInterpreterModules:
                     self.sharedImporter.sharedImport(fullname)
                 # Must copy all modules or relative imports will be broken
                 for moduleName in self.moduleList:
