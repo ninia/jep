@@ -48,7 +48,7 @@ public class TestGetByteArray {
             interp.eval("f = open('" + output.getAbsolutePath() + "', 'rb')");
             interp.eval("x = f.read()");
             interp.eval("f.close()");
-            b2 = interp.getValue_bytearray("x");
+            b2 = interp.getValue("x",byte[].class);
         }
 
         if (b2 == null) {

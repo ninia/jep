@@ -353,26 +353,6 @@ public class Jep implements Interpreter {
     private native Object getValue(long tstate, String str, Class<?> clazz)
             throws JepException;
 
-    /**
-     * @deprecated use Python 3 bytes object instead and
-     *             {@link #getValue(String,Class)} with byte[].class
-     *
-     *             Retrieves a Python string object as a Java byte[].
-     * 
-     * @param str
-     *            the name of the Python variable to get from the
-     *            sub-interpreter's global scope
-     * @return an <code>Object</code> array
-     * @throws JepException
-     *             if an error occurs
-     */
-    @Deprecated
-    public byte[] getValue_bytearray(String str) throws JepException {
-        isValidThread();
-
-        return getValue_bytearray(this.tstate, str);
-    }
-
     private native byte[] getValue_bytearray(long tstate, String str)
             throws JepException;
 
@@ -381,37 +361,7 @@ public class Jep implements Interpreter {
 
     // -------------------------------------------------- set things
 
-    /**
-     * Sets the default classloader.
-     * 
-     * @deprecated This may be removed in a future version of Jep. Jep does not
-     *             fully support changing the ClassLoader after construction.
-     * 
-     * @param cl
-     *            a <code>ClassLoader</code> value
-     */
-    @Deprecated
-    public void setClassLoader(ClassLoader cl) {
-        if (cl != null && cl != this.classLoader) {
-            this.classLoader = cl;
-            // call native set
-            setClassLoader(this.tstate, cl);
-        }
-    }
-
     private native void setClassLoader(long tstate, ClassLoader cl);
-
-    /**
-     * Gets whether or not this sub-interpreter is interactive.
-     * 
-     * @deprecated This may be removed in a future version of Jep.
-     * 
-     * @return whether or not the sub-interpreter is interactive
-     */
-    @Deprecated
-    public boolean isInteractive() {
-        return this.interactive;
-    }
 
     @Override
     public void set(String name, Object v) throws JepException {
