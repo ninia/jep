@@ -86,7 +86,7 @@ public class Jep implements Interpreter {
      * you make use of CPython extensions (e.g. numpy) that use the GIL, then
      * this gets even more risky and can potentially deadlock.
      */
-    private final static ThreadLocal<Boolean> threadUsed = new ThreadLocal<Boolean>() {
+    private static final ThreadLocal<Boolean> threadUsed = new ThreadLocal<Boolean>() {
         @Override
         protected Boolean initialValue() {
             return false;

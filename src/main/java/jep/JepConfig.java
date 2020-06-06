@@ -25,6 +25,7 @@
 package jep;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -163,9 +164,7 @@ public class JepConfig {
         if (sharedModules == null) {
             sharedModules = new HashSet<>();
         }
-        for (String sm : sharedModule) {
-            sharedModules.add(sm);
-        }
+        Collections.addAll(sharedModules, sharedModule);
         return this;
     }
 

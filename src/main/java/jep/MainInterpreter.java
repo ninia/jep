@@ -93,7 +93,7 @@ public final class MainInterpreter implements AutoCloseable {
      * @throws Error
      *             if an error occurs
      */
-    protected synchronized static MainInterpreter getMainInterpreter()
+    protected static synchronized MainInterpreter getMainInterpreter()
             throws Error {
         if (null == instance) {
             try {
