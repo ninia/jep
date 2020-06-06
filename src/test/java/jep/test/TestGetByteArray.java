@@ -15,7 +15,6 @@ import jep.SubInterpreter;
  * 
  * @author Nate Jensen
  */
-@SuppressWarnings("deprecation")
 public class TestGetByteArray {
 
     protected static final int SIZE = 1024;
