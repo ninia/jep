@@ -61,7 +61,7 @@ JNI_OnUnload(JavaVM *vm, void *reserved)
 /*
  * Class:     jep_Jep
  * Method:    init
- * Signature: (Ljava/lang/ClassLoader;Z)I
+ * Signature: (Ljava/lang/ClassLoader;Z)J
  */
 JNIEXPORT jlong JNICALL Java_jep_Jep_init
 (JNIEnv *env, jobject obj, jobject cl, jboolean hasSharedModules,
@@ -74,7 +74,7 @@ JNIEXPORT jlong JNICALL Java_jep_Jep_init
 /*
  * Class:     jep_Jep
  * Method:    run
- * Signature: (ILjava/lang/String;)V
+ * Signature: (JLjava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_run
 (JNIEnv *env, jobject obj, jlong tstate, jstring str)
@@ -114,7 +114,7 @@ JNIEXPORT jobject JNICALL Java_jep_Jep_invoke
 /*
  * Class:     jep_Jep
  * Method:    compileString
- * Signature: (ILjava/lang/String;)I
+ * Signature: (JLjava/lang/String;)I
  */
 JNIEXPORT jint JNICALL Java_jep_Jep_compileString
 (JNIEnv *env, jobject obj, jlong tstate, jstring jstr)
@@ -132,7 +132,7 @@ JNIEXPORT jint JNICALL Java_jep_Jep_compileString
 /*
  * Class:     jep_Jep
  * Method:    eval
- * Signature: (ILjava/lang/String;)V
+ * Signature: (JLjava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_eval
 (JNIEnv *env, jobject obj, jlong tstate, jstring jstr)
@@ -148,7 +148,7 @@ JNIEXPORT void JNICALL Java_jep_Jep_eval
 /*
  * Class:     jep_Jep
  * Method:    eval
- * Signature: (ILjava/lang/String;)V
+ * Signature: (JLjava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_exec
 (JNIEnv *env, jobject obj, jlong tstate, jstring jstr)
@@ -164,7 +164,7 @@ JNIEXPORT void JNICALL Java_jep_Jep_exec
 /*
  * Class:     jep_Jep
  * Method:    getValue
- * Signature: (ILjava/lang/String;)Ljava/lang/Object;
+ * Signature: (JLjava/lang/String;)Ljava/lang/Object;
  */
 JNIEXPORT jobject JNICALL Java_jep_Jep_getValue
 (JNIEnv *env, jobject obj, jlong tstate, jstring jstr, jclass clazz)
@@ -178,24 +178,6 @@ JNIEXPORT jobject JNICALL Java_jep_Jep_getValue
     return ret;
 }
 
-
-
-/*
- * Class:     jep_Jep
- * Method:    getValue_bytearray
- * Signature: (ILjava/lang/String;)L[B;
- */
-JNIEXPORT jobject JNICALL Java_jep_Jep_getValue_1bytearray
-(JNIEnv *env, jobject obj, jlong tstate, jstring jstr)
-{
-    const char *str;
-    jobject ret;
-
-    str = jstring2char(env, jstr);
-    ret = pyembed_getvalue_array(env, (intptr_t) tstate, (char *) str);
-    release_utf_char(env, jstr, str);
-    return ret;
-}
 
 
 /*
@@ -227,7 +209,7 @@ JNIEXPORT void JNICALL Java_jep_Jep_close
 /*
  * Class:     jep_Jep
  * Method:    set
- * Signature: (ILjava/lang/String;Ljava/lang/Object;)V
+ * Signature: (JLjava/lang/String;Ljava/lang/Object;)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2Ljava_lang_Object_2
 (JNIEnv *env, jobject obj, jlong tstate, jstring jname, jobject jval)
@@ -259,7 +241,7 @@ JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2Ljava_lang_Class_2
 /*
  * Class:     jep_Jep
  * Method:    set
- * Signature: (ILjava/lang/String;Ljava/lang/String;)V
+ * Signature: (JLjava/lang/String;Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2Ljava_lang_String_2
 (JNIEnv *env, jobject obj, jlong tstate, jstring jname, jstring jval)
@@ -277,7 +259,7 @@ JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2Ljava_lang_String_2
 /*
  * Class:     jep_Jep
  * Method:    set
- * Signature: (ILjava/lang/String;Z)V
+ * Signature: (JLjava/lang/String;Z)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2Z
 (JNIEnv *env, jobject obj, jlong tstate, jstring jname, jboolean jval)
@@ -292,7 +274,7 @@ JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2Z
 /*
  * Class:     jep_Jep
  * Method:    set
- * Signature: (ILjava/lang/String;I)V
+ * Signature: (JLjava/lang/String;I)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2I
 (JNIEnv *env, jobject obj, jlong tstate, jstring jname, jint jval)
@@ -308,7 +290,7 @@ JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2I
 /*
  * Class:     jep_Jep
  * Method:    set
- * Signature: (ILjava/lang/String;J)V
+ * Signature: (JLjava/lang/String;J)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2J
 (JNIEnv *env, jobject obj, jlong tstate, jstring jname, jlong jval)
@@ -324,7 +306,7 @@ JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2J
 /*
  * Class:     jep_Jep
  * Method:    set
- * Signature: (ILjava/lang/String;D)V
+ * Signature: (JLjava/lang/String;D)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2D
 (JNIEnv *env, jobject obj, jlong tstate, jstring jname, jdouble jval)
@@ -340,7 +322,7 @@ JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2D
 /*
  * Class:     jep_Jep
  * Method:    set
- * Signature: (ILjava/lang/String;F)V
+ * Signature: (JLjava/lang/String;F)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_set__JLjava_lang_String_2F
 (JNIEnv *env, jobject obj, jlong tstate, jstring jname, jfloat jval)

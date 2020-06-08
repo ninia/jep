@@ -353,15 +353,7 @@ public class Jep implements Interpreter {
     private native Object getValue(long tstate, String str, Class<?> clazz)
             throws JepException;
 
-    private native byte[] getValue_bytearray(long tstate, String str)
-            throws JepException;
-
-    private native long createModule(long tstate, String name)
-            throws JepException;
-
     // -------------------------------------------------- set things
-
-    private native void setClassLoader(long tstate, ClassLoader cl);
 
     @Override
     public void set(String name, Object v) throws JepException {
@@ -409,6 +401,9 @@ public class Jep implements Interpreter {
             throws JepException;
 
     private native void set(long tstate, String name, float v)
+            throws JepException;
+            
+    private native void set(long tstate, String name, boolean v)
             throws JepException;
 
     // -------------------------------------------------- set arrays
