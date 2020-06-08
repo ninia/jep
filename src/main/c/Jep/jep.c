@@ -178,20 +178,6 @@ JNIEXPORT jobject JNICALL Java_jep_Jep_getValue
     return ret;
 }
 
-
-
-/*
- * Class:     jep_Jep
- * Method:    setClassLoader
- * Signature: (ILjava/lang/ClassLoader;)V
- */
-JNIEXPORT void JNICALL Java_jep_Jep_setClassLoader
-(JNIEnv *env, jobject obj, jlong tstate, jobject cl)
-{
-    pyembed_setloader(env, (intptr_t) tstate, cl);
-}
-
-
 /*
  * Class:     jep_Jep
  * Method:    close
@@ -202,7 +188,6 @@ JNIEXPORT void JNICALL Java_jep_Jep_close
 {
     pyembed_thread_close(env, (intptr_t) tstate);
 }
-
 
 // -------------------------------------------------- set() methods
 
