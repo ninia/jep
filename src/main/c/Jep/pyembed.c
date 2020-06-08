@@ -212,7 +212,7 @@ void pyembed_preinit(JNIEnv *env,
         wchar_t* homeForPython = malloc((length + 1) * sizeof(wchar_t));
         mbstowcs(homeForPython, homeAsUTF, length + 1);
 #endif
-		(*env)->ReleaseStringUTFChars(env, pythonHome, homeAsUTF);
+        (*env)->ReleaseStringUTFChars(env, pythonHome, homeAsUTF);
         Py_SetPythonHome(homeForPython);
         // Python documentation says that the string should not be changed for
         // the duration of the program so it can never be freed.
