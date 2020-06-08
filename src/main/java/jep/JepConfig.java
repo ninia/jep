@@ -25,6 +25,7 @@
 package jep;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -53,24 +54,6 @@ public class JepConfig {
     protected boolean redirectOutputStreams = false;
 
     protected Set<String> sharedModules = null;
-
-    /**
-     * Sets whether <code>Jep.eval(String)</code> should support the slower
-     * behavior of potentially waiting for multiple statements
-     * 
-     * @deprecated Interactive mode will be removed in a future release. See
-     *             console.py for an example of how to interactively execute
-     *             Python using the builtin compile() and exec() functions.
-     *
-     * @param interactive
-     *            whether the Jep instance should be interactive
-     * @return a reference to this JepConfig
-     */
-    @Deprecated
-    public JepConfig setInteractive(boolean interactive) {
-        this.interactive = interactive;
-        return this;
-    }
 
     /**
      * Sets a path of directories separated by File.pathSeparator that will be
@@ -181,26 +164,8 @@ public class JepConfig {
         if (sharedModules == null) {
             sharedModules = new HashSet<>();
         }
-        for (String sm : sharedModule) {
-            sharedModules.add(sm);
-        }
+        Collections.addAll(sharedModules, sharedModule);
         return this;
-    }
-
-    /**
-     * Creates a new SubInterpreter instance and its associated sub-interpreter
-     * with this JepConfig.
-     * 
-     * @deprecated Use {@link #createSubInterpreter()} instead.
-     * 
-     * @return a new Jep instance
-     * @throws JepException
-     *             if an error occurs
-     * @since 3.8
-     */
-    @Deprecated
-    public Jep createJep() throws JepException {
-        return createSubInterpreter();
     }
 
     /**

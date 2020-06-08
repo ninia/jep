@@ -248,19 +248,7 @@ class TestTypes(unittest.TestCase):
            string is passed to java and back that it is the same.
 
         '''
-        if sys.version_info.major == 2:
-            from types import UnicodeType
-            result = []
-            for string in in_strings:
-               if isinstance(string, UnicodeType):
-                  utf8 = string.encode('UTF-8')
-                  result.append((string, utf8))
-                  result.append((utf8, utf8))
-               else:
-                  result.append((string,string))
-            return result
-        else:
-            return [(string, string) for string in in_strings]
+        return [(string, string) for string in in_strings]
             
      
 
@@ -462,9 +450,6 @@ class TestTypes(unittest.TestCase):
     def test_long(self):
         longs = [-9223372036854775808, -2147483648, -32768, -128, -
                  1, 0, 1, 127, 32767, 2147483647, 9223372036854775807]
-        if sys.version_info.major == 2:
-            for l in tuple(longs):
-                longs.append(long(l))
         for l in longs:
             self.assertEqual(l, self.methods.primitiveLong(l))
             self.assertEqual(l, self.methods.objectLong(l))
@@ -794,13 +779,12 @@ class TestTypes(unittest.TestCase):
 
     def test_int_array(self):
         examples = [[], (), [1, 2, 3], (1, 2, 3)]
-        if sys.version_info.major > 2:
-            import array
-            a = array.array('i', [1,2,3,4])
-            examples.append(a)
-            v = memoryview(a)
-            v = v[::2]
-            examples.append(v)
+        import array
+        a = array.array('i', [1,2,3,4])
+        examples.append(a)
+        v = memoryview(a)
+        v = v[::2]
+        examples.append(v)
         for l in examples:
             self.assertSequenceEqual(l, self.methods.intArray(l))
             self.assertSequenceEqual(l, self.staticMethods.intArray(l))
@@ -813,9 +797,8 @@ class TestTypes(unittest.TestCase):
 
     def test_int_array_coercion(self):
         examples = [["1", "2", "3"], ("1", "2", "3")]
-        if sys.version_info.major > 2:
-            import array
-            examples.append(array.array('f', [1,2,3,4]))
+        import array
+        examples.append(array.array('f', [1,2,3,4]))
         for l in examples:
             with self.assertRaises(TypeError):
                 self.methods.intArray(l)
@@ -832,21 +815,19 @@ class TestTypes(unittest.TestCase):
         l = [1,2,3,4]
         bb = ByteBuffer.wrap(bytearray(l))
         self.assertSequenceEqual(bb.array(), l)
-        if sys.version_info.major > 2:
-            bb = ByteBuffer.wrap(bytes(l))
-            self.assertSequenceEqual(bb.array(), l)
-            bb = ByteBuffer.wrap(array.array('b', l))
-            self.assertSequenceEqual(bb.array(), l)
-            bb = ByteBuffer.wrap(array.array('B', l))
-            self.assertSequenceEqual(bb.array(), l)
-            v = memoryview(array.array('B', l))
-            v = v[::2]
-            bb = ByteBuffer.wrap(v)
-            self.assertSequenceEqual(bb.array(), v)
-            with self.assertRaises(TypeError):
-                ByteBuffer.wrap(array.array('f', [1,2,3,4]))
-        
-    @unittest.skipIf(sys.version_info.major < 3, 'Python 2 arrays do not have the buffer interface')
+        bb = ByteBuffer.wrap(bytes(l))
+        self.assertSequenceEqual(bb.array(), l)
+        bb = ByteBuffer.wrap(array.array('b', l))
+        self.assertSequenceEqual(bb.array(), l)
+        bb = ByteBuffer.wrap(array.array('B', l))
+        self.assertSequenceEqual(bb.array(), l)
+        v = memoryview(array.array('B', l))
+        v = v[::2]
+        bb = ByteBuffer.wrap(v)
+        self.assertSequenceEqual(bb.array(), v)
+        with self.assertRaises(TypeError):
+            ByteBuffer.wrap(array.array('f', [1,2,3,4]))
+                
     def test_float_array(self):
         from java.nio import FloatBuffer
         import array
@@ -860,7 +841,6 @@ class TestTypes(unittest.TestCase):
         with self.assertRaises(TypeError):
             FloatBuffer.wrap(array.array('i', [1,2,3,4]))
 
-    @unittest.skipIf(sys.version_info.major < 3, 'Python 2 arrays do not have the buffer interface')
     def test_long_array(self):
         from java.nio import LongBuffer
         import array
@@ -876,28 +856,27 @@ class TestTypes(unittest.TestCase):
 
     def test_buffers(self):
         from java.nio import ByteBuffer, ByteOrder
-        if sys.version_info.major > 2:
-            b = ByteBuffer.allocateDirect(16).order(ByteOrder.nativeOrder())
-            v = memoryview(b)
-            v[0] = 7
-            self.assertEqual(v[0], b.get(0))
-            s = b.asShortBuffer();
-            v = memoryview(s)
-            self.assertEqual(v[0], s.get(0))
-            i = b.asIntBuffer()
-            v = memoryview(i)
-            self.assertEqual(v[0], i.get(0))
-            l = b.asLongBuffer()
-            v = memoryview(l)
-            self.assertEqual(v[0], l.get(0))
-            f = b.asFloatBuffer()
-            v = memoryview(f)
-            v[0] = -100
-            self.assertEqual(v[0], f.get(0))
-            d = b.asDoubleBuffer()
-            v = memoryview(d)
-            v[0] = -100
-            self.assertEqual(v[0], d.get(0))
+        b = ByteBuffer.allocateDirect(16).order(ByteOrder.nativeOrder())
+        v = memoryview(b)
+        v[0] = 7
+        self.assertEqual(v[0], b.get(0))
+        s = b.asShortBuffer();
+        v = memoryview(s)
+        self.assertEqual(v[0], s.get(0))
+        i = b.asIntBuffer()
+        v = memoryview(i)
+        self.assertEqual(v[0], i.get(0))
+        l = b.asLongBuffer()
+        v = memoryview(l)
+        self.assertEqual(v[0], l.get(0))
+        f = b.asFloatBuffer()
+        v = memoryview(f)
+        v[0] = -100
+        self.assertEqual(v[0], f.get(0))
+        d = b.asDoubleBuffer()
+        v = memoryview(d)
+        v[0] = -100
+        self.assertEqual(v[0], d.get(0))
         try:
            # memoryview only supports native order so numpy is required for the other one.
             from numpy import asarray

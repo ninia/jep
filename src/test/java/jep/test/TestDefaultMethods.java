@@ -7,12 +7,7 @@ import java.lang.Integer;
  * @since 3.8
  */
 public interface TestDefaultMethods {
-/*
- * Default methods won't compile on java 7,
- * uncomment this class when java 7 support is dropped.
- */
 
-/*
     public default Boolean testBooleanArg(boolean z){
         return Boolean.valueOf(z);
     }
@@ -80,5 +75,4 @@ public interface TestDefaultMethods {
     public default void testVoidReturn(){
         return;
     }
-*/
 }

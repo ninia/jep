@@ -40,7 +40,7 @@ public class Run {
 
     private static String scriptArgv = null;
 
-    private final static String USAGE = "  Usage: jep.Run [OPTIONS]...  [FILE].. [SCRIPT ARGS]\n"
+    private static final String USAGE = "  Usage: jep.Run [OPTIONS]...  [FILE].. [SCRIPT ARGS]\n"
             + "Options:\n"
             + "  -i                         Run script interactively.\n"
             + "  -s                         Run script in event dispatching thread (for use with Swing)\n";
