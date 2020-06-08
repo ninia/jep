@@ -204,10 +204,15 @@ void pyembed_preinit(JNIEnv *env,
         Py_HashRandomizationFlag = hashRandomizationFlag;
     }
     if (pythonHome) {
+#if PY_MAJOR_VERSION > 3 || PY_MINOR_VERSION >= 5
         const char* homeAsUTF = (*env)->GetStringUTFChars(env, pythonHome, NULL);
         wchar_t* homeForPython = Py_DecodeLocale(homeAsUTF, NULL);
         (*env)->ReleaseStringUTFChars(env, pythonHome, homeAsUTF);
-
+#else
+        int length = (*env)->GetStringUTFLength(env, pythonHome);
+        wchar_t* homeForPython = malloc((length + 1) * sizeof(wchar_t));
+        mbstowcs(homeForPython, homeAsUTF, length + 1);
+#endif
         Py_SetPythonHome(homeForPython);
         // Python documentation says that the string should not be changed for
         // the duration of the program so it can never be freed.
