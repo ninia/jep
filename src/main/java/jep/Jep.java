@@ -358,75 +358,10 @@ public class Jep implements Interpreter {
     @Override
     public void set(String name, Object v) throws JepException {
         isValidThread();
-
-        if (v instanceof Class) {
-            set(tstate, name, (Class<?>) v);
-        } else if (v instanceof String) {
-            set(tstate,name, ((String) v));
-        } else if (v instanceof Float) {
-            set(tstate,name, ((Float) v).floatValue());
-        } else if (v instanceof Integer) {
-            set(tstate,name, ((Integer) v).intValue());
-        } else if (v instanceof Double) {
-            set(tstate,name, ((Double) v).doubleValue());
-        } else if (v instanceof Long) {
-            set(tstate,name, ((Long) v).longValue());
-        } else if (v instanceof Byte) {
-            set(tstate,name, ((Byte) v).byteValue());
-        } else if (v instanceof Short) {
-            set(tstate,name, ((Short) v).shortValue());
-        } else if (v instanceof Boolean) {
-            set(tstate,name, ((Boolean) v).booleanValue());
-        } else {
-            set(tstate, name, v);
-        }
+		set(tstate,name,v);
     }
 
     private native void set(long tstate, String name, Object v)
-            throws JepException;
-
-    private native void set(long tstate, String name, Class<?> v)
-            throws JepException;
-
-    private native void set(long tstate, String name, String v)
-            throws JepException;
-
-    private native void set(long tstate, String name, int v)
-            throws JepException;
-
-    private native void set(long tstate, String name, long v)
-            throws JepException;
-
-    private native void set(long tstate, String name, double v)
-            throws JepException;
-
-    private native void set(long tstate, String name, float v)
-            throws JepException;
-            
-    private native void set(long tstate, String name, boolean v)
-            throws JepException;
-
-    // -------------------------------------------------- set arrays
-
-    private native void set(long tstate, String name, boolean[] v)
-            throws JepException;
-
-    private native void set(long tstate, String name, int[] v)
-            throws JepException;
-
-    private native void set(long tstate, String name, short[] v)
-            throws JepException;
-
-    private native void set(long tstate, String name, byte[] v)
-            throws JepException;
-
-    private native void set(long tstate, String name, long[] v)
-            throws JepException;
-
-    private native void set(long tstate, String name, double[] v)
-            throws JepException;
-
-    private native void set(long tstate, String name, float[] v)
             throws JepException;
 
     // -------------------------------------------------- close me
