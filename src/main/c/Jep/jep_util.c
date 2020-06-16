@@ -474,9 +474,15 @@ int pyarg_matches_jtype(JNIEnv *env,
             return 3;
             break;
         case JCHAR_ID:
+#if PY_MAJOR_VERSION < 3
             if (PyUnicode_GET_SIZE(param) == 1) {
                 return 2;
             }
+#else
+            if (PyUnicode_GET_LENGTH(param) == 1) {
+                return 2;
+            }
+#endif
             break;
         case JOBJECT_ID:
             if ((*env)->IsAssignableFrom(env, JSTRING_TYPE, paramType)) {
