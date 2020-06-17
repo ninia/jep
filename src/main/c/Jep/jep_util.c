@@ -474,7 +474,7 @@ int pyarg_matches_jtype(JNIEnv *env,
             return 3;
             break;
         case JCHAR_ID:
-            if (PyUnicode_GET_SIZE(param) == 1) {
+            if (PyUnicode_GET_LENGTH(param) == 1) {
                 return 2;
             }
             break;
