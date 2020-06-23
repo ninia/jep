@@ -509,7 +509,7 @@ int pyembed_is_version_unsafe(void)
         char *msg;
         JNIEnv *env = pyembed_get_env();
 
-        msg = malloc(sizeof(char) * 200);
+        msg = malloc(200);
         memset(msg, '\0', 200);
         sprintf(msg,
                 "Jep will not initialize because it was compiled against Python %i.%i but is running against Python %s.%s",
