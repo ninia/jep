@@ -444,12 +444,16 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
         for (i = 0; i < count; i++) {
             char* arg     = NULL;
             wchar_t* argt = NULL;
-
+            int j = 0;
             jstring jarg = (*env)->GetObjectArrayElement(env, sharedModulesArgv, i);
             if (jarg == NULL) {
                 PyEval_ReleaseThread(mainThreadState);
                 (*env)->PopLocalFrame(env, NULL);
                 THROW_JEP(env, "Received null argv.");
+                for(j = 0; j < i; j++) {
+                    free(argv[j]);
+                }
+                free(argv);
                 return;
             }
             arg = (char*) (*env)->GetStringUTFChars(env, jarg, NULL);
@@ -487,7 +491,7 @@ int pyembed_is_version_unsafe(void)
     int         i         = 0;
 
     pyversion = Py_GetVersion();
-    version = malloc(sizeof(char) * (strlen(pyversion) + 1));
+    version = malloc(strlen(pyversion) + 1);
     strcpy(version, pyversion);
     major = version;
 
@@ -613,6 +617,7 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller,
         if (mod_main == NULL) {
             THROW_JEP(env, "Couldn't add module __main__.");
             PyEval_ReleaseThread(jepThread->tstate);
+            free(jepThread);
             return 0;
         }
         globals = PyModule_GetDict(mod_main);
