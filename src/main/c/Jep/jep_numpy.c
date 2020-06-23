@@ -393,7 +393,6 @@ static jobject convert_pyndarray_jndarray(JNIEnv *env, PyObject *pyobj)
     for (i = 0; i < ndims; i++) {
         jdims[i] = (jint) dims[i];
     }
-
     jdimObj = (*env)->NewIntArray(env, ndims);
     if (process_java_exception(env) || !jdimObj) {
         free(jdims);
@@ -589,6 +588,9 @@ PyObject* convert_jdndarray_pyndarray(JNIEnv *env, PyObject* pyobj)
     // get the primitive array and convert it
     data = (*env)->CallObjectMethod(env, obj, dndarrayGetData);
     if (process_java_exception(env) || !data) {
+        free(dims);
+        //Is this necessary?
+        (*env)->DeleteLocalRef(env, data);
         return NULL;
     }
 
@@ -738,6 +740,7 @@ PyObject* convert_jndarray_pyndarray(JNIEnv *env, jobject obj)
     // get the primitive array and convert it
     data = (*env)->CallObjectMethod(env, obj, ndarrayGetData);
     if (process_java_exception(env) || !data) {
+        free(dims);
         return NULL;
     }
 
