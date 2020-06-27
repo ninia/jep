@@ -258,7 +258,7 @@ int process_py_exception(JNIEnv *env)
 
                         // remove the .py to look more like a Java StackTraceElement
                         namelen = (int) strlen(charPyFile);
-                        charPyFileNoExt = malloc(namelen + 1);
+                        charPyFileNoExt = malloc(sizeof(char) * (namelen + 1));
                         strcpy(charPyFileNoExt, charPyFile);
                         lastDot = strrchr(charPyFileNoExt, '.');
                         if (lastDot != NULL) {

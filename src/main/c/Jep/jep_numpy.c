@@ -589,8 +589,6 @@ PyObject* convert_jdndarray_pyndarray(JNIEnv *env, PyObject* pyobj)
     data = (*env)->CallObjectMethod(env, obj, dndarrayGetData);
     if (process_java_exception(env) || !data) {
         free(dims);
-        //Is this necessary?
-        (*env)->DeleteLocalRef(env, data);
         return NULL;
     }
 

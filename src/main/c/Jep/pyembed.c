@@ -444,14 +444,14 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
         for (i = 0; i < count; i++) {
             char* arg     = NULL;
             wchar_t* argt = NULL;
-            int j = 0;
+            int k = 0;
             jstring jarg = (*env)->GetObjectArrayElement(env, sharedModulesArgv, i);
             if (jarg == NULL) {
                 PyEval_ReleaseThread(mainThreadState);
                 (*env)->PopLocalFrame(env, NULL);
                 THROW_JEP(env, "Received null argv.");
-                for(j = 0; j < i; j++) {
-                    free(argv[j]);
+                for(k = 0; k < i; k++) {
+                    free(argv[k]);
                 }
                 free(argv);
                 return;
@@ -509,7 +509,7 @@ int pyembed_is_version_unsafe(void)
         char *msg;
         JNIEnv *env = pyembed_get_env();
 
-        msg = malloc(200);
+        msg = malloc(sizeof(char) * 200);
         memset(msg, '\0', 200);
         sprintf(msg,
                 "Jep will not initialize because it was compiled against Python %i.%i but is running against Python %s.%s",
