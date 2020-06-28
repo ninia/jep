@@ -64,7 +64,7 @@ int PyJMonitor_Check(PyObject *obj)
 static PyObject* pyjmonitor_enter(PyObject* self, PyObject* args)
 {
     PyJMonitorObject *monitor = (PyJMonitorObject*) self;
-    JNIEnv           *env     = env = pyembed_get_env();
+    JNIEnv           *env     = pyembed_get_env();
     int               failed  = 0;
 
     /*
@@ -94,7 +94,7 @@ static PyObject* pyjmonitor_enter(PyObject* self, PyObject* args)
 static PyObject* pyjmonitor_exit(PyObject* self, PyObject* args)
 {
     PyJMonitorObject *monitor  = (PyJMonitorObject*) self;
-    JNIEnv           *env      = env = pyembed_get_env();
+    JNIEnv           *env      = pyembed_get_env();
 
     if ((*env)->MonitorExit(env, monitor->lock) < 0) {
         process_java_exception(env);

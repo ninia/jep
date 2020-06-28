@@ -66,10 +66,10 @@ int PyJMethod_GetParameterCount(PyJMethodObject*, JNIEnv*);
 /*
  * Check if a method is compatible with the types of a tuple of arguments.
  * This will return a 0 if the arguments are not valid for this method and a
- * positive integer if the arguments are valid. Larger numbers indicate a better
- * match between the arguments and the expected parameter types. This function
- * uses pyarg_matches_jtype to determine how well arguments match. This function
- * does not need to be called before using calling this method, it is only
+ * positive integer if the arguments are valid. Returns a negative value on error. 
+ * Larger numbers indicate a better match between the arguments and the expected parameter types.
+ * This function uses pyarg_matches_jtype to determine how well arguments match.
+ * This function does not need to be called before using calling this method, it is only
  * necessary for resolving method overloading.
  */
 int PyJMethod_CheckArguments(PyJMethodObject*, JNIEnv*, PyObject*);

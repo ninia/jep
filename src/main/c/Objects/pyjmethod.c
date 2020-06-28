@@ -179,7 +179,7 @@ int PyJMethod_CheckArguments(PyJMethodObject* method, JNIEnv *env,
                                 method->parameters, parampos);
 
         if (process_java_exception(env) || !paramType) {
-            match = 0;
+            matchTotal = -1;
             break;
         }
 
@@ -188,11 +188,7 @@ int PyJMethod_CheckArguments(PyJMethodObject* method, JNIEnv *env,
         match = pyarg_matches_jtype(env, param, paramType, paramTypeId);
         (*env)->DeleteLocalRef(env, paramType);
         if (PyErr_Occurred()) {
-            match = 0;
-            break;
-        }
-
-        if (!match) {
+            matchTotal = -1;
             break;
         }
         matchTotal += match;
