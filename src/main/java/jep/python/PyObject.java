@@ -81,21 +81,6 @@ public class PyObject extends JepAccess implements AutoCloseable {
         }
     }
 
-    /**
-     * Check if PyObject is valid. This is an alternative to isValid() if you
-     * need a RuntimeException.
-     * 
-     * @throws IllegalStateException
-     *             if it is not safe to use this python object
-     */
-    protected void checkValidRuntime() throws IllegalStateException {
-        try {
-            checkValid();
-        } catch (JepException e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
     @Override
     @SuppressWarnings("deprecation")
     public void close() throws JepException {
@@ -215,7 +200,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        checkValidRuntime();
+        checkValid();
         return equals(pointer.tstate, pointer.pyObject, obj);
     }
 
@@ -225,7 +210,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      */
     @Override
     public String toString() {
-        checkValidRuntime();
+        checkValid();
         return toString(pointer.tstate, pointer.pyObject);
     }
 
@@ -237,7 +222,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      */
     @Override
     public int hashCode() {
-        checkValidRuntime();
+        checkValid();
         Long value = hashCode(pointer.tstate, pointer.pyObject);
         return value.hashCode();
     }
@@ -256,7 +241,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      * return an object that can be converted to the correct return type. This
      * method does not verify that this Python object has methods matching the
      * Java interfaces. If a method is called on the proxy object that does not
-     * have a matching Python method a RuntimeException will be thrown. The
+     * have a matching Python method a JepException will be thrown. The
      * returned proxy object can only be used when this PyObject is valid. It
      * cannot be used on other threads or after the Interpreter that it
      * originated from is closed.

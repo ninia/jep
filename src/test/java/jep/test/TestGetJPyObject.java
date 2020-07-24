@@ -314,7 +314,7 @@ public class TestGetJPyObject {
         try {
             q.push(n);
             throw new IllegalStateException("list.push worked");
-        } catch (UndeclaredThrowableException e) {
+        } catch (JepException e) {
             /* list doesn't have a push so this is correct */
         }
 

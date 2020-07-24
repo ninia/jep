@@ -234,13 +234,13 @@ public final class MainInterpreter implements AutoCloseable {
      * @param config
      *            the python configuration to use.
      * 
-     * @throws JepException
-     *             if an error occurs
+     * @throws IllegalStateException
+     *             if called after the Python interpreter is initialized
      * @since 3.6
      */
-    public static void setInitParams(PyConfig config) throws JepException {
+    public static void setInitParams(PyConfig config) throws IllegalStateException {
         if (null != instance) {
-            throw new JepException(
+            throw new IllegalStateException(
                     "Jep.setInitParams(PyConfig) called after initializing python interpreter.");
         }
         pyConfig = config;
@@ -253,15 +253,15 @@ public final class MainInterpreter implements AutoCloseable {
      * @param argv
      *            the arguments to be set on Python's sys.argv for the main
      *            interpreter
-     * @throws JepException
-     *             if an error occurs
+     * @throws IllegalStateException
+     *             if called after the Python interpreter is initialized
      * 
      * @since 3.7
      */
     public static void setSharedModulesArgv(String... argv)
-            throws JepException {
+            throws IllegalStateException {
         if (instance != null) {
-            throw new JepException(
+            throw new IllegalStateException(
                     "Jep.setSharedModulesArgv(...) called after initializing python interpreter.");
         }
         sharedModulesArgv = argv;
@@ -276,14 +276,14 @@ public final class MainInterpreter implements AutoCloseable {
      * @param path
      *            the path of the jep native library, an absolute path leading
      *            to a file that is often named libjep.so or libjep.dll.
-     * @throws JepException
-     *             if an error occurs
+     * @throws IllegalStateException
+     *             if called after the Python interpreter is initialized
      * 
      * @since 3.9
      */
-    public static void setJepLibraryPath(String path) throws JepException {
+    public static void setJepLibraryPath(String path) throws IllegalStateException {
         if (instance != null) {
-            throw new JepException(
+            throw new IllegalStateException(
                     "Jep.setJepLibraryPath(...) called after initializing python interpreter.");
         }
         jepLibraryPath = path;

@@ -29,7 +29,7 @@ package jep;
  * 
  * @author Mike Johnson
  */
-public class JepException extends Exception {
+public class JepException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
