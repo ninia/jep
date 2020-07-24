@@ -6,19 +6,19 @@
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any
  * damages arising from the use of this software.
- * 
+ *
  * Permission is granted to anyone to use this software for any
  * purpose, including commercial applications, and to alter it and
  * redistribute it freely, subject to the following restrictions:
- * 
+ *
  *     1. The origin of this software must not be misrepresented; you
  *     must not claim that you wrote the original software. If you use
  *     this software in a product, an acknowledgment in the product
  *     documentation would be appreciated but is not required.
- * 
+ *
  *     2. Altered source versions must be plainly marked as such, and
  *     must not be misrepresented as being the original software.
- * 
+ *
  *     3. This notice may not be removed or altered from any source
  *     distribution.
  */
@@ -34,7 +34,7 @@ import jep.python.MemoryManager;
  * SharedInterpreter instance and for interacting with the interpreter use the
  * interface Interpreter. If you previously used Jep instances, use
  * SubInterpreter instances to retain the same behavior.
- * 
+ *
  * <p>
  * Embeds CPython in Java. Each Jep provides access to a Python interpreter and
  * maintains an independent global namespace for Python variables. Values can be
@@ -43,7 +43,7 @@ import jep.python.MemoryManager;
  * used to execute Python code. Python variables can be accessed using
  * {@link #getValue(String)}.
  * </p>
- * 
+ *
  * <p>
  * In general, methods called on a Jep instance must be called from the same
  * thread that created the instance. To maintain stability, avoid having two Jep
@@ -52,9 +52,9 @@ import jep.python.MemoryManager;
  * thread. Jep instances should always be closed when no longer needed to
  * prevent memory leaks.
  * </p>
- * 
+ *
  */
-public class Jep implements Interpreter {
+public abstract class Jep implements Interpreter {
 
     private static final String THREAD_WARN = "JEP THREAD WARNING: ";
 
@@ -97,11 +97,11 @@ public class Jep implements Interpreter {
 
     /**
      * Creates a new <code>Jep</code> instance and its associated interpreter.
-     * 
+     *
      * @deprecated Deprecated in 3.9. Use SubInterpreter or SharedInterpreter
      *             instead. If you used Jep objects in previous releases, use
      *             SubIntepreter for the same behavior.
-     * 
+     *
      * @throws JepException
      *             if an error occurs
      */
@@ -112,14 +112,14 @@ public class Jep implements Interpreter {
 
     /**
      * Creates a new <code>Jep</code> instance and its associated interpreter.
-     * 
+     *
      * @param config
      *            the configuration for the Jep instance
-     * 
+     *
      * @deprecated Deprecated in 3.9. Use SubInterpreter or SharedInterpreter
      *             instead. If you used Jep objects in previous releases, use
      *             SubIntepreter for the same behavior.
-     * 
+     *
      * @throws JepException
      *             if an error occurs
      */
@@ -209,11 +209,11 @@ public class Jep implements Interpreter {
     /**
      * Checks if the current thread is valid for the method call. All calls must
      * check the thread.
-     * 
+     *
      * @deprecated For internal usage only.
-     * 
+     *
      *             <b>Internal Only</b>
-     * 
+     *
      * @throws JepException
      *             if an error occurs
      */
@@ -358,7 +358,7 @@ public class Jep implements Interpreter {
     @Override
     public void set(String name, Object v) throws JepException {
         isValidThread();
-		set(tstate,name,v);
+        set(tstate,name,v);
     }
 
     private native void set(long tstate, String name, Object v)
@@ -369,7 +369,7 @@ public class Jep implements Interpreter {
     /**
      * Gets the memory manager associated with this Jep instance. The memory
      * manager attempts to track native memory usage of PyObjects.
-     * 
+     *
      * @return the memory manager
      */
     protected MemoryManager getMemoryManager() {
@@ -382,7 +382,7 @@ public class Jep implements Interpreter {
 
     /**
      * Gets the class loader associated with this Jep instance.
-     * 
+     *
      * @return the class loader
      */
     protected ClassLoader getClassLoader() {
@@ -392,7 +392,7 @@ public class Jep implements Interpreter {
     /**
      * Shuts down the Python interpreter. Make sure you call this to prevent
      * memory leaks.
-     * 
+     *
      */
     @Override
     public synchronized void close() throws JepException {
