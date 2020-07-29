@@ -36,7 +36,7 @@ public class TestNumpy {
         NDArray<boolean[]> zarray = new NDArray<>(
                 new boolean[] { true, false, true, true }, dimensions);
         interp.set("zarray", zarray);
-        String z_dtype = (String) interp.getValue("zarray.dtype");
+        String z_dtype = interp.getValue("zarray.dtype", String.class);
         if (!"bool".equals(z_dtype)) {
             throw new AssertionError(
                     "boolean ndarray set failed, dtype = " + z_dtype);
@@ -55,7 +55,7 @@ public class TestNumpy {
         NDArray<byte[]> barray = new NDArray<>(
                 new byte[] { 0x10, 0x00, 0x54, 032 }, dimensions);
         interp.set("barray", barray);
-        String b_dtype = (String) interp.getValue("barray.dtype");
+        String b_dtype = interp.getValue("barray.dtype", String.class);
         if (!"int8".equals(b_dtype)) {
             throw new AssertionError(
                     "byte ndarray set failed, dtype = " + b_dtype);
@@ -74,7 +74,7 @@ public class TestNumpy {
         NDArray<short[]> sarray = new NDArray<>(new short[] { 5, 3, 1, 8 },
                 dimensions);
         interp.set("sarray", sarray);
-        String s_dtype = (String) interp.getValue("sarray.dtype");
+        String s_dtype = interp.getValue("sarray.dtype", String.class);
         if (!"int16".equals(s_dtype)) {
             throw new AssertionError(
                     "short ndarray set failed, dtype = " + s_dtype);
@@ -93,7 +93,7 @@ public class TestNumpy {
         NDArray<int[]> iarray = new NDArray<>(new int[] { 547, 232, -675, 101 },
                 dimensions);
         interp.set("iarray", iarray);
-        String i_dtype = (String) interp.getValue("iarray.dtype");
+        String i_dtype = interp.getValue("iarray.dtype", String.class);
         if (!"int32".equals(i_dtype)) {
             throw new AssertionError(
                     "int ndarray set failed, dtype = " + i_dtype);
@@ -113,7 +113,7 @@ public class TestNumpy {
                 new long[] { 62724764L, 3424637L, 3426734242L, -3429234L },
                 dimensions);
         interp.set("larray", larray);
-        String l_dtype = (String) interp.getValue("larray.dtype");
+        String l_dtype = interp.getValue("larray.dtype", String.class);
         if (!"int64".equals(l_dtype)) {
             throw new AssertionError(
                     "long ndarray set failed, dtype = " + l_dtype);
@@ -132,7 +132,7 @@ public class TestNumpy {
         NDArray<float[]> farray = new NDArray<>(
                 new float[] { 4.32f, -0.0001f, 349.285f, 3201.0f }, dimensions);
         interp.set("farray", farray);
-        String f_dtype = (String) interp.getValue("farray.dtype");
+        String f_dtype = interp.getValue("farray.dtype", String.class);
         if (!"float32".equals(f_dtype)) {
             throw new AssertionError(
                     "float ndarray set failed, dtype = " + f_dtype);
@@ -152,7 +152,7 @@ public class TestNumpy {
                 new double[] { 0.44321, 0.00015, -9.34278, 235574.53 },
                 dimensions);
         interp.set("darray", darray);
-        String d_dtype = (String) interp.getValue("darray.dtype");
+        String d_dtype = interp.getValue("darray.dtype", String.class);
         if (!"float64".equals(d_dtype)) {
             throw new AssertionError(
                     "double ndarray set failed, dtype = " + d_dtype);

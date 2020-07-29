@@ -306,9 +306,7 @@ public interface Interpreter extends AutoCloseable {
      * <tr>
      * <tr>
      * <td>Anything else</td>
-     * <td>{@link String}, {@link PyObject}</td>
-     * <td>String conversion will likely be removed in future versions of Jep so
-     * it is unsafe to depend on this behavior.</td>
+     * <td>{@link PyObject}, {@link String}</td>
      * </tr>
      * </table>
      *

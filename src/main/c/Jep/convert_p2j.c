@@ -1006,10 +1006,10 @@ jobject PyObject_As_jobject(JNIEnv *env, PyObject *pyobject,
 #endif
     } else if (PyObject_CheckBuffer(pyobject)) {
         return pybuffer_as_jobject(env, pyobject, expectedType);
-    } else if ((*env)->IsAssignableFrom(env, JSTRING_TYPE, expectedType)) {
-        return (jobject) PyObject_As_jstring(env, pyobject);
     } else if ((*env)->IsAssignableFrom(env, JPYOBJECT_TYPE, expectedType)) {
         return PyObject_As_JPyObject(env, pyobject);
+    } else if ((*env)->IsAssignableFrom(env, JSTRING_TYPE, expectedType)) {
+        return (jobject) PyObject_As_jstring(env, pyobject);
     }
     raiseTypeError(env, pyobject, expectedType);
     return NULL;
