@@ -50,6 +50,12 @@ matrix:
   - os: linux
     language: java
     jdk: openjdk12
+  - os: linux
+    language: java
+    jdk: openjdk13
+  - os: linux
+    language: java
+    jdk: openjdk14
    # Force error for earlier detection of python 2.7 windows build problems
   - os: linux
     language: python
