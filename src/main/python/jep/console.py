@@ -30,10 +30,6 @@ import sys
 
 history_file = None
 
-# python 3 renamed raw_input to input
-if sys.version_info[0] >= 3:
-    raw_input = input
-
 has_readline = False
 
 try:
@@ -135,9 +131,9 @@ def prompt(jep):
 
             try:
                 if ran:
-                    line = raw_input(PS1)
+                    line = input(PS1)
                 else:
-                    line = raw_input(PS2)
+                    line = input(PS2)
             except:
                 break
 
