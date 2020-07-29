@@ -92,17 +92,11 @@ class TestTypes(unittest.TestCase):
     def test_callback(self):
         expected = ArrayList([1, 2, 3, 4, 5])
         actual = ArrayList()
-        try:
-            expected.forEach(actual.add)
-            self.assertTrue(expected == actual)
-        except AttributeError:
-            self.skipTest("Test is only applicable on Java 8")
+        expected.forEach(actual.add)
+        self.assertTrue(expected == actual)
 
     def test_stream_callbacks(self):
-        try:
-            from java.util.stream import LongStream
-        except ImportError:
-            self.skipTest("Test is only applicable on Java 8")
+        from java.util.stream import LongStream
         result = LongStream.range(1, 1000)\
             .filter(lambda i: i % 2 == 0)\
             .reduce(lambda first, second: first + second)\

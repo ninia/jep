@@ -248,14 +248,7 @@ class build_java(Command):
     def build(self, *jclasses):
         jep = [x for x in list(*jclasses) if not x.startswith('src{0}test{0}java{0}'.format(os.sep))]
         tests = [x for x in list(*jclasses) if x.startswith('src{0}test{0}java{0}'.format(os.sep))]
-        javah = find_executable("javah", os.path.dirname(self.javac))
-        if javah is None:
-            spawn([self.javac, '-deprecation', '-d', build_java.outdir, '-h', build_java.headeroutdir, '-classpath', 'src'] + jep)
-        else:
-            # Old versions of java generate headers with the javah command,
-            spawn([self.javac, '-deprecation', '-d', build_java.outdir, '-classpath', 'src'] + jep)
-            javah_files = self.distribution.javah_files or []
-            spawn([javah, '-classpath', build_java.outdir, '-d', build_java.headeroutdir] + javah_files)
+        spawn([self.javac, '-deprecation', '-d', build_java.outdir, '-h', build_java.headeroutdir, '-classpath', 'src'] + jep)
         spawn([self.javac, '-deprecation', '-d', build_java.testoutdir, '-classpath', '{0}{1}src'.format(build_java.outdir, os.pathsep)] + tests)
         # Copy the source files over to the build directory to make src.jar's.
         self.copySrc('jep', jep)
