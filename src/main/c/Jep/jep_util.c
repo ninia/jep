@@ -427,52 +427,10 @@ int pyarg_matches_jtype(JNIEnv *env,
                 return 2;
             }
         }
-    } else if (PyLong_Check(param)) {
-        switch (paramTypeId) {
-        case JINT_ID:
-            return 11;
-        case JLONG_ID:
-            return 10;
-        case JDOUBLE_ID:
-            return 9;
-        case JFLOAT_ID:
-            return 8;
-        case JSHORT_ID:
-            return 7;
-        case JBYTE_ID:
-            return 6;
-        case JBOOLEAN_ID:
-            return 5;
-        case JOBJECT_ID:
-            if ((*env)->IsSameObject(env, JINT_OBJ_TYPE, paramType)) {
-                return 4;
-            } else if ((*env)->IsSameObject(env, JLONG_OBJ_TYPE, paramType)) {
-                return 3;
-            } else if ((*env)->IsSameObject(env, JOBJECT_TYPE, paramType)) {
-                return 1;
-            } else if ((*env)->IsAssignableFrom(env, JINT_OBJ_TYPE, paramType)) {
-                return 2;
-            }
-        }
     } else if (PyUnicode_Check(param)) {
         switch (paramTypeId) {
         case JSTRING_ID:
             return 3;
-        case JCHAR_ID:
-            if (PyUnicode_GET_LENGTH(param) == 1) {
-                return 2;
-            }
-            break;
-        case JOBJECT_ID:
-            if ((*env)->IsAssignableFrom(env, JSTRING_TYPE, paramType)) {
-                return 1;
-            }
-        }
-    } else if (PyUnicode_Check(param)) {
-        switch (paramTypeId) {
-        case JSTRING_ID:
-            return 3;
-            break;
         case JCHAR_ID:
             if (PyUnicode_GET_LENGTH(param) == 1) {
                 return 2;

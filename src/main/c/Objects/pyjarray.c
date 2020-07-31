@@ -311,12 +311,8 @@ static int pyjarray_init(JNIEnv *env,
 
             if (!value)
                 ;
-            else {
-                if (PyLong_Check(value)) {
-                    v = PyLong_AsLongLong(value);
-                } else if (PyLong_Check(value)) {
-                    v = PyLong_AsLongLong(value);
-                }
+            else if (PyLong_Check(value)) {
+                v = PyLong_AsLongLong(value);
             }
 
             for (i = 0; i < pyarray->length; i++) {
@@ -1476,12 +1472,6 @@ static PyObject* pyjarray_slice(PyObject *_self, Py_ssize_t ilow,
 static PyObject* pyjarray_subscript(PyJArrayObject *self, PyObject *item)
 {
     if (PyLong_Check(item)) {
-        long i = (long) PyLong_AsLongLong(item);
-        if (i < 0) {
-            i += self->length;
-        }
-        return pyjarray_item(self, (Py_ssize_t) i);
-    } else if (PyLong_Check(item)) {
         long i = PyLong_AsLong(item);
         if (i == -1 && PyErr_Occurred()) {
             return NULL;

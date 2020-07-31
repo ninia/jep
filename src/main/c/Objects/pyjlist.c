@@ -384,12 +384,6 @@ static PyObject* pyjlist_inplace_fill(PyObject *o, Py_ssize_t count)
 static PyObject* pyjlist_subscript(PyObject *self, PyObject *item)
 {
     if (PyLong_Check(item)) {
-        long i = (long) PyLong_AsLongLong(item);
-        if (i < 0) {
-            i += (long) PyObject_Size(self);
-        }
-        return pyjlist_getitem(self, (Py_ssize_t) i);
-    } else if (PyLong_Check(item)) {
         long i = PyLong_AsLong(item);
         if (i == -1 && PyErr_Occurred()) {
             return NULL;
@@ -425,12 +419,6 @@ static int pyjlist_set_subscript(PyObject* self, PyObject* item,
                                  PyObject* value)
 {
     if (PyLong_Check(item)) {
-        long i = (long) PyLong_AsLongLong(item);
-        if (i < 0) {
-            i += (long) PyObject_Size(self);
-        }
-        return pyjlist_setitem(self, (Py_ssize_t) i, value);
-    } else if (PyLong_Check(item)) {
         long i = PyLong_AsLong(item);
         if (i == -1 && PyErr_Occurred()) {
             return -1;
