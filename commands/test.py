@@ -37,7 +37,7 @@ class test(Command):
         classpath = os.path.join(self.java_build, 'jep-' + version + '.jar')
         classpath += os.pathsep + os.path.join(self.java_build, 'jep-' + version + '-test.jar')
         classpath += os.pathsep + 'src/test/python/lib/sqlitejdbc-v056.jar'
-        classpath += os.pathsep + 'stc/test/python/lib/fakenetty.jar'
+        classpath += os.pathsep + 'src/test/python/lib/fakenetty.jar'
 
         # setup environment variables
         environment = {}

@@ -44,7 +44,7 @@ Building and installing require the JDK, Python, and optionally numpy to be inst
 
 Dependencies
 ------------
-* Python 2.7, 3.3, 3.4, 3.5, 3.6, 3.7, or 3.8
+* Python 2.7, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, or 3.9
 * Java >= 1.7
 * NumPy >= 1.7 (optional)
 
