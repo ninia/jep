@@ -10,8 +10,6 @@ export VIRTUAL_ENV
 if test "x$VIRTUAL_ENV" != "x"; then
   PATH="$VIRTUAL_ENV/bin:$PATH"
   export PATH
-  PYTHONHOME="$VIRTUAL_ENV"
-  export PYTHONHOME
 fi
 
 cp="{install_lib}jep/jep-{version}.jar"

@@ -680,13 +680,14 @@ void pyembed_thread_close(JNIEnv *env, intptr_t _jepThread)
     }
     if (jepThread->tstate->interp == mainThreadState->interp) {
         PyThreadState_Clear(jepThread->tstate);
-        PyThreadState_Swap(NULL);
+        PyEval_ReleaseThread(jepThread->tstate);
         PyThreadState_Delete(jepThread->tstate);
     } else {
         Py_EndInterpreter(jepThread->tstate);
+	PyThreadState_Swap(mainThreadState);
+        PyEval_ReleaseThread(mainThreadState);
     }
     free(jepThread);
-    PyEval_ReleaseLock();
 }
 
 

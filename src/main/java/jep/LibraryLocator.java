@@ -213,14 +213,16 @@ final class LibraryLocator {
                         System.load(libraryFile.getAbsolutePath());
                     } catch (UnsatisfiedLinkError e) {
                         /*
-                         * This is almost always caused because libpython isn't
+                         * This is almost always caused because libpython or pythonXX.dll isn't
                          * found, so try to figure out the exact libpython that
-                         * is needed and look in PYTHONHOME.
+                         * is needed and look in PYTHONHOME. Otherwise look in PYTHONHOME for pythonXX.dll
                          * 
                          */
                         Matcher m = Pattern.compile("libpython[\\w\\.]*")
                                 .matcher(e.getMessage());
                         if (m.find() && findPythonLibrary(m.group(0))) {
+                            System.load(libraryFile.getAbsolutePath());
+                        } else if (findPythonLibraryWindows()) {
                             System.load(libraryFile.getAbsolutePath());
                         } else {
                             throw e;
@@ -254,6 +256,31 @@ final class LibraryLocator {
                 File libraryFile = new File(libDir, libraryName);
                 if (libraryFile.exists()) {
                     System.load(libraryFile.getAbsolutePath());
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Attempt to load pythonXX.dll from within PYTHONHOME
+     *
+     * @return true if pythonXX.dll was found and loaded.
+     */
+    private boolean findPythonLibraryWindows() {
+        String pythonHome = this.pythonHome;
+        if (pythonHome == null && !ignoreEnv) {
+            pythonHome = System.getenv("PYTHONHOME");
+        }
+        if (pythonHome != null) {
+            Pattern re = Pattern.compile("^python\\d\\d+\\.dll$");
+            for (File file : new File(pythonHome).listFiles()) {
+                if (!file.isFile()) {
+                    continue;
+                }
+                if (re.matcher(file.getName()).matches() && file.exists()) {
+                    System.load(file.getAbsolutePath());
                     return true;
                 }
             }
