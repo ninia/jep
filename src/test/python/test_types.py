@@ -792,6 +792,7 @@ class TestTypes(unittest.TestCase):
             self.assertSequenceEqual(l, self.fields.intArray)
             self.staticFields.intArray = l
             self.assertSequenceEqual(l, self.staticFields.intArray)
+            self.assertSequenceEqual(self.methods.object(a), a)
             self.fields.verify()
             self.staticFields.verify()
 
@@ -821,6 +822,7 @@ class TestTypes(unittest.TestCase):
         self.assertSequenceEqual(bb.array(), l)
         bb = ByteBuffer.wrap(array.array('B', l))
         self.assertSequenceEqual(bb.array(), l)
+        self.assertSequenceEqual(self.methods.object(l), l)
         v = memoryview(array.array('B', l))
         v = v[::2]
         bb = ByteBuffer.wrap(v)
@@ -834,6 +836,7 @@ class TestTypes(unittest.TestCase):
         a = array.array('f', [1,2,3,4])
         fb = FloatBuffer.wrap(a)
         self.assertSequenceEqual(fb.array(), a)
+        self.assertSequenceEqual(self.methods.object(a), a)
         v = memoryview(a)
         v = v[::2]
         fb = FloatBuffer.wrap(v)
@@ -847,6 +850,7 @@ class TestTypes(unittest.TestCase):
         a = array.array('q', [1,2,3,4])
         lb = LongBuffer.wrap(a)
         self.assertSequenceEqual(lb.array(), a)
+        self.assertSequenceEqual(self.methods.object(a), a)
         v = memoryview(a)
         v = v[::2]
         lb = LongBuffer.wrap(v)
