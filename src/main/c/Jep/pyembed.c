@@ -1480,7 +1480,7 @@ EXIT:
 }
 
 
-// gratuitously copyied from pythonrun.c::run_pyc_file
+// gratuitously copied from pythonrun.c::run_pyc_file
 static void pyembed_run_pyc(JepThread *jepThread,
                             FILE *fp)
 {
@@ -1517,7 +1517,7 @@ static void pyembed_run_pyc(JepThread *jepThread,
 
 /* Check whether a file maybe a pyc file: Look at the extension,
  the file type, and, if we may close it, at the first few bytes. */
-// gratuitously copyied from pythonrun.c::run_pyc_file
+// gratuitously copied from pythonrun.c::run_pyc_file
 static int maybe_pyc_file(FILE *fp, const char* filename, const char* ext,
                           int closeit)
 {
