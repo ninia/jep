@@ -193,6 +193,32 @@ final class LibraryLocator {
             }
 
         }
+        
+        // For Mac framework builds
+        if (userHome != null) {
+            File localDir = new File(userHome, "Library");
+            if (localDir.isDirectory()) {
+                File pythonMainDir = new File(localDir, "Python");
+                if (pythonMainDir.isDirectory()) {
+                    for (File versionDir : pythonMainDir.listFiles()) {
+                        if (versionDir.isDirectory() && versionDir.getName().matches("\\d\\.\\d")) {
+                            File libDir = new File(versionDir, "lib");
+                            if (libDir.isDirectory()) {
+                                File pythonDir = new File(libDir, "python");
+                                if (pythonDir.isDirectory()) {
+                                    File packagesDir = new File(pythonDir, "site-packages");
+                                    if (searchPackageDir(packagesDir)) {
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+        }
+        
         return false;
     }
 
