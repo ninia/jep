@@ -62,8 +62,8 @@ FINALLY:
  */
 PyTypeObject PyJIterable_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "jep.PyJIterable",
-    sizeof(PyJObject),
+    "java.lang.Iterable",
+    0,
     0,
     0,                                        /* tp_dealloc */
     0,                                        /* tp_print */
@@ -82,7 +82,7 @@ PyTypeObject PyJIterable_Type = {
     0,                                        /* tp_as_buffer */
     Py_TPFLAGS_DEFAULT |
     Py_TPFLAGS_BASETYPE,                      /* tp_flags */
-    "jiterable",                              /* tp_doc */
+    "Jep java.lang.Iterable",                 /* tp_doc */
     0,                                        /* tp_traverse */
     0,                                        /* tp_clear */
     0,                                        /* tp_richcompare */

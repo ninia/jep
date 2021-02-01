@@ -217,7 +217,7 @@ static PyObject* pyjmap_getiter(PyObject* obj)
         goto FINALLY;
     }
 
-    result = PyJIterator_Wrap(env, iter, NULL);
+    result = jobject_As_PyObject(env, iter);
 FINALLY:
     (*env)->PopLocalFrame(env, NULL);
     return result;
@@ -249,8 +249,8 @@ static PyMappingMethods pyjmap_map_methods = {
  */
 PyTypeObject PyJMap_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "jep.PyJMap",
-    sizeof(PyJObject),
+    "java.util.Map",
+    0,
     0,
     0,                                        /* tp_dealloc */
     0,                                        /* tp_print */
@@ -267,8 +267,8 @@ PyTypeObject PyJMap_Type = {
     0,                                        /* tp_getattro */
     0,                                        /* tp_setattro */
     0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT,                       /* tp_flags */
-    "jmap",                                   /* tp_doc */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /* tp_flags */
+    "Jep java.util.Map",                      /* tp_doc */
     0,                                        /* tp_traverse */
     0,                                        /* tp_clear */
     0,                                        /* tp_richcompare */

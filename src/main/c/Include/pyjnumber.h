@@ -39,9 +39,6 @@
 
 extern PyTypeObject PyJNumber_Type;
 
-#define PyJNumber_Wrap(env, jobj, jcls) \
-    PyJObject_New(env, &PyJNumber_Type, jobj, jcls)
-
 #define PyJNumber_Check(pyobj) \
     PyObject_TypeCheck(pyobj, &PyJNumber_Type)
 

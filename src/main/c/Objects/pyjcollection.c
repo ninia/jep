@@ -100,8 +100,8 @@ static PySequenceMethods pyjcollection_seq_methods = {
  */
 PyTypeObject PyJCollection_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "jep.PyJCollection",
-    sizeof(PyJObject),
+    "java.util.Collection",
+    0,
     0,
     0,                                        /* tp_dealloc */
     0,                                        /* tp_print */
@@ -120,7 +120,7 @@ PyTypeObject PyJCollection_Type = {
     0,                                        /* tp_as_buffer */
     Py_TPFLAGS_DEFAULT |                      /* tp_flags */
     Py_TPFLAGS_BASETYPE,
-    "jcollection",                            /* tp_doc */
+    "Jep java.util.Collection",               /* tp_doc */
     0,                                        /* tp_traverse */
     0,                                        /* tp_clear */
     0,                                        /* tp_richcompare */

@@ -54,6 +54,7 @@
 #include "pyjautocloseable.h"
 #include "pyjmonitor.h"
 #include "pyjobject.h"
+#include "pyjtype.h"
 #include "convert_p2j.h"
 #include "convert_j2p.h"
 #include "java_access/ArrayList.h"

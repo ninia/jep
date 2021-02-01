@@ -490,7 +490,7 @@ int process_java_exception(JNIEnv *env)
     pyExceptionType = pyerrtype_from_throwable(env, exception);
 
     // turn the Java exception into a PyJObject so the interpreter can handle it
-    jpyExc = PyJObject_Wrap(env, exception, NULL);
+    jpyExc = jobject_As_PyObject(env, exception);
     if (!jpyExc) {
         return 1;
     }

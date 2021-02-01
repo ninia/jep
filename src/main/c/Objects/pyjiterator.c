@@ -66,8 +66,8 @@ static PyObject* pyjiterator_next(PyObject* self)
  */
 PyTypeObject PyJIterator_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "jep.PyJIterator",
-    sizeof(PyJObject),
+    "java.util.Iterator",
+    0,
     0,
     0,                                        /* tp_dealloc */
     0,                                        /* tp_print */
@@ -84,8 +84,8 @@ PyTypeObject PyJIterator_Type = {
     0,                                        /* tp_getattro */
     0,                                        /* tp_setattro */
     0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT,                       /* tp_flags */
-    "jiterator",                              /* tp_doc */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /* tp_flags */
+    "Jep java.util.Iterator",                 /* tp_doc */
     0,                                        /* tp_traverse */
     0,                                        /* tp_clear */
     0,                                        /* tp_richcompare */

@@ -131,39 +131,28 @@ static PyObject* jnumber_As_PyObject(JNIEnv *env, jobject jobj, jclass class)
         }
         return jfloat_As_PyObject(f);
     } else {
-        return PyJNumber_Wrap(env, jobj, class);
+        return jobject_As_PyJObject(env, jobj, class);
     }
 
 }
 
 PyObject* jobject_As_PyJObject(JNIEnv *env, jobject jobj, jclass class)
 {
-    PyObject* result = NULL;
-    if ((*env)->IsAssignableFrom(env, class, JITERABLE_TYPE)) {
-        if ((*env)->IsAssignableFrom(env, class, JCOLLECTION_TYPE)) {
-            if ((*env)->IsAssignableFrom(env, class, JLIST_TYPE)) {
-                result = PyJList_Wrap(env, jobj, class);
-            } else {
-                result = PyJCollection_Wrap(env, jobj, class);
-            }
-        } else {
-            result = PyJIterable_Wrap(env, jobj, class);
-        }
-    } else if ((*env)->IsAssignableFrom(env, class, JMAP_TYPE)) {
-        result = PyJMap_Wrap(env, jobj, class);
-    } else if ((*env)->IsAssignableFrom(env, class, JITERATOR_TYPE)) {
-        result = PyJIterator_Wrap(env, jobj, class);
-    } else if ((*env)->IsAssignableFrom(env, class, JAUTOCLOSEABLE_TYPE)) {
-        result = PyJAutoCloseable_Wrap(env, jobj, class);
-    } else if ((*env)->IsSameObject(env, class, JCLASS_TYPE)) {
-        result = PyJClass_Wrap(env, jobj);
-    } else if ((*env)->IsAssignableFrom(env, class, JNUMBER_TYPE)) {
-        result = PyJNumber_Wrap(env, jobj, class);
-    } else if ((*env)->IsAssignableFrom(env, class, JBUFFER_TYPE)) {
-        result = PyJBuffer_Wrap(env, jobj, class);
-    } else {
-        result = PyJObject_Wrap(env, jobj, class);
+    if (jobj == NULL) {
+        Py_RETURN_NONE;
     }
+    if (!class) {
+        class = (*env)->GetObjectClass(env, jobj);
+    }
+    if ((*env)->IsSameObject(env, class, JCLASS_TYPE)) {
+        return PyJClass_Wrap(env, jobj);
+    }
+    PyTypeObject* type = PyJType_Get(env, class);
+    if (!type) {
+        return NULL;
+    }
+    PyObject* result = PyJObject_New(env, type, jobj, class);
+    Py_DECREF(type);
     return result;
 }
 
