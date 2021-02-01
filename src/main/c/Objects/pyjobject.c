@@ -211,7 +211,7 @@ EXIT_ERROR:
 PyObject* PyJObject_New(JNIEnv *env, PyTypeObject* type, jobject obj,
                         jclass class)
 {
-    PyJObject *pyjob = PyObject_NEW(PyJObject, type);
+    PyJObject *pyjob = (PyJObject*) PyType_GenericAlloc(type, 0);
 
     if (obj) {
         pyjob->object = (*env)->NewGlobalRef(env, obj);
@@ -250,8 +250,7 @@ static void pyjobject_dealloc(PyJObject *self)
 
     Py_CLEAR(self->attr);
     Py_CLEAR(self->javaClassName);
-
-    PyObject_Del(self);
+    Py_TYPE((PyObject*) self)->tp_free((PyObject*) self);
 #endif
 }
 
@@ -519,7 +518,7 @@ static PyMemberDef pyjobject_members[] = {
 
 PyTypeObject PyJObject_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "jep.PyJObject",                          /* tp_name */
+    "java.lang.Object",                       /* tp_name */
     sizeof(PyJObject),                        /* tp_basicsize */
     0,                                        /* tp_itemsize */
     (destructor) pyjobject_dealloc,           /* tp_dealloc */
@@ -539,7 +538,7 @@ PyTypeObject PyJObject_Type = {
     0,                                        /* tp_as_buffer */
     Py_TPFLAGS_DEFAULT |
     Py_TPFLAGS_BASETYPE,                      /* tp_flags */
-    "jobject",                                /* tp_doc */
+    "Jep java.lang.Object",                   /* tp_doc */
     0,                                        /* tp_traverse */
     0,                                        /* tp_clear */
     (richcmpfunc) pyjobject_richcompare,      /* tp_richcompare */

@@ -39,9 +39,6 @@
 
 extern PyTypeObject PyJAutoCloseable_Type;
 
-#define PyJAutoCloseable_Wrap(env, jobj, jcls) \
-    PyJObject_New(env, &PyJAutoCloseable_Type, jobj, jcls)
-
 #define PyJAutoCloseable_Check(pyobj) \
     PyObject_TypeCheck(pyobj, &PyJAutoCloseable_Type)
 

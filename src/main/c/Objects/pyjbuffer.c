@@ -164,7 +164,7 @@ static PyBufferProcs buffer_as_buffer = {
  */
 PyTypeObject PyJBuffer_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "jep.PyJBuffer",
+    "java.nio.Buffer",
     sizeof(PyJObject),
     0,
     0,                                        /* tp_dealloc */
@@ -184,7 +184,7 @@ PyTypeObject PyJBuffer_Type = {
     &buffer_as_buffer,                        /* tp_as_buffer */
     Py_TPFLAGS_DEFAULT |
     Py_TPFLAGS_BASETYPE,                      /* tp_flags */
-    "jbuffer",                                /* tp_doc */
+    "Jep java.nio.Buffer",                    /* tp_doc */
     0,                                        /* tp_traverse */
     0,                                        /* tp_clear */
     0,                                        /* tp_richcompare */

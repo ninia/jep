@@ -38,6 +38,8 @@ static jmethodID getSimpleName      = 0;
 static jmethodID isArray            = 0;
 static jmethodID newInstance        = 0;
 static jmethodID isInterface        = 0;
+static jmethodID getInterfaces      = 0;
+static jmethodID getSuperclass      = 0;
 
 jclass java_lang_Class_getComponentType(JNIEnv* env, jclass this)
 {
@@ -162,6 +164,30 @@ jboolean java_lang_Class_isInterface(JNIEnv* env, jclass this)
     Py_BEGIN_ALLOW_THREADS
     if (JNI_METHOD(isInterface, env, JCLASS_TYPE, "isInterface", "()Z")) {
         result = (*env)->CallBooleanMethod(env, this, isInterface);
+    }
+    Py_END_ALLOW_THREADS
+    return result;
+}
+
+jclass java_lang_Class_getSuperclass(JNIEnv* env, jclass this)
+{
+    jclass result = NULL;
+    Py_BEGIN_ALLOW_THREADS
+    if (JNI_METHOD(getSuperclass, env, JCLASS_TYPE, "getSuperclass",
+                   "()Ljava/lang/Class;")) {
+        result = (jclass) (*env)->CallObjectMethod(env, this, getSuperclass);
+    }
+    Py_END_ALLOW_THREADS
+    return result;
+}
+
+jobjectArray java_lang_Class_getInterfaces(JNIEnv* env, jclass this)
+{
+    jobjectArray result = NULL;
+    Py_BEGIN_ALLOW_THREADS
+    if (JNI_METHOD(getInterfaces, env, JCLASS_TYPE, "getInterfaces",
+                   "()[Ljava/lang/Class;")) {
+        result = (jobjectArray) (*env)->CallObjectMethod(env, this, getInterfaces);
     }
     Py_END_ALLOW_THREADS
     return result;

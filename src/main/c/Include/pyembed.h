@@ -39,9 +39,11 @@ struct __JepThread {
     PyThreadState *tstate;
     JNIEnv        *env;
     jobject        classloader;
-    jobject        caller;      /* Jep instance that called us. */
-    PyObject      *fqnToPyJAttrs; /* a dictionary of fully qualified Java
-                                       classnames to PyJMethods and PyJFields */
+    jobject        caller;        /* Jep instance that called us. */
+    PyObject      *fqnToPyJAttrs; /* A Dict mapping fully qualified Java
+                                       class names to PyJMethods and PyJFields */
+    PyObject      *fqnToPyType;   /* A Dict mapping fully qualified Java
+				       class names to a type object. */
 };
 typedef struct __JepThread JepThread;
 

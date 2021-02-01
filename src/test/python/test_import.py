@@ -45,3 +45,16 @@ class TestImport(unittest.TestCase):
     def test_inner_class(self):
         from java.lang import Thread
         self.assertEquals(Thread.currentThread().getState(), Thread.State.RUNNABLE)
+
+    def test_type_name(self):
+        from java.util import Date
+        self.assertEquals("java.util", Date.__pytype__.__module__)
+        self.assertEquals("Date", Date.__pytype__.__name__)
+
+    def test_type_inheritance(self):
+        from java.lang import Object
+        from java.io import Serializable
+        from java.util import Date
+        self.assertTrue(isinstance(Date(), Object.__pytype__))
+        self.assertTrue(isinstance(Date(), Serializable.__pytype__))
+

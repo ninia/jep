@@ -3,6 +3,7 @@ import unittest
 import jep
 Test = jep.findClass('jep.test.Test')
 from java.util import ArrayList
+from java.util import List
 
 COUNT = 17
 
@@ -88,7 +89,7 @@ class TestLists(unittest.TestCase):
     def test_add(self):
         jlist = makeJavaList()
         x = jlist + [1, 2, 3]
-        self.assertIn('jep.PyJList', str(type(x)))
+        self.assertTrue(isinstance(x, List.__pytype__))
         self.assertEqual(len(x), COUNT + 3)
 
     def test_addequals(self):
@@ -107,7 +108,7 @@ class TestLists(unittest.TestCase):
     def test_multiply(self):
         jlist = makeJavaList()
         x = jlist * 3
-        self.assertIn('jep.PyJList', str(type(x)))
+        self.assertTrue(isinstance(x, List.__pytype__))
         self.assertEqual(len(x), COUNT * 3)
 
     def test_multiplyequals(self):

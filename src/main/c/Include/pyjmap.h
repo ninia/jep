@@ -39,9 +39,6 @@
 
 extern PyTypeObject PyJMap_Type;
 
-#define PyJMap_Wrap(env, jobj, jcls) \
-    PyJObject_New(env, &PyJMap_Type, jobj, jcls)
-
 #define PyJMap_Check(pyobj) \
     PyObject_TypeCheck(pyobj, &PyJMap_Type)
 

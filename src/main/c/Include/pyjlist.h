@@ -39,9 +39,6 @@
 
 extern PyTypeObject PyJList_Type;
 
-#define PyJList_Wrap(env, jobj, jcls) \
-    PyJObject_New(env, &PyJList_Type, jobj, jcls)
-
 #define PyJList_Check(pyobj) \
     PyObject_TypeCheck(pyobj, &PyJList_Type)
 

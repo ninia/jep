@@ -39,9 +39,6 @@
 
 extern PyTypeObject PyJIterable_Type;
 
-#define PyJIterable_Wrap(env, jobj, jcls) \
-    PyJObject_New(env, &PyJIterable_Type, jobj, jcls)
-
 #define PyJIterable_Check(pyobj) \
     PyObject_TypeCheck(pyobj, &PyJIterable_Type)
 

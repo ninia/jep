@@ -228,15 +228,16 @@ void pyembed_preinit(JNIEnv *env,
  *
  * Furthermore, we need to ensure that the inheritance tree is built in the
  * correct order, i.e. from the top down.  For example, we need to set that
- * PyJIterable's tp_base extends PyJObject before we set that PyJCollection's
- * tp_base extends PyJIterable.
+ * PyJCollection's tp_base extends PyJIterbale before we set that PyJList's
+ * tp_base extends PyJCollection. Interfaces that are not extending another
+ * interface should not set tp_base because interfaces are added to Python
+ * types using multiple inheritance and only one superclass can define a
+ * custom structure.
  *
- * See https://docs.python.org/2/extending/newtypes.html
- *     https://docs.python.org/3/extending/newtypes.html
+ * See https://docs.python.org/3/extending/newtypes.html
  */
 static int pyjtypes_ready(void)
 {
-    // start at the top with object
     if (PyType_Ready(&PyJObject_Type) < 0) {
         return -1;
     }
@@ -247,7 +248,6 @@ static int pyjtypes_ready(void)
         return -1;
     }
 
-    // next do number
     if (!PyJNumber_Type.tp_base) {
         PyJNumber_Type.tp_base = &PyJObject_Type;
     }
@@ -255,23 +255,14 @@ static int pyjtypes_ready(void)
         return -1;
     }
 
-    // next do iterable
-    if (!PyJIterable_Type.tp_base) {
-        PyJIterable_Type.tp_base = &PyJObject_Type;
-    }
     if (PyType_Ready(&PyJIterable_Type) < 0) {
         return -1;
     }
 
-    // next do iterator
-    if (!PyJIterator_Type.tp_base) {
-        PyJIterator_Type.tp_base = &PyJObject_Type;
-    }
     if (PyType_Ready(&PyJIterator_Type) < 0) {
         return -1;
     }
 
-    // next do collection
     if (!PyJCollection_Type.tp_base) {
         PyJCollection_Type.tp_base = &PyJIterable_Type;
     }
@@ -279,7 +270,6 @@ static int pyjtypes_ready(void)
         return -1;
     }
 
-    // next do list
     if (!PyJList_Type.tp_base) {
         PyJList_Type.tp_base = &PyJCollection_Type;
     }
@@ -287,10 +277,6 @@ static int pyjtypes_ready(void)
         return -1;
     }
 
-    // next do map
-    if (!PyJMap_Type.tp_base) {
-        PyJMap_Type.tp_base = &PyJObject_Type;
-    }
     if (PyType_Ready(&PyJMap_Type) < 0) {
         return -1;
     }
@@ -302,10 +288,6 @@ static int pyjtypes_ready(void)
         return -1;
     }
 
-    // last do autocloseable
-    if (!PyJAutoCloseable_Type.tp_base) {
-        PyJAutoCloseable_Type.tp_base = &PyJObject_Type;
-    }
     if (PyType_Ready(&PyJAutoCloseable_Type) < 0) {
         return -1;
     }
@@ -449,7 +431,7 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
                 PyEval_ReleaseThread(mainThreadState);
                 (*env)->PopLocalFrame(env, NULL);
                 THROW_JEP(env, "Received null argv.");
-                for(k = 0; k < i; k++) {
+                for (k = 0; k < i; k++) {
                     free(argv[k]);
                 }
                 free(argv);
@@ -633,6 +615,7 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller,
     jepThread->classloader     = (*env)->NewGlobalRef(env, cl);
     jepThread->caller          = (*env)->NewGlobalRef(env, caller);
     jepThread->fqnToPyJAttrs = NULL;
+    jepThread->fqnToPyType   = NULL;
 
     if ((tdict = PyThreadState_GetDict()) != NULL) {
         PyObject *key, *t;
@@ -670,6 +653,7 @@ void pyembed_thread_close(JNIEnv *env, intptr_t _jepThread)
 
     Py_CLEAR(jepThread->globals);
     Py_CLEAR(jepThread->fqnToPyJAttrs);
+    Py_CLEAR(jepThread->fqnToPyType);
     Py_CLEAR(jepThread->modjep);
 
     if (jepThread->classloader) {
@@ -684,7 +668,7 @@ void pyembed_thread_close(JNIEnv *env, intptr_t _jepThread)
         PyThreadState_Delete(jepThread->tstate);
     } else {
         Py_EndInterpreter(jepThread->tstate);
-	PyThreadState_Swap(mainThreadState);
+        PyThreadState_Swap(mainThreadState);
         PyEval_ReleaseThread(mainThreadState);
     }
     free(jepThread);
@@ -805,7 +789,7 @@ static PyObject* pyembed_jproxy(PyObject *self, PyObject *args)
     // make sure target doesn't get garbage collected
     Py_INCREF(pytarget);
 
-    result = PyJObject_Wrap(env, proxy, NULL);
+    result = jobject_As_PyObject(env, proxy);
     (*env)->DeleteLocalRef(env, proxy);
     return result;
 }
@@ -1236,6 +1220,7 @@ void pyembed_setloader(JNIEnv *env, intptr_t _jepThread, jobject cl)
 
     PyEval_AcquireThread(jepThread->tstate);
     Py_CLEAR(jepThread->fqnToPyJAttrs);
+    Py_CLEAR(jepThread->fqnToPyType);
 
     oldLoader = jepThread->classloader;
     if (oldLoader) {

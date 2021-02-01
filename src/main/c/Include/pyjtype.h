@@ -1,7 +1,7 @@
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2019 JEP AUTHORS.
+   Copyright (c) 2020-2021 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -25,21 +25,14 @@
    distribution.
 */
 
-/*
- * A PyJAutoCloseableObject is a PyJObject that has __enter__ and __exit__
- * implemented. It should only be used where the underlying jobject
- * of the PyJObject is an implementation of java.lang.AutoCloseable.
- */
-
 #include "jep_platform.h"
-#include "pyjobject.h"
 
-#ifndef _Included_pyjbuffer
-#define _Included_pyjbuffer
+#ifndef _Included_pyjtype
+#define _Included_pyjtype
 
-extern PyTypeObject PyJBuffer_Type;
+/*
+ * Get a PyTypeObject for the java class provided.
+ */
+PyTypeObject* PyJType_Get(JNIEnv*, jclass);
 
-#define PyJBuffer_Check(pyobj) \
-    PyObject_TypeCheck(pyobj, &PyJBuffer_Type)
-
-#endif // ndef pyjbuffer
+#endif // ndef pyjtype

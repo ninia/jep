@@ -276,6 +276,17 @@ static PyObject* pyjclass_call(PyJClassObject *self,
     return result;
 }
 
+static PyTypeObject* pyjclass_GetPyType(PyJClassObject* self)
+{
+    JNIEnv* env = pyembed_get_env();
+    return PyJType_Get(env, self->clazz);
+}
+
+
+static PyGetSetDef pyjclass_getset[] = {
+    {"__pytype__", (getter) pyjclass_GetPyType, NULL},
+    {NULL} /* Sentinel */
+};
 
 PyTypeObject PyJClass_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
@@ -307,7 +318,7 @@ PyTypeObject PyJClass_Type = {
     0,                                        /* tp_iternext */
     0,                                        /* tp_methods */
     0,                                        /* tp_members */
-    0,                                        /* tp_getset */
+    pyjclass_getset,                          /* tp_getset */
     0, // &PyJObject_Type                     /* tp_base */
     0,                                        /* tp_dict */
     0,                                        /* tp_descr_get */

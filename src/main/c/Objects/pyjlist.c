@@ -69,7 +69,7 @@ static PyObject* pyjlist_new_copy(PyObject *toCopy)
         goto FINALLY;
     }
 
-    result = PyJList_Wrap(env, newList, obj->clazz);
+    result = jobject_As_PyJObject(env, newList, obj->clazz);
 FINALLY:
     (*env)->PopLocalFrame(env, NULL);
     return result;
@@ -175,7 +175,7 @@ static PyObject* pyjlist_getslice(PyObject *o, Py_ssize_t i1, Py_ssize_t i2)
         goto FINALLY;
     }
 
-    pyres = PyJList_Wrap(env, result, NULL);
+    pyres = jobject_As_PyObject(env, result);
 FINALLY:
     (*env)->PopLocalFrame(env, NULL);
     return pyres;
@@ -478,8 +478,8 @@ static PyMappingMethods pyjlist_map_methods = {
  */
 PyTypeObject PyJList_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "jep.PyJList",
-    sizeof(PyJObject),
+    "java.util.List",
+    0,
     0,
     0,                                        /* tp_dealloc */
     0,                                        /* tp_print */
@@ -496,8 +496,8 @@ PyTypeObject PyJList_Type = {
     0,                                        /* tp_getattro */
     0,                                        /* tp_setattro */
     0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT,                       /* tp_flags */
-    "jlist",                                  /* tp_doc */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /* tp_flags */
+    "Jep java.util.List",                     /* tp_doc */
     0,                                        /* tp_traverse */
     0,                                        /* tp_clear */
     0,                                        /* tp_richcompare */
