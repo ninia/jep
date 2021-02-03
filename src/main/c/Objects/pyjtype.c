@@ -82,9 +82,21 @@ static void parseModule(PyObject* typeName, PyObject** moduleName,
     }
 }
 
-static PyTypeObject* pyjtype_get_new(JNIEnv *env, PyObject *fqnToPyType,
-                                     PyObject *typeName, jclass clazz)
+/*
+ * Create a tuple containing the Python types that map to Java super class
+ * and interfaces implemented by a class. The super class of a Java class will
+ * be the first type and any interfaces are addded after. If the class is an
+ * interface it will not have a super class so the result will contain only
+ * interfaces that the class extends. Interfaces that do not extend any other
+ * interfaces will return an empty tuple. During type creation the empty tuple
+ * will cause the Python object type to be used as the base type. Interfaces
+ * cannot use pyjobject as the base type because pyjobject uses a custom
+ * struct and Python will not allow multiple inheritance of multiple types
+ * with a struct, even if they are the same struct.
+ */
+static PyObject* getBaseTypes(JNIEnv *env, PyObject *fqnToPyType, jclass clazz)
 {
+    /* Need to count the base types before tuple creation */
     jint numBases = 0;
     jboolean interface = java_lang_Class_isInterface(env, clazz);
     if (process_java_exception(env)) {
@@ -95,17 +107,21 @@ static PyTypeObject* pyjtype_get_new(JNIEnv *env, PyObject *fqnToPyType,
         return NULL;
     }
     if (interface != JNI_TRUE) {
+        /* When clazz is not an interface there is at least one base for the super class */
         numBases += 1;
     }
     if (interfaces) {
+        /* Each interface needs to be added as a base type */
         numBases += (*env)->GetArrayLength(env, interfaces);
     }
     PyObject* bases = PyTuple_New(numBases);
     if (!bases) {
         return NULL;
     }
+    /* The next index to be set in bases */
     Py_ssize_t baseIdx = 0;
     if (interface != JNI_TRUE) {
+        /* For classes that are not interfaces, the super class is the first type */
         jclass super = java_lang_Class_getSuperclass(env, clazz);
         PyObject* superType = (PyObject*) pyjtype_get_cached(env, fqnToPyType, super);
         (*env)->DeleteLocalRef(env, super);
@@ -116,8 +132,10 @@ static PyTypeObject* pyjtype_get_new(JNIEnv *env, PyObject *fqnToPyType,
         PyTuple_SET_ITEM(bases, baseIdx, superType);
         baseIdx += 1;
     }
+    /* The index of the next interface to get from interfaces */
     jint interfacesIdx = 0;
     while (baseIdx < numBases) {
+        /* Add a type to bases for each interface */
         jclass superI = (jclass) (*env)->GetObjectArrayElement(env, interfaces,
                         interfacesIdx);
         interfacesIdx += 1;
@@ -131,6 +149,28 @@ static PyTypeObject* pyjtype_get_new(JNIEnv *env, PyObject *fqnToPyType,
         baseIdx += 1;
     }
     (*env)->DeleteLocalRef(env, interfaces);
+    return bases;
+}
+
+/*
+ * Create a new PythonType object for the given Java class. The Python type
+ * hierarchy will mirror the Java class hierarchy.
+ */
+static PyTypeObject* pyjtype_get_new(JNIEnv *env, PyObject *fqnToPyType,
+                                     PyObject *typeName, jclass clazz)
+{
+    /* The Python types for the Java super class and any interfaces. */
+    PyObject* bases = getBaseTypes(env, fqnToPyType, clazz);
+    if (!bases) {
+        return NULL;
+    }
+
+    /*
+     * A dict is required for creating a type. This will only contain
+     * __module__ because pyjobject handles attribute look up. In the
+     * future consider placing pyjfields or pyjmethods in this dict
+     * to simplify the structure of each object.
+     */
     PyObject *dict = PyDict_New();
     if (!dict) {
         Py_DECREF(bases);
@@ -142,6 +182,11 @@ static PyTypeObject* pyjtype_get_new(JNIEnv *env, PyObject *fqnToPyType,
     PyTypeObject *type = NULL;
     if (moduleName && shortName
             && !PyDict_SetItemString(dict, "__module__", moduleName)) {
+        /*
+        * This is the actual type creation. It is equivalent of calling
+         * type(shortName, bases, dict) in python.
+         * See https://docs.python.org/3/library/functions.html#type
+         */
         type = (PyTypeObject*) PyObject_CallFunctionObjArgs((PyObject*) &PyType_Type,
                 shortName, bases, dict, NULL);
     }
@@ -157,7 +202,7 @@ static PyTypeObject* pyjtype_get_new(JNIEnv *env, PyObject *fqnToPyType,
 
 /*
  * Either create a new type for the class or return a cached type if a type
- * has already been provided. This function was seperated from PyJType_Get
+ * has already been provided. This function was separated from PyJType_Get
  * to allow for recursion while looking up super classes without needing to
  * look up the jepThread every time.
  */
