@@ -276,44 +276,22 @@ static PyObject* pyjclass_call(PyJClassObject *self,
     return result;
 }
 
+#define JCLASS_DOC
 
-PyTypeObject PyJClass_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    "jep.PyJClass",
-    sizeof(PyJClassObject),
-    0,
-    (destructor) pyjclass_dealloc,            /* tp_dealloc */
-    0,                                        /* tp_print */
-    0,                                        /* tp_getattr */
-    0,                                        /* tp_setattr */
-    0,                                        /* tp_compare */
-    0,                                        /* tp_repr */
-    0,                                        /* tp_as_number */
-    0,                                        /* tp_as_sequence */
-    0,                                        /* tp_as_mapping */
-    0,                                        /* tp_hash  */
-    (ternaryfunc) pyjclass_call,              /* tp_call */
-    0,                                        /* tp_str */
-    0,                                        /* tp_getattro */
-    0,                                        /* tp_setattro */
-    0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT,                       /* tp_flags */
-    "jclass",                                 /* tp_doc */
-    0,                                        /* tp_traverse */
-    0,                                        /* tp_clear */
-    0,                                        /* tp_richcompare */
-    0,                                        /* tp_weaklistoffset */
-    0,                                        /* tp_iter */
-    0,                                        /* tp_iternext */
-    0,                                        /* tp_methods */
-    0,                                        /* tp_members */
-    0,                                        /* tp_getset */
-    0, // &PyJObject_Type                     /* tp_base */
-    0,                                        /* tp_dict */
-    0,                                        /* tp_descr_get */
-    0,                                        /* tp_descr_set */
-    0,                                        /* tp_dictoffset */
-    0,                                        /* tp_init */
-    0,                                        /* tp_alloc */
-    NULL,                                     /* tp_new */
-};
+#ifdef Py_LIMITED_API
+PyTypeObject *PyJClass_Type = NULL;
+void jep_jclass_type_ready() {
+    PyType_Spec spec = {
+        .name = "jep.PyJClass",
+        .basicsize = sizeof(PyJClassObject),
+        .flags = Py_TPFLAGS_DEFAULT,
+        .slots = &[
+            {Py_tp_dealloc, (void*) pyjclass_dealloc},
+            {Py_tp_class, (void*) pyjclass_call},
+            {Py_tp_doc, "jclass"},
+            {0, NULL}
+        ]
+    };
+    *PyJNumber_Type = PyType_FromSpecWithBases(&spec, PyJObject_Type);
+    return PyType_Ready(PyJNumber_Type);
+}

@@ -36,7 +36,9 @@
 #ifndef _Included_pyjclass
 #define _Included_pyjclass
 
-extern PyTypeObject PyJClass_Type;
+// In the limited API, `PyTypeObject` is opaque and we can only have pointers
+extern PyTypeObject *PyJClass_Type;
+extern int jep_jclass_type_ready();
 
 typedef struct {
     PyObject_HEAD
@@ -51,7 +53,7 @@ typedef struct {
 PyObject* PyJClass_Wrap(JNIEnv*, jobject);
 
 #define PyJClass_Check(pyobj) \
-    PyObject_TypeCheck(pyobj, &PyJClass_Type)
+    PyObject_TypeCheck(pyobj, PyJClass_Type)
 
 
 #endif // ndef pyjclass

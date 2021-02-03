@@ -182,6 +182,8 @@ void pyembed_preinit(JNIEnv *env,
                      jint hashRandomizationFlag,
                      jstring pythonHome)
 {
+    // TODO: Most of these flags can't be implemented with the Stable ABI :(
+#ifndef Py_LIMITED_API
     if (noSiteFlag >= 0) {
         Py_NoSiteFlag = noSiteFlag;
     }
@@ -203,6 +205,7 @@ void pyembed_preinit(JNIEnv *env,
     if (hashRandomizationFlag >= 0) {
         Py_HashRandomizationFlag = hashRandomizationFlag;
     }
+#endif
     if (pythonHome) {
         const char* homeAsUTF = (*env)->GetStringUTFChars(env, pythonHome, NULL);
 #if PY_MAJOR_VERSION > 3 || PY_MINOR_VERSION >= 5
@@ -240,20 +243,12 @@ static int pyjtypes_ready(void)
     if (PyType_Ready(&PyJObject_Type) < 0) {
         return -1;
     }
-    if (!PyJClass_Type.tp_base) {
-        PyJClass_Type.tp_base = &PyJObject_Type;
-    }
-    if (PyType_Ready(&PyJClass_Type) < 0) {
+    if (jep_jclass_type_ready() < 0) {
         return -1;
-    }
+    };
 
     // next do number
-    if (!PyJNumber_Type.tp_base) {
-        PyJNumber_Type.tp_base = &PyJObject_Type;
-    }
-    if (PyType_Ready(&PyJNumber_Type) < 0) {
-        return -1;
-    }
+    if (jep_jnumber_type_ready() < 0) return -1;
 
     // next do iterable
     if (!PyJIterable_Type.tp_base) {

@@ -431,11 +431,18 @@ int pyarg_matches_jtype(JNIEnv *env,
         switch (paramTypeId) {
         case JSTRING_ID:
             return 3;
-        case JCHAR_ID:
-            if (PyUnicode_GET_LENGTH(param) == 1) {
+        case JCHAR_ID: {
+            Py_ssize_t length;
+#ifdef Py_LIMITED_API
+            length = PyUnicode_GetLength(param);
+#else
+            length = PyUnicode_GET_LENGTH(param);
+#endif
+            if (length == 1) {
                 return 2;
             }
             break;
+        }
         case JOBJECT_ID:
             if ((*env)->IsAssignableFrom(env, JSTRING_TYPE, paramType)) {
                 return 1;

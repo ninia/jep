@@ -55,18 +55,25 @@ static void raiseTypeError(JNIEnv *env, PyObject *pyobject, jclass expectedType)
     if (process_java_exception(env)) {
         return;
     }
+    PyObject *name_object = NULL;
     expTypeName = (*env)->GetStringUTFChars(env, expTypeJavaName, 0);
     if (PyJClass_Check(pyobject)) {
         actTypeName = "java.lang.Class";
     } else if (PyJObject_Check(pyobject)) {
         actTypeName = PyUnicode_AsUTF8(((PyJObject*) pyobject)->javaClassName);
     } else {
+#ifdef Py_LIMITED_API
+        name_object = PyObject_Str((PyObject*) Py_TYPE(pyobject));
+        actTypeName = PyUnicode_AsUTF8(name_object);
+#else
         actTypeName = pyobject->ob_type->tp_name;
+#endif
     }
     PyErr_Format(PyExc_TypeError, "Expected %s but received a %s.", expTypeName,
                  actTypeName);
     (*env)->ReleaseStringUTFChars(env, expTypeJavaName, expTypeName);
     (*env)->DeleteLocalRef(env, expTypeJavaName);
+    Py_XDECREF(name_object);
 }
 
 static jobject PyObject_As_JPyObject(JNIEnv *env, PyObject *pyobject)
@@ -198,6 +205,14 @@ jdouble PyObject_As_jdouble(PyObject *pyfloat)
 static jchar pyunicode_as_jchar(PyObject *pyunicode)
 {
     if (PyUnicode_Check(pyunicode)) {
+#ifdef Py_LIMITED_API
+        if (PyUnicode_GetLength(pyunicode) == 1) {
+            Py_UCS4 codepoint = PyUnicode_ReadChar(pyunicode, 0);
+            if (codepoint <= JCHAR_MAX) {
+                return (jchar) codepoint;
+            }
+        }
+#else
         if (PyUnicode_READY(pyunicode) != 0) {
             return 0;
         } else if (PyUnicode_GET_LENGTH(pyunicode) == 1) {
@@ -207,9 +222,11 @@ static jchar pyunicode_as_jchar(PyObject *pyunicode)
                 return (jchar) PyUnicode_2BYTE_DATA(pyunicode)[0];
             }
         }
+#endif
     }
-    PyErr_Format(PyExc_TypeError, "Expected char but received a %s.",
-                 pyunicode->ob_type->tp_name);
+    // NOTE: Implicitly calls `str()` on the type object
+    PyErr_Format(PyExc_TypeError, "Expected char but received a %S.",
+                 pyunicode->ob_type);
     return 0;
 }
 
@@ -218,6 +235,7 @@ static jstring pyunicode_as_jstring(JNIEnv *env, PyObject *pyunicode)
 {
     PyObject* bytes = NULL;
     jstring result  = NULL;
+#ifndef Py_LIMITED_API
     if (PyUnicode_READY(pyunicode) != 0) {
         return NULL;
     } else if (PyUnicode_KIND((pyunicode)) == PyUnicode_2BYTE_KIND) {
@@ -225,13 +243,25 @@ static jstring pyunicode_as_jstring(JNIEnv *env, PyObject *pyunicode)
         Py_ssize_t length = PyUnicode_GET_LENGTH(pyunicode);
         return (*env)->NewString(env, (jchar*) data, (jsize) length);
     }
+#endif
     bytes = PyUnicode_AsUTF16String(pyunicode);
     if (bytes == NULL) {
         return NULL;
     }
     /* +2 is to strip the BOM */
-    result = (*env)->NewString(env, (jchar*) (PyBytes_AS_STRING(bytes) + 2),
-                               (jsize) (PyBytes_GET_SIZE(bytes) - 2) / 2);
+#ifdef Py_LIMITED_API
+    Py_ssize_t length;
+    char *buffer;
+    if (PyBytes_AsStringAndSize(bytes, &buffer, &length) != 0) {
+        Py_DECREF(bytes);
+        return NULL;
+    }
+#else
+    buffer = PyBytes_AS_STRING(bytes);
+    length = PyBytes_GET_SIZE(bytes);
+#endif
+    result = (*env)->NewString(env, (jchar*) (buffer + 2),
+                               (jsize) (length - 2) / 2);
     Py_DECREF(bytes);
     return result;
 }
@@ -394,7 +424,7 @@ static jobject pyfloat_as_jobject(JNIEnv *env, PyObject *pyobject,
 }
 
 /*
- * This macro is intended only for use within pyfastsequence_as_jobject. It
+ * This function is intended only for use within pyfastsequence_as_jobject. It
  * contains all the redundant code for converting a fast sequence into a java
  * array of primitives. See the JNI documentation for
  * Set<PrimitiveType>ArrayRegion for more information on the arguments passed,
@@ -481,7 +511,6 @@ static jobject pyfastsequence_as_jobject(JNIEnv *env, PyObject *pyseq,
         jclass componentType;
         Py_ssize_t size, i;
         size = PySequence_Fast_GET_SIZE(pyseq);
-
         if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
             process_java_exception(env);
             return NULL;
@@ -702,24 +731,34 @@ static jobject PyCallable_As_JPyCallable(JNIEnv *env, PyObject *pyobject)
     return jpycallable;
 }
 
-static jbyteArray pybufferview_as_jbytearray(JNIEnv *env, Py_buffer view)
-{
-    Py_ssize_t length = view.len / view.itemsize;
-    jbyteArray jarr = (*env)->NewByteArray(env, (jsize) length);
-    if (process_java_exception(env)) {
-        return NULL;
-    }
-    if (PyBuffer_IsContiguous(&view, 'A')) {
-        (*env)->SetByteArrayRegion(env, jarr, 0, (jsize) length, (jbyte*) view.buf);
-    } else {
-        void* buf = (*env)->GetByteArrayElements(env, jarr, NULL);
-        PyBuffer_ToContiguous(buf, &view, view.len, 'C');
-        (*env)->ReleaseByteArrayElements(env, jarr, buf, 0);
-    }
+#ifdef Py_LIMITED_API
+    #define pybufferview_as_array_IMPL_COPY(jtype, Type) \
+        /* NOTE: Our limited wrappers only supported C */ \
+        (*env)->Set##Type##ArrayRegion(env, jarr, 0, (jsize) length, (jtype*) view.buf);
+#else
+    #define pybufferview_as_array_IMPL_COPY(jtype, Type) \
+        if (PyBuffer_IsContiguous((Py_buffer*) &view, 'A')) { \
+            (*env)->Set##Type##ArrayRegion(env, jarr, 0, (jsize) length, (jtype*) view.buf); \
+        } else { \
+            void* buf = (*env)->Get##Type##ArrayElements(env, jarr, NULL); \
+            PyBuffer_ToContiguous(buf, (Py_buffer*) &view, view.len, 'C'); \
+            (*env)->Release##Type##ArrayElements(env, jarr, buf, 0); \
+        }
+#endif
+
+#define pybufferview_as_array_IMPL(jtype, Type) \
+    Py_ssize_t length = view.len / view.itemsize; \
+    jtype##Array jarr = (*env)->New##Type##Array(env, (jsize) length); \
+    if (process_java_exception(env)) return NULL; \
+    pybufferview_as_array_IMPL_COPY(jtype, Type) \
     return jarr;
+
+static jbyteArray pybufferview_as_jbytearray(JNIEnv *env, JepBuffer view)
+{
+    pybufferview_as_array_IMPL(jbyte, Byte)
 }
 
-static int pybufferview_check_jbytearray(Py_buffer view)
+static int pybufferview_check_jbytearray(JepBuffer view)
 {
     return (view.format == NULL || strcmp(view.format, "b") == 0
             || strcmp(view.format, "B") == 0)
@@ -729,9 +768,9 @@ static int pybufferview_check_jbytearray(Py_buffer view)
 static jbyteArray pybuffer_as_jbytearray(JNIEnv *env, PyObject *pybuffer)
 {
     jbyteArray jarr = NULL;
-    Py_buffer view;
+    JepBuffer view;
 
-    if (PyObject_GetBuffer(pybuffer, &view, PyBUF_FULL_RO) < 0) {
+    if (JepBuffer_FromObject_ReadOnly(pybuffer, &view) < 0) {
         return NULL;
     }
     if ( pybufferview_check_jbytearray(view) ) {
@@ -745,28 +784,16 @@ static jbyteArray pybuffer_as_jbytearray(JNIEnv *env, PyObject *pybuffer)
                      view.format);
     }
 
-    PyBuffer_Release(&view);
+    JepBuffer_Release(&view);
     return jarr;
 }
 
-static jshortArray pybufferview_as_jshortarray(JNIEnv *env, Py_buffer view)
+static jshortArray pybufferview_as_jshortarray(JNIEnv *env, JepBuffer view)
 {
-    Py_ssize_t length = view.len / view.itemsize;
-    jshortArray jarr = (*env)->NewShortArray(env, (jsize) length);
-    if (process_java_exception(env)) {
-        return NULL;
-    }
-    if (PyBuffer_IsContiguous(&view, 'A')) {
-        (*env)->SetShortArrayRegion(env, jarr, 0, (jsize) length, (jshort*) view.buf);
-    } else {
-        void* buf = (*env)->GetShortArrayElements(env, jarr, NULL);
-        PyBuffer_ToContiguous(buf, &view, view.len, 'C');
-        (*env)->ReleaseShortArrayElements(env, jarr, buf, 0);
-    }
-    return jarr;
+    pybufferview_as_array_IMPL(jshort, Short)
 }
 
-static int pybufferview_check_jshortarray(Py_buffer view)
+static int pybufferview_check_jshortarray(JepBuffer view)
 {
     return view.format != NULL && strcmp(view.format, "h") == 0
            && view.itemsize == sizeof(jshort);
@@ -775,9 +802,9 @@ static int pybufferview_check_jshortarray(Py_buffer view)
 static jshortArray pybuffer_as_jshortarray(JNIEnv *env, PyObject *pybuffer)
 {
     jshortArray jarr = NULL;
-    Py_buffer view;
+    JepBuffer view;
 
-    if (PyObject_GetBuffer(pybuffer, &view, PyBUF_FULL) < 0) {
+    if (JepBuffer_FromObject(pybuffer, &view) < 0) {
         return NULL;
     }
     if ( pybufferview_check_jshortarray(view) ) {
@@ -791,28 +818,16 @@ static jshortArray pybuffer_as_jshortarray(JNIEnv *env, PyObject *pybuffer)
                      view.format);
     }
 
-    PyBuffer_Release(&view);
+    JepBuffer_Release(&view);
     return jarr;
 }
 
-static jintArray pybufferview_as_jintarray(JNIEnv *env, Py_buffer view)
+static jintArray pybufferview_as_jintarray(JNIEnv *env, JepBuffer view)
 {
-    Py_ssize_t length = view.len / view.itemsize;
-    jintArray jarr = (*env)->NewIntArray(env, (jsize) length);
-    if (process_java_exception(env)) {
-        return NULL;
-    }
-    if (PyBuffer_IsContiguous(&view, 'A')) {
-        (*env)->SetIntArrayRegion(env, jarr, 0, (jsize) length, (jint*) view.buf);
-    } else {
-        void* buf = (*env)->GetIntArrayElements(env, jarr, NULL);
-        PyBuffer_ToContiguous(buf, &view, view.len, 'C');
-        (*env)->ReleaseIntArrayElements(env, jarr, buf, 0);
-    }
-    return jarr;
+    pybufferview_as_array_IMPL(jint, Int)
 }
 
-static int pybufferview_check_jintarray(Py_buffer view)
+static int pybufferview_check_jintarray(JepBuffer view)
 {
     return view.format != NULL
            && (strcmp(view.format, "i") == 0 || strcmp(view.format, "l") == 0)
@@ -822,9 +837,9 @@ static int pybufferview_check_jintarray(Py_buffer view)
 static jintArray pybuffer_as_jintarray(JNIEnv *env, PyObject *pybuffer)
 {
     jintArray jarr = NULL;
-    Py_buffer view;
+    JepBuffer view;
 
-    if (PyObject_GetBuffer(pybuffer, &view, PyBUF_FULL) < 0) {
+    if (JepBuffer_FromObject(pybuffer, &view) < 0) {
         return NULL;
     }
     if (pybufferview_check_jintarray(view)) {
@@ -837,28 +852,16 @@ static jintArray pybuffer_as_jintarray(JNIEnv *env, PyObject *pybuffer)
         PyErr_Format(PyExc_TypeError, "Buffer format '%s' is not valid for a int[].",
                      view.format);
     }
-    PyBuffer_Release(&view);
+    JepBuffer_Release(&view);
     return jarr;
 }
 
-static jlongArray pybufferview_as_jlongarray(JNIEnv *env, Py_buffer view)
+static jlongArray pybufferview_as_jlongarray(JNIEnv *env, JepBuffer view)
 {
-    Py_ssize_t length = view.len / view.itemsize;
-    jlongArray jarr = (*env)->NewLongArray(env, (jsize) length);
-    if (process_java_exception(env)) {
-        return NULL;
-    }
-    if (PyBuffer_IsContiguous(&view, 'A')) {
-        (*env)->SetLongArrayRegion(env, jarr, 0, (jsize) length, (jlong*) view.buf);
-    } else {
-        void* buf = (*env)->GetLongArrayElements(env, jarr, NULL);
-        PyBuffer_ToContiguous(buf, &view, view.len, 'C');
-        (*env)->ReleaseLongArrayElements(env, jarr, buf, 0);
-    }
-    return jarr;
+    pybufferview_as_array_IMPL(jlong, Long)
 }
 
-static int pybufferview_check_jlongarray(Py_buffer view)
+static int pybufferview_check_jlongarray(JepBuffer view)
 {
     return view.format != NULL
            &&  (strcmp(view.format, "l") == 0 || strcmp(view.format, "q") == 0)
@@ -868,9 +871,9 @@ static int pybufferview_check_jlongarray(Py_buffer view)
 static jlongArray pybuffer_as_jlongarray(JNIEnv *env, PyObject *pybuffer)
 {
     jlongArray jarr = NULL;
-    Py_buffer view;
+    JepBuffer view;
 
-    if (PyObject_GetBuffer(pybuffer, &view, PyBUF_FULL) < 0) {
+    if (JepBuffer_FromObject(pybuffer, &view) < 0) {
         return NULL;
     }
     if ( pybufferview_check_jlongarray(view) ) {
@@ -884,28 +887,16 @@ static jlongArray pybuffer_as_jlongarray(JNIEnv *env, PyObject *pybuffer)
                      view.format);
     }
 
-    PyBuffer_Release(&view);
+    JepBuffer_Release(&view);
     return jarr;
 }
 
-static jfloatArray pybufferview_as_jfloatarray(JNIEnv *env, Py_buffer view)
+static jfloatArray pybufferview_as_jfloatarray(JNIEnv *env, JepBuffer view)
 {
-    Py_ssize_t length = view.len / view.itemsize;
-    jfloatArray jarr = (*env)->NewFloatArray(env, (jsize) length);
-    if (process_java_exception(env)) {
-        return NULL;
-    }
-    if (PyBuffer_IsContiguous(&view, 'A')) {
-        (*env)->SetFloatArrayRegion(env, jarr, 0, (jsize) length, (jfloat*) view.buf);
-    } else {
-        void* buf = (*env)->GetFloatArrayElements(env, jarr, NULL);
-        PyBuffer_ToContiguous(buf, &view, view.len, 'C');
-        (*env)->ReleaseFloatArrayElements(env, jarr, buf, 0);
-    }
-    return jarr;
+    pybufferview_as_array_IMPL(jfloat, Float)
 }
 
-static int pybufferview_check_jfloatarray(Py_buffer view)
+static int pybufferview_check_jfloatarray(JepBuffer view)
 {
     return view.format != NULL && strcmp(view.format, "f") == 0
            && view.itemsize == sizeof(jfloat);
@@ -914,9 +905,9 @@ static int pybufferview_check_jfloatarray(Py_buffer view)
 static jfloatArray pybuffer_as_jfloatarray(JNIEnv *env, PyObject *pybuffer)
 {
     jfloatArray jarr = NULL;
-    Py_buffer view;
+    JepBuffer view;
 
-    if (PyObject_GetBuffer(pybuffer, &view, PyBUF_FULL) < 0) {
+    if (JepBuffer_FromObject(pybuffer, &view) < 0) {
         return NULL;
     }
     if (pybufferview_check_jfloatarray(view)) {
@@ -933,24 +924,12 @@ static jfloatArray pybuffer_as_jfloatarray(JNIEnv *env, PyObject *pybuffer)
     return jarr;
 }
 
-static jdoubleArray pybufferview_as_jdoublearray(JNIEnv *env, Py_buffer view)
+static jdoubleArray pybufferview_as_jdoublearray(JNIEnv *env, JepBuffer view)
 {
-    Py_ssize_t length = view.len / view.itemsize;
-    jdoubleArray jarr = (*env)->NewDoubleArray(env, (jsize) length);
-    if (process_java_exception(env)) {
-        return NULL;
-    }
-    if (PyBuffer_IsContiguous(&view, 'A')) {
-        (*env)->SetDoubleArrayRegion(env, jarr, 0, (jsize) length, (jdouble*) view.buf);
-    } else {
-        void* buf = (*env)->GetDoubleArrayElements(env, jarr, NULL);
-        PyBuffer_ToContiguous(buf, &view, view.len, 'C');
-        (*env)->ReleaseDoubleArrayElements(env, jarr, buf, 0);
-    }
-    return jarr;
+    pybufferview_as_array_IMPL(jdouble, Double)
 }
 
-static int pybufferview_check_jdoublearray(Py_buffer view)
+static int pybufferview_check_jdoublearray(JepBuffer view)
 {
     return view.format != NULL && strcmp(view.format, "d") == 0
            && view.itemsize == sizeof(jdouble);
@@ -959,9 +938,9 @@ static int pybufferview_check_jdoublearray(Py_buffer view)
 static jdoubleArray pybuffer_as_jdoublearray(JNIEnv *env, PyObject *pybuffer)
 {
     jdoubleArray jarr = NULL;
-    Py_buffer view;
+    JepBuffer view;
 
-    if (PyObject_GetBuffer(pybuffer, &view, PyBUF_FULL) < 0) {
+    if (JepBuffer_FromObject(pybuffer, &view) < 0) {
         return NULL;
     }
     if ( pybufferview_check_jdoublearray(view) ) {
@@ -986,9 +965,9 @@ static jobject pybuffer_as_jobject(JNIEnv *env, PyObject *pybuffer,
          * Expect any java.lang.Object so must access the view to determine
          * what type of java array is compatible
          */
-        Py_buffer view;
+        JepBuffer view;
         jobject result = NULL;
-        if (PyObject_GetBuffer(pybuffer, &view, PyBUF_FULL) < 0) {
+        if (JepBuffer_FromObject(pybuffer, &view) < 0) {
             return NULL;
         }
         if (pybufferview_check_jintarray(view)) {
@@ -1082,7 +1061,11 @@ jobject PyObject_As_jobject(JNIEnv *env, PyObject *pyobject,
     } else if (npy_array_check(pyobject)) {
         return convert_pyndarray_jobject(env, pyobject, expectedType);
 #endif
-    } else if (PyObject_CheckBuffer(pyobject)) {
+    /* NOTE: Buffers are unsupported in the limited ABI,
+     * We use our own wrapper api (which just wraps the normal API most of the time)
+     */
+    } else if (JepBuffer_Check(pyobject)) {
+        // Processing functions i the same for both stable and unstable ABI
         return pybuffer_as_jobject(env, pyobject, expectedType);
     } else if ((*env)->IsAssignableFrom(env, JPYOBJECT_TYPE, expectedType)) {
         return PyObject_As_JPyObject(env, pyobject);

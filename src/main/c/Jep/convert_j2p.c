@@ -28,8 +28,17 @@
 #include "Jep.h"
 PyObject* jchar_As_PyObject(jchar c)
 {
+#if Py_LIMITED_API
+    return PyUnicode_FromOrdinal((int) c);
+#else
+    /*
+     * TODO: Avioid PyUnicode_FromKindAndData - Actually a validating wrapper around `PyUnicode_New`
+     * Also avoid statically assuming we have PyUnicode_2BYTE_KIND.
+     * * Its not needed if we have only have ASCII chars.
+     */
     Py_UCS2 value = (Py_UCS2) c;
     return PyUnicode_FromKindAndData(PyUnicode_2BYTE_KIND, &value, 1);
+#endif
 }
 
 PyObject* jstring_As_PyString(JNIEnv *env, jstring jstr)

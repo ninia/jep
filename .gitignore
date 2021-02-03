@@ -25,3 +25,9 @@ dist
 MANIFEST
 .DS_Store
 .idea
+
+# Compilation database
+compile_commands.json
+
+# Clangd
+.cache/clangd
