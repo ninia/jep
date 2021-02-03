@@ -228,7 +228,7 @@ void pyembed_preinit(JNIEnv *env,
  *
  * Furthermore, we need to ensure that the inheritance tree is built in the
  * correct order, i.e. from the top down.  For example, we need to set that
- * PyJCollection's tp_base extends PyJIterbale before we set that PyJList's
+ * PyJCollection's tp_base extends PyJIterable before we set that PyJList's
  * tp_base extends PyJCollection. Interfaces that are not extending another
  * interface should not set tp_base because interfaces are added to Python
  * types using multiple inheritance and only one superclass can define a
