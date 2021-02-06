@@ -10,7 +10,6 @@ class TestCallable(object):
 
 class TestJProxy(unittest.TestCase):
 
-    @unittest.skip("Default method tests are disabled to support java 7.")
     def test_default_methods(self):
         proxy = jep.jproxy(self, ["jep.test.TestDefaultMethods"])
         proxy.testVoidReturn();

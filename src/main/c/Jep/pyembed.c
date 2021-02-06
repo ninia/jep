@@ -783,7 +783,9 @@ static PyObject* pyembed_jproxy(PyObject *self, PyObject *args)
     // make sure target doesn't get garbage collected
     Py_INCREF(pytarget);
 
-    result = jobject_As_PyObject(env, proxy);
+    jclass clazz = (*env)->GetObjectClass(env, proxy);
+    result = jobject_As_PyJObject(env, proxy, clazz);
+    (*env)->DeleteLocalRef(env, clazz);
     (*env)->DeleteLocalRef(env, proxy);
     return result;
 }
