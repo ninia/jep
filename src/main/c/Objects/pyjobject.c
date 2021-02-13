@@ -36,10 +36,10 @@
 /* Set the object attributes from the cache */
 static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
 {
-
     jstring className     = NULL;
     PyObject *pyClassName = NULL;
-    JepThread *jepThread  = NULL;
+    PyObject* modjep      = NULL;
+    PyObject* fqnToPyJAttrs = NULL;
     PyObject *cachedAttrs = NULL;
 
     if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
@@ -81,15 +81,16 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
      * synchronized and multiple threads will not alter the dictionary at the
      * same time.
      */
-    jepThread = pyembed_get_jepthread();
-    if (jepThread == NULL) {
+    modjep = PyImport_ImportModule("_jep");
+    if (!modjep) {
         goto EXIT_ERROR;
     }
-    if (jepThread->fqnToPyJAttrs == NULL) {
-        jepThread->fqnToPyJAttrs = PyDict_New();
+    fqnToPyJAttrs = PyObject_GetAttrString(modjep, "__javaAttributeCache__");
+    if (!fqnToPyJAttrs) {
+        goto EXIT_ERROR;
     }
 
-    cachedAttrs = PyDict_GetItem(jepThread->fqnToPyJAttrs, pyClassName);
+    cachedAttrs = PyDict_GetItem(fqnToPyJAttrs, pyClassName);
     if (cachedAttrs == NULL) {
         int i, len = 0;
         jobjectArray methodArray = NULL;
@@ -186,7 +187,7 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
         }
         (*env)->DeleteLocalRef(env, fieldArray);
 
-        PyDict_SetItem(jepThread->fqnToPyJAttrs, pyClassName, cachedAttrs);
+        PyDict_SetItem(fqnToPyJAttrs, pyClassName, cachedAttrs);
         Py_DECREF(cachedAttrs); // fqnToPyJAttrs will hold the reference
     } // end of setting up cache for this Java Class
 
@@ -198,11 +199,15 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
         pyjob->attr = PyDict_Copy(cachedAttrs);
     }
 
+    Py_XDECREF(modjep);
+    Py_XDECREF(fqnToPyJAttrs);
     (*env)->PopLocalFrame(env, NULL);
     return 1;
 
 
 EXIT_ERROR:
+    Py_XDECREF(modjep);
+    Py_XDECREF(fqnToPyJAttrs);
     (*env)->PopLocalFrame(env, NULL);
     return 0;
 }

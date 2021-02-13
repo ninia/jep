@@ -45,19 +45,19 @@ static PyTypeObject* pyjtype_get_cached(JNIEnv*, PyObject*, jclass);
 
 /*
  * Add the statically defined wrapper types to the base cache of types.
+ *
+ * Returns 0 on success and -1 on failure
  */
-static PyObject* createBaseTypeDict()
+static int populateBaseTypeDict(PyObject* fqnToPyType)
 {
-    PyObject* fqnToPyType = PyDict_New();
     int i;
     for (i = 0 ; baseTypes[i] != NULL ; i += 1) {
         PyTypeObject* type = baseTypes[i];
         if (PyDict_SetItemString(fqnToPyType, type->tp_name, (PyObject*) type)) {
-            Py_DECREF(fqnToPyType);
-            return NULL;
+            return -1;
         }
     }
-    return fqnToPyType;
+    return 0;
 }
 
 /*
@@ -227,15 +227,23 @@ static PyTypeObject* pyjtype_get_cached(JNIEnv *env, PyObject *fqnToPyType,
 
 PyTypeObject* PyJType_Get(JNIEnv *env, jclass clazz)
 {
-    JepThread* jepThread  = pyembed_get_jepthread();
-    if (!jepThread) {
+    PyObject* modjep = PyImport_ImportModule("_jep");
+    if (!modjep) {
         return NULL;
     }
-    if (jepThread->fqnToPyType == NULL) {
-        jepThread->fqnToPyType = createBaseTypeDict();
-        if (jepThread->fqnToPyType == NULL) {
+    PyObject* fqnToPyType = PyObject_GetAttrString(modjep, "__javaTypeCache__");
+    if (!fqnToPyType) {
+        Py_DECREF(modjep);
+        return NULL;
+    } else if (PyDict_Size(fqnToPyType) == 0) {
+        if (populateBaseTypeDict(fqnToPyType)) {
+            Py_DECREF(modjep);
+            Py_DECREF(fqnToPyType);
             return NULL;
         }
     }
-    return pyjtype_get_cached(env, jepThread->fqnToPyType, clazz);
+    PyTypeObject* result = pyjtype_get_cached(env, fqnToPyType, clazz);
+    Py_DECREF(modjep);
+    Py_DECREF(fqnToPyType);
+    return result;
 }

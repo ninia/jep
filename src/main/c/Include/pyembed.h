@@ -34,16 +34,11 @@
 #define DICT_KEY "jep"
 
 struct __JepThread {
-    PyObject      *modjep;
     PyObject      *globals;
     PyThreadState *tstate;
     JNIEnv        *env;
     jobject        classloader;
     jobject        caller;        /* Jep instance that called us. */
-    PyObject      *fqnToPyJAttrs; /* A Dict mapping fully qualified Java
-                                       class names to PyJMethods and PyJFields */
-    PyObject      *fqnToPyType;   /* A Dict mapping fully qualified Java
-				       class names to a type object. */
 };
 typedef struct __JepThread JepThread;
 

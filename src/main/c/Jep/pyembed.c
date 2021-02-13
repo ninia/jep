@@ -132,25 +132,28 @@ static struct PyModuleDef jep_module_def = {
     NULL,                /* m_free */
 };
 
-static PyObject* initjep(JNIEnv *env, jboolean hasSharedModules)
+/*
+ * Initialize the _jep module.
+ *
+ * Return 0 on success and -1 on failure.
+ */
+static int initjep(JNIEnv *env, jboolean hasSharedModules)
 {
-    PyObject *modjep;
-    PyObject *sysmodules;
-    modjep = PyModule_Create(&jep_module_def);
-    if (modjep == NULL) {
-        handle_startup_exception(env, "Couldn't create module _jep");
-        return NULL;
-    }
-    sysmodules = PyImport_GetModuleDict();
-    if (PyDict_SetItemString(sysmodules, "_jep", modjep) == -1) {
-        handle_startup_exception(env, "Couldn't set _jep on sys.modules");
-        return NULL;
-    }
-    modjep = PyImport_ImportModule("_jep");
-    if (modjep == NULL) {
-        handle_startup_exception(env, "Couldn't import module _jep");
-    } else {
-        // stuff for making new pyjarray objects
+    PyObject *sysmodules = PyImport_GetModuleDict();
+    PyObject *modjep = PyDict_GetItemString(sysmodules, "_jep");
+    if (!modjep && PyErr_Occurred()) {
+        handle_startup_exception(env, "Error checking for exisitng module _jep");
+    } else if (!modjep) {
+        modjep = PyModule_Create(&jep_module_def);
+        if (!modjep) {
+            handle_startup_exception(env, "Couldn't create module _jep");
+            return -1;
+        }
+        if (PyDict_SetItemString(sysmodules, "_jep", modjep) == -1) {
+            Py_DECREF(modjep);
+            handle_startup_exception(env, "Couldn't set _jep on sys.modules");
+            return -1;
+        }
         PyModule_AddIntConstant(modjep, "JBOOLEAN_ID", JBOOLEAN_ID);
         PyModule_AddIntConstant(modjep, "JINT_ID", JINT_ID);
         PyModule_AddIntConstant(modjep, "JLONG_ID", JLONG_ID);
@@ -161,15 +164,36 @@ static PyObject* initjep(JNIEnv *env, jboolean hasSharedModules)
         PyModule_AddIntConstant(modjep, "JCHAR_ID", JCHAR_ID);
         PyModule_AddIntConstant(modjep, "JBYTE_ID", JBYTE_ID);
         PyModule_AddIntConstant(modjep, "JEP_NUMPY_ENABLED", JEP_NUMPY_ENABLED);
+        PyObject *javaAttrCache = PyDict_New();
+        if (!javaAttrCache) {
+            Py_DECREF(modjep);
+            return -1;
+        }
+        if (PyModule_AddObject(modjep, "__javaAttributeCache__", javaAttrCache)) {
+            Py_DECREF(javaAttrCache);
+            Py_DECREF(modjep);
+            return -1;
+        }
+        PyObject *javaTypeCache = PyDict_New();
+        if (!javaTypeCache) {
+            Py_DECREF(modjep);
+            return -1;
+        }
+        if (PyModule_AddObject(modjep, "__javaTypeCache__", javaTypeCache)) {
+            Py_DECREF(javaTypeCache);
+            Py_DECREF(modjep);
+            return -1;
+        }
         if (hasSharedModules) {
             Py_INCREF(mainThreadModules);
             PyModule_AddObject(modjep, "mainInterpreterModules", mainThreadModules);
             Py_INCREF(mainThreadModulesLock);
             PyModule_AddObject(modjep, "mainInterpreterModulesLock", mainThreadModulesLock);
         }
+        /* still held by sys.modules. */
+        Py_DECREF(modjep);
     }
-
-    return modjep;
+    return 0;
 }
 
 void pyembed_preinit(JNIEnv *env,
@@ -601,15 +625,15 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller,
         globals = PyDict_New();
         PyDict_SetItemString(globals, "__builtins__", PyEval_GetBuiltins());
     }
+    if (initjep(env, hasSharedModules)) {
+        return 0;
+    }
 
     // init static module
-    jepThread->modjep          = initjep(env, hasSharedModules);
     jepThread->globals         = globals;
     jepThread->env             = env;
     jepThread->classloader     = (*env)->NewGlobalRef(env, cl);
     jepThread->caller          = (*env)->NewGlobalRef(env, caller);
-    jepThread->fqnToPyJAttrs = NULL;
-    jepThread->fqnToPyType   = NULL;
 
     if ((tdict = PyThreadState_GetDict()) != NULL) {
         PyObject *key, *t;
@@ -646,9 +670,6 @@ void pyembed_thread_close(JNIEnv *env, intptr_t _jepThread)
     Py_DECREF(key);
 
     Py_CLEAR(jepThread->globals);
-    Py_CLEAR(jepThread->fqnToPyJAttrs);
-    Py_CLEAR(jepThread->fqnToPyType);
-    Py_CLEAR(jepThread->modjep);
 
     if (jepThread->classloader) {
         (*env)->DeleteGlobalRef(env, jepThread->classloader);

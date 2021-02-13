@@ -14,6 +14,12 @@ import jep.SharedInterpreter;
 public class TestSharedInterpreter extends Thread {
 
     public static void main(String[] args) throws Throwable {
+        testSharedModule();
+        testSharedJep();
+        testSharedTypes();
+    }
+
+    public static void testSharedModule() throws Throwable{
         TestSharedInterpreter[] t = new TestSharedInterpreter[4];
         try (Interpreter interp = new SharedInterpreter()) {
             interp.eval("import sys");
@@ -43,6 +49,43 @@ public class TestSharedInterpreter extends Thread {
         }
     }
 
+    /**
+     * In the original implementation the _jep module would be recreated for
+     * each SharedInterpreter. It shouldn't do that.
+     */
+    public static void testSharedJep() throws Throwable{
+        try (Interpreter interp = new SharedInterpreter()) {
+            interp.exec("import _jep");
+            interp.exec("import sys");
+            interp.exec("sys.testJep = _jep");
+        }
+        try (Interpreter interp = new SharedInterpreter()) {
+            interp.exec("import _jep");
+            interp.exec("import sys");
+            boolean pass = interp.getValue("sys.testJep is _jep", Boolean.class);
+            if (!pass) {
+                throw new IllegalStateException("_jep module changed.");
+            }
+        }
+    }
+
+    public static void testSharedTypes() throws Throwable{
+        try (Interpreter interp = new SharedInterpreter()) {
+            interp.exec("import sys");
+            interp.exec("from java.util import ArrayList");
+            interp.exec("sys.sampleArrayList = ArrayList()");
+        }
+        try (Interpreter interp = new SharedInterpreter()) {
+            interp.exec("import sys");
+            interp.exec("from java.util import ArrayList");
+            interp.exec("sampleArrayList = ArrayList()");
+            boolean pass = interp.getValue("id(type(sampleArrayList)) == id(type(sys.sampleArrayList))", Boolean.class);
+            if (!pass) {
+                throw new IllegalStateException("types are different");
+            }
+        }
+    }
+
     public Exception e = null;
 
     public final int index;
@@ -54,9 +97,9 @@ public class TestSharedInterpreter extends Thread {
     @Override
     public void run() {
         try (Interpreter interp = new SharedInterpreter()) {
-            interp.eval("import sys");
+            interp.exec("import sys");
             interp.set("index", index);
-            interp.eval("sys.sharedTestThing[index] = True");
+            interp.exec("sys.sharedTestThing[index] = True");
         } catch (Exception e) {
             this.e = e;
         }

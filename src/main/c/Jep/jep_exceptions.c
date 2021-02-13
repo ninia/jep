@@ -388,54 +388,6 @@ int process_py_exception(JNIEnv *env)
 }
 
 /*
- * Convert a Java exception into a Python String which includes the stack
- * trace.
- */
-static PyObject* jexception_As_PyString(JNIEnv *env, jobject exception,
-                                        jobjectArray stack)
-{
-    PyObject* result = jobject_As_PyString(env, exception);
-    if (!result) {
-        return NULL;
-    }
-    if (stack) {
-        PyObject* stackSep = PyUnicode_FromString("\n  at ");
-        if (!stackSep) {
-            Py_DECREF(result);
-            return NULL;
-        }
-        jint stackLength = (*env)->GetArrayLength(env, stack);
-        int i = 0;
-        for ( i = 0 ; i < stackLength ; i += 1 ) {
-            jobject stackElem = (*env)->GetObjectArrayElement(env, stack, i);
-            PyObject* stackStr = jobject_As_PyString(env, stackElem);
-            (*env)->DeleteLocalRef(env, stackElem);
-            if (!stackStr) {
-                Py_DECREF(result);
-                result = NULL;
-                break;
-            }
-            PyObject* merged = PyUnicode_Concat(result, stackSep);
-            Py_DECREF(result);
-            result = merged;
-            if (!result) {
-                Py_DECREF(stackStr);
-                break;
-            }
-            merged = PyUnicode_Concat(result, stackStr);
-            Py_DECREF(result);
-            Py_DECREF(stackStr);
-            result = merged;
-            if (!result) {
-                break;
-            }
-        }
-        Py_DECREF(stackSep);
-    }
-    return result;
-}
-
-/*
  * Converts a Java exception to a PyErr.  Returns true if an exception was
  * processed.  If an error was processed here, it can be caught in Python code
  * or if uncaught it will reach the method process_py_exception(...).
@@ -445,7 +397,6 @@ int process_java_exception(JNIEnv *env)
     jthrowable exception = NULL;
     PyObject *pyExceptionType;
     PyObject *jpyExc;
-    JepThread *jepThread;
     jobjectArray stack;
 
     if (!(*env)->ExceptionCheck(env)) {
@@ -466,8 +417,6 @@ int process_java_exception(JNIEnv *env)
         PyErr_Print();
     }
 
-    jepThread = pyembed_get_jepthread();
-
     // we're already processing this one, clear the old
     (*env)->ExceptionClear(env);
 
@@ -485,17 +434,7 @@ int process_java_exception(JNIEnv *env)
     }
     pyExceptionType = pyerrtype_from_throwable(env, exception);
 
-    if (jepThread) {
-        // turn the Java exception into a PyJObject so the interpreter can handle it
-        jpyExc = jobject_As_PyObject(env, exception);
-    } else {
-        /*
-        * For python created threads we cannot create PyJObjects. Using Java on these
-         * threads isn't well supported but some cases work so try to handle exceptions
-         * the best we can.
-         */
-        jpyExc = jexception_As_PyString(env, exception, stack);
-    }
+    jpyExc = jobject_As_PyObject(env, exception);
     if (!jpyExc) {
         return 1;
     }
