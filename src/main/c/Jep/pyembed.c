@@ -356,7 +356,10 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
     }
 
     Py_Initialize();
+    // NOTE: PyEval_InitThread is depreciated and un-needed as of version 3.9
+#if PY_MINOR_VERSION < 9
     PyEval_InitThreads();
+#endif
 
     if (pyjtypes_ready()) {
         handle_startup_exception(env, "Failed to initialize PyJTypes");
