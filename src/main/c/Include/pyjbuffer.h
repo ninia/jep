@@ -37,7 +37,8 @@
 #ifndef _Included_pyjbuffer
 #define _Included_pyjbuffer
 
-extern PyTypeObject PyJBuffer_Type;
+extern PyTypeObject *PyJBuffer_Type;
+extern int jep_jbuffer_type_ready();
 
 /**
  * *********************************
@@ -141,9 +142,9 @@ extern PyTypeObject PyJBuffer_Type;
 #endif
 
 #define PyJBuffer_Wrap(env, jobj, jcls) \
-    PyJObject_New(env, &PyJBuffer_Type, jobj, jcls)
+    PyJObject_New(env, PyJBuffer_Type, jobj, jcls)
 
 #define PyJBuffer_Check(pyobj) \
-    PyObject_TypeCheck(pyobj, &PyJBuffer_Type)
+    PyObject_TypeCheck(pyobj, PyJBuffer_Type)
 
 #endif // ndef pyjbuffer

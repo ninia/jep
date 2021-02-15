@@ -36,13 +36,14 @@
 #ifndef _Included_pyjiterator
 #define _Included_pyjiterator
 
-extern PyTypeObject PyJIterator_Type;
+extern PyTypeObject *PyJIterator_Type;
+extern int jep_jiterator_type_ready();
 
 #define PyJIterator_Wrap(env, jobj, jcls) \
-    PyJObject_New(env, &PyJIterator_Type, jobj, jcls)
+    PyJObject_New(env, PyJIterator_Type, jobj, jcls)
 
 #define PyJIterator_Check(pyobj) \
-    PyObject_TypeCheck(pyobj, &PyJIterator_Type)
+    PyObject_TypeCheck(pyobj, PyJIterator_Type)
 
 
 #endif // ndef pyjiterator

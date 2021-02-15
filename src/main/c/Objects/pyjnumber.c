@@ -319,6 +319,6 @@ int jep_jnumber_type_ready() {
                 {0, NULL}
             ]
     };
-    *PyJNumber_Type = PyType_FromSpecWithBases(&spec, PyJObject_Type);
+    PyJNumber_Type = PyType_FromSpecWithBases(&spec, PyJObject_Type);
     return PyType_Ready(PyJNumber_Type);
 }

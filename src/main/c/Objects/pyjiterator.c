@@ -64,43 +64,25 @@ static PyObject* pyjiterator_next(PyObject* self)
 /*
  * Inherits from PyJObject_Type
  */
-PyTypeObject PyJIterator_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    "jep.PyJIterator",
-    sizeof(PyJObject),
-    0,
-    0,                                        /* tp_dealloc */
-    0,                                        /* tp_print */
-    0,                                        /* tp_getattr */
-    0,                                        /* tp_setattr */
-    0,                                        /* tp_compare */
-    0,                                        /* tp_repr */
-    0,                                        /* tp_as_number */
-    0,                                        /* tp_as_sequence */
-    0,                                        /* tp_as_mapping */
-    0,                                        /* tp_hash  */
-    0,                                        /* tp_call */
-    0,                                        /* tp_str */
-    0,                                        /* tp_getattro */
-    0,                                        /* tp_setattro */
-    0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT,                       /* tp_flags */
-    "jiterator",                              /* tp_doc */
-    0,                                        /* tp_traverse */
-    0,                                        /* tp_clear */
-    0,                                        /* tp_richcompare */
-    0,                                        /* tp_weaklistoffset */
-    PyObject_SelfIter,                        /* tp_iter */
-    (iternextfunc) pyjiterator_next,          /* tp_iternext */
-    0,                                        /* tp_methods */
-    0,                                        /* tp_members */
-    0,                                        /* tp_getset */
-    0, // &PyJObject_Type                     /* tp_base */
-    0,                                        /* tp_dict */
-    0,                                        /* tp_descr_get */
-    0,                                        /* tp_descr_set */
-    0,                                        /* tp_dictoffset */
-    0,                                        /* tp_init */
-    0,                                        /* tp_alloc */
-    NULL,                                     /* tp_new */
-};
+PyTypeObject *PyJIterator_Type;
+int jep_jiterator_type_ready() {
+    static PyType_Slot slots[] = {
+            {Py_tp_doc, "jiterator"},
+            {Py_tp_iter, (void*) PyObject_SelfIter},
+            {Py_tp_iternext, (void*) pyjiterator_next},
+            {0, NULL},
+    };
+    PyType_Spec spec = {
+            .name = "jep.PyJIterator",
+            .basicsize = sizeof(PyJObject),
+            .flags = Py_TPFLAGS_DEFAULT,
+            .slots = &[
+            {Py_tp_dealloc, (void*) pyjclass_dealloc},
+            {Py_tp_class, (void*) pyjclass_call},
+            {Py_tp_doc, "jclass"},
+            {0, NULL}
+            ]
+    };
+    PyJIterator_Type = PyType_FromSpecWithBases(&spec, (PyObject*) PyJObject_Type);
+    return PyType_Ready(PyJIterator_Type);
+}

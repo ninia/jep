@@ -517,44 +517,27 @@ static PyMemberDef pyjobject_members[] = {
 };
 
 
-PyTypeObject PyJObject_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    "jep.PyJObject",                          /* tp_name */
-    sizeof(PyJObject),                        /* tp_basicsize */
-    0,                                        /* tp_itemsize */
-    (destructor) pyjobject_dealloc,           /* tp_dealloc */
-    0,                                        /* tp_print */
-    0,                                        /* tp_getattr */
-    0,                                        /* tp_setattr */
-    0,                                        /* tp_compare */
-    0,                                        /* tp_repr */
-    0,                                        /* tp_as_number */
-    0,                                        /* tp_as_sequence */
-    0,                                        /* tp_as_mapping */
-    (hashfunc) pyjobject_hash,                /* tp_hash  */
-    0,                                        /* tp_call */
-    (reprfunc) pyjobject_str,                 /* tp_str */
-    (getattrofunc) pyjobject_getattro,        /* tp_getattro */
-    (setattrofunc) pyjobject_setattro,        /* tp_setattro */
-    0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT |
-    Py_TPFLAGS_BASETYPE,                      /* tp_flags */
-    "jobject",                                /* tp_doc */
-    0,                                        /* tp_traverse */
-    0,                                        /* tp_clear */
-    (richcmpfunc) pyjobject_richcompare,      /* tp_richcompare */
-    0,                                        /* tp_weaklistoffset */
-    0,                                        /* tp_iter */
-    0,                                        /* tp_iternext */
-    pyjobject_methods,                        /* tp_methods */
-    pyjobject_members,                        /* tp_members */
-    0,                                        /* tp_getset */
-    0,                                        /* tp_base */
-    0,                                        /* tp_dict */
-    0,                                        /* tp_descr_get */
-    0,                                        /* tp_descr_set */
-    offsetof(PyJObject, attr),                /* tp_dictoffset */
-    0,                                        /* tp_init */
-    0,                                        /* tp_alloc */
-    NULL,                                     /* tp_new */
-};
+PyTypeObject *PyJObject_Type;
+int jep_jobject_type_ready() {
+    static PyType_Slot slots[] = {
+            {Py_tp_dealloc, (void*) pyjobject_dealloc},
+            {Py_tp_hash, (void*) pyjobject_hash},
+            {Py_tp_str, (void*) pyjobject_str},
+            {Py_tp_getattro, (void*) pyjobject_getattro},
+            {Py_tp_setattro, (void*) pyjobject_setattro},
+            {Py_tp_doc, "jobject"},
+            {Py_tp_richcompare, (void*) pyjobject_richcompare},
+            {Py_tp_methods, (void*) pyjobject_methods},
+            {Py_tp_members, (void*) pyjobject_members},
+            {Py_tp_dictoffset, offsetof(PyJObject, attr)},
+            {0, NULL},
+    };
+    PyType_Spec spec = {
+            .name = "jep.PyJObject",
+            .basicsize = sizeof(PyJObject),
+            .flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+            .slots = slots
+    };
+    PyJObject_Type = PyType_FromSpec(&spec);
+    return PyType_Ready(PyJObject_Type);
+}

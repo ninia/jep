@@ -223,67 +223,28 @@ FINALLY:
     return result;
 }
 
-
-static PySequenceMethods pyjmap_seq_methods = {
-    0,                          /* sq_length */
-    0,                          /* sq_concat */
-    0,                          /* sq_repeat */
-    0,                          /* sq_item */
-    0,                          /* sq_slice */
-    0,                          /* sq_ass_item */
-    0,                          /* sq_ass_slice */
-    pyjmap_contains_key,        /* sq_contains */
-    0,                          /* sq_inplace_concat */
-    0,                          /* sq_inplace_repeat */
-};
-
-static PyMappingMethods pyjmap_map_methods = {
-    pyjmap_len,           /* mp_length */
-    pyjmap_getitem,       /* mp_subscript */
-    pyjmap_setitem        /* mp_ass_subscript */
-};
-
-
 /*
  * Inherits from PyJObject_Type
  */
-PyTypeObject PyJMap_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    "jep.PyJMap",
-    sizeof(PyJObject),
-    0,
-    0,                                        /* tp_dealloc */
-    0,                                        /* tp_print */
-    0,                                        /* tp_getattr */
-    0,                                        /* tp_setattr */
-    0,                                        /* tp_compare */
-    0,                                        /* tp_repr */
-    0,                                        /* tp_as_number */
-    &pyjmap_seq_methods,                      /* tp_as_sequence */
-    &pyjmap_map_methods,                      /* tp_as_mapping */
-    0,                                        /* tp_hash  */
-    0,                                        /* tp_call */
-    0,                                        /* tp_str */
-    0,                                        /* tp_getattro */
-    0,                                        /* tp_setattro */
-    0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT,                       /* tp_flags */
-    "jmap",                                   /* tp_doc */
-    0,                                        /* tp_traverse */
-    0,                                        /* tp_clear */
-    0,                                        /* tp_richcompare */
-    0,                                        /* tp_weaklistoffset */
-    (getiterfunc) pyjmap_getiter,             /* tp_iter */
-    0,                                        /* tp_iternext */
-    0,                                        /* tp_methods */
-    0,                                        /* tp_members */
-    0,                                        /* tp_getset */
-    0, // &PyJObject_Type                     /* tp_base */
-    0,                                        /* tp_dict */
-    0,                                        /* tp_descr_get */
-    0,                                        /* tp_descr_set */
-    0,                                        /* tp_dictoffset */
-    0,                                        /* tp_init */
-    0,                                        /* tp_alloc */
-    NULL,                                     /* tp_new */
-};
+PyTypeObject *PyJMap_Type;
+int jep_jmap_type_ready() {
+    static PyType_Slot slots[] = {
+            {Py_tp_doc, "jmap"},
+            {Py_tp_iter, (void*) pyjmap_getiter},
+            // sequence slots
+            {Py_seq_contains, (void*) pyjmap_contains_key},
+            // mapping slots
+            {Py_mp_length, (void*) pyjmap_len},
+            {Py_mp_subscript, (void*) pyjmap_getitem},
+            {Py_mp_ass_subscript, (void*) pyjmap_setitem},
+            {0, NULL},
+    };
+    PyType_Spec spec = {
+            .name = "jep.PyJMap",
+            .basicsize = sizeof(PyJObject),
+            .flags = Py_TPFLAGS_DEFAULT,
+            .slots = slots,
+    };
+    PyJMap_Type = PyType_FromSpecWithBases(&spec, (PyObject*) PyJObject_Type);
+    return PyType_Ready(PyJMap_Type);
+}

@@ -37,12 +37,13 @@
 #ifndef _Included_pyjlist
 #define _Included_pyjlist
 
-extern PyTypeObject PyJList_Type;
+extern PyTypeObject *PyJList_Type;
+extern int jep_jlist_type_ready();
 
 #define PyJList_Wrap(env, jobj, jcls) \
-    PyJObject_New(env, &PyJList_Type, jobj, jcls)
+    PyJObject_New(env, PyJList_Type, jobj, jcls)
 
 #define PyJList_Check(pyobj) \
-    PyObject_TypeCheck(pyobj, &PyJList_Type)
+    PyObject_TypeCheck(pyobj, PyJList_Type)
 
 #endif // ndef pyjlist

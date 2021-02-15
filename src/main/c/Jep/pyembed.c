@@ -240,7 +240,7 @@ void pyembed_preinit(JNIEnv *env,
 static int pyjtypes_ready(void)
 {
     // start at the top with object
-    if (PyType_Ready(&PyJObject_Type) < 0) {
+    if (jep_jobject_type_ready() < 0) {
         return -1;
     }
     if (jep_jclass_type_ready() < 0) {
@@ -251,57 +251,36 @@ static int pyjtypes_ready(void)
     if (jep_jnumber_type_ready() < 0) return -1;
 
     // next do iterable
-    if (!PyJIterable_Type.tp_base) {
-        PyJIterable_Type.tp_base = &PyJObject_Type;
-    }
-    if (PyType_Ready(&PyJIterable_Type) < 0) {
+    if (jep_jiterable_type_ready() < 0) {
         return -1;
     }
 
     // next do iterator
-    if (!PyJIterator_Type.tp_base) {
-        PyJIterator_Type.tp_base = &PyJObject_Type;
-    }
-    if (PyType_Ready(&PyJIterator_Type) < 0) {
+    if (jep_jiterator_type_ready() < 0) {
         return -1;
     }
 
     // next do collection
-    if (!PyJCollection_Type.tp_base) {
-        PyJCollection_Type.tp_base = &PyJIterable_Type;
-    }
-    if (PyType_Ready(&PyJCollection_Type) < 0) {
+    if (jep_jcollection_type_ready() < 0) {
         return -1;
     }
 
     // next do list
-    if (!PyJList_Type.tp_base) {
-        PyJList_Type.tp_base = &PyJCollection_Type;
-    }
-    if (PyType_Ready(&PyJList_Type) < 0) {
+    if (jep_jlist_type_ready() < 0) {
         return -1;
     }
 
     // next do map
-    if (!PyJMap_Type.tp_base) {
-        PyJMap_Type.tp_base = &PyJObject_Type;
-    }
-    if (PyType_Ready(&PyJMap_Type) < 0) {
+    if (jep_jmap_type_ready() < 0) {
         return -1;
     }
 
-    if (!PyJBuffer_Type.tp_base) {
-        PyJBuffer_Type.tp_base = &PyJObject_Type;
-    }
-    if (PyType_Ready(&PyJBuffer_Type) < 0) {
+    if (jep_jbuffer_type_ready() < 0) {
         return -1;
     }
 
     // last do autocloseable
-    if (!PyJAutoCloseable_Type.tp_base) {
-        PyJAutoCloseable_Type.tp_base = &PyJObject_Type;
-    }
-    if (PyType_Ready(&PyJAutoCloseable_Type) < 0) {
+    if (jep_jauto_closable_type_ready() < 0) {
         return -1;
     }
 
@@ -758,7 +737,15 @@ static PyObject* pyembed_jproxy(PyObject *self, PyObject *args)
 
     env = jepThread->env;
 
+#ifdef Py_LIMITED_API
+    inum = (int) PyList_Size(interfaces);
+    if (inum < 0) {
+        assert(PyErr_Occurred());
+        return NULL;
+    }
+#else
     inum = (int) PyList_GET_SIZE(interfaces);
+#endif
     if (inum < 1) {
         return PyErr_Format(PyExc_ValueError, "Empty interface list.");
     }
@@ -932,7 +919,8 @@ jobject pyembed_invoke_as(JNIEnv *env,
             goto EXIT;
         }
 
-        PyTuple_SET_ITEM(pyargs, i, pyval); /* steals */
+        if (PyTuple_SetItem(pyargs, i, pyval) != 0) goto EXIT; /* steals */
+
         if (val) {
             (*env)->DeleteLocalRef(env, val);
         }
@@ -1395,9 +1383,11 @@ jobject pyembed_getvalue_array(JNIEnv *env, intptr_t _jepThread, char *str)
         }
     }
 
-    if (PyBytes_Check(result)) {
-        void *s = (void*) PyBytes_AS_STRING(result);
-        Py_ssize_t n = PyBytes_Size(result);
+    char *s = NULL;
+    Py_ssize_t n = -1;
+    if (PyBytes_AsStringAndSize(result, &s, &n) != 0) {
+        assert(s != NULL);
+        assert(n >= 0);
         ret = (*env)->NewByteArray(env, (jsize) n);
         (*env)->SetByteArrayRegion(env, ret, 0, (jsize) n, (jbyte *) s);
     } else {
@@ -1446,12 +1436,14 @@ void pyembed_run(JNIEnv *env,
                 goto EXIT;
             }
 
+#ifndef Py_LIMITED_API
             /* Turn on optimization if a .pyo file is given */
             if (strcmp(ext, ".pyo") == 0) {
                 Py_OptimizeFlag = 2;
             } else {
                 Py_OptimizeFlag = 0;
             }
+#endif
 
             pyembed_run_pyc(jepThread, script);
         } else {

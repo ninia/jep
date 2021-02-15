@@ -451,68 +451,37 @@ static int pyjlist_set_subscript(PyObject* self, PyObject* item,
 
 }
 
-
-static PySequenceMethods pyjlist_seq_methods = {
-    0, // inherited       /* sq_length */
-    pyjlist_add,          /* sq_concat */
-    pyjlist_fill,         /* sq_repeat */
-    pyjlist_getitem,      /* sq_item */
-    pyjlist_getslice,     /* sq_slice */
-    pyjlist_setitem,      /* sq_ass_item */
-    pyjlist_setslice,     /* sq_ass_slice */
-    0, // inherited       /* sq_contains */
-    pyjlist_inplace_add,  /* sq_inplace_concat */
-    pyjlist_inplace_fill, /* sq_inplace_repeat */
-};
-
-
-static PyMappingMethods pyjlist_map_methods = {
-    0,                                        /* mp_length */
-    (binaryfunc) pyjlist_subscript,           /* mp_subscript */
-    (objobjargproc) pyjlist_set_subscript,    /* mp_ass_subscript */
-};
-
-
 /*
  * Inherits from PyJCollection_Type
  */
-PyTypeObject PyJList_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    "jep.PyJList",
-    sizeof(PyJObject),
-    0,
-    0,                                        /* tp_dealloc */
-    0,                                        /* tp_print */
-    0,                                        /* tp_getattr */
-    0,                                        /* tp_setattr */
-    0,                                        /* tp_compare */
-    0,                                        /* tp_repr */
-    0,                                        /* tp_as_number */
-    &pyjlist_seq_methods,                     /* tp_as_sequence */
-    &pyjlist_map_methods,                     /* tp_as_mapping */
-    0,                                        /* tp_hash  */
-    0,                                        /* tp_call */
-    0,                                        /* tp_str */
-    0,                                        /* tp_getattro */
-    0,                                        /* tp_setattro */
-    0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT,                       /* tp_flags */
-    "jlist",                                  /* tp_doc */
-    0,                                        /* tp_traverse */
-    0,                                        /* tp_clear */
-    0,                                        /* tp_richcompare */
-    0,                                        /* tp_weaklistoffset */
-    0, // inherited                           /* tp_iter */
-    0,                                        /* tp_iternext */
-    0,                                        /* tp_methods */
-    0,                                        /* tp_members */
-    0,                                        /* tp_getset */
-    0, // &PyJCollection_Type                 /* tp_base */
-    0,                                        /* tp_dict */
-    0,                                        /* tp_descr_get */
-    0,                                        /* tp_descr_set */
-    0,                                        /* tp_dictoffset */
-    0,                                        /* tp_init */
-    0,                                        /* tp_alloc */
-    NULL,                                     /* tp_new */
-};
+PyTypeObject *PyJList_Type;
+int jep_jlist_type_ready() {
+    static PyType_Slot slots[] = {
+            // NOTE: Inherited `tp_iter`
+            {Py_tp_doc, "jlist"},
+            /*
+             * **** sequence slots ****
+             * NOTE: Inherited `sq_length` and `sq_contains`
+             */
+            {Py_sq_concat, (void*) pyjlist_add},
+            {Py_sq_repeat, (void*) pyjlist_fill},
+            {Py_sq_item, (void*) pyjlist_getitem},
+            {Py_sq_slice, (void*) pyjlist_getslice},
+            {Py_sq_ass_item, (void*) pyjlist_setitem},
+            {Py_sq_ass_slice, (void*) pyjlist_setslice},
+            {Py_sq_inplace_concat, (void*) pyjlist_inplace_add},
+            {Py_sq_inplace_repeat, (void*) pyjlist_inplace_fill},
+            // mapping methods
+            {Py_mp_subscript, (void*) pyjlist_subscript},
+            {Py_mp_ass_subscript, (void*) pyjlist_set_subscript},
+            {0, NULL},
+    };
+    PyType_Spec spec = {
+            .name = "jep.PyJList",
+            .basicsize = sizeof(PyJObject),
+            .flags = Py_TPFLAGS_DEFAUL,
+            .slots = slots,
+    };
+    PyJList_Type = PyType_FromSpecWithBases(&spec, (PyObject*) PyJCollection_Type);
+    return PyType_Ready(PyJList_Type);
+}

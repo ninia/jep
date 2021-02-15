@@ -75,44 +75,28 @@ static PyMethodDef pyjautocloseable_methods[] = {
 /*
  * Inherits from PyJObject_Type
  */
-PyTypeObject PyJAutoCloseable_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    "jep.PyJAutoCloseable",
-    sizeof(PyJObject),
-    0,
-    0,                                        /* tp_dealloc */
-    0,                                        /* tp_print */
-    0,                                        /* tp_getattr */
-    0,                                        /* tp_setattr */
-    0,                                        /* tp_compare */
-    0,                                        /* tp_repr */
-    0,                                        /* tp_as_number */
-    0,                                        /* tp_as_sequence */
-    0,                                        /* tp_as_mapping */
-    0,                                        /* tp_hash  */
-    0,                                        /* tp_call */
-    0,                                        /* tp_str */
-    0,                                        /* tp_getattro */
-    0,                                        /* tp_setattro */
-    0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT |
-    Py_TPFLAGS_BASETYPE,                      /* tp_flags */
-    "jautocloseable",                         /* tp_doc */
-    0,                                        /* tp_traverse */
-    0,                                        /* tp_clear */
-    0,                                        /* tp_richcompare */
-    0,                                        /* tp_weaklistoffset */
-    0,                                        /* tp_iter */
-    0,                                        /* tp_iternext */
-    pyjautocloseable_methods,                 /* tp_methods */
-    0,                                        /* tp_members */
-    0,                                        /* tp_getset */
-    0, // &PyJObject_Type                     /* tp_base */
-    0,                                        /* tp_dict */
-    0,                                        /* tp_descr_get */
-    0,                                        /* tp_descr_set */
-    0,                                        /* tp_dictoffset */
-    0,                                        /* tp_init */
-    0,                                        /* tp_alloc */
-    NULL,                                     /* tp_new */
-};
+PyTypeObject *PyJAutoCloseable_Type;
+
+int jep_jauto_closable_type_ready() {
+    static PyType_Slot slots[] = {
+            {Py_tp_doc, "jautocloseable"},
+            {Py_tp_methods, (void*) pyjautocloseable_methods},
+#ifndef Py_LIMITED_API
+            /*
+             * *** buffer methods ***
+             * currently unavailable in the limited ABI :(
+             */
+            {Py_bf_getbuffer, (void*) getbuf},
+            {Py_bf_releasebuffer, NULL},
+#endif
+            {0, NULL}
+    };
+    PyType_Spec spec = {
+            .name = "jep.PyJAutoCloseable",
+            .basicsize = sizeof(PyJObject),
+            .flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+            .slots = slots
+    };
+    PyJAutoCloseable_Type = PyType_FromSpecWithBases(&spec, (PyObject*) PyJObject_Type);
+    return PyType_Ready(PyJAutoCloseable_Type);
+}

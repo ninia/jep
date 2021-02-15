@@ -38,12 +38,13 @@
 #ifndef _Included_pyjcollection
 #define _Included_pyjcollection
 
-extern PyTypeObject PyJCollection_Type;
+extern PyTypeObject *PyJCollection_Type;
+extern int jep_jcollection_type_ready();
 
 #define PyJCollection_Wrap(env, jobj, jcls) \
-    PyJObject_New(env, &PyJCollection_Type, jobj, jcls)
+    PyJObject_New(env, PyJCollection_Type, jobj, jcls)
 
 #define PyJCollection_Check(pyobj) \
-    PyObject_TypeCheck(pyobj, &PyJCollection_Type)
+    PyObject_TypeCheck(pyobj, PyJCollection_Type)
 
 #endif // ndef pyjcollection

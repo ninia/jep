@@ -37,13 +37,14 @@
 #ifndef _Included_pyjmap
 #define _Included_pyjmap
 
-extern PyTypeObject PyJMap_Type;
+extern PyTypeObject *PyJMap_Type;
+extern int jep_jmap_type_ready();
 
 #define PyJMap_Wrap(env, jobj, jcls) \
-    PyJObject_New(env, &PyJMap_Type, jobj, jcls)
+    PyJObject_New(env, PyJMap_Type, jobj, jcls)
 
 #define PyJMap_Check(pyobj) \
-    PyObject_TypeCheck(pyobj, &PyJMap_Type)
+    PyObject_TypeCheck(pyobj, PyJMap_Type)
 
 
 #endif // ndef pyjmap

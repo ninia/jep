@@ -37,12 +37,13 @@
 #ifndef _Included_pyjautocloseable
 #define _Included_pyjautocloseable
 
-extern PyTypeObject PyJAutoCloseable_Type;
+extern PyTypeObject *PyJAutoCloseable_Type;
+extern int jep_jauto_closable_type_ready();
 
 #define PyJAutoCloseable_Wrap(env, jobj, jcls) \
-    PyJObject_New(env, &PyJAutoCloseable_Type, jobj, jcls)
+    PyJObject_New(env, PyJAutoCloseable_Type, jobj, jcls)
 
 #define PyJAutoCloseable_Check(pyobj) \
-    PyObject_TypeCheck(pyobj, &PyJAutoCloseable_Type)
+    PyObject_TypeCheck(pyobj, PyJAutoCloseable_Type)
 
 #endif // ndef pyjautocloseable

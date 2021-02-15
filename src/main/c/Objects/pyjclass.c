@@ -278,7 +278,6 @@ static PyObject* pyjclass_call(PyJClassObject *self,
 
 #define JCLASS_DOC
 
-#ifdef Py_LIMITED_API
 PyTypeObject *PyJClass_Type = NULL;
 void jep_jclass_type_ready() {
     PyType_Spec spec = {
@@ -292,6 +291,6 @@ void jep_jclass_type_ready() {
             {0, NULL}
         ]
     };
-    *PyJNumber_Type = PyType_FromSpecWithBases(&spec, PyJObject_Type);
-    return PyType_Ready(PyJNumber_Type);
+    PyJClass_Type = PyType_FromSpecWithBases(&spec, PyJObject_Type);
+    return PyType_Ready(PyJClass_Type);
 }

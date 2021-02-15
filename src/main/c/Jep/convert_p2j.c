@@ -920,7 +920,7 @@ static jfloatArray pybuffer_as_jfloatarray(JNIEnv *env, PyObject *pybuffer)
         PyErr_Format(PyExc_TypeError, "Buffer format '%s' is not valid for a float[].",
                      view.format);
     }
-    PyBuffer_Release(&view);
+    JepBuffer_Release(&view);
     return jarr;
 }
 
@@ -953,7 +953,7 @@ static jdoubleArray pybuffer_as_jdoublearray(JNIEnv *env, PyObject *pybuffer)
         PyErr_Format(PyExc_TypeError, "Buffer format '%s' is not valid for a double[].",
                      view.format);
     }
-    PyBuffer_Release(&view);
+    JepBuffer_Release(&view);
     return jarr;
 }
 
@@ -985,7 +985,7 @@ static jobject pybuffer_as_jobject(JNIEnv *env, PyObject *pybuffer,
         } else {
             result = PyObject_As_JPyObject(env, pybuffer);
         }
-        PyBuffer_Release(&view);
+        JepBuffer_Release(&view);
         return result;
     } else if ((*env)->IsAssignableFrom(env, JBYTE_ARRAY_TYPE, expectedType)) {
         return (jobject) pybuffer_as_jbytearray(env, pybuffer);

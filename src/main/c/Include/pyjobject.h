@@ -31,7 +31,8 @@
 #define _Included_pyjobject
 
 
-extern PyTypeObject PyJObject_Type;
+extern PyTypeObject *PyJObject_Type;
+extern int jep_jobject_type_ready();
 
 /*
  * The common fields for PyJObject. The usage of this macro is similar to
@@ -62,10 +63,10 @@ typedef struct {
 PyObject* PyJObject_New(JNIEnv*, PyTypeObject*, jobject, jclass);
 
 #define PyJObject_Wrap(env, jobj, jcls) \
-    PyJObject_New(env, &PyJObject_Type, jobj, jcls)
+    PyJObject_New(env, PyJObject_Type, jobj, jcls)
 
 #define PyJObject_Check(pyobj) \
-    PyObject_TypeCheck(pyobj, &PyJObject_Type)
+    PyObject_TypeCheck(pyobj, PyJObject_Type)
 
 
 #endif // ndef pyjobject
