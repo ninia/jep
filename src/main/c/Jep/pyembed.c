@@ -131,25 +131,28 @@ static struct PyModuleDef jep_module_def = {
     NULL,                /* m_free */
 };
 
-static PyObject* initjep(JNIEnv *env, jboolean hasSharedModules)
+/*
+ * Initialize the _jep module.
+ *
+ * Return 0 on success and -1 on failure.
+ */
+static int initjep(JNIEnv *env, jboolean hasSharedModules)
 {
-    PyObject *modjep;
-    PyObject *sysmodules;
-    modjep = PyModule_Create(&jep_module_def);
-    if (modjep == NULL) {
-        handle_startup_exception(env, "Couldn't create module _jep");
-        return NULL;
-    }
-    sysmodules = PyImport_GetModuleDict();
-    if (PyDict_SetItemString(sysmodules, "_jep", modjep) == -1) {
-        handle_startup_exception(env, "Couldn't set _jep on sys.modules");
-        return NULL;
-    }
-    modjep = PyImport_ImportModule("_jep");
-    if (modjep == NULL) {
-        handle_startup_exception(env, "Couldn't import module _jep");
-    } else {
-        // stuff for making new pyjarray objects
+    PyObject *sysmodules = PyImport_GetModuleDict();
+    PyObject *modjep = PyDict_GetItemString(sysmodules, "_jep");
+    if (!modjep && PyErr_Occurred()) {
+        handle_startup_exception(env, "Error checking for exisitng module _jep");
+    } else if (!modjep) {
+        modjep = PyModule_Create(&jep_module_def);
+        if (!modjep) {
+            handle_startup_exception(env, "Couldn't create module _jep");
+            return -1;
+        }
+        if (PyDict_SetItemString(sysmodules, "_jep", modjep) == -1) {
+            Py_DECREF(modjep);
+            handle_startup_exception(env, "Couldn't set _jep on sys.modules");
+            return -1;
+        }
         PyModule_AddIntConstant(modjep, "JBOOLEAN_ID", JBOOLEAN_ID);
         PyModule_AddIntConstant(modjep, "JINT_ID", JINT_ID);
         PyModule_AddIntConstant(modjep, "JLONG_ID", JLONG_ID);
@@ -160,15 +163,36 @@ static PyObject* initjep(JNIEnv *env, jboolean hasSharedModules)
         PyModule_AddIntConstant(modjep, "JCHAR_ID", JCHAR_ID);
         PyModule_AddIntConstant(modjep, "JBYTE_ID", JBYTE_ID);
         PyModule_AddIntConstant(modjep, "JEP_NUMPY_ENABLED", JEP_NUMPY_ENABLED);
+        PyObject *javaAttrCache = PyDict_New();
+        if (!javaAttrCache) {
+            Py_DECREF(modjep);
+            return -1;
+        }
+        if (PyModule_AddObject(modjep, "__javaAttributeCache__", javaAttrCache)) {
+            Py_DECREF(javaAttrCache);
+            Py_DECREF(modjep);
+            return -1;
+        }
+        PyObject *javaTypeCache = PyDict_New();
+        if (!javaTypeCache) {
+            Py_DECREF(modjep);
+            return -1;
+        }
+        if (PyModule_AddObject(modjep, "__javaTypeCache__", javaTypeCache)) {
+            Py_DECREF(javaTypeCache);
+            Py_DECREF(modjep);
+            return -1;
+        }
         if (hasSharedModules) {
             Py_INCREF(mainThreadModules);
             PyModule_AddObject(modjep, "mainInterpreterModules", mainThreadModules);
             Py_INCREF(mainThreadModulesLock);
             PyModule_AddObject(modjep, "mainInterpreterModulesLock", mainThreadModulesLock);
         }
+        /* still held by sys.modules. */
+        Py_DECREF(modjep);
     }
-
-    return modjep;
+    return 0;
 }
 
 void pyembed_preinit(JNIEnv *env,
@@ -207,13 +231,7 @@ void pyembed_preinit(JNIEnv *env,
 #endif
     if (pythonHome) {
         const char* homeAsUTF = (*env)->GetStringUTFChars(env, pythonHome, NULL);
-#if PY_MAJOR_VERSION > 3 || PY_MINOR_VERSION >= 5
         wchar_t* homeForPython = Py_DecodeLocale(homeAsUTF, NULL);
-#else
-        int length = (*env)->GetStringUTFLength(env, pythonHome);
-        wchar_t* homeForPython = malloc((length + 1) * sizeof(wchar_t));
-        mbstowcs(homeForPython, homeAsUTF, length + 1);
-#endif
         (*env)->ReleaseStringUTFChars(env, pythonHome, homeAsUTF);
         Py_SetPythonHome(homeForPython);
         // Python documentation says that the string should not be changed for
@@ -230,11 +248,13 @@ void pyembed_preinit(JNIEnv *env,
  *
  * Furthermore, we need to ensure that the inheritance tree is built in the
  * correct order, i.e. from the top down.  For example, we need to set that
- * PyJIterable's tp_base extends PyJObject before we set that PyJCollection's
- * tp_base extends PyJIterable.
+ * PyJCollection's tp_base extends PyJIterable before we set that PyJList's
+ * tp_base extends PyJCollection. Interfaces that are not extending another
+ * interface should not set tp_base because interfaces are added to Python
+ * types using multiple inheritance and only one superclass can define a
+ * custom structure.
  *
- * See https://docs.python.org/2/extending/newtypes.html
- *     https://docs.python.org/3/extending/newtypes.html
+ * See https://docs.python.org/3/extending/newtypes.html
  */
 static int pyjtypes_ready(void)
 {
@@ -425,7 +445,7 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
                 PyEval_ReleaseThread(mainThreadState);
                 (*env)->PopLocalFrame(env, NULL);
                 THROW_JEP(env, "Received null argv.");
-                for(k = 0; k < i; k++) {
+                for (k = 0; k < i; k++) {
                     free(argv[k]);
                 }
                 free(argv);
@@ -601,14 +621,15 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller,
         globals = PyDict_New();
         PyDict_SetItemString(globals, "__builtins__", PyEval_GetBuiltins());
     }
+    if (initjep(env, hasSharedModules)) {
+        return 0;
+    }
 
     // init static module
-    jepThread->modjep          = initjep(env, hasSharedModules);
     jepThread->globals         = globals;
     jepThread->env             = env;
     jepThread->classloader     = (*env)->NewGlobalRef(env, cl);
     jepThread->caller          = (*env)->NewGlobalRef(env, caller);
-    jepThread->fqnToPyJAttrs = NULL;
 
     if ((tdict = PyThreadState_GetDict()) != NULL) {
         PyObject *key, *t;
@@ -645,8 +666,6 @@ void pyembed_thread_close(JNIEnv *env, intptr_t _jepThread)
     Py_DECREF(key);
 
     Py_CLEAR(jepThread->globals);
-    Py_CLEAR(jepThread->fqnToPyJAttrs);
-    Py_CLEAR(jepThread->modjep);
 
     if (jepThread->classloader) {
         (*env)->DeleteGlobalRef(env, jepThread->classloader);
@@ -660,7 +679,7 @@ void pyembed_thread_close(JNIEnv *env, intptr_t _jepThread)
         PyThreadState_Delete(jepThread->tstate);
     } else {
         Py_EndInterpreter(jepThread->tstate);
-	PyThreadState_Swap(mainThreadState);
+        PyThreadState_Swap(mainThreadState);
         PyEval_ReleaseThread(mainThreadState);
     }
     free(jepThread);
@@ -790,7 +809,9 @@ static PyObject* pyembed_jproxy(PyObject *self, PyObject *args)
     // make sure target doesn't get garbage collected
     Py_INCREF(pytarget);
 
-    result = PyJObject_Wrap(env, proxy, NULL);
+    jclass clazz = (*env)->GetObjectClass(env, proxy);
+    result = jobject_As_PyJObject(env, proxy, clazz);
+    (*env)->DeleteLocalRef(env, clazz);
     (*env)->DeleteLocalRef(env, proxy);
     return result;
 }
@@ -1206,92 +1227,6 @@ void pyembed_exec(JNIEnv *env, intptr_t _jepThread, char *str)
     PyEval_ReleaseThread(jepThread->tstate);
 }
 
-
-void pyembed_setloader(JNIEnv *env, intptr_t _jepThread, jobject cl)
-{
-    jobject    oldLoader = NULL;
-    JepThread *jepThread = (JepThread *) _jepThread;
-    if (!jepThread) {
-        THROW_JEP(env, "Couldn't get thread objects.");
-        return;
-    }
-
-    if (!cl) {
-        return;
-    }
-
-    PyEval_AcquireThread(jepThread->tstate);
-    Py_CLEAR(jepThread->fqnToPyJAttrs);
-
-    oldLoader = jepThread->classloader;
-    if (oldLoader) {
-        (*env)->DeleteGlobalRef(env, oldLoader);
-    }
-
-    jepThread->classloader = (*env)->NewGlobalRef(env, cl);
-    PyEval_ReleaseThread(jepThread->tstate);
-}
-jobject pyembed_getvalue_on(JNIEnv *env,
-                            intptr_t _jepThread,
-                            intptr_t _onModule,
-                            char *str)
-{
-    PyObject       *dict, *result, *onModule;
-    jobject         ret = NULL;
-    JepThread      *jepThread;
-
-    result = 0;
-
-    jepThread = (JepThread *) _jepThread;
-    if (!jepThread) {
-        THROW_JEP(env, "Couldn't get thread objects.");
-        return NULL;
-    }
-
-    if (str == NULL) {
-        return NULL;
-    }
-
-    PyEval_AcquireThread(jepThread->tstate);
-
-    if (process_py_exception(env)) {
-        goto EXIT;
-    }
-
-    onModule = (PyObject *) _onModule;
-    if (!PyModule_Check(onModule)) {
-        THROW_JEP(env, "pyembed_getvalue_on: Invalid onModule.");
-        goto EXIT;
-    }
-
-    dict = PyModule_GetDict(onModule);
-    Py_INCREF(dict);
-
-    result = pyembed_util_run_string(str, Py_eval_input, dict, dict);      /* new ref */
-
-    process_py_exception(env);
-    Py_DECREF(dict);
-
-    if (result == NULL) {
-        goto EXIT;    /* don't return, need to release GIL */
-    }
-    if (result == Py_None) {
-        goto EXIT;
-    }
-
-    // convert results to jobject
-    ret = PyObject_As_jobject(env, result, JOBJECT_TYPE);
-    if (!ret) {
-        process_py_exception(env);
-    }
-
-EXIT:
-    Py_XDECREF(result);
-    PyEval_ReleaseThread(jepThread->tstate);
-    return ret;
-}
-
-
 jobject pyembed_getvalue(JNIEnv *env, intptr_t _jepThread, char *str,
                          jclass clazz)
 {
@@ -1339,72 +1274,6 @@ EXIT:
     PyEval_ReleaseThread(jepThread->tstate);
     return ret;
 }
-
-
-
-jobject pyembed_getvalue_array(JNIEnv *env, intptr_t _jepThread, char *str)
-{
-    PyObject       *result;
-    jobject         ret = NULL;
-    JepThread      *jepThread;
-
-    result = NULL;
-
-    jepThread = (JepThread *) _jepThread;
-    if (!jepThread) {
-        THROW_JEP(env, "Couldn't get thread objects.");
-        return NULL;
-    }
-
-    if (str == NULL) {
-        return NULL;
-    }
-
-    PyEval_AcquireThread(jepThread->tstate);
-
-    if (process_py_exception(env)) {
-        goto EXIT;
-    }
-
-    result = pyembed_util_run_string(str,  /* new ref */
-                          Py_eval_input,
-                          jepThread->globals,
-                          jepThread->globals);
-
-    process_py_exception(env);
-
-    if (result == NULL || result == Py_None) {
-        goto EXIT;    /* don't return, need to release GIL */
-    }
-    if (PyBytes_Check(result) == 0) {
-        PyObject *temp = PyBytes_FromObject(result);
-        if (process_py_exception(env) || result == NULL) {
-            goto EXIT;
-        } else {
-            Py_DECREF(result);
-            result = temp;
-        }
-    }
-
-    char *s = NULL;
-    Py_ssize_t n = -1;
-    if (PyBytes_AsStringAndSize(result, &s, &n) != 0) {
-        assert(s != NULL);
-        assert(n >= 0);
-        ret = (*env)->NewByteArray(env, (jsize) n);
-        (*env)->SetByteArrayRegion(env, ret, 0, (jsize) n, (jbyte *) s);
-    } else {
-        THROW_JEP(env, "Value is not a string.");
-        goto EXIT;
-    }
-
-
-EXIT:
-    Py_XDECREF(result);
-    PyEval_ReleaseThread(jepThread->tstate);
-    return ret;
-}
-
 
 
 void pyembed_run(JNIEnv *env,

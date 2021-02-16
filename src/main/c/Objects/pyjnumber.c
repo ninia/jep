@@ -292,13 +292,13 @@ static Py_hash_t pyjnumber_hash(PyObject *self)
 PyTypeObject *PyJNumber_Type = NULL;
 int jep_jnumber_type_ready() {
     PyType_Spec spec = {
-            .name = "jep.PyJClass",
+            .name = "java.lang.Number",
             .basicsize = sizeof(PyJNumber),
             .flags = Py_TPFLAGS_DEFAULT,
             .slots = &[
                 {Py_tp_hash, (void*) pyjnumber_hash},
                 {Py_tp_richcompare, (void*) pyjnumber_richcompare},
-                {Py_tp_doc, "jnumber"},
+                {Py_tp_doc, "Jep java.lang.Number"},
                 // number slots
                 {Py_nb_index, (void*) pyjnumber_index},
                 {Py_nb_truedivide, (void*) pyjnumber_truedivide},

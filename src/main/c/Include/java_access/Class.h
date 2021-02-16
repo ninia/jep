@@ -39,5 +39,7 @@ jstring      java_lang_Class_getSimpleName(JNIEnv*, jclass);
 jboolean     java_lang_Class_isArray(JNIEnv*, jclass);
 jobject      java_lang_Class_newInstance(JNIEnv*, jclass);
 jboolean     java_lang_Class_isInterface(JNIEnv*, jclass);
+jclass       java_lang_Class_getSuperclass(JNIEnv*, jclass);
+jobjectArray java_lang_Class_getInterfaces(JNIEnv*, jclass);
 
 #endif // ndef java_lang_Class

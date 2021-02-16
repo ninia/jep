@@ -34,14 +34,11 @@
 #define DICT_KEY "jep"
 
 struct __JepThread {
-    PyObject      *modjep;
     PyObject      *globals;
     PyThreadState *tstate;
     JNIEnv        *env;
     jobject        classloader;
-    jobject        caller;      /* Jep instance that called us. */
-    PyObject      *fqnToPyJAttrs; /* a dictionary of fully qualified Java
-                                       classnames to PyJMethods and PyJFields */
+    jobject        caller;        /* Jep instance that called us. */
 };
 typedef struct __JepThread JepThread;
 
@@ -66,10 +63,7 @@ jobject pyembed_invoke_as(JNIEnv*, PyObject*, jobjectArray, jobject, jclass);
 void pyembed_eval(JNIEnv*, intptr_t, char*);
 int pyembed_compile_string(JNIEnv*, intptr_t, char*);
 void pyembed_exec(JNIEnv*, intptr_t, char*);
-void pyembed_setloader(JNIEnv*, intptr_t, jobject);
 jobject pyembed_getvalue(JNIEnv*, intptr_t, char*, jclass);
-jobject pyembed_getvalue_array(JNIEnv*, intptr_t, char*);
-jobject pyembed_getvalue_on(JNIEnv*, intptr_t, intptr_t, char*);
 
 JNIEnv* pyembed_get_env(void);
 JepThread* pyembed_get_jepthread(void);

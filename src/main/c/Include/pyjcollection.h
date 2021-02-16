@@ -41,9 +41,6 @@
 extern PyTypeObject *PyJCollection_Type;
 extern int jep_jcollection_type_ready();
 
-#define PyJCollection_Wrap(env, jobj, jcls) \
-    PyJObject_New(env, PyJCollection_Type, jobj, jcls)
-
 #define PyJCollection_Check(pyobj) \
     PyObject_TypeCheck(pyobj, PyJCollection_Type)
 

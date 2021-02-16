@@ -69,7 +69,7 @@ static PyObject* pyjlist_new_copy(PyObject *toCopy)
         goto FINALLY;
     }
 
-    result = PyJList_Wrap(env, newList, obj->clazz);
+    result = jobject_As_PyJObject(env, newList, obj->clazz);
 FINALLY:
     (*env)->PopLocalFrame(env, NULL);
     return result;
@@ -175,7 +175,7 @@ static PyObject* pyjlist_getslice(PyObject *o, Py_ssize_t i1, Py_ssize_t i2)
         goto FINALLY;
     }
 
-    pyres = PyJList_Wrap(env, result, NULL);
+    pyres = jobject_As_PyObject(env, result);
 FINALLY:
     (*env)->PopLocalFrame(env, NULL);
     return pyres;
@@ -458,7 +458,7 @@ PyTypeObject *PyJList_Type;
 int jep_jlist_type_ready() {
     static PyType_Slot slots[] = {
             // NOTE: Inherited `tp_iter`
-            {Py_tp_doc, "jlist"},
+            {Py_tp_doc, "Jep java.util.List"},
             /*
              * **** sequence slots ****
              * NOTE: Inherited `sq_length` and `sq_contains`
@@ -477,7 +477,7 @@ int jep_jlist_type_ready() {
             {0, NULL},
     };
     PyType_Spec spec = {
-            .name = "jep.PyJList",
+            .name = "java.util.List",
             .basicsize = sizeof(PyJObject),
             .flags = Py_TPFLAGS_DEFAUL,
             .slots = slots,

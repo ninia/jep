@@ -62,9 +62,6 @@ typedef struct {
  */
 PyObject* PyJObject_New(JNIEnv*, PyTypeObject*, jobject, jclass);
 
-#define PyJObject_Wrap(env, jobj, jcls) \
-    PyJObject_New(env, PyJObject_Type, jobj, jcls)
-
 #define PyJObject_Check(pyobj) \
     PyObject_TypeCheck(pyobj, PyJObject_Type)
 

@@ -85,3 +85,19 @@ class TestExceptions(unittest.TestCase):
 
     # TODO come up with a way to test MemoryError and AssertionError given
     # I coded support for that.
+
+    def test_java_exception_from_python_thread(self):
+        # Calling java from a python thread has numerous limitations but since
+        # there are some cases where it works we should be able to handle
+        # exceptions properly.
+        from java.lang import System
+        from concurrent.futures import ThreadPoolExecutor
+        def failOnOtherThread():
+            # null is not allowed and will throw NPE
+            return System.getenv(None)
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(failOnOtherThread)
+            with self.assertRaises(Exception) as raises:
+                future.result()
+            self.assertIn("NullPointerException", str(raises.exception))
+

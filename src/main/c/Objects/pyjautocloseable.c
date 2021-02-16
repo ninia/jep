@@ -79,7 +79,7 @@ PyTypeObject *PyJAutoCloseable_Type;
 
 int jep_jauto_closable_type_ready() {
     static PyType_Slot slots[] = {
-            {Py_tp_doc, "jautocloseable"},
+            {Py_tp_doc, "Jep java.lang.AutoCloseable"},
             {Py_tp_methods, (void*) pyjautocloseable_methods},
 #ifndef Py_LIMITED_API
             /*
@@ -92,7 +92,7 @@ int jep_jauto_closable_type_ready() {
             {0, NULL}
     };
     PyType_Spec spec = {
-            .name = "jep.PyJAutoCloseable",
+            .name = "java.lang.AutoClosable",
             .basicsize = sizeof(PyJObject),
             .flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
             .slots = slots

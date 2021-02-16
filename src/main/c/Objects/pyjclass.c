@@ -276,7 +276,17 @@ static PyObject* pyjclass_call(PyJClassObject *self,
     return result;
 }
 
-#define JCLASS_DOC
+static PyTypeObject* pyjclass_GetPyType(PyJClassObject* self)
+{
+    JNIEnv* env = pyembed_get_env();
+    return PyJType_Get(env, self->clazz);
+}
+
+
+static PyGetSetDef pyjclass_getset[] = {
+    {"__pytype__", (getter) pyjclass_GetPyType, NULL},
+    {NULL} /* Sentinel */
+};
 
 PyTypeObject *PyJClass_Type = NULL;
 void jep_jclass_type_ready() {
@@ -288,6 +298,7 @@ void jep_jclass_type_ready() {
             {Py_tp_dealloc, (void*) pyjclass_dealloc},
             {Py_tp_class, (void*) pyjclass_call},
             {Py_tp_doc, "jclass"},
+            {Py_tp_getset, (void*) pyjclass_getset},
             {0, NULL}
         ]
     };

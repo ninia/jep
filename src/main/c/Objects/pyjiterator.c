@@ -67,13 +67,13 @@ static PyObject* pyjiterator_next(PyObject* self)
 PyTypeObject *PyJIterator_Type;
 int jep_jiterator_type_ready() {
     static PyType_Slot slots[] = {
-            {Py_tp_doc, "jiterator"},
+            {Py_tp_doc, "Jep java.util.Iterator"},
             {Py_tp_iter, (void*) PyObject_SelfIter},
             {Py_tp_iternext, (void*) pyjiterator_next},
             {0, NULL},
     };
     PyType_Spec spec = {
-            .name = "jep.PyJIterator",
+            .name = "java.util.Iterator",
             .basicsize = sizeof(PyJObject),
             .flags = Py_TPFLAGS_DEFAULT,
             .slots = &[

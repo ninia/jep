@@ -141,9 +141,6 @@ extern int jep_jbuffer_type_ready();
     }
 #endif
 
-#define PyJBuffer_Wrap(env, jobj, jcls) \
-    PyJObject_New(env, PyJBuffer_Type, jobj, jcls)
-
 #define PyJBuffer_Check(pyobj) \
     PyObject_TypeCheck(pyobj, PyJBuffer_Type)
 

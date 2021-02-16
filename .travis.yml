@@ -41,6 +41,9 @@ matrix:
   - os: linux
     language: java
     jdk: openjdk14
+  - os: linux
+    language: java
+    jdk: openjdk15
   - os: osx
     language: generic
 

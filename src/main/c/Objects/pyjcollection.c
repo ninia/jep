@@ -87,14 +87,14 @@ PyTypeObject *PyJCollection_Type;
 int jep_jcollection_type_ready() {
     static PyType_Slot slots[] = {
             // NOTE: Inherited `tp_iter`
-            {Py_tp_doc, "jcollection"},
+            {Py_tp_doc, "Jep java.util.Collection"},
             // sequence slots
             {Py_seq_len, (void*) pyjcollection_len},
             {Py_seq_contains, (void*) pyjcollection_contains},
             {0, NULL},
     };
     PyType_Spec spec = {
-            .name = "jep.PyJCollection",
+            .name = "java.util.Collection",
             .basicsize = sizeof(PyJObject),
             .flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
             .slots = slots,

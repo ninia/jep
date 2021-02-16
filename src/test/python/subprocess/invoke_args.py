@@ -1,5 +1,7 @@
 from unittest import TestCase
 
+from java.util import List
+
 
 class FakeTestCase(TestCase):
     "This class exists to get the assert methods without having a real TestCase"
@@ -39,7 +41,7 @@ def invokeKeywordArgsExplicit(argnull, arg4, arg5, arg6=None):
     x = FakeTestCase()
     x.assertIsNone(argnull)
     x.assertEqual(arg4, "xyz")
-    x.assertIn("PyJList", str(type(arg5)))
+    x.assertTrue(isinstance(arg5,List.__pytype__))
     x.assertIsNone(arg6)
     return arg5
 
@@ -49,7 +51,7 @@ def invokeKeywordArgs(**kwargs):
     x.assertEqual(kwargs['arg4'], "xyz")
     x.assertIsNone(kwargs['argnull'])
     arg5 = kwargs['arg5']
-    x.assertIn("PyJList", str(type(arg5)))
+    x.assertTrue(isinstance(arg5,List.__pytype__))
     x.assertNotIn("arg1", kwargs)
     x.assertNotIn("arg2", kwargs)
     x.assertNotIn("arg3", kwargs)

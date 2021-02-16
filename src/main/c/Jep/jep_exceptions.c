@@ -160,8 +160,8 @@ int process_py_exception(JNIEnv *env)
             }
             (*env)->DeleteLocalRef(env, jmsg);
             if ((*env)->ExceptionCheck(env) || !jepException) {
-                PyErr_Format(PyExc_RuntimeError,
-                             "creating jep.JepException failed.");
+                PyErr_SetString(PyExc_RuntimeError,
+                                "creating jep.JepException failed.");
                 return 1;
             }
 
@@ -217,8 +217,8 @@ int process_py_exception(JNIEnv *env)
                 stackArray = (*env)->NewObjectArray(env, (jsize) stackSize,
                                                     stackTraceElemClazz, NULL);
                 if ((*env)->ExceptionCheck(env) || !stackArray) {
-                    PyErr_Format(PyExc_RuntimeError,
-                                 "creating java.lang.StackTraceElement[] failed.");
+                    PyErr_SetString(PyExc_RuntimeError,
+                                    "creating java.lang.StackTraceElement[] failed.");
                     Py_DECREF(pystack);
                     return 1;
                 }
@@ -316,8 +316,8 @@ int process_py_exception(JNIEnv *env)
                  */
                 javaStack = java_lang_Throwable_getStackTrace(env, jepException);
                 if ((*env)->ExceptionCheck(env) || !javaStack) {
-                    PyErr_Format(PyExc_RuntimeError,
-                                 "Lookup of current java stack failed.");
+                    PyErr_SetString(PyExc_RuntimeError,
+                                    "Lookup of current java stack failed.");
                     return 1;
                 }
                 javaStackLength = (*env)->GetArrayLength(env, javaStack);
@@ -330,8 +330,8 @@ int process_py_exception(JNIEnv *env)
                 reverse = (*env)->NewObjectArray(env, (jsize) (count + javaStackLength),
                                                  stackTraceElemClazz, NULL);
                 if ((*env)->ExceptionCheck(env) || !reverse) {
-                    PyErr_Format(PyExc_RuntimeError,
-                                 "creating reverse java.lang.StackTraceElement[] failed.");
+                    PyErr_SetString(PyExc_RuntimeError,
+                                    "creating reverse java.lang.StackTraceElement[] failed.");
                     return 1;
                 }
 
@@ -387,52 +387,6 @@ int process_py_exception(JNIEnv *env)
     return 1;
 }
 
-
-// convert java exception to ImportError.
-// true (1) if an exception was processed.
-int process_import_exception(JNIEnv *env)
-{
-    PyObject   *estr;
-    jthrowable  exception    = NULL;
-    PyObject   *pyException  = PyExc_ImportError;
-    JepThread  *jepThread;
-
-    if (!(*env)->ExceptionCheck(env)) {
-        return 0;
-    }
-
-    if ((exception = (*env)->ExceptionOccurred(env)) == NULL) {
-        return 0;
-    }
-
-    jepThread = pyembed_get_jepthread();
-    if (!jepThread) {
-        printf("Error while processing a Java exception, "
-               "invalid JepThread.\n");
-        return 1;
-    }
-
-    // we're already processing this one, clear the old
-    (*env)->ExceptionClear(env);
-
-    if ((*env)->ExceptionCheck(env)) {
-        (*env)->ExceptionDescribe(env);
-        return 1;
-    }
-
-    estr = jobject_As_PyString(env, exception);
-    if (!estr) {
-        return 1;
-    }
-
-    PyErr_SetObject(pyException, estr);
-    Py_DECREF(estr);
-
-    (*env)->DeleteLocalRef(env, exception);
-    return 1;
-}
-
-
 /*
  * Converts a Java exception to a PyErr.  Returns true if an exception was
  * processed.  If an error was processed here, it can be caught in Python code
@@ -443,7 +397,6 @@ int process_java_exception(JNIEnv *env)
     jthrowable exception = NULL;
     PyObject *pyExceptionType;
     PyObject *jpyExc;
-    JepThread *jepThread;
     jobjectArray stack;
 
     if (!(*env)->ExceptionCheck(env)) {
@@ -464,13 +417,6 @@ int process_java_exception(JNIEnv *env)
         PyErr_Print();
     }
 
-    jepThread = pyembed_get_jepthread();
-    if (!jepThread) {
-        printf("Error while processing a Java exception, "
-               "invalid JepThread.\n");
-        return 1;
-    }
-
     // we're already processing this one, clear the old
     (*env)->ExceptionClear(env);
 
@@ -481,22 +427,21 @@ int process_java_exception(JNIEnv *env)
      */
     stack = java_lang_Throwable_getStackTrace(env, exception);
     if ((*env)->ExceptionCheck(env)) {
-        PyErr_Format(PyExc_RuntimeError,
-                     "wrapping java exception in pyjobject failed.");
+        PyErr_SetString(PyExc_RuntimeError,
+                        "wrapping java exception in pyjobject failed.");
         return 1;
 
     }
-    (*env)->DeleteLocalRef(env, stack);
     pyExceptionType = pyerrtype_from_throwable(env, exception);
 
-    // turn the Java exception into a PyJObject so the interpreter can handle it
-    jpyExc = PyJObject_Wrap(env, exception, NULL);
+    jpyExc = jobject_As_PyObject(env, exception);
     if (!jpyExc) {
         return 1;
     }
 
     PyErr_SetObject(pyExceptionType, jpyExc);
     Py_DECREF(jpyExc);
+    (*env)->DeleteLocalRef(env, stack);
     (*env)->DeleteLocalRef(env, exception);
     return 1;
 }

@@ -63,9 +63,6 @@ import jep.JepException;
  * </pre>
  *
  * @see <a href=
- *      "https://docs.python.org/2/reference/expressions.html#calls">Python 2
- *      Call Expression</a>
- * @see <a href=
  *      "https://docs.python.org/3/reference/expressions.html#calls">Python 3
  *      Call Expression</a>
  * @author Nate Jensen

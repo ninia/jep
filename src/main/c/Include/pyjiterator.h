@@ -39,9 +39,6 @@
 extern PyTypeObject *PyJIterator_Type;
 extern int jep_jiterator_type_ready();
 
-#define PyJIterator_Wrap(env, jobj, jcls) \
-    PyJObject_New(env, PyJIterator_Type, jobj, jcls)
-
 #define PyJIterator_Check(pyobj) \
     PyObject_TypeCheck(pyobj, PyJIterator_Type)
 

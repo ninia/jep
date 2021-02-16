@@ -92,8 +92,6 @@ if __name__ == '__main__':
                        'Topic :: Software Development',
                        'Programming Language :: Java',
                        'Programming Language :: Python',
-                       'Programming Language :: Python :: 3.3',
-                       'Programming Language :: Python :: 3.4',
                        'Programming Language :: Python :: 3.5',
                        'Programming Language :: Python :: 3.6', 
                        'Programming Language :: Python :: 3.7', 
@@ -115,8 +113,7 @@ if __name__ == '__main__':
 
           # my hacks to compile java files
           java_files=get_files('.java'),
-          extra_jar_files=['src/main/resources/jep/classlist_7.txt',
-                           'src/main/resources/jep/classlist_8.txt',
+          extra_jar_files=['src/main/resources/jep/classlist_8.txt',
                            'src/main/resources/jep/classlist_9.txt',
                            'src/main/resources/jep/classlist_10.txt',
                            'src/main/resources/jep/classlist_11.txt'],

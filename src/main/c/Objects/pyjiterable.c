@@ -63,17 +63,17 @@ FINALLY:
 PyTypeObject *PyJIterable_Type;
 int jep_jiterable_type_ready() {
     static PyType_Slot slots[] = {
-            {Py_tp_doc, "jiterable"},
+            {Py_tp_doc, "Jep java.lang.Iterable"},
             {Py_tp_iter, (void*) pyjiterable_getiter},
             {Py_tp_new, NULL},
             {0, NULL}
     };
     PyType_Spec spec = {
-            .name = "jep.PyJIterable",
+            .name = "java.lang.Iterable",
             .basicsize = sizeof(PyJObject),
             .flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
             .slots = slots
     };
     PyJIterable_Type = (PyTypeObject*) PyType_FromSpecWithBases(&spec, (PyObject*) PyJObject_Type);
     return PyType_Ready(PyJIterable_Type);
-};
+}

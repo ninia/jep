@@ -217,7 +217,7 @@ static PyObject* pyjmap_getiter(PyObject* obj)
         goto FINALLY;
     }
 
-    result = PyJIterator_Wrap(env, iter, NULL);
+    result = jobject_As_PyObject(env, iter);
 FINALLY:
     (*env)->PopLocalFrame(env, NULL);
     return result;
@@ -229,7 +229,7 @@ FINALLY:
 PyTypeObject *PyJMap_Type;
 int jep_jmap_type_ready() {
     static PyType_Slot slots[] = {
-            {Py_tp_doc, "jmap"},
+            {Py_tp_doc, "Jep java.util.Map"},
             {Py_tp_iter, (void*) pyjmap_getiter},
             // sequence slots
             {Py_seq_contains, (void*) pyjmap_contains_key},
@@ -240,7 +240,7 @@ int jep_jmap_type_ready() {
             {0, NULL},
     };
     PyType_Spec spec = {
-            .name = "jep.PyJMap",
+            .name = "java.util.Map",
             .basicsize = sizeof(PyJObject),
             .flags = Py_TPFLAGS_DEFAULT,
             .slots = slots,
@@ -248,3 +248,4 @@ int jep_jmap_type_ready() {
     PyJMap_Type = PyType_FromSpecWithBases(&spec, (PyObject*) PyJObject_Type);
     return PyType_Ready(PyJMap_Type);
 }
+

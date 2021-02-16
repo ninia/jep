@@ -47,8 +47,4 @@ int process_py_exception(JNIEnv*);
 // true (1) if an exception was processed.
 int process_java_exception(JNIEnv*);
 
-// convert java exception to ImportError.
-// true (1) if an exception was processed.
-int process_import_exception(JNIEnv *env);
-
 #endif // ifndef _Included_jep_exceptions

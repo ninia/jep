@@ -36,10 +36,10 @@
 /* Set the object attributes from the cache */
 static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
 {
-
     jstring className     = NULL;
     PyObject *pyClassName = NULL;
-    JepThread *jepThread  = NULL;
+    PyObject* modjep      = NULL;
+    PyObject* fqnToPyJAttrs = NULL;
     PyObject *cachedAttrs = NULL;
 
     if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
@@ -81,15 +81,16 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
      * synchronized and multiple threads will not alter the dictionary at the
      * same time.
      */
-    jepThread = pyembed_get_jepthread();
-    if (jepThread == NULL) {
+    modjep = PyImport_ImportModule("_jep");
+    if (!modjep) {
         goto EXIT_ERROR;
     }
-    if (jepThread->fqnToPyJAttrs == NULL) {
-        jepThread->fqnToPyJAttrs = PyDict_New();
+    fqnToPyJAttrs = PyObject_GetAttrString(modjep, "__javaAttributeCache__");
+    if (!fqnToPyJAttrs) {
+        goto EXIT_ERROR;
     }
 
-    cachedAttrs = PyDict_GetItem(jepThread->fqnToPyJAttrs, pyClassName);
+    cachedAttrs = PyDict_GetItem(fqnToPyJAttrs, pyClassName);
     if (cachedAttrs == NULL) {
         int i, len = 0;
         jobjectArray methodArray = NULL;
@@ -186,7 +187,7 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
         }
         (*env)->DeleteLocalRef(env, fieldArray);
 
-        PyDict_SetItem(jepThread->fqnToPyJAttrs, pyClassName, cachedAttrs);
+        PyDict_SetItem(fqnToPyJAttrs, pyClassName, cachedAttrs);
         Py_DECREF(cachedAttrs); // fqnToPyJAttrs will hold the reference
     } // end of setting up cache for this Java Class
 
@@ -198,11 +199,15 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
         pyjob->attr = PyDict_Copy(cachedAttrs);
     }
 
+    Py_XDECREF(modjep);
+    Py_XDECREF(fqnToPyJAttrs);
     (*env)->PopLocalFrame(env, NULL);
     return 1;
 
 
 EXIT_ERROR:
+    Py_XDECREF(modjep);
+    Py_XDECREF(fqnToPyJAttrs);
     (*env)->PopLocalFrame(env, NULL);
     return 0;
 }
@@ -211,7 +216,7 @@ EXIT_ERROR:
 PyObject* PyJObject_New(JNIEnv *env, PyTypeObject* type, jobject obj,
                         jclass class)
 {
-    PyJObject *pyjob = PyObject_NEW(PyJObject, type);
+    PyJObject *pyjob = (PyJObject*) PyType_GenericAlloc(type, 0);
 
     if (obj) {
         pyjob->object = (*env)->NewGlobalRef(env, obj);
@@ -250,8 +255,7 @@ static void pyjobject_dealloc(PyJObject *self)
 
     Py_CLEAR(self->attr);
     Py_CLEAR(self->javaClassName);
-
-    PyObject_Del(self);
+    Py_TYPE((PyObject*) self)->tp_free((PyObject*) self);
 #endif
 }
 
@@ -525,7 +529,7 @@ int jep_jobject_type_ready() {
             {Py_tp_str, (void*) pyjobject_str},
             {Py_tp_getattro, (void*) pyjobject_getattro},
             {Py_tp_setattro, (void*) pyjobject_setattro},
-            {Py_tp_doc, "jobject"},
+            {Py_tp_doc, "Jep java.lang.Object"},
             {Py_tp_richcompare, (void*) pyjobject_richcompare},
             {Py_tp_methods, (void*) pyjobject_methods},
             {Py_tp_members, (void*) pyjobject_members},
@@ -533,7 +537,7 @@ int jep_jobject_type_ready() {
             {0, NULL},
     };
     PyType_Spec spec = {
-            .name = "jep.PyJObject",
+            .name = "java.lang.Object",
             .basicsize = sizeof(PyJObject),
             .flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
             .slots = slots

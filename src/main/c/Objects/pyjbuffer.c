@@ -157,7 +157,7 @@ getbuf(PyObject* self, Py_buffer *view, int flags)
 PyTypeObject *PyJBuffer_Type;
 int jep_jbuffer_type_ready() {
     static PyType_Slot slots[] = {
-            {Py_tp_doc, "jbuffer"},
+            {Py_tp_doc, "Jep java.nio.Buffer"},
             {Py_tp_iter, (void*) pyjiterable_getiter},
             #ifndef Py_LIMITED_API
             /*
@@ -170,7 +170,7 @@ int jep_jbuffer_type_ready() {
             {0, NULL}
     };
     PyType_Spec spec = {
-            .name = "jep.PyJBuffer",
+            .name = "java.nio.Buffer",
             .basicsize = sizeof(PyJObject),
             .flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
             .slots = slots
