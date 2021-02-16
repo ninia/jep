@@ -78,4 +78,35 @@ JepThread* pyembed_get_jepthread(void);
 
 void pyembed_setparameter_object(JNIEnv*, intptr_t, intptr_t, const char*,
                                  jobject);
+
+enum jep_run_target_type {
+    JEP_RUN_STRING_C,
+    JEP_RUN_STRING_OBJECT,
+    JEP_RUN_FILE,
+    JEP_RUN_BYTECODE_FILE
+};
+typedef struct jep_run_target {
+    enum jep_run_target_type target_type;
+    union {
+        FILE *file_handle;
+        PyObject *string_object;
+        void *c_string;
+    };
+} JepRunTarget;
+
+/**
+ * Execute the specified target by compiling and then running it.
+ *
+ * This should be equivalent to calling `PyRun_File` or `PyRun_String`,
+ * but works on the stable API too.
+ */
+PyObject *pyembed_util_run(JepRunTarget target, char* file_name, int input_type, PyObject *locals, PyObject *globals);
+static inline PyObject *pyembed_util_run_string(char *input_str, int input_type, PyObject *locals, PyObject *globals) {
+    JepRunTarget target = {
+            .target_type = JEP_RUN_STRING_C,
+            .c_string = input_str,
+    };
+    return pyembed_util_run(target, "<string>", input_type, locals, globals);
+}
+
 #endif

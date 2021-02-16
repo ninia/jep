@@ -79,7 +79,6 @@ static PyObject* pyembed_forname(PyObject*, PyObject*);
 static PyObject* pyembed_jproxy(PyObject*, PyObject*);
 
 static int maybe_pyc_file(FILE*, const char*, const char*, int);
-static void pyembed_run_pyc(JepThread*, FILE*);
 
 static struct PyMethodDef jep_methods[] = {
     {
@@ -765,7 +764,8 @@ static PyObject* pyembed_jproxy(PyObject *self, PyObject *args)
         jstring     jstr;
         PyObject   *item;
 
-        item = PyList_GET_ITEM(interfaces, i);
+        item = PyList_GetItem(interfaces, i);
+        if (item == NULL) return NULL;
         if (!PyUnicode_Check(item)) {
             return PyErr_Format(PyExc_ValueError, "Item %zd not a string.", i);
         }
@@ -1124,7 +1124,7 @@ void pyembed_eval(JNIEnv *env,
         goto EXIT;
     }
 
-    result = PyRun_String(str,  /* new ref */
+    result = pyembed_util_run_string(str,  /* new ref */
                           Py_single_input,
                           jepThread->globals,
                           jepThread->globals);
@@ -1194,7 +1194,7 @@ void pyembed_exec(JNIEnv *env, intptr_t _jepThread, char *str)
 
     PyEval_AcquireThread(jepThread->tstate);
 
-    result = PyRun_String(str, Py_file_input, jepThread->globals,
+    result = pyembed_util_run_string(str, Py_file_input, jepThread->globals,
                           jepThread->globals);
     if (result) {
         // Result is expected to be Py_None.
@@ -1267,7 +1267,7 @@ jobject pyembed_getvalue_on(JNIEnv *env,
     dict = PyModule_GetDict(onModule);
     Py_INCREF(dict);
 
-    result = PyRun_String(str, Py_eval_input, dict, dict);      /* new ref */
+    result = pyembed_util_run_string(str, Py_eval_input, dict, dict);      /* new ref */
 
     process_py_exception(env);
     Py_DECREF(dict);
@@ -1317,7 +1317,7 @@ jobject pyembed_getvalue(JNIEnv *env, intptr_t _jepThread, char *str,
         goto EXIT;
     }
 
-    result = PyRun_String(str,  /* new ref */
+    result = pyembed_util_run_string(str,  /* new ref */
                           Py_eval_input,
                           jepThread->globals,
                           jepThread->globals);
@@ -1366,7 +1366,7 @@ jobject pyembed_getvalue_array(JNIEnv *env, intptr_t _jepThread, char *str)
         goto EXIT;
     }
 
-    result = PyRun_String(str,  /* new ref */
+    result = pyembed_util_run_string(str,  /* new ref */
                           Py_eval_input,
                           jepThread->globals,
                           jepThread->globals);
@@ -1422,6 +1422,7 @@ void pyembed_run(JNIEnv *env,
 
     PyEval_AcquireThread(jepThread->tstate);
 
+    JepRunTarget run_target;
     if (file != NULL) {
         FILE *script = fopen(file, "r");
         if (!script) {
@@ -1448,14 +1449,15 @@ void pyembed_run(JNIEnv *env,
             }
 #endif
 
-            pyembed_run_pyc(jepThread, script);
+            run_target.target_type = JEP_RUN_BYTECODE_FILE;
+            run_target.file_handle = script;
         } else {
-            PyRun_File(script,
-                       file,
-                       Py_file_input,
-                       jepThread->globals,
-                       jepThread->globals);
+            run_target.target_type = JEP_RUN_FILE;
+            run_target.file_handle = script;
         }
+        PyObject *exec_result = pyembed_util_run(run_target, file, Py_file_input, jepThread->globals, jepThread->globals);
+        // NOTE: We unconditionally ignore the result of execution
+        Py_XDECREF(exec_result);
 
         // c programs inside some java environments may get buffered output
         fflush(stdout);
@@ -1471,8 +1473,8 @@ EXIT:
 
 
 // gratuitously copied from pythonrun.c::run_pyc_file
-static void pyembed_run_pyc(JepThread *jepThread,
-                            FILE *fp)
+#ifndef Py_LIMITED_API
+static PyObject* pyembed_run_pyc(JepThread *jepThread, FILE *fp, PyObject *locals, PyObject *globals)
 {
     PyObject *co;
     PyObject *v;
@@ -1483,7 +1485,7 @@ static void pyembed_run_pyc(JepThread *jepThread,
     magic = PyMarshal_ReadLongFromFile(fp);
     if (magic != PyImport_GetMagicNumber()) {
         PyErr_SetString(PyExc_RuntimeError, "Bad magic number in .pyc file");
-        return;
+        return NULL;
     }
     (void) PyMarshal_ReadLongFromFile(fp);
     // Python 3.3 added an extra long containing the size of the source.
@@ -1497,12 +1499,118 @@ static void pyembed_run_pyc(JepThread *jepThread,
     if (v == NULL || !PyCode_Check(v)) {
         Py_XDECREF(v);
         PyErr_SetString(PyExc_RuntimeError, "Bad code object in .pyc file");
-        return;
+        return NULL;
     }
     co = v;
-    v = PyEval_EvalCode(co, jepThread->globals, jepThread->globals);
+    v = PyEval_EvalCode(co, locals, globals);
     Py_DECREF(co);
-    Py_XDECREF(v);
+    return v;
+}
+#endif // PY_LIMITED_API
+
+PyObject *pyembed_util_run(JepRunTarget target, char *file_name, int input_type, PyObject *locals, PyObject *globals) {
+
+    switch (target.target_type) {
+        case JEP_RUN_STRING_OBJECT: {
+            if (!PyUnicode_Check(target.string_object)) {
+                PyErr_SetString(PyExc_TypeError, "Claimed string object");
+                return NULL;
+            }
+            const char *utf8 = PyUnicode_AsUTF8(target.string_object);
+            if (utf8 == NULL) return NULL;
+            // Change to use C string
+            target.target_type = JEP_RUN_STRING_C;
+            target.c_string = (char*) utf8;
+            return pyembed_util_run(target, file_name, input_type, locals, globals);
+        }
+        case JEP_RUN_STRING_C: {
+            PyObject *exec_result = NULL;
+            PyObject *compiled = Py_CompileString(target.c_string, file_name, Py_file_input);
+            if (compiled == NULL) goto cleanup;
+            exec_result = PyEval_EvalCode(compiled, locals, globals);
+            // fallthrough
+            cleanup:
+            Py_XDECREF(compiled);
+            return exec_result;
+        }
+        case JEP_RUN_BYTECODE_FILE: {
+#ifndef Py_LIMITED_API
+            return pyembed_run_pyc(target.file_handle)
+#else
+            PyErr_Format(PyExc_NotImplementedError, "Jep compiled against stable ABI. Can't compile bytecode file: %s", file_name);
+            return NULL;
+#endif
+        }
+        case JEP_RUN_FILE: {
+#ifndef Py_LIMITED_API
+            return PyRun_File(target.file_handle, file, input_type. locals, globals);
+#else
+            FILE *input_file = target.file_handle;
+            PyObject *exec_result = NULL;
+            Py_ssize_t capacity = 4096;
+            Py_ssize_t used = 0;
+            PyObject *compiled = NULL;
+            PyObject *buffer = PyByteArray_FromStringAndSize(NULL, capacity);
+            if (buffer == NULL) goto finished_manual_run;
+            while (1) {
+                assert(used <= capacity);
+                if ((capacity - used) < 1024) {
+                    capacity *= 2;
+                    assert(capacity - used >= 1024);
+                    if (PyByteArray_Resize(buffer, capacity) != 0) {
+                        goto finished_manual_run;
+                    }
+                }
+                size_t remaining = (size_t) capacity - used;
+                assert(PyByteArray_Size(buffer) == capacity);
+                char *raw_buffer = PyByteArray_AsString(buffer);
+                if (raw_buffer == NULL) goto finished_manual_run;
+                size_t actually_read = fread(&buffer, 1, (size_t) capacity, input_file);
+                if (actually_read == remaining) {
+                    // Success - read fully
+                    used += actually_read;
+                    continue;
+                } else if (feof(input_file) != 0) {
+                    // Success - encountered EOF
+                    used += actually_read;
+                    break;
+                } else if (ferror(input_file) != 0) {
+                    // ERROR
+                    PyErr_Format(PyExc_IOError, "Jep failed to read file: %s", file_name);
+                    goto finished_manual_run;
+                } else {
+                    /*
+                     * Well I guess we can just assume success,
+                     * since there is not technically an error indicator or EOF
+                     */
+                    used += actually_read;
+                    continue;
+                }
+            }
+            assert(capacity == PyByteArray_Size(buffer));
+            assert(used <= capacity);
+            if (PyByteArray_Resize(buffer, used) != 0) {
+                goto finished_manual_run;
+            }
+            assert(PyByteArray_Size(buffer) == used);
+            char *result_string = PyByteArray_AsString(buffer);
+            if (result_string == NULL) goto finished_manual_run;
+            // Change target to UTF8 cstring, then delegate
+            target.target_type = JEP_RUN_STRING_C;
+            target.c_string = result_string;
+            exec_result = pyembed_util_run(target, file_name, input_type, locals, globals);
+            // fallthrough
+            finished_manual_run:
+                Py_XDECREF(buffer);
+                Py_XDECREF(compiled);
+                return exec_result;
+#endif
+        }
+        default: {
+            PyErr_Format(PyExc_SystemError, "Unknown JepRunTargetType: %d", (int) target.target_type);
+            return NULL;
+        }
+    }
 }
 
 /* Check whether a file maybe a pyc file: Look at the extension,
