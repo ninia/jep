@@ -182,6 +182,6 @@ public class PyCallable extends PyObject {
     }
 
     private native Object call(long tstate, long pyObject, Object[] args,
-            Map<String, Object> kwargs, Class expectedType) throws JepException;
+            Map<String, Object> kwargs, Class<?> expectedType) throws JepException;
 
 }

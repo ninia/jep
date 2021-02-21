@@ -1463,5 +1463,4 @@ void pyembed_setparameter_object(JNIEnv *env,
     process_py_exception(env);
 
     PyEval_ReleaseThread(jepThread->tstate);
-    return;
 }
