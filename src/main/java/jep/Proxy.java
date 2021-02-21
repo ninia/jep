@@ -45,7 +45,7 @@ class Proxy {
         } catch (JepException e) {
             throw new IllegalArgumentException(e);
         }
-        Class classes[] = { targetInterface };
+        Class<?> classes[] = { targetInterface };
         return java.lang.reflect.Proxy.newProxyInstance(loader, classes, ih);
     }
 
@@ -84,7 +84,7 @@ class Proxy {
             throw new IllegalArgumentException(e);
         }
 
-        Class classes[] = new Class[interfaces.length];
+        Class<?> classes[] = new Class<?>[interfaces.length];
         try {
             for (int i = 0; i < interfaces.length; i++)
                 classes[i] = loader.loadClass(interfaces[i]);

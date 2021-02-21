@@ -294,6 +294,6 @@ public class PyObject extends JepAccess implements AutoCloseable {
                 .cast(as(pointer.tstate, pointer.pyObject, expectedType));
     }
 
-    private native Object as(long tstate, long pyObject, Class expectedType)
+    private native Object as(long tstate, long pyObject, Class<?> expectedType)
             throws JepException;
 }
