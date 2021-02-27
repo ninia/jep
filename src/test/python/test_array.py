@@ -1,6 +1,16 @@
 import os
 import unittest
-from jep import jarray, JINT_ID, JBYTE_ID
+
+from jep import jarray
+from jep import JBOOLEAN_ID, JCHAR_ID
+from jep import JBYTE_ID, JSHORT_ID, JINT_ID, JLONG_ID
+from jep import JFLOAT_ID, JDOUBLE_ID
+
+from java.util import Arrays
+from java.lang.reflect import Array
+from java.lang import Boolean, Character
+from java.lang import Byte, Short, Integer, Long
+from java.lang import Float, Double
 
 
 class TestArray(unittest.TestCase):
@@ -134,3 +144,51 @@ class TestArray(unittest.TestCase):
     def test_jarray_one_arg_throws_exception(self):
         with self.assertRaises(Exception):
             jep.jarray(1)
+
+    def test_primitive_bool_array_creation(self):
+        base = Array.newInstance(Boolean.TYPE, 1);
+        self.assertTrue(base, jarray(1, JBOOLEAN_ID))
+        self.assertTrue(base, jarray(1, 'z'))
+        self.assertTrue(base, jarray(1, Boolean.TYPE))
+
+    def test_primitive_byte_array_creation(self):
+        base = Array.newInstance(Byte.TYPE, 1);
+        self.assertTrue(base, jarray(1, JBYTE_ID))
+        self.assertTrue(base, jarray(1, 'b'))
+        self.assertTrue(base, jarray(1, Byte.TYPE))
+
+    def test_primitive_char_array_creation(self):
+        base = Array.newInstance(Character.TYPE, 1);
+        self.assertTrue(base, jarray(1, JCHAR_ID))
+        self.assertTrue(base, jarray(1, 'c'))
+        self.assertTrue(base, jarray(1, Character.TYPE))
+
+    def test_primitive_short_array_creation(self):
+        base = Array.newInstance(Short.TYPE, 1);
+        self.assertTrue(base, jarray(1, JSHORT_ID))
+        self.assertTrue(base, jarray(1, 's'))
+        self.assertTrue(base, jarray(1, Short.TYPE))
+
+    def test_primitive_int_array_creation(self):
+        base = Array.newInstance(Integer.TYPE, 1);
+        self.assertTrue(base, jarray(1, JINT_ID))
+        self.assertTrue(base, jarray(1, 'i'))
+        self.assertTrue(base, jarray(1, Integer.TYPE))
+
+    def test_primitive_long_array_creation(self):
+        base = Array.newInstance(Long.TYPE, 1);
+        self.assertTrue(base, jarray(1, JLONG_ID))
+        self.assertTrue(base, jarray(1, 'j'))
+        self.assertTrue(base, jarray(1, Long.TYPE))
+
+    def test_primitive_float_array_creation(self):
+        base = Array.newInstance(Float.TYPE, 1);
+        self.assertTrue(base, jarray(1, JFLOAT_ID))
+        self.assertTrue(base, jarray(1, 'f'))
+        self.assertTrue(base, jarray(1, Float.TYPE))
+
+    def test_primitive_double_array_creation(self):
+        base = Array.newInstance(Double.TYPE, 1);
+        self.assertTrue(base, jarray(1, JDOUBLE_ID))
+        self.assertTrue(base, jarray(1, 'd'))
+        self.assertTrue(base, jarray(1, Double.TYPE))

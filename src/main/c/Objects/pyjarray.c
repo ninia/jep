@@ -157,13 +157,92 @@ PyObject* pyjarray_new_v(PyObject *isnull, PyObject *args)
         } // if int(two)
         else if (PyJObject_Check(two)) {
             PyJObject *pyjob = (PyJObject *) two;
-            typeId = JOBJECT_ID;
 
             componentClass = pyjob->clazz;
-            arrayObj = (*env)->NewObjectArray(env,
-                                              (jsize) size,
-                                              componentClass,
-                                              NULL);
+            if ((*env)->IsAssignableFrom(env, componentClass, JOBJECT_TYPE)) {
+                typeId = JOBJECT_ID;
+                arrayObj = (*env)->NewObjectArray(env,
+                                                  (jsize) size,
+                                                  componentClass,
+                                                  NULL);
+            } else if ((*env)->IsSameObject(env, componentClass, JBOOLEAN_TYPE)) {
+                typeId = JBOOLEAN_ID;
+                arrayObj = (*env)->NewBooleanArray(env, (jsize) size);
+            } else if ((*env)->IsSameObject(env, componentClass, JBYTE_TYPE)) {
+                typeId = JBYTE_ID;
+                arrayObj = (*env)->NewByteArray(env, (jsize) size);
+            } else if ((*env)->IsSameObject(env, componentClass, JCHAR_TYPE)) {
+                typeId = JCHAR_ID;
+                arrayObj = (*env)->NewCharArray(env, (jsize) size);
+            } else if ((*env)->IsSameObject(env, componentClass, JSHORT_TYPE)) {
+                typeId = JSHORT_ID;
+                arrayObj = (*env)->NewShortArray(env, (jsize) size);
+            } else if ((*env)->IsSameObject(env, componentClass, JINT_TYPE)) {
+                typeId = JINT_ID;
+                arrayObj = (*env)->NewIntArray(env, (jsize) size);
+            } else if ((*env)->IsSameObject(env, componentClass, JLONG_TYPE)) {
+                typeId = JLONG_ID;
+                arrayObj = (*env)->NewLongArray(env, (jsize) size);
+            } else if ((*env)->IsSameObject(env, componentClass, JFLOAT_TYPE)) {
+                typeId = JFLOAT_ID;
+                arrayObj = (*env)->NewFloatArray(env, (jsize) size);
+            } else if ((*env)->IsSameObject(env, componentClass, JDOUBLE_TYPE)) {
+                typeId = JDOUBLE_ID;
+                arrayObj = (*env)->NewDoubleArray(env, (jsize) size);
+            } else {
+                /* Void? */
+                PyErr_SetString(PyExc_ValueError, "Unsupported jarray Component type");
+                return NULL;
+            }
+        } else if (PyUnicode_Check(two)) {
+            Py_UCS1 typecode = 0;
+            if (PyUnicode_READY(two) != 0) {
+                return NULL;
+            } else if (PyUnicode_GET_LENGTH(two) == 1) {
+                if (PyUnicode_KIND((two)) == PyUnicode_1BYTE_KIND) {
+                    typecode = PyUnicode_1BYTE_DATA(two)[0];
+                }
+            }
+            /* 0 will fall through like any other invalid character. */
+            switch (typecode) {
+            case 'z':
+                typeId = JBOOLEAN_ID;
+                arrayObj = (*env)->NewBooleanArray(env, (jsize) size);
+                break;
+            case 'b':
+                typeId = JBYTE_ID;
+                arrayObj = (*env)->NewByteArray(env, (jsize) size);
+                break;
+            case 'c':
+                typeId = JCHAR_ID;
+                arrayObj = (*env)->NewCharArray(env, (jsize) size);
+                break;
+            case 's':
+                typeId = JSHORT_ID;
+                arrayObj = (*env)->NewShortArray(env, (jsize) size);
+                break;
+            case 'i':
+                typeId = JINT_ID;
+                arrayObj = (*env)->NewIntArray(env, (jsize) size);
+                break;
+            case 'j':
+                typeId = JLONG_ID;
+                arrayObj = (*env)->NewLongArray(env, (jsize) size);
+                break;
+            case 'f':
+                typeId = JFLOAT_ID;
+                arrayObj = (*env)->NewFloatArray(env, (jsize) size);
+                break;
+            case 'd':
+                typeId = JDOUBLE_ID;
+                arrayObj = (*env)->NewDoubleArray(env, (jsize) size);
+                break;
+            } // switch
+            if (!arrayObj) {
+                PyErr_SetString(PyExc_ValueError,
+                                "bad typecode (must be z, b, c, s, i, j, f or d)");
+                return NULL;
+            }
         } else {
             PyErr_SetString(PyExc_ValueError, "Unknown arg type: expected "
                             "one of: J<foo>_ID, pyjobject, jarray");
@@ -178,7 +257,7 @@ PyObject* pyjarray_new_v(PyObject *isnull, PyObject *args)
         return NULL;
     }
 
-    if (!arrayObj || typeId < -1 || size < -1) {
+    if (!arrayObj || typeId < 0 || size < 0) {
         PyErr_SetString(PyExc_ValueError, "Unknown type.");
         return NULL;
     }

@@ -154,15 +154,14 @@ static int initjep(JNIEnv *env, jboolean hasSharedModules)
             handle_startup_exception(env, "Couldn't set _jep on sys.modules");
             return -1;
         }
-        PyModule_AddIntConstant(modjep, "JBOOLEAN_ID", JBOOLEAN_ID);
-        PyModule_AddIntConstant(modjep, "JINT_ID", JINT_ID);
-        PyModule_AddIntConstant(modjep, "JLONG_ID", JLONG_ID);
-        PyModule_AddIntConstant(modjep, "JSTRING_ID", JSTRING_ID);
-        PyModule_AddIntConstant(modjep, "JDOUBLE_ID", JDOUBLE_ID);
-        PyModule_AddIntConstant(modjep, "JSHORT_ID", JSHORT_ID);
-        PyModule_AddIntConstant(modjep, "JFLOAT_ID", JFLOAT_ID);
-        PyModule_AddIntConstant(modjep, "JCHAR_ID", JCHAR_ID);
-        PyModule_AddIntConstant(modjep, "JBYTE_ID", JBYTE_ID);
+        PyModule_AddStringConstant(modjep, "JBOOLEAN_ID", "z");
+        PyModule_AddStringConstant(modjep, "JINT_ID", "i");
+        PyModule_AddStringConstant(modjep, "JLONG_ID", "j");
+        PyModule_AddStringConstant(modjep, "JDOUBLE_ID", "d");
+        PyModule_AddStringConstant(modjep, "JSHORT_ID", "s");
+        PyModule_AddStringConstant(modjep, "JFLOAT_ID", "f");
+        PyModule_AddStringConstant(modjep, "JCHAR_ID", "c");
+        PyModule_AddStringConstant(modjep, "JBYTE_ID", "b");
         PyModule_AddIntConstant(modjep, "JEP_NUMPY_ENABLED", JEP_NUMPY_ENABLED);
         PyObject *javaAttrCache = PyDict_New();
         if (!javaAttrCache) {
@@ -184,6 +183,17 @@ static int initjep(JNIEnv *env, jboolean hasSharedModules)
             Py_DECREF(modjep);
             return -1;
         }
+	/* JSTRING_ID ust be done after the caches */
+	PyObject* stringClass = PyJClass_Wrap(env, JSTRING_TYPE);
+	if (!stringClass) {
+            Py_DECREF(modjep);
+            return -1;
+	}
+        if (PyModule_AddObject(modjep, "JSTRING_ID", stringClass)) {
+            Py_DECREF(stringClass);
+            Py_DECREF(modjep);
+            return -1;
+	}
         if (hasSharedModules) {
             Py_INCREF(mainThreadModules);
             PyModule_AddObject(modjep, "mainInterpreterModules", mainThreadModules);
