@@ -36,17 +36,14 @@ static void pyjarray_dealloc(PyJArrayObject *self);
 static int pyjarray_init(JNIEnv*, PyJArrayObject*, int, PyObject*);
 static Py_ssize_t pyjarray_length(PyObject *self);
 
-
+int jarray_type_init();
 
 // called internally to make new PyJArrayObject instances
 PyObject* pyjarray_new(JNIEnv *env, jobjectArray obj)
 {
     PyJArrayObject  *pyarray;
 
-    if (!PyJArray_Type.tp_base) {
-        PyJArray_Type.tp_base = &PyJObject_Type;
-    }
-    if (PyType_Ready(&PyJArray_Type) < 0) {
+    if (jarray_type_init() < 0) {
         return NULL;
     }
     if (!obj) {
@@ -54,7 +51,7 @@ PyObject* pyjarray_new(JNIEnv *env, jobjectArray obj)
         return NULL;
     }
 
-    pyarray = (PyJArrayObject*) PyJObject_New(env, &PyJArray_Type, obj, NULL);
+    pyarray = (PyJArrayObject*) PyJObject_New(env, PyJArray_Type, obj, NULL);
     if (!pyarray) {
         return NULL;
     }
@@ -89,10 +86,7 @@ PyObject* pyjarray_new_v(PyObject *isnull, PyObject *args)
     PyObject *one, *two, *three;
     one = two = three = NULL;
 
-    if (!PyJArray_Type.tp_base) {
-        PyJArray_Type.tp_base = &PyJObject_Type;
-    }
-    if (PyType_Ready(&PyJArray_Type) < 0) {
+    if (jarray_type_init() < 0) {
         return NULL;
     }
 
@@ -183,7 +177,7 @@ PyObject* pyjarray_new_v(PyObject *isnull, PyObject *args)
         return NULL;
     }
 
-    pyarray = (PyJArrayObject*) PyJObject_New(env, &PyJArray_Type, arrayObj, NULL);
+    pyarray = (PyJArrayObject*) PyJObject_New(env, PyJArray_Type, arrayObj, NULL);
     if (!pyarray) {
         return NULL;
     }
@@ -348,7 +342,7 @@ static int pyjarray_init(JNIEnv *env,
             jdouble *ar = (jdouble *) pyarray->pinnedArray;
 
             if (value && PyFloat_Check(value)) {
-                v = PyFloat_AS_DOUBLE(value);
+                v = PyFloat_AsDouble(value);
             }
 
             for (i = 0; i < pyarray->length; i++) {
@@ -380,7 +374,7 @@ static int pyjarray_init(JNIEnv *env,
             jfloat *ar = (jfloat *) pyarray->pinnedArray;
 
             if (value && PyFloat_Check(value)) {
-                v = PyFloat_AS_DOUBLE(value);
+                v = PyFloat_AsDouble(value);
             }
 
             for (i = 0; i < pyarray->length; i++) {
@@ -489,7 +483,9 @@ static void pyjarray_dealloc(PyJArrayObject *self)
         // can't guarantee mode 0 will work in this case...
         pyjarray_release_pinned(self, JNI_ABORT);
     }
-    PyJArray_Type.tp_base->tp_dealloc((PyObject*) self);
+    // Our supertype is `PyJObject` (I don't see how to do this with the STABLE ABI)
+    destructor super_dealloc = (destructor) PyType_GetSlot(PyJObject_Type, Py_tp_dealloc);
+    if (super_dealloc != NULL) super_dealloc((PyObject*) self);
 #endif
 }
 
@@ -572,7 +568,7 @@ void pyjarray_release_pinned(PyJArrayObject *self, jint mode)
 
 int pyjarray_check(PyObject *obj)
 {
-    if (PyObject_TypeCheck(obj, &PyJArray_Type)) {
+    if (PyObject_TypeCheck(obj, PyJArray_Type)) {
         return 1;
     }
     return 0;
@@ -693,7 +689,7 @@ static int pyjarray_setitem(PyJArrayObject *self,
     case JCHAR_ID:
         if (PyLong_Check(newitem)) {
             ((jchar *) self->pinnedArray)[pos] = (jchar) PyLong_AsLongLong(newitem);
-        } else if (PyUnicode_Check(newitem) && PyUnicode_GET_LENGTH(newitem) == 1) {
+        } else if (PyUnicode_Check(newitem) && PyUnicode_GetLength(newitem) == 1) {
             const char *val = PyUnicode_AsUTF8(newitem);
             ((jchar *) self->pinnedArray)[pos] = (jchar) val[0];
         } else {
@@ -1103,7 +1099,7 @@ static int pyjarray_index(PyJArrayObject *self, PyObject *el)
 
         if (PyLong_Check(el)) {
             v = (jchar) PyLong_AsLongLong(el);
-        } else if (PyUnicode_Check(el) && PyUnicode_GET_LENGTH(el) == 1) {
+        } else if (PyUnicode_Check(el) && PyUnicode_GetLength(el) == 1) {
             const char *val = PyUnicode_AsUTF8(el);
             v = (jchar) val[0];
         } else {
@@ -1548,70 +1544,40 @@ PyMethodDef pyjarray_methods[] = {
 };
 
 
-static PySequenceMethods list_as_sequence = {
-    (lenfunc) pyjarray_length,                /* sq_length */
-    (binaryfunc) 0,                           /* sq_concat */
-    (ssizeargfunc) 0,                         /* sq_repeat */
-    (ssizeargfunc) pyjarray_item,             /* sq_item */
-    (ssizessizeargfunc) pyjarray_slice,       /* sq_slice */
-    (ssizeobjargproc) pyjarray_setitem,       /* sq_ass_item */
-    (ssizessizeobjargproc) 0,                 /* sq_ass_slice */
-    (objobjproc) pyjarray_contains,           /* sq_contains */
-    (binaryfunc) 0,                           /* sq_inplace_concat */
-    (ssizeargfunc) 0,                         /* sq_inplace_repeat */
-};
-
-static PyMappingMethods pyjarray_map_methods = {
-    (lenfunc) pyjarray_length,                /* mp_length */
-    (binaryfunc) pyjarray_subscript,          /* mp_subscript */
-    0,                                        /* mp_ass_subscript */
-};
-
-
 static PyObject* pyjarray_iter(PyObject *);
 
-
-PyTypeObject PyJArray_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    "jep.PyJArray",                           /* tp_name */
-    sizeof(PyJArrayObject),                   /* tp_basicsize */
-    0,                                        /* tp_itemsize */
-    (destructor) pyjarray_dealloc,            /* tp_dealloc */
-    0,                                        /* tp_print */
-    0,                                        /* tp_getattr */
-    0,                                        /* tp_setattr */
-    0,                                        /* tp_compare */
-    0,                                        /* tp_repr */
-    0,                                        /* tp_as_number */
-    &list_as_sequence,                        /* tp_as_sequence */
-    &pyjarray_map_methods,                    /* tp_as_mapping */
-    0,                                        /* tp_hash  */
-    0,                                        /* tp_call */
-    (reprfunc) pyjarray_str,                  /* tp_str */
-    0,                                        /* tp_getattro */
-    0,                                        /* tp_setattro */
-    0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT,                       /* tp_flags */
-    list_doc,                                 /* tp_doc */
-    0,                                        /* tp_traverse */
-    0,                                        /* tp_clear */
-    0,                                        /* tp_richcompare */
-    0,                                        /* tp_weaklistoffset */
-    pyjarray_iter,                            /* tp_iter */
-    0,                                        /* tp_iternext */
-    pyjarray_methods,                         /* tp_methods */
-    0,                                        /* tp_members */
-    0,                                        /* tp_getset */
-    0,                                        /* tp_base */
-    0,                                        /* tp_dict */
-    0,                                        /* tp_descr_get */
-    0,                                        /* tp_descr_set */
-    0,                                        /* tp_dictoffset */
-    0,                                        /* tp_init */
-    0,                                        /* tp_alloc */
-    NULL,                                     /* tp_new */
-};
-
+int jarray_type_init() {
+    static PyType_Slot slots[] = {
+            {Py_tp_dealloc, (void*) pyjarray_dealloc},
+            {Py_tp_str, (void*) pyjarray_str},
+            {Py_tp_doc, (void*) list_doc},
+            {Py_tp_iter, (void*) pyjarray_iter},
+            {Py_tp_methods, (void*) pyjarray_methods},
+            {Py_tp_new, NULL},
+            // mapping methods
+            {Py_mp_length, (void*) pyjarray_length},
+            {Py_mp_subscript, (void*) pyjarray_subscript},
+            // sequence methods
+            {Py_sq_length, (void*) pyjarray_length},
+            {Py_sq_repeat, NULL},
+            {Py_sq_concat, NULL},
+            {Py_sq_item, (void*) pyjarray_item},
+            // NOTE: `Py_sq_slice` is implemented via slice objects in `Py_mp_subscript`
+            {Py_sq_ass_item, (void*) pyjarray_setitem},
+            {Py_sq_contains, (void*) pyjarray_contains},
+            {Py_sq_inplace_repeat, NULL},
+            {Py_sq_inplace_concat, NULL},
+            {0, NULL}
+    };
+    PyType_Spec spec = {
+            .name = "jep.PyJArray",
+            .basicsize = sizeof(PyJArrayObject),
+            .flags = Py_TPFLAGS_DEFAULT,
+            .slots = slots
+    };
+    PyJArray_Type = (PyTypeObject*) PyType_FromSpecWithBases(&spec, (PyObject*) PyJObject_Type);
+    return PyType_Ready(PyJArray_Type);
+}
 
 /*********************** List Iterator **************************/
 
@@ -1625,13 +1591,14 @@ typedef struct {
     PyJArrayObject *it_seq; /* Set to NULL when iterator is exhausted */
 } PyJArrayIterObject;
 
-PyTypeObject PyJArrayIter_Type;
+PyTypeObject *PyJArrayIter_Type;
+int jarray_iter_type_init();
 
 static PyObject *pyjarray_iter(PyObject *seq)
 {
     PyJArrayIterObject *it;
 
-    if (PyType_Ready(&PyJArrayIter_Type) < 0) {
+    if (jarray_iter_type_init() < 0) {
         return NULL;
     }
 
@@ -1639,7 +1606,7 @@ static PyObject *pyjarray_iter(PyObject *seq)
         PyErr_BadInternalCall();
         return NULL;
     }
-    it = PyObject_New(PyJArrayIterObject, &PyJArrayIter_Type);
+    it = PyObject_New(PyJArrayIterObject, PyJArrayIter_Type);
     if (it == NULL) {
         return NULL;
     }
@@ -1689,50 +1656,27 @@ static int pyjarrayiter_len(PyJArrayIterObject *it)
     return 0;
 }
 
-static PySequenceMethods pyjarrayiter_as_sequence = {
-    (lenfunc) pyjarrayiter_len,               /* sq_length */
-    0,                                        /* sq_concat */
-};
-
 PyObject* pyjarrayiter_getattr(PyObject *one, PyObject *two)
 {
     return PyObject_GenericGetAttr(one, two);
 }
 
-PyTypeObject PyJArrayIter_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    "jep.PyJArrayIter",                       /* tp_name */
-    sizeof(PyJArrayIterObject),               /* tp_basicsize */
-    0,                                        /* tp_itemsize */
-    /* methods */
-    (destructor) pyjarrayiter_dealloc,        /* tp_dealloc */
-    0,                                        /* tp_print */
-    0,                                        /* tp_getattr */
-    0,                                        /* tp_setattr */
-    0,                                        /* tp_compare */
-    0,                                        /* tp_repr */
-    0,                                        /* tp_as_number */
-    &pyjarrayiter_as_sequence,                /* tp_as_sequence */
-    0,                                        /* tp_as_mapping */
-    0,                                        /* tp_hash */
-    0,                                        /* tp_call */
-    0,                                        /* tp_str */
-    (getattrofunc) pyjarrayiter_dealloc,      /* tp_getattro */
-    0,                                        /* tp_setattro */
-    0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT,                       /* tp_flags */
-    0,                                        /* tp_doc */
-    0,                                        /* tp_traverse */
-    0,                                        /* tp_clear */
-    0,                                        /* tp_richcompare */
-    0,                                        /* tp_weaklistoffset */
-    PyObject_SelfIter,                        /* tp_iter */
-    (iternextfunc) pyjarrayiter_next,         /* tp_iternext */
-    0,                                        /* tp_methods */
-    0,                                        /* tp_members */
-    0,                                        /* tp_getset */
-    0, // &PyJObject_Type                     /* tp_base */
-    0,                                        /* tp_dict */
-    0,                                        /* tp_descr_get */
-    0,                                        /* tp_descr_set */
-};
+int jarray_iter_type_init() {
+    static PyType_Slot SLOTS[] = {
+            {Py_tp_dealloc, (void*) pyjarrayiter_dealloc},
+            {Py_tp_iter, (void*) PyObject_SelfIter},
+            {Py_tp_iternext, (void*) pyjarrayiter_next},
+            // sequence methods
+            {Py_sq_length, (void*) pyjarrayiter_len},
+            {Py_sq_concat, NULL},
+            {0, NULL}
+    };
+    PyType_Spec spec = {
+            .name = "jep.PyJArrayIter",
+            .basicsize = sizeof(PyJArrayIterObject),
+            .flags = Py_TPFLAGS_DEFAULT,
+            .slots = SLOTS
+    };
+    PyJArrayIter_Type = (PyTypeObject*) PyType_FromSpecWithBases(&spec, (PyObject*) PyJObject_Type);
+    return PyType_Ready(PyJArrayIter_Type);
+}
