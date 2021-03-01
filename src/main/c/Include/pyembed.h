@@ -42,6 +42,27 @@ struct __JepThread {
 };
 typedef struct __JepThread JepThread;
 
+#if defined(Py_LIMITED_API) && Py_LIMITED_API+0 < 0x03090000
+    /*
+     * On versions before 3.8, there was no way to get the current `PyInterpreterState*`
+     * using the Stable ABI.
+     *
+     * Therefore, we simply assume there is one and only one active interpreter (no sub-interpreters)
+     */
+    #define JEP_ASSUME_SINGLE_INTERPRETER
+#endif
+
+#ifndef JEP_ASSUME_SINGLE_INTERPRETER
+static inline PyInterpreterState *pythread_get_interpreter(PyThreadState *state) {
+    #if Py_VERSION_HEX >= 0x03090000 || (defined(Py_LIMITED_API) && Py_LIMITED_API+0 >= 0x03090000)
+        return PyThreadState_GetInterpreter(state);
+    #elif !defined(Py_LIMITED_API)
+        return state->interp;
+    #else
+        #error "Can't go from PyThreadState -> PyInterpreterState before Py 3.9"
+    #endif
+}
+#endif
 
 void pyembed_preinit(JNIEnv*, jint, jint, jint, jint, jint, jint, jint,
                      jstring);

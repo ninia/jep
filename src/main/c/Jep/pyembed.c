@@ -65,11 +65,51 @@
     #endif
 #endif
 
-static PyThreadState *mainThreadState = NULL;
+typedef struct main_thread_state {
+    PyThreadState *py_state;
+#ifndef JEP_ASSUME_SINGLE_INTERPRETER
+    PyInterpreterState *py_interpreter;
+#endif
+    /* Saved for cross thread access to shared modules. */
+    PyObject *modules;
+    PyObject *modules_lock;
+} MainThreadState;
+static MainThreadState mainThreadState = {
+        .py_state = NULL,
+#ifndef JEP_ASSUME_SINGLE_INTERPRETER
+        .py_interpreter = NULL,
+#endif
+        .modules = NULL,
+        .modules_lock = NULL,
+};
 
-/* Saved for cross thread access to shared modules. */
-static PyObject* mainThreadModules = NULL;
-static PyObject* mainThreadModulesLock = NULL;
+static inline void init_main_thread() {
+    assert(mainThreadState.py_state == NULL); // Check if already initialized
+    PyThreadState *tstate = PyThreadState_Get();
+    mainThreadState.py_state = tstate;
+#ifndef JEP_ASSUME_SINGLE_INTERPRETER
+    mainThreadState.py_interpreter = pythread_get_interpreter(tstate);
+#endif
+}
+static inline PyThreadState *get_main_pystate() {
+    return mainThreadState.py_state;
+}
+#ifndef JEP_ASSUME_SINGLE_INTERPRETER
+static inline PyInterpreterState *get_main_py_interpreter() {
+    PyInterpreterState *interp = mainThreadState.py_interpreter;
+    assert(pythread_get_interpreter(get_main_pystate()) == interp);
+    return interp;
+}
+#endif
+static inline PyObject *get_main_modules() {
+    assert(mainThreadState.modules != NULL);
+    return mainThreadState.modules;
+}
+static inline PyObject *get_main_modules_lock() {
+    assert(mainThreadState.modules_lock != NULL);
+    assert(mainThreadState.modules != NULL);
+    return mainThreadState.modules_lock;
+}
 
 static int pyembed_is_version_unsafe(void);
 static void handle_startup_exception(JNIEnv*, const char*);
@@ -184,6 +224,8 @@ static int initjep(JNIEnv *env, jboolean hasSharedModules)
             return -1;
         }
         if (hasSharedModules) {
+            PyObject *mainThreadModules = get_main_modules();
+            PyObject *mainThreadModulesLock = get_main_modules_lock();
             Py_INCREF(mainThreadModules);
             PyModule_AddObject(modjep, "mainInterpreterModules", mainThreadModules);
             Py_INCREF(mainThreadModulesLock);
@@ -365,7 +407,7 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
 #endif
 
 
-    if (mainThreadState != NULL) {
+    if (mainThreadState.py_state != NULL) {
         // this shouldn't happen but to be safe, don't initialize twice
         return;
     }
@@ -395,8 +437,9 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
         return;
     }
 
-    mainThreadModules = PyObject_GetAttrString(sysModule, "modules");
-    if (mainThreadModules == NULL) {
+    assert(mainThreadState.modules == NULL);
+    mainThreadState.modules = PyObject_GetAttrString(sysModule, "modules");
+    if (mainThreadState.modules == NULL) {
         handle_startup_exception(env, "Failed to get sys.modules");
         return;
     }
@@ -413,8 +456,9 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
         return;
     }
 
-    mainThreadModulesLock = PyObject_CallObject(lockCreator, NULL);
-    if (mainThreadModulesLock == NULL) {
+    assert(mainThreadState.modules_lock == NULL);
+    mainThreadState.modules_lock = PyObject_CallObject(lockCreator, NULL);
+    if (mainThreadState.modules_lock == NULL) {
         handle_startup_exception(env, "Failed to get main thread modules lock");
         return;
     }
@@ -422,7 +466,7 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
     Py_DECREF(lockCreator);
 
     // save a pointer to the main PyThreadState object
-    mainThreadState = PyThreadState_Get();
+    init_main_thread();
 
     /*
      * Workaround for shared modules sys.argv.  Set sys.argv on the main thread.
@@ -442,7 +486,7 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
             int k = 0;
             jstring jarg = (*env)->GetObjectArrayElement(env, sharedModulesArgv, i);
             if (jarg == NULL) {
-                PyEval_ReleaseThread(mainThreadState);
+                PyEval_ReleaseThread(get_main_pystate());
                 (*env)->PopLocalFrame(env, NULL);
                 THROW_JEP(env, "Received null argv.");
                 for (k = 0; k < i; k++) {
@@ -468,7 +512,7 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
         (*env)->PopLocalFrame(env, NULL);
     }
 
-    PyEval_ReleaseThread(mainThreadState);
+    PyEval_ReleaseThread(get_main_pystate());
 }
 
 
@@ -525,7 +569,7 @@ void pyembed_shutdown(JavaVM *vm)
     JNIEnv *env;
 
     // shut down python first
-    PyEval_AcquireThread(mainThreadState);
+    PyEval_AcquireThread(get_main_pystate());
     Py_Finalize();
 
     if ((*vm)->GetEnv(vm, (void **) &env, JNI_VERSION_1_6) != JNI_OK) {
@@ -547,7 +591,7 @@ void pyembed_shared_import(JNIEnv *env, jstring module)
 {
     const char *moduleName = NULL;
     PyObject   *pymodule   =  NULL;
-    PyEval_AcquireThread(mainThreadState);
+    PyEval_AcquireThread(get_main_pystate());
 
     moduleName = (*env)->GetStringUTFChars(env, module, 0);
 
@@ -558,7 +602,7 @@ void pyembed_shared_import(JNIEnv *env, jstring module)
         process_py_exception(env);
     }
     (*env)->ReleaseStringUTFChars(env, module, moduleName);
-    PyEval_ReleaseThread(mainThreadState);
+    PyEval_ReleaseThread(get_main_pystate());
 }
 
 intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller,
@@ -584,7 +628,7 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller,
     }
 
     if (usesubinterpreter) {
-        PyEval_AcquireThread(mainThreadState);
+        PyEval_AcquireThread(get_main_pystate());
 
         jepThread->tstate = Py_NewInterpreter();
 
@@ -594,7 +638,20 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller,
          */
         PyEval_SaveThread();
     } else {
-        jepThread->tstate = PyThreadState_New(mainThreadState->interp);
+#ifdef JEP_ASSUME_SINGLE_INTERPRETER
+        /*
+         * We don't have direct access to the `PyInterpreterState*` object,
+         * se we hack around it by using the `PyGILState_Ensure()` API.
+         *
+         * That implicitly calls `PyGILState_Release` with the correct
+         * interpreter state ;)
+         */
+        PyGILState_STATE state = PyGILState_Ensure();
+        jepThread->tstate = PyThreadState_Get();
+        PyGILState_Release(state);
+#else
+        jepThread->tstate = PyThreadState_New(get_main_py_interpreter());
+#endif
     }
     PyEval_AcquireThread(jepThread->tstate);
 
@@ -673,14 +730,20 @@ void pyembed_thread_close(JNIEnv *env, intptr_t _jepThread)
     if (jepThread->caller) {
         (*env)->DeleteGlobalRef(env, jepThread->caller);
     }
-    if (jepThread->tstate->interp == mainThreadState->interp) {
+    int interpretersMatch;
+#ifdef JEP_ASSUME_SINGLE_INTERPRETER
+    interpretersMatch = 1; // We have one and only one
+#else
+    interpretersMatch = (pythread_get_interpreter(jepThread->tstate) == get_main_py_interpreter());
+#endif
+    if (interpretersMatch) {
         PyThreadState_Clear(jepThread->tstate);
         PyEval_ReleaseThread(jepThread->tstate);
         PyThreadState_Delete(jepThread->tstate);
     } else {
         Py_EndInterpreter(jepThread->tstate);
-        PyThreadState_Swap(mainThreadState);
-        PyEval_ReleaseThread(mainThreadState);
+    	PyThreadState_Swap(get_main_pystate());
+        PyEval_ReleaseThread(get_main_pystate());
     }
     free(jepThread);
 }
