@@ -255,7 +255,11 @@ static void pyjobject_dealloc(PyJObject *self)
 
     Py_CLEAR(self->attr);
     Py_CLEAR(self->javaClassName);
-    Py_TYPE((PyObject*) self)->tp_free((PyObject*) self);
+    #ifndef Py_LIMITED_API
+        assert(Py_TYPE((PyObject*) self)->tp_base == PyObject)
+        assert(Py_TYPE((PyObject*) self)->tp_free == PyObject_Del);
+    #endif
+    PyObject_Del((PyObject*) self);
 #endif
 }
 
@@ -283,7 +287,7 @@ static PyObject* pyjobject_richcompare(PyJObject *self,
 {
     JNIEnv *env;
 
-    if (PyType_IsSubtype(Py_TYPE(_other), &PyJObject_Type)) {
+    if (PyType_IsSubtype(Py_TYPE(_other), PyJObject_Type)) {
         PyJObject *other = (PyJObject *) _other;
         jboolean eq;
 
@@ -409,9 +413,14 @@ static PyObject* pyjobject_getattro(PyObject *obj, PyObject *name)
          * TODO Should not bind non-static methods to pyjclass objects, but not
          * sure yet how to handle multimethods and static methods.
          */
+        #ifndef Py_LIMITED_API
         PyObject* wrapper = PyMethod_New(ret, (PyObject*) obj);
         Py_DECREF(ret);
         return wrapper;
+        #else
+            #warning "How do bound methods work on the limited API?"
+            return ret;
+        #endif
     } else if (PyJField_Check(ret)) {
         PyObject *resolved = pyjfield_get((PyJFieldObject *) ret, (PyJObject*) obj);
         Py_DECREF(ret);
@@ -516,6 +525,7 @@ static PyMethodDef pyjobject_methods[] = {
 
 static PyMemberDef pyjobject_members[] = {
     {"__dict__", T_OBJECT, offsetof(PyJObject, attr), READONLY},
+    {"__dictoffset__", T_PYSSIZET, offsetof(PyJObject, attr), READONLY}, // NOTE: Sets `PyTypeObject.tp_dictoffset` for heap types...
     {"java_name", T_OBJECT, offsetof(PyJObject, javaClassName), READONLY},
     {0}
 };
@@ -533,7 +543,6 @@ int jep_jobject_type_ready() {
             {Py_tp_richcompare, (void*) pyjobject_richcompare},
             {Py_tp_methods, (void*) pyjobject_methods},
             {Py_tp_members, (void*) pyjobject_members},
-            {Py_tp_dictoffset, offsetof(PyJObject, attr)},
             {0, NULL},
     };
     PyType_Spec spec = {
@@ -542,6 +551,6 @@ int jep_jobject_type_ready() {
             .flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
             .slots = slots
     };
-    PyJObject_Type = PyType_FromSpec(&spec);
+    PyJObject_Type = (PyTypeObject*) PyType_FromSpec(&spec);
     return PyType_Ready(PyJObject_Type);
 }

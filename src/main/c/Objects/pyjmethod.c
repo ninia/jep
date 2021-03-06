@@ -31,6 +31,7 @@
  * https://bugs.python.org/issue2897
  * structmember.h must be included to use PyMemberDef
  */
+#include "object.h"
 #include "structmember.h"
 
 
@@ -42,7 +43,7 @@ PyJMethodObject* PyJMethod_New(JNIEnv *env, jobject rmethod)
     PyObject        *pyname = NULL;
     PyJMethodObject *pym    = NULL;
 
-    if (PyType_Ready(&PyJMethod_Type) < 0) {
+    if (PyJMethod_Type == NULL && jep_jmethod_type_ready() < 0) {
         return NULL;
     }
 
@@ -53,7 +54,7 @@ PyJMethodObject* PyJMethod_New(JNIEnv *env, jobject rmethod)
     pyname = jstring_As_PyString(env, jname);
     (*env)->DeleteLocalRef(env, jname);
 
-    pym                = PyObject_NEW(PyJMethodObject, &PyJMethod_Type);
+    pym                = PyObject_NEW(PyJMethodObject, PyJMethod_Type);
     pym->rmethod       = (*env)->NewGlobalRef(env, rmethod);
     pym->parameters    = NULL;
     pym->lenParameters = -1;
@@ -149,7 +150,7 @@ static void pyjmethod_dealloc(PyJMethodObject *self)
 
 int PyJMethod_Check(PyObject *obj)
 {
-    return PyObject_TypeCheck(obj, &PyJMethod_Type);
+    return PyObject_TypeCheck(obj, PyJMethod_Type);
 }
 
 int PyJMethod_GetParameterCount(PyJMethodObject *method, JNIEnv *env)
@@ -785,43 +786,21 @@ static PyMemberDef pyjmethod_members[] = {
 };
 
 
-PyTypeObject PyJMethod_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    "jep.PyJMethod",
-    sizeof(PyJMethodObject),
-    0,
-    (destructor) pyjmethod_dealloc,           /* tp_dealloc */
-    0,                                        /* tp_print */
-    0,                                        /* tp_getattr */
-    0,                                        /* tp_setattr */
-    0,                                        /* tp_compare */
-    0,                                        /* tp_repr */
-    0,                                        /* tp_as_number */
-    0,                                        /* tp_as_sequence */
-    0,                                        /* tp_as_mapping */
-    0,                                        /* tp_hash  */
-    (ternaryfunc) pyjmethod_call,             /* tp_call */
-    0,                                        /* tp_str */
-    0,                                        /* tp_getattro */
-    0,                                        /* tp_setattro */
-    0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT,                       /* tp_flags */
-    "jmethod",                                /* tp_doc */
-    0,                                        /* tp_traverse */
-    0,                                        /* tp_clear */
-    0,                                        /* tp_richcompare */
-    0,                                        /* tp_weaklistoffset */
-    0,                                        /* tp_iter */
-    0,                                        /* tp_iternext */
-    0,                                        /* tp_methods */
-    pyjmethod_members,                        /* tp_members */
-    0,                                        /* tp_getset */
-    0,                                        /* tp_base */
-    0,                                        /* tp_dict */
-    0,                                        /* tp_descr_get */
-    0,                                        /* tp_descr_set */
-    0,                                        /* tp_dictoffset */
-    0,                                        /* tp_init */
-    0,                                        /* tp_alloc */
-    NULL,                                     /* tp_new */
-};
+PyTypeObject *PyJMethod_Type;
+int jep_jmethod_type_ready() {
+    static PyType_Slot SLOTS[] = {
+        {Py_tp_dealloc, (void*) pyjmethod_dealloc},
+        {Py_tp_call, (void*) pyjmethod_call},
+        {Py_tp_doc, "jmethod"},
+        {Py_tp_members, (void*) pyjmethod_members},
+        {0, NULL}
+    };
+    PyType_Spec spec = {
+        .name = "jep.PyJMethod",
+        .basicsize = sizeof(PyJMethodObject),
+        .flags = Py_TPFLAGS_DEFAULT,
+        .slots = SLOTS
+    };
+    PyJMethod_Type = (PyTypeObject*) PyType_FromSpec(&spec);
+    return PyType_Ready(PyJMethod_Type);
+}

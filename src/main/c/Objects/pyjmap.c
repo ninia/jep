@@ -228,11 +228,11 @@ FINALLY:
  */
 PyTypeObject *PyJMap_Type;
 int jep_jmap_type_ready() {
-    static PyType_Slot slots[] = {
+    static PyType_Slot SLOTS[] = {
             {Py_tp_doc, "Jep java.util.Map"},
             {Py_tp_iter, (void*) pyjmap_getiter},
             // sequence slots
-            {Py_seq_contains, (void*) pyjmap_contains_key},
+            {Py_sq_contains, (void*) pyjmap_contains_key},
             // mapping slots
             {Py_mp_length, (void*) pyjmap_len},
             {Py_mp_subscript, (void*) pyjmap_getitem},
@@ -243,9 +243,9 @@ int jep_jmap_type_ready() {
             .name = "java.util.Map",
             .basicsize = sizeof(PyJObject),
             .flags = Py_TPFLAGS_DEFAULT,
-            .slots = slots,
+            .slots = SLOTS,
     };
-    PyJMap_Type = PyType_FromSpecWithBases(&spec, (PyObject*) PyJObject_Type);
+    PyJMap_Type = (PyTypeObject*) PyType_FromSpecWithBases(&spec, (PyObject*) PyJObject_Type);
     return PyType_Ready(PyJMap_Type);
 }
 

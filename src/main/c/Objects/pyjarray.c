@@ -31,6 +31,7 @@
 */
 
 #include "Jep.h"
+#include "object.h"
 
 static void pyjarray_dealloc(PyJArrayObject *self);
 static int pyjarray_init(JNIEnv*, PyJArrayObject*, int, PyObject*);
@@ -729,7 +730,7 @@ static int pyjarray_setitem(PyJArrayObject *self,
         }
 
         ((jdouble *) self->pinnedArray)[pos] =
-            (jdouble) PyFloat_AS_DOUBLE(newitem);
+            (jdouble) PyFloat_AsDouble(newitem);
         return 0; /* success */
 
     case JSHORT_ID:
@@ -749,7 +750,7 @@ static int pyjarray_setitem(PyJArrayObject *self,
         }
 
         ((jfloat *) self->pinnedArray)[pos] =
-            (jfloat) PyFloat_AS_DOUBLE(newitem);
+            (jfloat) PyFloat_AsDouble(newitem);
         return 0; /* success */
 
     } // switch
@@ -1546,28 +1547,29 @@ PyMethodDef pyjarray_methods[] = {
 
 static PyObject* pyjarray_iter(PyObject *);
 
+PyTypeObject *PyJArray_Type;
 int jarray_type_init() {
     static PyType_Slot slots[] = {
-            {Py_tp_dealloc, (void*) pyjarray_dealloc},
-            {Py_tp_str, (void*) pyjarray_str},
-            {Py_tp_doc, (void*) list_doc},
-            {Py_tp_iter, (void*) pyjarray_iter},
-            {Py_tp_methods, (void*) pyjarray_methods},
-            {Py_tp_new, NULL},
-            // mapping methods
-            {Py_mp_length, (void*) pyjarray_length},
-            {Py_mp_subscript, (void*) pyjarray_subscript},
-            // sequence methods
-            {Py_sq_length, (void*) pyjarray_length},
-            {Py_sq_repeat, NULL},
-            {Py_sq_concat, NULL},
-            {Py_sq_item, (void*) pyjarray_item},
-            // NOTE: `Py_sq_slice` is implemented via slice objects in `Py_mp_subscript`
-            {Py_sq_ass_item, (void*) pyjarray_setitem},
-            {Py_sq_contains, (void*) pyjarray_contains},
-            {Py_sq_inplace_repeat, NULL},
-            {Py_sq_inplace_concat, NULL},
-            {0, NULL}
+        {Py_tp_dealloc, (void*) pyjarray_dealloc},
+        {Py_tp_str, (void*) pyjarray_str},
+        {Py_tp_doc, (void*) list_doc},
+        {Py_tp_iter, (void*) pyjarray_iter},
+        {Py_tp_methods, (void*) pyjarray_methods},
+        {Py_tp_new, NULL},
+        // mapping methods
+        {Py_mp_length, (void*) pyjarray_length},
+        {Py_mp_subscript, (void*) pyjarray_subscript},
+        // sequence methods
+        {Py_sq_length, (void*) pyjarray_length},
+        {Py_sq_repeat, NULL},
+        {Py_sq_concat, NULL},
+        {Py_sq_item, (void*) pyjarray_item},
+        // NOTE: `Py_sq_slice` is implemented via slice objects in `Py_mp_subscript`
+        {Py_sq_ass_item, (void*) pyjarray_setitem},
+        {Py_sq_contains, (void*) pyjarray_contains},
+        {Py_sq_inplace_repeat, NULL},
+        {Py_sq_inplace_concat, NULL},
+        {0, NULL}
     };
     PyType_Spec spec = {
             .name = "jep.PyJArray",

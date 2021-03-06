@@ -27,6 +27,12 @@
 
 #include "Jep.h"
 
+
+#ifdef Py_LIMITED_API
+    #warning "Need to reimplement an alternative for buffers on Limited API...."
+#else
+    // Pretty much the entire buffer API is misisng from the limited API
+
 static jobject BYTE_ORDER_NATIVE = NULL;
 static jobject BYTE_ORDER_LITTLE = NULL;
 
@@ -150,6 +156,7 @@ getbuf(PyObject* self, Py_buffer *view, int flags)
     }
     return 0;
 }
+#endif // Py_LIMITED_API
 
 /*
  * Inherits from PyJObject_Type
@@ -158,7 +165,6 @@ PyTypeObject *PyJBuffer_Type;
 int jep_jbuffer_type_ready() {
     static PyType_Slot slots[] = {
             {Py_tp_doc, "Jep java.nio.Buffer"},
-            {Py_tp_iter, (void*) pyjiterable_getiter},
             #ifndef Py_LIMITED_API
             /*
              * *** buffer methods ***
@@ -175,6 +181,6 @@ int jep_jbuffer_type_ready() {
             .flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
             .slots = slots
     };
-    PyJBuffer_Type = PyType_FromSpecWithBases(&spec, (PyObject*) PyJObject_Type);
+    PyJBuffer_Type = (PyTypeObject*) PyType_FromSpecWithBases(&spec, (PyObject*) PyJObject_Type);
     return PyType_Ready(PyJBuffer_Type);
 }

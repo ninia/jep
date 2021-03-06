@@ -31,7 +31,9 @@
 #ifndef _Included_pyjconstructor
 #define _Included_pyjconstructor
 
-extern PyTypeObject PyJConstructor_Type;
+extern PyTypeObject *PyJConstructor_Type;
+extern int jep_jconstructor_type_ready();
+
 
 /* Second arg must be a java.lang.reflect.Constructor */
 PyObject* PyJConstructor_New(JNIEnv*, jobject);

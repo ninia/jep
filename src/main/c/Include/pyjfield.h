@@ -31,7 +31,8 @@
 #ifndef _Included_pyjfield
 #define _Included_pyjfield
 
-extern PyTypeObject PyJField_Type;
+extern PyTypeObject *PyJField_Type;
+extern int jep_jfield_type_ready();
 
 /* Represents a java field on a java object and allows getting and setting values */
 typedef struct {

@@ -97,6 +97,6 @@ int jep_jauto_closable_type_ready() {
             .flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
             .slots = slots
     };
-    PyJAutoCloseable_Type = PyType_FromSpecWithBases(&spec, (PyObject*) PyJObject_Type);
+    PyJAutoCloseable_Type = (PyTypeObject*) PyType_FromSpecWithBases(&spec, (PyObject*) PyJObject_Type);
     return PyType_Ready(PyJAutoCloseable_Type);
 }

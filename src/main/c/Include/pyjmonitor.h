@@ -37,7 +37,8 @@
 #ifndef _Included_pyjmonitor
 #define _Included_pyjmonitor
 
-extern PyTypeObject PyJMonitor_Type;
+extern PyTypeObject *PyJMonitor_Type;
+extern int jep_jmonitor_type_ready();
 
 typedef struct {
     PyObject_HEAD

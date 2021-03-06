@@ -27,6 +27,7 @@
 */
 
 #include "Jep.h"
+#include "object.h"
 
 static PyObject* pyjlist_add(PyObject*, PyObject*);
 static PyObject* pyjlist_fill(PyObject*, Py_ssize_t);
@@ -456,7 +457,7 @@ static int pyjlist_set_subscript(PyObject* self, PyObject* item,
  */
 PyTypeObject *PyJList_Type;
 int jep_jlist_type_ready() {
-    static PyType_Slot slots[] = {
+    static PyType_Slot SLOTS[] = {
             // NOTE: Inherited `tp_iter`
             {Py_tp_doc, "Jep java.util.List"},
             /*
@@ -466,9 +467,9 @@ int jep_jlist_type_ready() {
             {Py_sq_concat, (void*) pyjlist_add},
             {Py_sq_repeat, (void*) pyjlist_fill},
             {Py_sq_item, (void*) pyjlist_getitem},
-            {Py_sq_slice, (void*) pyjlist_getslice},
+            /* {Py_sq_slice, (void*) pyjlist_getslice}, */  // Replaced with `PySlice_Check` in `pylist_subscript`
             {Py_sq_ass_item, (void*) pyjlist_setitem},
-            {Py_sq_ass_slice, (void*) pyjlist_setslice},
+            /* {Py_sq_ass_slice, (void*) pyjlist_setslice}, */ // Replaced with `PySlice_Check` in `pyjlist_setsubscript`
             {Py_sq_inplace_concat, (void*) pyjlist_inplace_add},
             {Py_sq_inplace_repeat, (void*) pyjlist_inplace_fill},
             // mapping methods
@@ -479,9 +480,9 @@ int jep_jlist_type_ready() {
     PyType_Spec spec = {
             .name = "java.util.List",
             .basicsize = sizeof(PyJObject),
-            .flags = Py_TPFLAGS_DEFAUL,
-            .slots = slots,
+            .flags = Py_TPFLAGS_DEFAULT,
+            .slots = SLOTS,
     };
-    PyJList_Type = PyType_FromSpecWithBases(&spec, (PyObject*) PyJCollection_Type);
+    PyJList_Type = (PyTypeObject*) PyType_FromSpecWithBases(&spec, (PyObject*) PyJCollection_Type);
     return PyType_Ready(PyJList_Type);
 }

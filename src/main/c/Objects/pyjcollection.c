@@ -89,8 +89,8 @@ int jep_jcollection_type_ready() {
             // NOTE: Inherited `tp_iter`
             {Py_tp_doc, "Jep java.util.Collection"},
             // sequence slots
-            {Py_seq_len, (void*) pyjcollection_len},
-            {Py_seq_contains, (void*) pyjcollection_contains},
+            {Py_sq_length, (void*) pyjcollection_len},
+            {Py_sq_contains, (void*) pyjcollection_contains},
             {0, NULL},
     };
     PyType_Spec spec = {
@@ -99,6 +99,6 @@ int jep_jcollection_type_ready() {
             .flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
             .slots = slots,
     };
-    PyJCollection_Type = PyType_FromSpecWithBases(&spec, (PyObject*) PyJIterable_Type);
+    PyJCollection_Type = (PyTypeObject*) PyType_FromSpecWithBases(&spec, (PyObject*) PyJIterable_Type);
     return PyType_Ready(PyJCollection_Type);
 }

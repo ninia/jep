@@ -27,6 +27,7 @@
 
 
 #include "Jep.h"
+#include "object.h"
 
 
 static PyObject* java_number_to_pythonintlong(JNIEnv *env, PyObject* n)
@@ -235,8 +236,7 @@ static PyObject* pyjnumber_index(PyObject *x)
         return result;
     }
     else {
-        PyErr_Format(PyExc_TypeError, "list indices must be integers, not %s",
-                     Py_TYPE(x)->tp_name);
+        PyErr_Format(PyExc_TypeError, "list indices must be integers, not %R", Py_TYPE(x));
         return NULL;
     }
 }
@@ -291,34 +291,35 @@ static Py_hash_t pyjnumber_hash(PyObject *self)
  */
 PyTypeObject *PyJNumber_Type = NULL;
 int jep_jnumber_type_ready() {
-    PyType_Spec spec = {
-            .name = "java.lang.Number",
-            .basicsize = sizeof(PyJNumber),
-            .flags = Py_TPFLAGS_DEFAULT,
-            .slots = &[
-                {Py_tp_hash, (void*) pyjnumber_hash},
-                {Py_tp_richcompare, (void*) pyjnumber_richcompare},
-                {Py_tp_doc, "Jep java.lang.Number"},
-                // number slots
-                {Py_nb_index, (void*) pyjnumber_index},
-                {Py_nb_truedivide, (void*) pyjnumber_truedivide},
-                {Py_nb_floordivide, (void*) pyjnumber_floordivide},
-                {Py_nb_float, (void*) pyjnumber_float},
-                {Py_nb_int, (void*) pyjnumber_int},
-                {Py_nb_nonzero, (void*) pyjnumber_nonzero},
-                {Py_nb_abs, (void*) pyjnumber_absolute},
-                {Py_nb_pos, (void*) pyjnumber_positive},
-                {Py_nb_neg, (void*) pyjnumer_negative},
-                {Py_nb_power, (void*) pyjnumber_power},
-                {Py_nb_divmode, (void*) pyjnumber_divmod},
-                {Py_nb_remainder, (void*) pyjnumber_remainder},
-                {Py_nb_multiply, (void*) pyjnumber_multiply},
-                {Py_nb_add, (void*) pyjnumber_add},
-                {Py_nb_subtract, (void*) pyjnumber_subtract},
-                {Py_nb_multiply, (void*) pyjnumber_multiply},
-                {0, NULL}
-            ]
+    static PyType_Slot SLOTS[] = {
+        {Py_tp_hash, (void*) pyjnumber_hash},
+        {Py_tp_richcompare, (void*) pyjnumber_richcompare},
+        {Py_tp_doc, "Jep java.lang.number"},
+        // number slots
+        {Py_nb_index, (void*) pyjnumber_index},
+        {Py_nb_true_divide, (void*) pyjnumber_truedivide},
+        {Py_nb_floor_divide, (void*) pyjnumber_floordivide},
+        {Py_nb_float, (void*) pyjnumber_float},
+        {Py_nb_int, (void*) pyjnumber_int},
+        {Py_nb_bool, (void*) pyjnumber_nonzero},
+        {Py_nb_absolute, (void*) pyjnumber_absolute},
+        {Py_nb_positive, (void*) pyjnumber_positive},
+        {Py_nb_negative, (void*) pyjnumber_negative},
+        {Py_nb_power, (void*) pyjnumber_power},
+        {Py_nb_divmod, (void*) pyjnumber_divmod},
+        {Py_nb_remainder, (void*) pyjnumber_remainder},
+        {Py_nb_multiply, (void*) pyjnumber_multiply},
+        {Py_nb_add, (void*) pyjnumber_add},
+        {Py_nb_subtract, (void*) pyjnumber_subtract},
+        {Py_nb_multiply, (void*) pyjnumber_multiply},
+        {0, NULL}
     };
-    PyJNumber_Type = PyType_FromSpecWithBases(&spec, PyJObject_Type);
+    PyType_Spec spec = {
+        .name = "java.lang.Number",
+        .basicsize = sizeof(PyJObject),
+        .flags = Py_TPFLAGS_DEFAULT,
+        .slots = SLOTS
+    };
+    PyJNumber_Type = (PyTypeObject*) PyType_FromSpecWithBases(&spec, (PyObject*) PyJObject_Type);
     return PyType_Ready(PyJNumber_Type);
 }

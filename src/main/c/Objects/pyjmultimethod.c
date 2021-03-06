@@ -26,13 +26,15 @@
 */
 
 #include "Jep.h"
+#include "listobject.h"
+#include "pymacro.h"
 
 
 PyObject* PyJMultiMethod_New(PyObject* method1, PyObject* method2)
 {
     PyJMultiMethodObject* mm = NULL;
 
-    if (PyType_Ready(&PyJMultiMethod_Type) < 0) {
+    if (PyJMultiMethod_Type == NULL && jep_jmulti_method_type_ready() < 0) {
         return NULL;
     }
     if (!PyJMethod_Check(method1) || !PyJMethod_Check(method2)) {
@@ -40,7 +42,7 @@ PyObject* PyJMultiMethod_New(PyObject* method1, PyObject* method2)
         return NULL;
     }
 
-    mm = PyObject_NEW(PyJMultiMethodObject, &PyJMultiMethod_Type);
+    mm = PyObject_NEW(PyJMultiMethodObject, PyJMultiMethod_Type);
     if (mm == NULL) {
         return NULL;
     }
@@ -50,9 +52,9 @@ PyObject* PyJMultiMethod_New(PyObject* method1, PyObject* method2)
         return NULL;
     }
     Py_INCREF(method1);
-    PyList_SET_ITEM(mm->methodList, 0, method1);
+    if (!PyList_SetItem(mm->methodList, 0, method1)) Py_UNREACHABLE();
     Py_INCREF(method2);
-    PyList_SET_ITEM(mm->methodList, 1, method2);
+    if (!PyList_SetItem(mm->methodList, 1, method2)) Py_UNREACHABLE();
     return (PyObject *) mm;
 }
 
@@ -74,7 +76,7 @@ int PyJMultiMethod_Append(PyObject* multimethod, PyObject* method)
 
 int PyJMultiMethod_Check(PyObject* object)
 {
-    return PyObject_TypeCheck(object, &PyJMultiMethod_Type);
+    return PyObject_TypeCheck(object, PyJMultiMethod_Type);
 }
 
 PyObject* PyJMultiMethod_GetName(PyObject* multimethod)
@@ -203,43 +205,22 @@ PyDoc_STRVAR(pyjmultimethod_doc,
              "PyJMultiMethod wraps multiple java methods from the same class with the same\n\
 name as a single callable python object.");
 
-PyTypeObject PyJMultiMethod_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    "jep.PyJMultiMethod",
-    sizeof(PyJMultiMethodObject),
-    0,
-    (destructor) pyjmultimethod_dealloc,      /* tp_dealloc */
-    0,                                        /* tp_print */
-    0,                                        /* tp_getattr */
-    0,                                        /* tp_setattr */
-    0,                                        /* tp_compare */
-    0,                                        /* tp_repr */
-    0,                                        /* tp_as_number */
-    0,                                        /* tp_as_sequence */
-    0,                                        /* tp_as_mapping */
-    0,                                        /* tp_hash  */
-    (ternaryfunc) pyjmultimethod_call,        /* tp_call */
-    0,                                        /* tp_str */
-    0,                                        /* tp_getattro */
-    0,                                        /* tp_setattro */
-    0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT,                       /* tp_flags */
-    pyjmultimethod_doc,                       /* tp_doc */
-    0,                                        /* tp_traverse */
-    0,                                        /* tp_clear */
-    0,                                        /* tp_richcompare */
-    0,                                        /* tp_weaklistoffset */
-    0,                                        /* tp_iter */
-    0,                                        /* tp_iternext */
-    0,                                        /* tp_methods */
-    0,                                        /* tp_members */
-    pyjmultimethod_getsetlist,                /* tp_getset */
-    0,                                        /* tp_base */
-    0,                                        /* tp_dict */
-    0,                                        /* tp_descr_get */
-    0,                                        /* tp_descr_set */
-    0,                                        /* tp_dictoffset */
-    0,                                        /* tp_init */
-    0,                                        /* tp_alloc */
-    NULL,                                     /* tp_new */
-};
+PyTypeObject *PyJMultiMethod_Type;
+
+int jep_jmulti_method_type_ready() {
+    static PyType_Slot SLOTS[] = {
+            {Py_tp_doc, (void*) pyjmultimethod_doc},
+            {Py_tp_dealloc, (void*) pyjmultimethod_dealloc},
+            {Py_tp_call, (void*) pyjmultimethod_call},
+            {Py_tp_getset, (void*) pyjmultimethod_getsetlist},
+            {0, NULL},
+    };
+    PyType_Spec spec = {
+            .name = "jep.PyJMultiMethod",
+            .basicsize = sizeof(PyJMultiMethodObject),
+            .flags = Py_TPFLAGS_DEFAULT,
+            .slots = SLOTS,
+    };
+    PyJMultiMethod_Type = (PyTypeObject*) PyType_FromSpec(&spec);
+    return PyType_Ready(PyJMultiMethod_Type);
+}

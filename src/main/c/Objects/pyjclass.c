@@ -26,6 +26,10 @@
 */
 
 #include "Jep.h"
+#include "abstract.h"
+#include "object.h"
+#include "pyport.h"
+#include "tupleobject.h"
 
 
 /*
@@ -159,7 +163,7 @@ static int pyjclass_init(JNIEnv *env, PyObject *pyjob)
 
 PyObject* PyJClass_Wrap(JNIEnv *env, jobject obj)
 {
-    PyObject* pyjob = PyJObject_New(env, &PyJClass_Type, NULL, obj);
+    PyObject* pyjob = PyJObject_New(env, PyJClass_Type, NULL, obj);
     if (pyjob) {
         if (!pyjclass_init(env, pyjob)) {
             Py_DecRef(pyjob);
@@ -173,7 +177,11 @@ static void pyjclass_dealloc(PyJClassObject *self)
 {
 #if USE_DEALLOC
     Py_CLEAR(self->constructor);
-    PyJClass_Type.tp_base->tp_dealloc((PyObject*) self);
+    #ifndef Py_LIMITED_API
+        assert(PyJClass_Type->tp_base == PyJObject_Type);
+    #endif
+    destructor dealloc = PyType_GetSlot(PyJObject_Type, Py_tp_dealloc);
+    if (dealloc != NULL) dealloc((PyObject*) self);
 #endif
 }
 
@@ -255,7 +263,6 @@ static PyObject* pyjclass_call(PyJClassObject *self,
                                PyObject *args,
                                PyObject *keywords)
 {
-    PyObject *boundConstructor = NULL;
     PyObject *result           = NULL;
     if (self->constructor == NULL) {
         if (pyjclass_init_constructors(self) == -1) {
@@ -266,13 +273,18 @@ static PyObject* pyjclass_call(PyJClassObject *self,
             return NULL;
         }
     }
-    /*
-     * Bind the constructor to the class so that the class will
-     * be the first arg when constructor is called.
-     */
-    boundConstructor = PyMethod_New(self->constructor, (PyObject*) self);
-    result = PyObject_Call(boundConstructor, args, keywords);
-    Py_DECREF(boundConstructor);
+    Py_ssize_t originalSize = PyTuple_Size(args);
+    assert(originalArgs >= 0);
+    PyObject *actualArgs = PyTuple_New(1 + originalSize);
+    if (actualArgs == NULL) return NULL; // OutOfMemoryError
+    for (Py_ssize_t i = 0; i < originalSize; i++) {
+        PyObject *arg = PyTuple_GetItem(args, i);
+        assert(arg != NULL);
+        Py_INCREF(arg);
+        if (!PyTuple_SetItem(actualArgs, i + 1, arg)) Py_UNREACHABLE();
+    }
+    result = PyObject_Call(self->constructor, actualArgs, keywords);
+    Py_DECREF(actualArgs);
     return result;
 }
 
@@ -289,19 +301,20 @@ static PyGetSetDef pyjclass_getset[] = {
 };
 
 PyTypeObject *PyJClass_Type = NULL;
-void jep_jclass_type_ready() {
+int jep_jclass_type_ready() {
+    static PyType_Slot SLOTS[] = {
+        {Py_tp_dealloc, (void*) pyjclass_dealloc},
+        {Py_tp_call, (void*) pyjclass_call},
+        {Py_tp_doc, "jclass"},
+        {Py_tp_getset, pyjclass_getset},
+        {0, NULL}
+    };
     PyType_Spec spec = {
         .name = "jep.PyJClass",
         .basicsize = sizeof(PyJClassObject),
         .flags = Py_TPFLAGS_DEFAULT,
-        .slots = &[
-            {Py_tp_dealloc, (void*) pyjclass_dealloc},
-            {Py_tp_class, (void*) pyjclass_call},
-            {Py_tp_doc, "jclass"},
-            {Py_tp_getset, (void*) pyjclass_getset},
-            {0, NULL}
-        ]
+        .slots = SLOTS
     };
-    PyJClass_Type = PyType_FromSpecWithBases(&spec, PyJObject_Type);
+    PyJClass_Type = (PyTypeObject*) PyType_FromSpecWithBases(&spec, (PyObject*) PyJObject_Type);
     return PyType_Ready(PyJClass_Type);
 }

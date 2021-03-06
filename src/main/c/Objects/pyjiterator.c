@@ -26,6 +26,7 @@
 */
 
 #include "Jep.h"
+#include "object.h"
 
 static PyObject* pyjiterator_next(PyObject* self)
 {
@@ -66,23 +67,18 @@ static PyObject* pyjiterator_next(PyObject* self)
  */
 PyTypeObject *PyJIterator_Type;
 int jep_jiterator_type_ready() {
-    static PyType_Slot slots[] = {
-            {Py_tp_doc, "Jep java.util.Iterator"},
-            {Py_tp_iter, (void*) PyObject_SelfIter},
-            {Py_tp_iternext, (void*) pyjiterator_next},
-            {0, NULL},
+    static PyType_Slot SLOTS[] = {
+        {Py_tp_doc, "Jep java.util.Iterator"},
+        {Py_tp_iter, (void*) PyObject_SelfIter},
+        {Py_tp_iternext, (void*) pyjiterator_next},
+        {0, NULL},
     };
     PyType_Spec spec = {
-            .name = "java.util.Iterator",
-            .basicsize = sizeof(PyJObject),
-            .flags = Py_TPFLAGS_DEFAULT,
-            .slots = &[
-            {Py_tp_dealloc, (void*) pyjclass_dealloc},
-            {Py_tp_class, (void*) pyjclass_call},
-            {Py_tp_doc, "jclass"},
-            {0, NULL}
-            ]
+        .name = "java.util.Iterator",
+        .basicsize = sizeof(PyJObject),
+        .flags = Py_TPFLAGS_DEFAULT,
+        .slots = SLOTS
     };
-    PyJIterator_Type = PyType_FromSpecWithBases(&spec, (PyObject*) PyJObject_Type);
+    PyJIterator_Type = (PyTypeObject*) PyType_FromSpecWithBases(&spec, (PyObject*) PyJObject_Type);
     return PyType_Ready(PyJIterator_Type);
 }

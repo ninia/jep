@@ -26,9 +26,11 @@
 */
 
 #include "Jep.h"
+#include "object.h"
+#include "pymacro.h"
 
 /* NULL terminated array of type that are statically defined */
-static PyTypeObject* baseTypes[] = {
+static PyTypeObject** BASE_TYPE_ADDRS[] = {
     &PyJAutoCloseable_Type,
     &PyJBuffer_Type,
     &PyJCollection_Type,
@@ -51,9 +53,23 @@ static PyTypeObject* pyjtype_get_cached(JNIEnv*, PyObject*, jclass);
 static int populateBaseTypeDict(PyObject* fqnToPyType)
 {
     int i;
-    for (i = 0 ; baseTypes[i] != NULL ; i += 1) {
-        PyTypeObject* type = baseTypes[i];
-        if (PyDict_SetItemString(fqnToPyType, type->tp_name, (PyObject*) type)) {
+    for (i = 0 ; BASE_TYPE_ADDRS[i] != NULL ; i += 1) {
+        PyTypeObject* type = *BASE_TYPE_ADDRS[i];
+        PyObject *name = PyObject_Repr((PyObject*) type); // We are assuming that this returns 'tp_name'
+        #ifndef Py_LIMITED_API
+        {
+            // Ensure `type.repr` matches `PyTypeObject->tp_name`
+            const char *expectedName = type->tp_name;
+            Py_ssize_t actualSize;
+            const char actualName = PyUnicode_AsUTF8AndSize(name, &actualSize);
+            if (actualSize < 0 || actualName == NULL) return -1; // propagate error
+            if (strlen(expectedName) != actualSize || strcmp(expectedName, actualName) != 0) {
+                PyErr_Format(PyExc_SystemError, "Mismatch between expected name %s and actual name %R", expectedName, name);
+                return -1;
+            }
+        }
+        #endif
+        if (PyDict_SetItem(fqnToPyType, name, (PyObject*) type)) {
             return -1;
         }
     }
@@ -129,7 +145,7 @@ static PyObject* getBaseTypes(JNIEnv *env, PyObject *fqnToPyType, jclass clazz)
             Py_DECREF(bases);
             return NULL;
         }
-        PyTuple_SET_ITEM(bases, baseIdx, superType);
+        if (!PyTuple_SetItem(bases, baseIdx, superType)) Py_UNREACHABLE();
         baseIdx += 1;
     }
     /* The index of the next interface to get from interfaces */
@@ -145,7 +161,7 @@ static PyObject* getBaseTypes(JNIEnv *env, PyObject *fqnToPyType, jclass clazz)
             Py_DECREF(bases);
             return NULL;
         }
-        PyTuple_SET_ITEM(bases, baseIdx, superType);
+        if (!PyTuple_SetItem(bases, baseIdx, superType)) Py_UNREACHABLE();
         baseIdx += 1;
     }
     (*env)->DeleteLocalRef(env, interfaces);
