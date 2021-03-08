@@ -483,6 +483,5 @@ int jep_jlist_type_ready() {
             .flags = Py_TPFLAGS_DEFAULT,
             .slots = SLOTS,
     };
-    PyJList_Type = (PyTypeObject*) PyType_FromSpecWithBases(&spec, (PyObject*) PyJCollection_Type);
-    return PyType_Ready(PyJList_Type);
+    return jep_util_type_ready(&PyJList_Type, &spec, PyJCollection_Type);
 }

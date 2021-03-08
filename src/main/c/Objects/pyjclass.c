@@ -315,6 +315,5 @@ int jep_jclass_type_ready() {
         .flags = Py_TPFLAGS_DEFAULT,
         .slots = SLOTS
     };
-    PyJClass_Type = (PyTypeObject*) PyType_FromSpecWithBases(&spec, (PyObject*) PyJObject_Type);
-    return PyType_Ready(PyJClass_Type);
+    return jep_util_type_ready(&PyJClass_Type, &spec, PyJObject_Type);
 }

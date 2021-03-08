@@ -221,6 +221,5 @@ int jep_jmulti_method_type_ready() {
             .flags = Py_TPFLAGS_DEFAULT,
             .slots = SLOTS,
     };
-    PyJMultiMethod_Type = (PyTypeObject*) PyType_FromSpec(&spec);
-    return PyType_Ready(PyJMultiMethod_Type);
+    return jep_util_type_ready(&PyJMultiMethod_Type, &spec, NULL);
 }

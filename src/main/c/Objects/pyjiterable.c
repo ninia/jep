@@ -74,6 +74,5 @@ int jep_jiterable_type_ready() {
             .flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
             .slots = slots
     };
-    PyJIterable_Type = (PyTypeObject*) PyType_FromSpecWithBases(&spec, (PyObject*) PyJObject_Type);
-    return PyType_Ready(PyJIterable_Type);
+    return jep_util_type_ready(&PyJIterable_Type, &spec, PyJObject_Type);
 }

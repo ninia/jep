@@ -169,4 +169,6 @@ extern jclass JDOUBLE_ARRAY_TYPE;
 #define DEFINE_CLASS_GLOBAL(var, name) extern jclass var;
 CLASS_TABLE(DEFINE_CLASS_GLOBAL)
 
+int jep_util_type_ready(PyTypeObject **target_type, PyType_Spec *spec, PyTypeObject *base);
+
 #endif // ifndef _Included_jep_util

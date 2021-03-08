@@ -99,6 +99,5 @@ int jep_jcollection_type_ready() {
             .flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
             .slots = slots,
     };
-    PyJCollection_Type = (PyTypeObject*) PyType_FromSpecWithBases(&spec, (PyObject*) PyJIterable_Type);
-    return PyType_Ready(PyJCollection_Type);
+    return jep_util_type_ready(&PyJCollection_Type, &spec, PyJIterable_Type);
 }

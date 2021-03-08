@@ -228,6 +228,5 @@ int jep_jconstructor_type_ready() {
         .flags = Py_TPFLAGS_DEFAULT,
         .slots = SLOTS
     };
-    PyJConstructor_Type = (PyTypeObject*) PyType_FromSpecWithBases(&spec, (PyObject*) PyJMethod_Type);
-    return PyType_Ready(PyJConstructor_Type);
+    return jep_util_type_ready(&PyJConstructor_Type, &spec, PyJMethod_Type);
 }

@@ -245,7 +245,6 @@ int jep_jmap_type_ready() {
             .flags = Py_TPFLAGS_DEFAULT,
             .slots = SLOTS,
     };
-    PyJMap_Type = (PyTypeObject*) PyType_FromSpecWithBases(&spec, (PyObject*) PyJObject_Type);
-    return PyType_Ready(PyJMap_Type);
+    return jep_util_type_ready(&PyJMap_Type, &spec, PyJObject_Type);
 }
 

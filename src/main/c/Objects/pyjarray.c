@@ -1577,8 +1577,7 @@ int jarray_type_init() {
             .flags = Py_TPFLAGS_DEFAULT,
             .slots = slots
     };
-    PyJArray_Type = (PyTypeObject*) PyType_FromSpecWithBases(&spec, (PyObject*) PyJObject_Type);
-    return PyType_Ready(PyJArray_Type);
+    return jep_util_type_ready(&PyJArray_Type, &spec, PyJObject_Type);
 }
 
 /*********************** List Iterator **************************/
@@ -1594,13 +1593,13 @@ typedef struct {
 } PyJArrayIterObject;
 
 PyTypeObject *PyJArrayIter_Type;
-int jarray_iter_type_init();
+int jarray_iter_type_ready();
 
 static PyObject *pyjarray_iter(PyObject *seq)
 {
     PyJArrayIterObject *it;
 
-    if (jarray_iter_type_init() < 0) {
+    if (PyJArrayIter_Type == NULL && jarray_iter_type_ready() < 0) {
         return NULL;
     }
 
@@ -1663,7 +1662,7 @@ PyObject* pyjarrayiter_getattr(PyObject *one, PyObject *two)
     return PyObject_GenericGetAttr(one, two);
 }
 
-int jarray_iter_type_init() {
+int jarray_iter_type_ready() {
     static PyType_Slot SLOTS[] = {
             {Py_tp_dealloc, (void*) pyjarrayiter_dealloc},
             {Py_tp_iter, (void*) PyObject_SelfIter},
@@ -1679,6 +1678,5 @@ int jarray_iter_type_init() {
             .flags = Py_TPFLAGS_DEFAULT,
             .slots = SLOTS
     };
-    PyJArrayIter_Type = (PyTypeObject*) PyType_FromSpecWithBases(&spec, (PyObject*) PyJObject_Type);
-    return PyType_Ready(PyJArrayIter_Type);
+    return jep_util_type_ready(&PyJArrayIter_Type, &spec, PyJObject_Type);
 }

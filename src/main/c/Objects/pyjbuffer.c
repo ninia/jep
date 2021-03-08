@@ -181,6 +181,5 @@ int jep_jbuffer_type_ready() {
             .flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
             .slots = slots
     };
-    PyJBuffer_Type = (PyTypeObject*) PyType_FromSpecWithBases(&spec, (PyObject*) PyJObject_Type);
-    return PyType_Ready(PyJBuffer_Type);
+    return jep_util_type_ready(&PyJBuffer_Type, &spec, PyJObject_Type);
 }

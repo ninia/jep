@@ -26,6 +26,7 @@
 */
 
 #include "Jep.h"
+#include "object.h"
 
 
 /*
@@ -567,4 +568,24 @@ jvalue convert_pyarg_jvalue(JNIEnv *env, PyObject *param, jclass paramType,
         Py_XDECREF(ptrace);
     }
     return ret;
+}
+
+int jep_util_type_ready(PyTypeObject **target_type, PyType_Spec *spec, PyTypeObject *base) {
+    assert(target_type != NULL);
+    assert(spec != NULL);
+    if (*target_type != NULL) {
+        PyErr_Format(PyExc_SystemError, "Already initialized %s", spec->name);
+        return -1;
+    }
+    PyObject *bases;
+    if (base == NULL) {
+        bases = NULL; // Default basetype
+    } else {
+        bases = PyTuple_Pack(1, base);
+        if (bases == NULL) return -1;
+    }
+    *target_type = (PyTypeObject*) PyType_FromSpecWithBases(spec, bases);
+    Py_XDECREF(bases);
+    if (*target_type == NULL) return -1;
+    return PyType_Ready(*target_type);
 }

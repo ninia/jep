@@ -627,6 +627,5 @@ int jep_jfield_type_ready() {
         .flags = Py_TPFLAGS_DEFAULT,
         .slots = SLOTS
     };
-    PyJField_Type = (PyTypeObject*) PyType_FromSpec(&spec);
-    return PyType_Ready(PyJField_Type);
+    return jep_util_type_ready(&PyJField_Type, &spec, NULL);
 }

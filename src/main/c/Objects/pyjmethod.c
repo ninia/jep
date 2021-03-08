@@ -802,5 +802,5 @@ int jep_jmethod_type_ready() {
         .slots = SLOTS
     };
     PyJMethod_Type = (PyTypeObject*) PyType_FromSpec(&spec);
-    return PyType_Ready(PyJMethod_Type);
+    return jep_util_type_ready(&PyJMethod_Type, &spec, NULL);
 }

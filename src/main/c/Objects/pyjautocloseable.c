@@ -81,14 +81,6 @@ int jep_jauto_closable_type_ready() {
     static PyType_Slot slots[] = {
             {Py_tp_doc, "Jep java.lang.AutoCloseable"},
             {Py_tp_methods, (void*) pyjautocloseable_methods},
-#ifndef Py_LIMITED_API
-            /*
-             * *** buffer methods ***
-             * currently unavailable in the limited ABI :(
-             */
-            {Py_bf_getbuffer, (void*) getbuf},
-            {Py_bf_releasebuffer, NULL},
-#endif
             {0, NULL}
     };
     PyType_Spec spec = {
@@ -97,6 +89,6 @@ int jep_jauto_closable_type_ready() {
             .flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
             .slots = slots
     };
-    PyJAutoCloseable_Type = (PyTypeObject*) PyType_FromSpecWithBases(&spec, (PyObject*) PyJObject_Type);
-    return PyType_Ready(PyJAutoCloseable_Type);
+
+    return jep_util_type_ready(&PyJAutoCloseable_Type, &spec, PyJObject_Type);
 }

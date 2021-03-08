@@ -158,6 +158,5 @@ int jep_jmonitor_type_ready() {
             .flags = Py_TPFLAGS_DEFAULT,
             .slots = SLOTS,
     };
-    PyJMonitor_Type = (PyTypeObject*) PyType_FromSpecWithBases(&spec, (PyObject*) PyJObject_Type);
-    return PyType_Ready(PyJMonitor_Type);
+    return jep_util_type_ready(&PyJMonitor_Type, &spec, PyJObject_Type);
 }
