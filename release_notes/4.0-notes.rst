@@ -1,0 +1,50 @@
+Jep 4.0 Release Notes
+*********************
+This is a major version increment and it includes removal of deprecated
+functionality and several changes making it incompatible with previous versions
+of Jep. This release is compatible with Python versions >= 3.5 and Java
+versions >= 1.8. Thanks to all the contributors who have submitted code to
+improve this release.
+
+Python 2 is no longer Supported
+*******************************
+Python 2 is no longer supported. Python 3.3, Python 3.4, and Java 1.7 are also
+no longer supported. Code supporting these versions has been removed and
+Jep 4.0 will not build correctly with these versions.
+
+Jep class is now abstract
+*************************
+The classes jep.Interpreter, jep.SubInterpreter and jep.SharedInterpreter should
+be used instead of jep.Jep. Deprecated methods on jep.Jep that are not present
+in jep.Interpreter have been removed. The Interpreter classes were introduced
+in Jep 3.9 and they are the new API for accessing Interpreters. jep.Jep may be
+removed, renamed or made private in a future release so it should not be
+referenced outside the Jep project. jep.Jep remains public in this release only
+to facilitate a gradual transition.
+
+JepException is now an unchecked Exception
+******************************************
+JepException extends RuntimeException instead of Exception. It is still thrown
+whenever a Python exception occurs and should be caught if your application can
+recover from Python exceptions.
+
+Python objects will no longer fallback to str() for conversion to Java
+**********************************************************************
+When a Python Object is converted to a Java Object and no better conversion
+is found then it will be converted to a jep.python.PyObject. In previous
+versions the fallback conversion was to call str on the Python Object and
+create a java.lang.String. If a java.lang.String conversion is needed then
+it can still be forces by using a method that takes the desired type as an
+argument and passing in the java.lang.String class.
+
+Python buffer obejcts can be converted to java arrays
+*****************************************************
+Python buffer obejcts such as bytes, bytearray and array.array can be
+converted to java primitive arrays when they are passed from Python to Java.
+
+Internal cleanup and Improvements
+*********************************
+Minor bug fixes, spelling fixes, warning silencing, build compatibility
+improvements and more. Compare branches on github for the full set of changes.
+
+
