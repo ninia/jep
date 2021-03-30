@@ -34,12 +34,12 @@ When a Python Object is converted to a Java Object and no better conversion
 is found then it will be converted to a jep.python.PyObject. In previous
 versions the fallback conversion was to call str on the Python Object and
 create a java.lang.String. If a java.lang.String conversion is needed then
-it can still be forces by using a method that takes the desired type as an
+it can still be forced by using a method that takes the desired type as an
 argument and passing in the java.lang.String class.
 
-Python buffer obejcts can be converted to java arrays
+Python buffer objects can be converted to Java arrays
 *****************************************************
-Python buffer obejcts such as bytes, bytearray and array.array can be
+Python buffer objects such as bytes, bytearray and array.array can be
 converted to java primitive arrays when they are passed from Python to Java.
 
 Internal cleanup and Improvements
