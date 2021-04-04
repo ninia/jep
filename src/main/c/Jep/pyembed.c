@@ -100,13 +100,27 @@ static struct PyMethodDef jep_methods[] = {
         "jarray",
         pyjarray_new_v,
         METH_VARARGS,
-        "Create a new primitive array in Java.\n"
-        "Accepts:\n"
-        "(size, type _ID, [0]) || "
-        "(size, JCHAR_ID, [string value] || "
-        "(size, jobject) || "
-        "(size, str) || "
-        "(size, jarray)"
+        "Returns a new Java Array.\n"
+        "Accepts:\n  "
+        "(size, typecode, [fill]) or "
+        "(size, jclass)\n"
+        "\n"
+        "Java arrays behave much like lists, except the size is fixed at\n"
+        "creation and all the components of a jarray have the same type.\n"
+        "The component type is specified at object creation time by using a\n"
+        "jclass or type code. Java Object arrays are created by using a jclass\n"
+        "for the component type and Java primitive arrays are created by using\n"
+        "a type code for the component type.\n"
+        "The following type codes are defined:\n"
+        "  Type code   Java Primitive Type\n"
+        "  'z'         boolean\n"
+        "  'b'         byte\n"
+        "  'c'         char\n"
+        "  's'         short\n"
+        "  'i'         int\n"
+        "  'j'         long\n"
+        "  'f'         float\n"
+        "  'd'         double\n"
     },
 
     {
@@ -183,17 +197,6 @@ static int initjep(JNIEnv *env, jboolean hasSharedModules)
             Py_DECREF(modjep);
             return -1;
         }
-	/* JSTRING_ID ust be done after the caches */
-	PyObject* stringClass = PyJClass_Wrap(env, JSTRING_TYPE);
-	if (!stringClass) {
-            Py_DECREF(modjep);
-            return -1;
-	}
-        if (PyModule_AddObject(modjep, "JSTRING_ID", stringClass)) {
-            Py_DECREF(stringClass);
-            Py_DECREF(modjep);
-            return -1;
-	}
         if (hasSharedModules) {
             Py_INCREF(mainThreadModules);
             PyModule_AddObject(modjep, "mainInterpreterModules", mainThreadModules);
