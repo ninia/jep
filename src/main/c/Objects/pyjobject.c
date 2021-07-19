@@ -276,6 +276,45 @@ static PyObject* pyjobject_str(PyJObject *self)
     return pyres;
 }
 
+// call __repr__() on jobject. returns null on error.
+// expected to return new reference.
+static PyObject* pyjobject_repr(PyJObject *self)
+{
+    PyObject   *pyres   = NULL;
+    JNIEnv     *env;
+    jmethodID  __repr__ = 0;
+    jstring    jrepr    = NULL;
+
+    //check if __repr__ method exists on java object
+    if (self->object && self->clazz) {
+        env   = pyembed_get_env();
+
+        Py_BEGIN_ALLOW_THREADS
+        if (JNI_METHOD(__repr__, env, self->clazz, "__repr__", "()Ljava/lang/String;")) {
+            jrepr = (jstring) (*env)->CallObjectMethod(env, self->object, __repr__);
+        } else {
+            //method does not exist, clear exception
+            if ((*env)->ExceptionCheck(env)) {
+                (*env)->ExceptionClear(env);
+            }
+        }
+        Py_END_ALLOW_THREADS
+        if (process_java_exception(env)) {
+            return NULL;
+        }
+        if (jrepr != NULL) {
+            pyres = jstring_As_PyString(env, jrepr);
+        }
+        (*env)->DeleteLocalRef(env, jrepr);
+    }
+
+    if (pyres == NULL) {
+        //default (see: PyObject_Repr)
+        pyres =  PyUnicode_FromFormat("<%s object at %p>", Py_TYPE(self)->tp_name, self);
+    }
+    return pyres;
+}
+
 
 static PyObject* pyjobject_richcompare(PyJObject *self,
                                        PyObject *_other,
@@ -531,7 +570,7 @@ PyTypeObject PyJObject_Type = {
     0,                                        /* tp_getattr */
     0,                                        /* tp_setattr */
     0,                                        /* tp_compare */
-    0,                                        /* tp_repr */
+    (reprfunc) pyjobject_repr,                /* tp_repr */
     0,                                        /* tp_as_number */
     0,                                        /* tp_as_sequence */
     0,                                        /* tp_as_mapping */
