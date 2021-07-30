@@ -114,6 +114,7 @@ extern jclass JDOUBLE_ARRAY_TYPE;
     F(JCOLLECTION_TYPE, "java/util/Collection") \
     F(JCOMPARABLE_TYPE, "java/lang/Comparable") \
     F(JAUTOCLOSEABLE_TYPE, "java/lang/AutoCloseable") \
+    F(JBIGINTEGER_TYPE, "java/math/BigInteger") \
     F(JBOOL_OBJ_TYPE, "java/lang/Boolean") \
     F(JBYTEBUFFER_TYPE, "java/nio/ByteBuffer") \
     F(JBYTE_OBJ_TYPE, "java/lang/Byte") \

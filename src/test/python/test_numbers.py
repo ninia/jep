@@ -4,7 +4,7 @@ import sys
 from java.lang import Integer, Long, Double
 from java.util.concurrent.atomic import AtomicInteger
 from java.util import ArrayList
-
+from java.math import BigInteger
 
 class TestNumbers(unittest.TestCase):
 
@@ -161,6 +161,15 @@ class TestNumbers(unittest.TestCase):
         self.assertEqual(x.get(0).get(), 0)
         self.assertEqual(x.get(1).get(), 1)
         self.assertEqual(x.get(2).get(), 2)
+
+    def test_big_integer(self):
+        big = Long.MAX_VALUE + 1;
+        bigger = big*big*big;
+        x = ArrayList()
+        x.add(big)
+        x.add(bigger)
+        self.assertEqual(x.get(0), big)
+        self.assertEqual(x.get(1), bigger)
 
     def test_hash(self):
         # verify a PyJNumber can be hashed by Python, this will call the Python hash() not the Java hashCode()

@@ -301,6 +301,21 @@ static jobject pyunicode_as_jobject(JNIEnv *env, PyObject *pyobject,
     return NULL;
 }
 
+static jobject pylong_as_jbiginteger(JNIEnv *env, PyObject *pyobject,
+                                 jclass expectedType)
+{
+    jstring s = PyObject_As_jstring(env, pyobject);
+    if (s == NULL) {
+        return NULL;
+    }
+    jobject result = java_math_BigInteger_new_String(env, s);
+    if (!result) {
+        process_java_exception(env);
+        return NULL;
+    }
+    return result;
+}
+
 static jobject pylong_as_jobject(JNIEnv *env, PyObject *pyobject,
                                  jclass expectedType)
 {
@@ -308,6 +323,11 @@ static jobject pylong_as_jobject(JNIEnv *env, PyObject *pyobject,
         jobject result;
         jlong j = PyObject_As_jlong(pyobject);
         if (j == -1 && PyErr_Occurred()) {
+            if (PyErr_ExceptionMatches(PyExc_OverflowError) &&
+                (*env)->IsAssignableFrom(env, JBIGINTEGER_TYPE, expectedType)) {
+                PyErr_Clear();
+                return pylong_as_jbiginteger(env, pyobject, expectedType);
+            }
             return NULL;
         }
         result = java_lang_Long_new_J(env, j);
@@ -354,6 +374,8 @@ static jobject pylong_as_jobject(JNIEnv *env, PyObject *pyobject,
         return result;
     } else if ((*env)->IsAssignableFrom(env, JPYOBJECT_TYPE, expectedType)) {
         return PyObject_As_JPyObject(env, pyobject);
+    } else if ((*env)->IsAssignableFrom(env, JBIGINTEGER_TYPE, expectedType)) {
+        return pylong_as_jbiginteger(env, pyobject, expectedType);
     }
     raiseTypeError(env, pyobject, expectedType);
     return NULL;

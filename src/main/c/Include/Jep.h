@@ -59,6 +59,7 @@
 #include "convert_j2p.h"
 #include "java_access/ArrayList.h"
 #include "java_access/AutoCloseable.h"
+#include "java_access/BigInteger.h"
 #include "java_access/Boolean.h"
 #include "java_access/Buffer.h"
 #include "java_access/Byte.h"
