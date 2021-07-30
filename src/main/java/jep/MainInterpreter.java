@@ -101,6 +101,7 @@ public final class MainInterpreter implements AutoCloseable {
                 instance.initialize();
             } catch (Error e) {
                 instance.close();
+                instance.error = e;
                 throw e;
             }
         } else if (null != instance.error) {
