@@ -58,11 +58,17 @@ Help
 ----
 * `Documentation <https://github.com/ninia/jep/wiki>`_
 * `JavaDoc <https://ninia.github.io/jep/javadoc>`_
-* `Mailing List <https://groups.google.com/d/forum/jep-project>`_
-* `Known Issues <https://github.com/ninia/jep/issues>`_
+* `Mailing List (deprecated) <https://groups.google.com/d/forum/jep-project>`_
+* `Known Issues and Help <https://github.com/ninia/jep/issues>`_
 * `Contribution Guidelines <https://github.com/ninia/jep/blob/master/.github/CONTRIBUTING.md>`_
 * `Project Page <https://github.com/ninia/jep>`_
 
 We welcome comments, contributions, bug reports, wiki documentation, etc.
+
+If you need help, please first search for existing solutions online, in the
+the issues, and on the wiki. If you still need help, please open a GitHub issue
+and we will try and help you. Please remember to close the issue once it has
+been resolved.
+
 
 *Jep Team*

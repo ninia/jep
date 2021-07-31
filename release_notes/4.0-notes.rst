@@ -42,6 +42,11 @@ Python buffer objects can be converted to Java arrays
 Python buffer objects such as bytes, bytearray and array.array can be
 converted to java primitive arrays when they are passed from Python to Java.
 
+Redirect streams now supports OutputStreams
+*******************************************
+The redirect streams capability now takes an OutputStream instead of
+automatically redirecting to Java's System.out or System.err.
+
 Internal cleanup and Improvements
 *********************************
 Minor bug fixes, spelling fixes, warning silencing, build compatibility
