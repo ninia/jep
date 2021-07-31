@@ -164,12 +164,15 @@ class TestNumbers(unittest.TestCase):
 
     def test_big_integer(self):
         big = Long.MAX_VALUE + 1;
-        bigger = big*big*big;
+        bigger = big*big + 3;
+        biggest = big*big*big;
         x = ArrayList()
         x.add(big)
         x.add(bigger)
+        x.add(biggest)
         self.assertEqual(x.get(0), big)
         self.assertEqual(x.get(1), bigger)
+        self.assertEqual(x.get(2), biggest)
 
     def test_hash(self):
         # verify a PyJNumber can be hashed by Python, this will call the Python hash() not the Java hashCode()

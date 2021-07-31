@@ -130,6 +130,14 @@ static PyObject* jnumber_As_PyObject(JNIEnv *env, jobject jobj, jclass class)
             return NULL;
         }
         return jfloat_As_PyObject(f);
+    } else if ((*env)->IsSameObject(env, class, JBIGINTEGER_TYPE)) {
+        PyObject* pystr = jobject_As_PyString(env, jobj);
+        if (pystr == NULL) {
+            return NULL;
+        }
+        PyObject* pyint = PyLong_FromUnicodeObject(pystr, 10);
+        Py_DECREF(pystr);
+	return pyint;
     } else {
         return jobject_As_PyJObject(env, jobj, class);
     }
