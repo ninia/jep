@@ -2,7 +2,7 @@
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2015-2019 JEP AUTHORS.
+   Copyright (c) 2015-2021 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
