@@ -25,6 +25,7 @@
 package jep;
 
 import java.io.File;
+import java.io.OutputStream;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -51,7 +52,9 @@ public class JepConfig {
 
     protected ClassEnquirer classEnquirer = null;
 
-    protected boolean redirectOutputStreams = false;
+    protected OutputStream redirectStdout = null;
+
+    protected OutputStream redirectStderr = null;
 
     protected Set<String> sharedModules = null;
 
@@ -118,15 +121,32 @@ public class JepConfig {
     }
 
     /**
-     * Sets whether to redirect the Python sys.stdout and sys.stderr streams to
-     * the Java System.out and System.err streams
-     * 
-     * @param redirectOutputStreams
-     *            whether to redirect Python streams to Java
+     * Redirects the Python interpreter's sys.stdout to the provided
+     * OutputStream.
+     *
+     * @param outputStream
+     *            the Java OutputStream to redirect Python stdout to
      * @return a reference to this JepConfig
+     *
+     * @since 4.0
      */
-    public JepConfig setRedirectOutputStreams(boolean redirectOutputStreams) {
-        this.redirectOutputStreams = redirectOutputStreams;
+    public JepConfig redirectStdout(OutputStream outputStream) {
+        this.redirectStdout = outputStream;
+        return this;
+    }
+
+    /**
+     * Redirects the Python interpreter's sys.stderr to the provided
+     * OutputStream.
+     *
+     * @param outputStream
+     *            the Java OutputStream to redirect Python stderr to
+     * @return a reference to this JepConfig
+     *
+     * @since 4.0
+     */
+    public JepConfig redirectStdErr(OutputStream outputStream) {
+        this.redirectStderr = outputStream;
         return this;
     }
 

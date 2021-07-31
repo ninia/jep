@@ -185,9 +185,16 @@ public abstract class Jep implements Interpreter {
             exec("del sharedImporter");
         }
         setupJavaImportHook(config.classEnquirer);
-        if (config.redirectOutputStreams) {
+        if (config.redirectStdout != null || config.redirectStderr != null) {
             exec("from jep import redirect_streams");
-            exec("redirect_streams.setup()");
+            if (config.redirectStdout != null) {
+                set("stdoutOutputStream", config.redirectStdout);
+                exec("redirect_streams.redirectStdout(stdoutOutputStream)");
+            }
+            if (config.redirectStderr != null) {
+                set("stderrOutputStream", config.redirectStderr);
+                exec("redirect_streams.redirectStderr(stderrOutputStream)");
+            }
         }
     }
 
@@ -358,7 +365,7 @@ public abstract class Jep implements Interpreter {
     @Override
     public void set(String name, Object v) throws JepException {
         isValidThread();
-        set(tstate,name,v);
+        set(tstate, name, v);
     }
 
     private native void set(long tstate, String name, Object v)
