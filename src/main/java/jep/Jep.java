@@ -188,12 +188,10 @@ public abstract class Jep implements Interpreter {
         if (config.redirectStdout != null || config.redirectStderr != null) {
             exec("from jep import redirect_streams");
             if (config.redirectStdout != null) {
-                set("stdoutOutputStream", config.redirectStdout);
-                exec("redirect_streams.redirectStdout(stdoutOutputStream)");
+                invoke("redirect_streams.redirectStdout", config.redirectStdout);
             }
             if (config.redirectStderr != null) {
-                set("stderrOutputStream", config.redirectStderr);
-                exec("redirect_streams.redirectStderr(stderrOutputStream)");
+                invoke("redirect_streams.redirectStderr", config.redirectStderr);
             }
         }
     }
