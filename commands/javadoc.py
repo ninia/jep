@@ -3,7 +3,7 @@ from distutils.spawn import spawn
 
 import os.path
 
-from commands.java import get_java_home, is_apple_jdk
+from commands.java import get_java_home
 
 class javadoc(Command):
     outdir = None
@@ -18,10 +18,7 @@ class javadoc(Command):
         if not os.path.exists(javadoc.outdir):
             os.makedirs(javadoc.outdir)
         self.version = []
-        if is_apple_jdk():
-            self.javadoc = os.path.join(get_java_home(), 'Commands', 'javadoc')
-        else:
-            self.javadoc = os.path.join(get_java_home(), 'bin', 'javadoc')
+        self.javadoc = os.path.join(get_java_home(), 'bin', 'javadoc')
 
     def finalize_options(self):
         self.version = self.distribution.metadata.get_version()

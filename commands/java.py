@@ -20,9 +20,6 @@ from commands.util import is_windows
 
 
 _java_home = None
-# MAC_JAVA_HOME is for the Apple JDK and is consistent in its install directory.
-# For better or for worse, Apple stopped supporting a JDK after Java 1.6.
-MAC_JAVA_HOME = '/System/Library/Frameworks/JavaVM.framework'
 
 
 def get_java_home():
@@ -50,34 +47,16 @@ def get_java_home():
             return _java_home
         except CommandFailed:
             traceback.print_exc()
-            if not os.path.exists(MAC_JAVA_HOME):
-                configure_error('No JAVA_HOME')
-
-        # Apple's JAVA_HOME is predictable, just use that if we can
-        # though it doesn't work for Oracle's JDK
-        if os.path.exists(MAC_JAVA_HOME):
-            _java_home = MAC_JAVA_HOME
-            return _java_home
 
     configure_error(
         'Please set the environment variable JAVA_HOME to a path containing the JDK.')
 
-
-def is_apple_jdk():
-    """
-    Checks if the JDK installed is Apple's JDK.  Apple's JDK layout is
-    different than others, while Oracle's JDK layout consistently has
-    a bin, include, and lib dir.
-    """
-    return get_java_home() == MAC_JAVA_HOME
 
 def get_java_include():
     """
     Locate the Java include folders for compiling JNI applications.
     """
     inc_name = 'include'
-    if is_apple_jdk():
-        inc_name = 'Headers'
     inc = os.path.join(get_java_home(), inc_name)
     if not os.path.exists(inc):
         configure_error("Include folder should be at '{0}' but doesn't exist. "
@@ -110,8 +89,6 @@ def get_java_include():
 
 def get_java_lib():
     lib_name = 'lib'
-    if is_apple_jdk():
-        lib_name = 'Libraries'
     lib = os.path.join(get_java_home(), lib_name)
     if not os.path.exists(lib):
         configure_error("Lib folder should be at '{0}' but doesn't exist. "
@@ -149,8 +126,6 @@ def get_java_lib_folders():
 
 
 def get_java_linker_args():
-    if is_apple_jdk():
-        return ['-framework JavaVM']
     return []
 
 
@@ -237,10 +212,7 @@ class build_java(Command):
             os.makedirs(build_java.headeroutdir)
 
         self.java_files = []
-        if is_apple_jdk():
-            self.javac = os.path.join(get_java_home(), 'Commands', 'javac')
-        else:
-            self.javac = os.path.join(get_java_home(), 'bin', 'javac')
+        self.javac = os.path.join(get_java_home(), 'bin', 'javac')
 
     def finalize_options(self):
         self.java_files = self.distribution.java_files
@@ -285,10 +257,7 @@ class build_jar(Command):
         self.version = []
         self.java_files = []
         self.extra_jar_files = []
-        if is_apple_jdk():
-            self.jar = os.path.join(get_java_home(), 'Commands', 'jar')
-        else:
-            self.jar = os.path.join(get_java_home(), 'bin', 'jar')
+        self.jar = os.path.join(get_java_home(), 'bin', 'jar')
 
     def finalize_options(self):
         self.extra_jar_files = self.distribution.extra_jar_files
