@@ -82,9 +82,6 @@ class MSVCCompiler(old_MSVCCompiler):
 
 def find_vcvarsall(version):
     import os
-    for loc in VCVARSALL_LOCATIONS:
-        if os.path.isfile(loc):
-            return loc
 
     Reg = distutils.msvc9compiler.Reg
     VC_BASE = r'Software\%sMicrosoft\DevDiv\VCForPython\%0.1f'
@@ -108,10 +105,21 @@ def find_vcvarsall(version):
         # this implies that MSVC++ for Python2.7 is not installed, and we
         # should fall back to attempting through MSVC from Visual Studio
         retVal = old_find_vcvarsall(version)
-        if not retVal:
-            from distutils import _msvccompiler
-            loc, _ = _msvccompiler._find_vcvarsall(version)
-            return loc
+        if retVal:
+            return retVal
+
+        from distutils import _msvccompiler
+        retVal, _ = _msvccompiler._find_vcvarsall(version)
+        if retVal:
+            return retVal
+
+        for loc in VCVARSALL_LOCATIONS:
+            if os.path.isfile(loc):
+                return loc
+
+        # couldn't find vcvarsall.bat
+        return None
+
 
 old_find_vcvarsall = old_msvc_module.find_vcvarsall
 old_msvc_module.find_vcvarsall = find_vcvarsall
