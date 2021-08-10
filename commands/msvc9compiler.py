@@ -11,6 +11,12 @@ import distutils
 from distutils import msvc9compiler as old_msvc_module
 from distutils.msvc9compiler import MSVCCompiler as old_MSVCCompiler
 
+VCVARSALL_LOCATIONS = (
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Auxiliary\\Build\\vcvarsall.bat",
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\VC\\Auxiliary\\Build\\vcvarsall.bat",
+    "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\vcvarsall.bat"
+)
+
 
 class MSVCCompiler(old_MSVCCompiler):
 
@@ -75,6 +81,11 @@ class MSVCCompiler(old_MSVCCompiler):
 
 
 def find_vcvarsall(version):
+    import os
+    for loc in VCVARSALL_LOCATIONS:
+        if os.path.isfile(loc):
+            return loc
+
     Reg = distutils.msvc9compiler.Reg
     VC_BASE = r'Software\%sMicrosoft\DevDiv\VCForPython\%0.1f'
     key = VC_BASE % ('', version)
@@ -90,7 +101,6 @@ def find_vcvarsall(version):
             productdir = None
 
     if productdir:
-        import os
         vcvarsall = os.path.join(productdir, "vcvarsall.bat")
         if os.path.isfile(vcvarsall):
             return vcvarsall
