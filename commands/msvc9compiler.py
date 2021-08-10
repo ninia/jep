@@ -97,7 +97,11 @@ def find_vcvarsall(version):
     else:
         # this implies that MSVC++ for Python2.7 is not installed, and we
         # should fall back to attempting through MSVC from Visual Studio
-        return old_find_vcvarsall(version)
+        retVal = old_find_vcvarsall(version)
+        if not retVal:
+            from distutils import _msvccompiler
+            loc, _ = _msvccompiler._find_vcvarsall(version)
+            return loc
 
 old_find_vcvarsall = old_msvc_module.find_vcvarsall
 old_msvc_module.find_vcvarsall = find_vcvarsall
