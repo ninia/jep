@@ -23,13 +23,13 @@ class build_ext (old_build_ext):
             import sys
             import distutils
             import distutils.ccompiler
-            from commands import _msvccompiler
+            from commands import msvc9compiler
 
             # See commands.msvc9compiler method comments for information on
             # this override.
             distutils.ccompiler.compiler_class['msvc'] = (
                 'jepmsvccompiler', 'MSVCCompiler', "Microsoft Visual C++")
-            sys.modules['distutils.jepmsvccompiler'] = _msvccompiler
+            sys.modules['distutils.jepmsvccompiler'] = msvc9compiler
         old_build_ext.run(self)
 
         # copy the jep.pyd to jep.dll early to avoid confusion

@@ -1,7 +1,4 @@
 """
-This is the old way Jep built on Windows with setup.py.  With Python 3.5+ the
-preferred way is with _msvccompiler.
-
 Fork of distutils' msvc9compiler to compile Jep on Windows.  This fork fixes the
 following problems:
   1. Bypass the removal of MSVC manifest from the pyd/dll file, which Jep needs
