@@ -79,7 +79,6 @@ class TestExceptions(unittest.TestCase):
         except ArithmeticError as ex:
             pass
 
-    @unittest.skipIf(sys.platform.startswith("win"), "subprocess complications on Windows")
     def test_exception_cause(self):
         jep_pipe(build_java_process_cmd('jep.test.TestExceptionCause'))
 

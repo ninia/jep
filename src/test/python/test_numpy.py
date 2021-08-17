@@ -11,7 +11,6 @@ class TestNumpy(unittest.TestCase):
         self.test = TestClass()
         self.printout = False
 
-    @unittest.skipIf(sys.platform.startswith("win"), "subprocess complications on Windows")
     def testSetGet(self):
         """
         Tests using Jep.set(String, Object) for java NDArrays

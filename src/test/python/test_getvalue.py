@@ -4,7 +4,7 @@ from jep_pipe import jep_pipe
 from jep_pipe import build_java_process_cmd
 
 
-@unittest.skipIf(sys.platform.startswith("win"), "subprocess complications on Windows")
+@unittest.skipIf(sys.platform.startswith("win"), "temporary file permissions issues on Windows")
 class TestGetValue(unittest.TestCase):
 
     def test_get_collection_boxing(self):

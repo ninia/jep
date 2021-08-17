@@ -5,7 +5,6 @@ from jep_pipe import build_java_process_cmd
 import jep
 
 
-@unittest.skipIf(sys.platform.startswith("win"), "subprocess complications on Windows")
 class TestSharedModules(unittest.TestCase):
 
     def test_shared_modules(self):

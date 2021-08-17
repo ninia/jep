@@ -25,7 +25,6 @@ class TestRegressions(unittest.TestCase):
         with self.assertRaises(TypeError):
             TestFieldTypes.objectString = ""
 
-    @unittest.skipIf(sys.platform.startswith("win"), "subprocess complications on Windows")
     def test_close_with_threads(self):
         jep_pipe(build_java_process_cmd('jep.test.TestCloseWithThreads'))
 
