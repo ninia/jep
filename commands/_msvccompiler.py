@@ -44,3 +44,9 @@ class MSVCCompiler(python_MSVCCompiler):
                               build_temp,
                               target_lang)
 
+
+    # Escape any backslash in the Windows path as a trailing backslash
+    # will escape a end quote in the link command.
+    def library_dir_option(self, dir):
+        dir = dir.replace('\\', '\\\\')
+        return python_MSVCCompiler.library_dir_option(self, dir)
