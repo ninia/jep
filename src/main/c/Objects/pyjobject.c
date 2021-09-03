@@ -287,25 +287,28 @@ static PyObject* pyjobject_repr(PyJObject *self)
 
     //check if __repr__ method exists on java object
     if (self->object && self->clazz) {
-        env   = pyembed_get_env();
+        PyObject *repr = PyDict_GetItemString(self->attr, "__repr__");
+        if (repr) {
+            env   = pyembed_get_env();
 
-        Py_BEGIN_ALLOW_THREADS
-        if (JNI_METHOD(__repr__, env, self->clazz, "__repr__", "()Ljava/lang/String;")) {
-            jrepr = (jstring) (*env)->CallObjectMethod(env, self->object, __repr__);
-        } else {
-            //method does not exist, clear exception
-            if ((*env)->ExceptionCheck(env)) {
-                (*env)->ExceptionClear(env);
+            Py_BEGIN_ALLOW_THREADS
+            if (JNI_METHOD(__repr__, env, self->clazz, "__repr__", "()Ljava/lang/String;")) {
+                jrepr = (jstring) (*env)->CallObjectMethod(env, self->object, __repr__);
+            } else {
+                //method does not exist, clear exception
+                if ((*env)->ExceptionCheck(env)) {
+                    (*env)->ExceptionClear(env);
+                }
             }
+            Py_END_ALLOW_THREADS
+            if (process_java_exception(env)) {
+                return NULL;
+            }
+            if (jrepr != NULL) {
+                pyres = jstring_As_PyString(env, jrepr);
+            }
+            (*env)->DeleteLocalRef(env, jrepr);
         }
-        Py_END_ALLOW_THREADS
-        if (process_java_exception(env)) {
-            return NULL;
-        }
-        if (jrepr != NULL) {
-            pyres = jstring_As_PyString(env, jrepr);
-        }
-        (*env)->DeleteLocalRef(env, jrepr);
     }
 
     if (pyres == NULL) {

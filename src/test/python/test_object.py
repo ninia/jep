@@ -17,7 +17,7 @@ class TestObject(unittest.TestCase):
     def test_repr(self):
         self.assertEquals(repr(TestPyJObject.ReprClass()), "ReprClass")
         self.assertEquals(repr(TestPyJObject.ReprSubClass()), "ReprSubClass")
-        self.assertIn("<jep.PyJObject object at", repr(Object()))
+        self.assertIn("<java.lang.Object object at", repr(Object()))
 
     def test_del_throws_exception(self):
         o = Object()
