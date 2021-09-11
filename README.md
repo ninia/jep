@@ -1,9 +1,9 @@
 Jep - Java Embedded Python
 ===========================
 
-[![Python: 2.7, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8](https://img.shields.io/pypi/pyversions/Jep.svg)](https://pypi.python.org/pypi/jep)
+[![Python: 3.5, 3.6, 3.7, 3.8, 3.9](https://img.shields.io/pypi/pyversions/Jep.svg)](https://pypi.python.org/pypi/jep)
 [![License: zlib/libpng](https://img.shields.io/pypi/l/Jep.svg)](https://pypi.python.org/pypi/jep)
-[![Pypi: v3.9.0](https://img.shields.io/pypi/v/Jep.svg)](https://pypie.python.org/pypi/jep)
+[![Pypi: v4.0.0](https://img.shields.io/pypi/v/Jep.svg)](https://pypie.python.org/pypi/jep)
 [![Docs: wiki](https://img.shields.io/badge/docs-wiki-orange.svg)](https://github.com/ninia/jep/wiki)
 [![Docs: JavaDoc](https://img.shields.io/badge/docs-javadoc-orange.svg)](javadoc)
 
@@ -35,8 +35,8 @@ Building and installing require the JDK, Python, and optionally numpy to be inst
 
 Dependencies
 ------------
-* Python 2.7, 3.3, 3.4, 3.5, 3.6, 3.7 or 3.8
-* Java >= 1.7
+* Python 3.5, 3.6, 3.7, 3.8 or 3.9
+* Java >= 1.8
 * NumPy >= 1.7 (optional)
 
 Notable features
@@ -49,7 +49,6 @@ Help
 ----
 * [Documentation](https://github.com/ninia/jep/wiki)
 * [JavaDoc](javadoc)
-* [Mailing List](https://groups.google.com/d/forum/jep-project)
 * [Known Issues](https://github.com/ninia/jep/issues)
 * [Project Page](https://github.com/ninia/jep)
 
