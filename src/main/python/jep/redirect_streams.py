@@ -40,6 +40,9 @@ class StreamRedirect(object):
     def flush(self):
         self.flushmethod()
 
+    def isatty(self):
+        return False
+
 def redirectStdout(javaOutputStream):
     sys.stdout = StreamRedirect(javaOutputStream)
 
