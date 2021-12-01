@@ -116,7 +116,7 @@ static PyObject* pyjmultimethod_call(PyObject *multimethod,
     Py_ssize_t        argsSize       = 0;
     JNIEnv*           env            = NULL;
 
-    if (keywords != NULL) {
+    if (keywords != NULL && PyDict_Size(keywords) > 0) {
         PyErr_Format(PyExc_RuntimeError, "Keywords are not supported.");
         return NULL;
     }
