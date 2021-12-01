@@ -123,7 +123,7 @@ static PyObject* pyjconstructor_call(PyJMethodObject *self, PyObject *args,
     jobject   obj  = NULL;
     PyObject *pobj = NULL;
 
-    if (keywords != NULL) {
+    if (keywords != NULL && PyDict_Size(keywords) > 0) {
         PyErr_Format(PyExc_TypeError, "Keywords are not supported.");
         return NULL;
     }

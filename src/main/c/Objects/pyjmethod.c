@@ -221,7 +221,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
     /* if params includes pyjarray instance */
     int            foundArray       = 0;
 
-    if (keywords != NULL) {
+    if (keywords != NULL && PyDict_Size(keywords) > 0) {
         PyErr_Format(PyExc_RuntimeError, "Keywords are not supported.");
         return NULL;
     }
