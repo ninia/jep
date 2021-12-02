@@ -25,3 +25,4 @@ dist
 MANIFEST
 .DS_Store
 .idea
+/target/
