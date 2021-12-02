@@ -395,7 +395,10 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
     }
 
     Py_Initialize();
+
+#if PY_MAJOR_VERSION < 4 && PY_MINOR_VERSION < 7
     PyEval_InitThreads();
+#endif
 
     if (pyjtypes_ready()) {
         handle_startup_exception(env, "Failed to initialize PyJTypes");
