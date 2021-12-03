@@ -15,6 +15,8 @@ environment:
       JAVA_HOME: "C:\\Program Files\\Java\\jdk11"
     - PYTHON: "C:\\Python39-x64"
       JAVA_HOME: "C:\\Program Files\\Java\\jdk11"
+    - PYTHON: "C:\\Python310-x64"
+      JAVA_HOME: "C:\\Program Files\\Java\\jdk11"
 
 build: off
 
