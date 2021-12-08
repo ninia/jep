@@ -17,7 +17,8 @@ class TestImport(unittest.TestCase):
 
     def test_not_found(self):
         importer = JepJavaImporter()
-        mod = importer.load_module('java.lang')
+        spec = importer.find_spec('java.lang', None)
+        mod = importer.create_module(spec)
         mod.Integer
         self.assertRaises(ImportError, mod.__getattr__, 'asdf')
 
