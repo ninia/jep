@@ -64,11 +64,23 @@ class build_scripts(Command):
             install_base=install.install_base,
             install_platbase=install.install_platbase,
             install_lib=install.install_lib,
-            virtual_env=os.environ.get('VIRTUAL_ENV') or '',
+            virtual_env='',
             ld_library_path='',
             ld_preload='',
             pythonhome='',
+            pythonexecutable='',
         )
+
+        if os.environ.get('VIRTUAL_ENV'):
+            if is_windows():
+                context['virtual_env'] = os.environ.get('VIRTUAL_ENV')
+            else:
+                context['virtual_env'] = '. %s/bin/activate' % os.environ.get('VIRTUAL_ENV')
+            if is_osx():
+                # OS X is setting sys.executable to java which is preventing it from finding site-packages in a venv
+                # setting PYTHONEXECUTABLE overrides sys.executable and helps find site-packages
+                context['pythonexecutable'] = 'export PYTHONEXECUTABLE = %s' % sys.executable
+
 
         if not is_osx() and not is_windows():
             context['ld_library_path'] = 'LD_LIBRARY_PATH="' + \
@@ -82,7 +94,7 @@ class build_scripts(Command):
             if lib_python:
                 context['ld_preload'] = 'LD_PRELOAD="{0}"; export LD_PRELOAD'.format(
                     lib_python)
-        if is_osx():
+        if is_osx() and not os.environ.get('VIRTUAL_ENV'):
             prefix = sysconfig.get_config_var('prefix')
             exec_prefix = sysconfig.get_config_var('exec_prefix')
             if prefix == exec_prefix:
@@ -91,7 +103,6 @@ class build_scripts(Command):
                 pythonhome = prefix + ':' + exec_prefix
             context['pythonhome'] = 'PYTHONHOME="{0}"; export PYTHONHOME'.format(
                     pythonhome)
-
 
         for script in self.scripts:
             if is_windows():

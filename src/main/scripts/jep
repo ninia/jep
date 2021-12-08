@@ -1,16 +1,10 @@
 #!/bin/sh
 
-VIRTUAL_ENV={virtual_env}
-export VIRTUAL_ENV
-
+{virtual_env}
+{pythonexecutable}
 {pythonhome}
 {ld_library_path}
 {ld_preload}
-
-if test "x$VIRTUAL_ENV" != "x"; then
-  PATH="$VIRTUAL_ENV/bin:$PATH"
-  export PATH
-fi
 
 cp="{install_lib}jep/jep-{version}.jar"
 if test "x$CLASSPATH" != "x"; then
