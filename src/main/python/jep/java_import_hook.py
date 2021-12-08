@@ -80,7 +80,6 @@ def makeModule(fullname, loader, classEnquirer):
         '__package__': None,
         '__classEnquirer__': classEnquirer,
     })
-    sys.modules[fullname] = mod
     return mod
 
 
@@ -99,9 +98,6 @@ class JepJavaImporter(object):
 
     def create_module(self, spec):
         fullname = spec.name
-        if fullname in sys.modules:
-            return sys.modules[fullname]
-
         mod = makeModule(fullname, self, self.classEnquirer)
         return mod
 
