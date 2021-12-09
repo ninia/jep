@@ -89,6 +89,17 @@ class TestTypes(unittest.TestCase):
         list.remove(1)
         self.assertEqual(list.size(), 2)
 
+    def test_empty_kwargs(self):
+        # Some frameworks will pass an empty kwargs dict when there are no kwargs.
+        # pyjmethods pyjconstructors and pyjmultimethods should handle this
+        l = []
+        d = {}
+        a = ArrayList(*l, **d)
+        # In a normal call python will end up removing the empty kwargs before
+        # it reaches jep objects so use __func__ to call more directly.
+        a.add.__func__(a, 1, *l, **d)
+        self.assertEquals(1, a.size.__func__(a, *l, **d))
+
     def test_callback(self):
         expected = ArrayList([1, 2, 3, 4, 5])
         actual = ArrayList()
