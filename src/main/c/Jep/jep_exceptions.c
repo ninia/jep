@@ -76,12 +76,12 @@ int process_py_exception(JNIEnv *env)
         if (ptype == PyExc_SystemExit) {
             // If the exception is not normalized the exit code is in pvalue.
             PyObject *code = pvalue;
-	    if (PyErr_GivenExceptionMatches(pvalue, ptype)) {
+            if (PyErr_GivenExceptionMatches(pvalue, ptype)) {
                 // If the exception is normalized the exit code is in the code attribute.
                 code = PyObject_GetAttrString(pvalue, "code");
             }
             if (code == NULL) {
-                /* 
+                /*
                  * It should be impossible to get here unless the code attribute
                  * is missing. There is no reasonable way to handle that case so
                  * clear the error and let the SystemExit become a JepException
@@ -94,7 +94,7 @@ int process_py_exception(JNIEnv *env)
             } else {
                 /*
                  * It should be impossible to get here but if something changes
-                 * it seems reasonable to jsut let the SystemExit become a JepException
+                 * it seems reasonable to just let the SystemExit become a JepException
                  */
                 Py_XDECREF(code);
             }
