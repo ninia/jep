@@ -26,7 +26,7 @@
 from _jep import forName
 import sys
 from types import ModuleType
-
+from importlib.util import spec_from_loader
 
 class module(ModuleType):
     """Lazy load classes not found at runtime.
@@ -80,7 +80,6 @@ def makeModule(fullname, loader, classEnquirer):
         '__package__': None,
         '__classEnquirer__': classEnquirer,
     })
-    sys.modules[fullname] = mod
     return mod
 
 
@@ -92,17 +91,18 @@ class JepJavaImporter(object):
         else:
             self.classEnquirer = forName('jep.ClassList').getInstance()
 
-    def find_module(self, fullname, path=None):
+    def find_spec(self, fullname, path, target=None):
         if self.classEnquirer.isJavaPackage(fullname):
-            return self  # found a Java package with this name
+            return spec_from_loader(fullname, self, is_package=True)
         return None
 
-    def load_module(self, fullname):
-        if fullname in sys.modules:
-            return sys.modules[fullname]
-
+    def create_module(self, spec):
+        fullname = spec.name
         mod = makeModule(fullname, self, self.classEnquirer)
         return mod
+
+    def exec_module(self, fullname):
+        return None
 
 
 def setupImporter(classEnquirer):
