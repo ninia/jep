@@ -1,15 +1,13 @@
-from __future__ import print_function
-
-from distutils import log
-from distutils.cmd import Command
-from distutils.spawn import spawn, find_executable
-from distutils.dep_util import newer_group
+from setuptools import Command
+from setuptools.dep_util import newer_group
 
 import shutil
 import os
 import fnmatch
 import traceback
+import subprocess
 import sys
+import logging
 
 from commands.util import configure_error
 from commands.util import is_osx
@@ -171,7 +169,7 @@ class setup_java(Command):
 
     def run(self):
         if skip_java_build(self):
-            log.debug('skipping Java build (up-to-date)')
+            logging.debug('skipping Java build (up-to-date)')
             return
         warning('Using JAVA_HOME:', get_java_home())
 
@@ -220,8 +218,8 @@ class build_java(Command):
     def build(self, *jclasses):
         jep = [x for x in list(*jclasses) if not x.startswith('src{0}test{0}java{0}'.format(os.sep))]
         tests = [x for x in list(*jclasses) if x.startswith('src{0}test{0}java{0}'.format(os.sep))]
-        spawn([self.javac, '-deprecation', '-d', build_java.outdir, '-h', build_java.headeroutdir, '-classpath', 'src'] + jep)
-        spawn([self.javac, '-deprecation', '-d', build_java.testoutdir, '-classpath', '{0}{1}src'.format(build_java.outdir, os.pathsep)] + tests)
+        subprocess.run([self.javac, '-deprecation', '-d', build_java.outdir, '-h', build_java.headeroutdir, '-classpath', 'src'] + jep)
+        subprocess.run([self.javac, '-deprecation', '-d', build_java.testoutdir, '-classpath', '{0}{1}src'.format(build_java.outdir, os.pathsep)] + tests)
         # Copy the source files over to the build directory to make src.jar's.
         self.copySrc('jep', jep)
         self.copySrc('jep.test', tests)
@@ -230,7 +228,7 @@ class build_java(Command):
         if not skip_java_build(self):
             self.build(self.java_files)
         else:
-            log.debug('skipping building .class files (up to date)')
+            logging.debug('skipping building .class files (up to date)')
 
     def copySrc(self, app, files):
         for src in files:
@@ -272,13 +270,13 @@ class build_jar(Command):
                 os.makedirs(dest_dir)
             shutil.copy(src, dest)
 
-        spawn([self.jar, '-cf', 'build/java/jep-{0}-sources.jar'.format(self.version), '-C', 'build/java/jep.src/main/java', 'jep'])
-        spawn([self.jar, '-cfe', 'build/java/jep-{0}.jar'.format(self.version), 'jep.Run', '-C', 'build/java', 'jep'])
-        spawn([self.jar, '-cf', 'build/java/jep-{0}-test-sources.jar'.format(self.version), '-C', 'build/java/jep.test.src/test/java', 'jep'])
-        spawn([self.jar, '-cfe', 'build/java/jep-{0}-test.jar'.format(self.version), 'test.jep.Test', '-C', 'build/java/test', 'jep'])
+        subprocess.run([self.jar, '-cf', 'build/java/jep-{0}-sources.jar'.format(self.version), '-C', 'build/java/jep.src/main/java', 'jep'])
+        subprocess.run([self.jar, '-cfe', 'build/java/jep-{0}.jar'.format(self.version), 'jep.Run', '-C', 'build/java', 'jep'])
+        subprocess.run([self.jar, '-cf', 'build/java/jep-{0}-test-sources.jar'.format(self.version), '-C', 'build/java/jep.test.src/test/java', 'jep'])
+        subprocess.run([self.jar, '-cfe', 'build/java/jep-{0}-test.jar'.format(self.version), 'test.jep.Test', '-C', 'build/java/test', 'jep'])
 
     def run(self):
         if not skip_java_build(self):
             self.build()
         else:
-            log.debug('skipping packing jar files (up to date)')
+            logging.debug('skipping packing jar files (up to date)')

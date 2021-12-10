@@ -1,4 +1,3 @@
-from __future__ import print_function
 from distutils.command.clean import clean
 import shutil
 

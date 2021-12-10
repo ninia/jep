@@ -1,5 +1,5 @@
-from distutils.cmd import Command
-from distutils.spawn import spawn
+from setuptools import Command
+import subprocess
 
 import os.path
 
@@ -25,7 +25,7 @@ class javadoc(Command):
         self.java_files = self.distribution.java_files
 
     def run(self):
-        spawn([self.javadoc, '-public', '-notimestamp',
+        subprocess.run([self.javadoc, '-public', '-notimestamp',
                              '-d', os.path.join(javadoc.outdir, self.version), 
                              '-sourcepath', 'src/main/java',
                              '-subpackages', 'jep' ])

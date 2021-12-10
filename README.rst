@@ -39,7 +39,7 @@ Some benefits of embedding CPython in a JVM:
 
 Installation
 ------------
-Simply run ``pip install jep`` or download the source and run ``python setup.py build install``.
+Simply run ``pip install jep`` or download the source and run ``pip install .``.
 Building and installing require the JDK, Python, and optionally numpy to be installed beforehand.
 
 Dependencies

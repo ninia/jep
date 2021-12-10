@@ -1,10 +1,10 @@
 """
-Fork of distutils' build_ext command to handle using a
+Fork of setuptools' build_ext command to handle using a
 patched version of the msvc9compiler.
 """
 
 import os.path
-from distutils.command.build_ext import build_ext as old_build_ext
+from setuptools.command.build_ext import build_ext as old_build_ext
 
 
 class build_ext (old_build_ext):
