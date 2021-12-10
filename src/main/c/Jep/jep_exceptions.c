@@ -52,16 +52,6 @@ int process_py_exception(JNIEnv *env)
         return 0;
     }
 
-    // let's not turn this into a Java exception if the user exited
-    if (PyErr_ExceptionMatches(PyExc_SystemExit)) {
-        /*
-         * If you look at the CPython source code, the following line will
-         * trigger a clean exit from Python.
-         */
-        PyErr_PrintEx(1);
-        return 0;
-    }
-
     if ((*env)->ExceptionCheck(env)) {
         /*
          * There's a bug in Jep somewhere, hopefully this printout will help
@@ -82,6 +72,34 @@ int process_py_exception(JNIEnv *env)
     PyErr_Fetch(&ptype, &pvalue, &ptrace);
 
     if (ptype) {
+        // let's not turn this into a Java exception if the user exited
+        if (ptype == PyExc_SystemExit) {
+            // If the exception is not normalized the exit code is in pvalue.
+            PyObject *code = pvalue;
+	    if (PyErr_GivenExceptionMatches(pvalue, ptype)) {
+                // If the exception is normalized the exit code is in the code attribute.
+                code = PyObject_GetAttrString(pvalue, "code");
+            }
+            if (code == NULL) {
+                /* 
+                 * It should be impossible to get here unless the code attribute
+                 * is missing. There is no reasonable way to handle that case so
+                 * clear the error and let the SystemExit become a JepException
+                 */
+                PyErr_Clear();
+            } else if (code == Py_None) {
+                exit(0);
+            } else if (PyLong_Check(code)) {
+                exit(PyLong_AsLong(code));
+            } else {
+                /*
+                 * It should be impossible to get here but if something changes
+                 * it seems reasonable to jsut let the SystemExit become a JepException
+                 */
+                Py_XDECREF(code);
+            }
+        }
+
         message = PyObject_Str(ptype);
 
         if (pvalue) {
