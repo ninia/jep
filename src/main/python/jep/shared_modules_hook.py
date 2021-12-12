@@ -98,6 +98,7 @@
 
 import sys
 
+from importlib.util import spec_from_loader
 
 class JepSharedModuleImporter(object):
 
@@ -105,26 +106,39 @@ class JepSharedModuleImporter(object):
         self.moduleList = list(moduleList)
         self.sharedImporter = sharedImporter
 
-    def find_module(self, fullname, path=None):
+    def find_spec(self, fullname, path, target=None):
         if fullname in self.moduleList:
-            return self
+            return spec_from_loader(fullname, self)
         for moduleName in self.moduleList:
             if fullname.startswith(moduleName + "."):
-                return self
+                return spec_from_loader(fullname, self)
         return None
 
-    def load_module(self, fullname):
-        if fullname not in sys.modules:
-            from _jep import mainInterpreterModules, mainInterpreterModulesLock
-            with mainInterpreterModulesLock:
-                if fullname not in mainInterpreterModules:
-                    self.sharedImporter.sharedImport(fullname)
-                # Must copy all modules or relative imports will be broken
-                for moduleName in self.moduleList:
-                    for key in mainInterpreterModules:
-                        if key == moduleName or key.startswith(moduleName + "."):
-                            sys.modules[key] = mainInterpreterModules[key]
-        return sys.modules[fullname]
+    def create_module(self, spec):
+        # The import machinery sets attributes(such as __spec__) on the newly
+        # created module. We do not want to allow that modification of the
+        # shared module because it can affect behaviour on the main interpreter.
+        # Returning None triggers default module creation. That default module
+        # will be modified and then exec_module replaces it with the shared
+        # module.
+        return None
+
+    def exec_module(self, module):
+        # After calling this the import machinery returns the module in
+        # sys.modules, so overwrite the values in that dict with the correct
+        # shared modules.
+        from _jep import mainInterpreterModules, mainInterpreterModulesLock
+        fullname = module.__name__
+        with mainInterpreterModulesLock:
+            if fullname not in mainInterpreterModules:
+                self.sharedImporter.sharedImport(fullname)
+            # Must copy all modules or relative imports will be broken
+            for moduleName in self.moduleList:
+                for key in mainInterpreterModules:
+                    if key == moduleName or key.startswith(moduleName + "."):
+                        sys.modules[key] = mainInterpreterModules[key]
+        if sys.modules[fullname] == module:
+            raise ModuleNotFoundError(fullname + " cannot be loaded as a shared module") 
 
     def unload_modules(self):
         for moduleName in self.moduleList:
