@@ -799,7 +799,7 @@ static jshortArray pybuffer_as_jshortarray(JNIEnv *env, PyObject *pybuffer)
     jshortArray jarr = NULL;
     Py_buffer view;
 
-    if (PyObject_GetBuffer(pybuffer, &view, PyBUF_FULL) < 0) {
+    if (PyObject_GetBuffer(pybuffer, &view, PyBUF_FULL_RO) < 0) {
         return NULL;
     }
     if ( pybufferview_check_jshortarray(view) ) {
@@ -846,7 +846,7 @@ static jintArray pybuffer_as_jintarray(JNIEnv *env, PyObject *pybuffer)
     jintArray jarr = NULL;
     Py_buffer view;
 
-    if (PyObject_GetBuffer(pybuffer, &view, PyBUF_FULL) < 0) {
+    if (PyObject_GetBuffer(pybuffer, &view, PyBUF_FULL_RO) < 0) {
         return NULL;
     }
     if (pybufferview_check_jintarray(view)) {
@@ -892,7 +892,7 @@ static jlongArray pybuffer_as_jlongarray(JNIEnv *env, PyObject *pybuffer)
     jlongArray jarr = NULL;
     Py_buffer view;
 
-    if (PyObject_GetBuffer(pybuffer, &view, PyBUF_FULL) < 0) {
+    if (PyObject_GetBuffer(pybuffer, &view, PyBUF_FULL_RO) < 0) {
         return NULL;
     }
     if ( pybufferview_check_jlongarray(view) ) {
@@ -938,7 +938,7 @@ static jfloatArray pybuffer_as_jfloatarray(JNIEnv *env, PyObject *pybuffer)
     jfloatArray jarr = NULL;
     Py_buffer view;
 
-    if (PyObject_GetBuffer(pybuffer, &view, PyBUF_FULL) < 0) {
+    if (PyObject_GetBuffer(pybuffer, &view, PyBUF_FULL_RO) < 0) {
         return NULL;
     }
     if (pybufferview_check_jfloatarray(view)) {
@@ -983,7 +983,7 @@ static jdoubleArray pybuffer_as_jdoublearray(JNIEnv *env, PyObject *pybuffer)
     jdoubleArray jarr = NULL;
     Py_buffer view;
 
-    if (PyObject_GetBuffer(pybuffer, &view, PyBUF_FULL) < 0) {
+    if (PyObject_GetBuffer(pybuffer, &view, PyBUF_FULL_RO) < 0) {
         return NULL;
     }
     if ( pybufferview_check_jdoublearray(view) ) {
@@ -1010,11 +1010,11 @@ static jobject pybuffer_as_jobject(JNIEnv *env, PyObject *pybuffer,
          */
         Py_buffer view;
         jobject result = NULL;
-        if (PyObject_GetBuffer(pybuffer, &view, PyBUF_FULL) < 0) {
+        if (PyObject_GetBuffer(pybuffer, &view, PyBUF_FULL_RO) < 0) {
             return NULL;
         }
-        if (pybufferview_check_jintarray(view)) {
-            result = (jobject) pybufferview_as_jintarray(env, view);
+        if (pybufferview_check_jbytearray(view)) {
+            result = (jobject) pybufferview_as_jbytearray(env, view);
         } else if (pybufferview_check_jshortarray(view)) {
             result = (jobject) pybufferview_as_jshortarray(env, view);
         } else if (pybufferview_check_jintarray(view)) {
