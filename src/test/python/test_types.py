@@ -785,6 +785,8 @@ class TestTypes(unittest.TestCase):
         v = memoryview(a)
         v = v[::2]
         examples.append(v)
+        if sys.version_info.major > 3 or sys.version_info.minor > 7:
+            examples.append(v.toreadonly())
         for l in examples:
             self.assertSequenceEqual(l, self.methods.intArray(l))
             self.assertSequenceEqual(l, self.staticMethods.intArray(l))
@@ -827,8 +829,12 @@ class TestTypes(unittest.TestCase):
         v = v[::2]
         bb = ByteBuffer.wrap(v)
         self.assertSequenceEqual(bb.array(), v)
+        if sys.version_info.major > 3 or sys.version_info.minor > 7:
+            bb = ByteBuffer.wrap(v.toreadonly())
+            self.assertSequenceEqual(bb.array(), v)
         with self.assertRaises(TypeError):
             ByteBuffer.wrap(array.array('f', [1,2,3,4]))
+        self.assertSequenceEqual(self.methods.object(b'binary'), b'binary')
                 
     def test_float_array(self):
         from java.nio import FloatBuffer
@@ -841,6 +847,9 @@ class TestTypes(unittest.TestCase):
         v = v[::2]
         fb = FloatBuffer.wrap(v)
         self.assertSequenceEqual(fb.array(), v)
+        if sys.version_info.major > 3 or sys.version_info.minor > 7:
+            fb = FloatBuffer.wrap(v.toreadonly())
+            self.assertSequenceEqual(fb.array(), v)
         with self.assertRaises(TypeError):
             FloatBuffer.wrap(array.array('i', [1,2,3,4]))
 
@@ -855,6 +864,9 @@ class TestTypes(unittest.TestCase):
         v = v[::2]
         lb = LongBuffer.wrap(v)
         self.assertSequenceEqual(lb.array(), v)
+        if sys.version_info.major > 3 or sys.version_info.minor > 7:
+            lb = LongBuffer.wrap(v.toreadonly())
+            self.assertSequenceEqual(lb.array(), v)
         with self.assertRaises(TypeError):
             LongBuffer.wrap(array.array('f', [1,2,3,4]))
 
