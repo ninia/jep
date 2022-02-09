@@ -137,7 +137,7 @@ final class LibraryLocator {
                 }
                 for (File pythonDir : libDir.listFiles()) {
                     if (pythonDir.isDirectory()
-                            && pythonDir.getName().matches("python\\d\\.\\d")) {
+                            && pythonDir.getName().matches("python\\d\\.\\d{1,2}")) {
                         packagesDir = new File(pythonDir, "site-packages");
                         if (searchPackageDir(packagesDir)) {
                             return true;
@@ -166,7 +166,7 @@ final class LibraryLocator {
             if (libDir.isDirectory()) {
                 for (File pythonDir : libDir.listFiles()) {
                     if (pythonDir.isDirectory()
-                            && pythonDir.getName().matches("python\\d{2}")) {
+                            && pythonDir.getName().matches("python\\d{2,3}")) {
                         File packagesDir = new File(pythonDir, "site-packages");
                         if (searchPackageDir(packagesDir)) {
                             return true;
@@ -183,7 +183,7 @@ final class LibraryLocator {
             if (libDir.isDirectory()) {
                 for (File pythonDir : libDir.listFiles()) {
                     if (pythonDir.isDirectory()
-                            && pythonDir.getName().matches("python\\d\\.\\d")) {
+                            && pythonDir.getName().matches("python\\d\\.\\d{1,2}")) {
                         File packagesDir = new File(pythonDir, "site-packages");
                         if (searchPackageDir(packagesDir)) {
                             return true;
@@ -201,7 +201,7 @@ final class LibraryLocator {
                 File pythonMainDir = new File(localDir, "Python");
                 if (pythonMainDir.isDirectory()) {
                     for (File versionDir : pythonMainDir.listFiles()) {
-                        if (versionDir.isDirectory() && versionDir.getName().matches("\\d\\.\\d")) {
+                        if (versionDir.isDirectory() && versionDir.getName().matches("\\d\\.\\d{1,2}")) {
                             File libDir = new File(versionDir, "lib");
                             if (libDir.isDirectory()) {
                                 File pythonDir = new File(libDir, "python");
