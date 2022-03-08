@@ -75,8 +75,7 @@ public class ClassList implements ClassEnquirer {
     }
 
     /**
-     * load jar files from class path
-     * 
+     * load .jar files and .class files from class path
      */
     private void loadClassPath() {
         StringTokenizer tok = new StringTokenizer(
@@ -95,14 +94,21 @@ public class ClassList implements ClassEnquirer {
         while (!queue.isEmpty()) {
             String el = queue.remove();
 
-            if (!el.toLowerCase().endsWith(".jar")) {
-                // ignore filesystem classpath
+            // make sure it exists
+            File file = new File(el);
+
+            // A directory is a special case.
+            if (file.isDirectory()) {
+                // search for all .class files recursively starting with no prefix.
+                addClassFilesInTree(file, "");
                 continue;
             }
 
-            // make sure it exists
-            File file = new File(el);
             if (!file.exists() || !file.canRead())
+                continue;
+
+            // The .jar file is the normal case.
+            if (!el.toLowerCase().endsWith(".jar"))
                 continue;
 
             try (JarFile jfile = new JarFile(el, false)) {
@@ -155,6 +161,31 @@ public class ClassList implements ClassEnquirer {
             } catch (IOException e) {
                 // debugging only
                 e.printStackTrace();
+            }
+        }
+    }
+
+   /**
+     * Recursively go through a folder and all subdirectories looking for .class
+     * files. Add them all.
+     */
+    private void addClassFilesInTree(File folder, String prefix) {
+        if (!folder.isDirectory()) {
+            throw new IllegalArgumentException("folder is not a Directory");
+        }
+        for (File file : folder.listFiles()) {
+            String entry = file.getName();
+            if (file.isDirectory()) {
+                if (prefix!=null && !prefix.isEmpty()) {
+                    // Include a . between directories only if there was a prefix.
+                    addClassFilesInTree(file, prefix+"."+entry);
+                } else {
+                    // Don't include a prefix--we only care about subdirectories.
+                    addClassFilesInTree(file, entry);
+                }
+            } else if (file.exists() && file.canRead() && entry.toLowerCase().endsWith(".class")) {
+                // We've found a .class file on the file system.  Add it.
+                addClass(prefix, entry.replaceAll(".class$", ""));
             }
         }
     }
