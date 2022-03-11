@@ -80,7 +80,7 @@ class build_scripts(Command):
             if is_osx():
                 # OS X is setting sys.executable to java which is preventing it from finding site-packages in a venv
                 # setting PYTHONEXECUTABLE overrides sys.executable and helps find site-packages
-                context['pythonexecutable'] = 'export PYTHONEXECUTABLE = %s' % sys.executable
+                context['pythonexecutable'] = 'export PYTHONEXECUTABLE="%s"' % sys.executable
 
 
         if not is_osx() and not is_windows():
