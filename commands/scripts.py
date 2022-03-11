@@ -5,6 +5,7 @@ the jep interpreter can be run from the command line.
 """
 
 import os
+import sys
 from stat import ST_MODE
 from distutils.core import Command
 from distutils.dep_util import newer
