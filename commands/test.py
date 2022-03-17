@@ -70,6 +70,11 @@ class test(Command):
             else:
                 environment['PYTHONHOME'] = prefix + ':' + exec_prefix
 
+        # OS X is setting sys.executable to java which is preventing it from finding site-packages in a venv
+        # setting PYTHONEXECUTABLE overrides sys.executable and helps find site-packages
+        if is_osx():
+            environment['PYTHONEXECUTABLE'] = sys.executable
+
         # find the jep library and makes sure it's named correctly
         build_ext = self.get_finalized_command('build_ext')
         jep_lib = build_ext.get_outputs()[0]
