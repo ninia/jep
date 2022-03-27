@@ -182,11 +182,6 @@ static int initjep(JNIEnv *env, jboolean hasSharedModules)
             Py_DECREF(modjep);
             return -1;
         }
-        if (PyModule_AddObject(modjep, "__javaAttributeCache__", javaAttrCache)) {
-            Py_DECREF(javaAttrCache);
-            Py_DECREF(modjep);
-            return -1;
-        }
         PyObject *javaTypeCache = PyDict_New();
         if (!javaTypeCache) {
             Py_DECREF(modjep);

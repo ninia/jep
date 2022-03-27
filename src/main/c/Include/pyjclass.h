@@ -45,7 +45,9 @@ typedef struct {
      * A python callable, either a PyJConstructor or PyJMultiMethod with many
      * PyJConstructors
      */
-    PyObject  *constructor;
+    PyObject *constructor;
+    /* A python dict containing fields, methods, and inner classes */
+    PyObject *attr;
 } PyJClassObject;
 
 PyObject* PyJClass_Wrap(JNIEnv*, jobject);

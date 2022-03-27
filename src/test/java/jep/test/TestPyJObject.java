@@ -14,4 +14,9 @@ public class TestPyJObject {
     public static class ReprSubClass extends ReprClass {
     }
 
+    public static class AddClass {
+        public int __add__(int value) {
+            return value + 1;
+        }
+    }
 }

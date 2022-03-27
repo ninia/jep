@@ -31,6 +31,8 @@
 jclass       java_lang_Class_getComponentType(JNIEnv*, jclass);
 jobjectArray java_lang_Class_getConstructors(JNIEnv*, jclass);
 jobjectArray java_lang_Class_getDeclaredClasses(JNIEnv*, jclass);
+jobjectArray java_lang_Class_getDeclaredFields(JNIEnv*, jclass);
+jobjectArray java_lang_Class_getDeclaredMethods(JNIEnv*, jclass);
 jobjectArray java_lang_Class_getFields(JNIEnv*, jclass);
 jobjectArray java_lang_Class_getMethods(JNIEnv*, jclass);
 jint         java_lang_Class_getModifiers(JNIEnv*, jclass);

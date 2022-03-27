@@ -613,6 +613,39 @@ int pyjfield_set(PyJFieldObject *self, PyJObject* pyjobject, PyObject *value)
     return -1;
 }
 
+static PyObject* pyjfield_descr_get(PyObject *field, PyObject *obj,
+                                    PyObject *type)
+{
+    if (obj == Py_None || obj == NULL) {
+        Py_INCREF(field);
+        return field;
+    } else if (PyJObject_Check(obj)) {
+        return pyjfield_get((PyJFieldObject*) field, (PyJObject*) obj);
+    } else {
+        PyErr_Format(PyExc_RuntimeError,
+                     "PyJField can only access fields on Java objects");
+        return NULL;
+    }
+}
+
+
+static int pyjfield_descr_set(PyObject *field, PyObject *obj, PyObject *value)
+{
+    if (value == NULL) {
+        PyErr_Format(PyExc_TypeError,
+                     "Deleting Java fields is not allowed");
+        return -1;
+    }
+
+    if (PyJObject_Check(obj)) {
+        return pyjfield_set((PyJFieldObject*) field, (PyJObject*) obj, value);
+    } else {
+        PyErr_Format(PyExc_RuntimeError,
+                     "PyJField can only access fields on Java objects");
+        return -1;
+    }
+}
+
 
 PyTypeObject PyJField_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
@@ -647,8 +680,8 @@ PyTypeObject PyJField_Type = {
     0,                                        /* tp_getset */
     0,                                        /* tp_base */
     0,                                        /* tp_dict */
-    0,                                        /* tp_descr_get */
-    0,                                        /* tp_descr_set */
+    pyjfield_descr_get,                       /* tp_descr_get */
+    pyjfield_descr_set,                       /* tp_descr_set */
     0,                                        /* tp_dictoffset */
     0,                                        /* tp_init */
     0,                                        /* tp_alloc */

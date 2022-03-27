@@ -27,35 +27,63 @@
 
 #include "Jep.h"
 
-/* NULL terminated array of type that are statically defined */
-static PyTypeObject* baseTypes[] = {
-    &PyJAutoCloseable_Type,
-    &PyJBuffer_Type,
-    &PyJCollection_Type,
-    &PyJIterable_Type,
-    &PyJIterator_Type,
-    &PyJList_Type,
-    &PyJMap_Type,
-    &PyJNumber_Type,
-    &PyJObject_Type,
-    NULL
-};
-
 static PyTypeObject* pyjtype_get_cached(JNIEnv*, PyObject*, jclass);
+static int addMethods(JNIEnv*, PyObject*, jclass);
 
 /*
  * Add the statically defined wrapper types to the base cache of types.
  *
  * Returns 0 on success and -1 on failure
  */
-static int populateBaseTypeDict(PyObject* fqnToPyType)
+static int populateBaseTypeDict(JNIEnv *env, PyObject* fqnToPyType)
 {
+    /*
+     * NULL terminated array of type that are statically defined,
+     * must be in same order as baseClasses
+     */
+    PyTypeObject* baseTypes[] = {
+        &PyJAutoCloseable_Type,
+        &PyJBuffer_Type,
+        &PyJCollection_Type,
+        &PyJIterable_Type,
+        &PyJIterator_Type,
+        &PyJList_Type,
+        &PyJMap_Type,
+        &PyJNumber_Type,
+        &PyJObject_Type,
+        NULL
+    };
+    /*
+     * NULL terminated array of java classes that have statically defined types,
+     * must be in same order as baseTypes
+     */
+    jclass baseClasses[] = {
+        JAUTOCLOSEABLE_TYPE,
+        JBUFFER_TYPE,
+        JCOLLECTION_TYPE,
+        JITERABLE_TYPE,
+        JITERATOR_TYPE,
+        JLIST_TYPE,
+        JMAP_TYPE,
+        JNUMBER_TYPE,
+        JOBJECT_TYPE,
+        NULL
+    };
     int i;
     for (i = 0 ; baseTypes[i] != NULL ; i += 1) {
         PyTypeObject* type = baseTypes[i];
         if (PyDict_SetItemString(fqnToPyType, type->tp_name, (PyObject*) type)) {
             return -1;
         }
+        /*
+         * The statically defined wrapper types need to have their methods added
+         * since they are not defined when the type is created. None of the types
+         * have fields so no need to addFields.
+         */
+        if (addMethods(env, type->tp_dict, baseClasses[i]) != 0) {
+            return -1;
+        }
+
     }
     return 0;
 }
@@ -152,6 +180,117 @@ static PyObject* getBaseTypes(JNIEnv *env, PyObject *fqnToPyType, jclass clazz)
     return bases;
 }
 
+
+
+/*
+ * Adding empty slots to the type dict to prevent creation of __dict__ for
+ * every instance and ensures all attributes go through pyjfield.
+ */
+static int addSlots(PyObject* dict)
+{
+    PyObject *slots = PyTuple_New(0);
+    if (!slots) {
+        return -1;
+    }
+    if (PyDict_SetItemString(dict, "__slots__", slots)) {
+        Py_DECREF(slots);
+        return -1;
+    }
+    Py_DECREF(slots);
+    return 0;
+}
+
+/*
+ * Look up all Java methods and create pyjmethods that are added to the type
+ * dict.
+ */
+static int addMethods(JNIEnv* env, PyObject* dict, jclass clazz)
+{
+    jobjectArray methodArray = java_lang_Class_getMethods(env, clazz);
+    if (!methodArray) {
+        process_java_exception(env);
+        return -1;
+    }
+    int i;
+    int len = (*env)->GetArrayLength(env, methodArray);
+    for (i = 0; i < len; i += 1) {
+        jobject rmethod = (*env)->GetObjectArrayElement(env, methodArray, i);
+        PyJMethodObject *pymethod = PyJMethod_New(env, rmethod);
+
+        if (!pymethod) {
+            return -1;
+        }
+
+        /*
+         * For every method of this name, check to see if a PyJMethod or
+         * PyJMultiMethod is already in the cache with the same name. If
+         * so, turn it into a PyJMultiMethod or add it to the existing
+         * PyJMultiMethod.
+         */
+        PyObject* cached = PyDict_GetItem(dict, pymethod->pyMethodName);
+        if (cached == NULL) {
+            if (PyDict_SetItem(dict, pymethod->pyMethodName,
+                               (PyObject*) pymethod) != 0) {
+                Py_DECREF(pymethod);
+                return -1;
+            }
+        } else if (PyJMethod_Check(cached)) {
+            PyObject* multimethod = PyJMultiMethod_New((PyObject*) pymethod, cached);
+            PyDict_SetItem(dict, pymethod->pyMethodName, multimethod);
+            Py_DECREF(multimethod);
+        } else if (PyJMultiMethod_Check(cached)) {
+            PyJMultiMethod_Append(cached, (PyObject*) pymethod);
+        }
+
+        Py_DECREF(pymethod);
+        (*env)->DeleteLocalRef(env, rmethod);
+    }
+    (*env)->DeleteLocalRef(env, methodArray);
+    return 0;
+}
+
+/*
+ * Look up all Java fields and create pyjmethods that are added to the type
+ * dict.
+ */
+static int addFields(JNIEnv* env, PyObject* dict, jclass clazz)
+{
+    jobjectArray fieldArray = java_lang_Class_getDeclaredFields(env, clazz);
+    if (!fieldArray) {
+        process_java_exception(env);
+        return -1;
+    }
+    int i;
+    int len = (*env)->GetArrayLength(env, fieldArray);
+    for (i = 0; i < len; i += 1) {
+        jobject rfield = (*env)->GetObjectArrayElement(env, fieldArray, i);
+        jint mods = java_lang_reflect_Member_getModifiers(env, rfield);
+        if (process_java_exception(env)) {
+            return -1;
+        }
+        jboolean public = java_lang_reflect_Modifier_isPublic(env, mods);
+        if (process_java_exception(env)) {
+            return -1;
+        }
+        if (public) {
+            PyJFieldObject *pyjfield = PyJField_New(env, rfield);
+
+            if (!pyjfield) {
+                return -1;
+            }
+
+            if (PyDict_SetItem(dict, pyjfield->pyFieldName, (PyObject*) pyjfield) != 0) {
+                return -1;
+            }
+
+            Py_DECREF(pyjfield);
+        }
+        (*env)->DeleteLocalRef(env, rfield);
+    }
+    (*env)->DeleteLocalRef(env, fieldArray);
+    return 0;
+}
+
 /*
  * Create a new PythonType object for the given Java class. The Python type
  * hierarchy will mirror the Java class hierarchy.
@@ -159,6 +298,12 @@ static PyObject* getBaseTypes(JNIEnv *env, PyObject *fqnToPyType, jclass clazz)
 static PyTypeObject* pyjtype_get_new(JNIEnv *env, PyObject *fqnToPyType,
                                      PyObject *typeName, jclass clazz)
 {
+    if (!(*env)->IsAssignableFrom(env, clazz, JOBJECT_TYPE)) {
+        PyErr_Format(PyExc_TypeError, "Cannot create a pyjtype for primitive type: %s",
+                     PyUnicode_AsUTF8(typeName));
+        return NULL;
+    }
+
     /* The Python types for the Java super class and any interfaces. */
     PyObject* bases = getBaseTypes(env, fqnToPyType, clazz);
     if (!bases) {
@@ -176,6 +321,12 @@ static PyTypeObject* pyjtype_get_new(JNIEnv *env, PyObject *fqnToPyType,
         Py_DECREF(bases);
         return NULL;
     }
+    if ((addSlots(dict) != 0) || (addMethods(env, dict, clazz) != 0)
+            || (addFields(env, dict, clazz) != 0)) {
+        Py_DECREF(bases);
+        Py_DECREF(dict);
+        return NULL;
+    }
     PyObject* moduleName = NULL;
     PyObject* shortName = NULL;
     parseModule(typeName, &moduleName, &shortName);
@@ -183,7 +334,7 @@ static PyTypeObject* pyjtype_get_new(JNIEnv *env, PyObject *fqnToPyType,
     if (moduleName && shortName
             && !PyDict_SetItemString(dict, "__module__", moduleName)) {
         /*
-        * This is the actual type creation. It is equivalent of calling
+         * This is the actual type creation. It is equivalent of calling
          * type(shortName, bases, dict) in python.
          * See https://docs.python.org/3/library/functions.html#type
          */
@@ -236,7 +387,7 @@ PyTypeObject* PyJType_Get(JNIEnv *env, jclass clazz)
         Py_DECREF(modjep);
         return NULL;
     } else if (PyDict_Size(fqnToPyType) == 0) {
-        if (populateBaseTypeDict(fqnToPyType)) {
+        if (populateBaseTypeDict(env, fqnToPyType)) {
             Py_DECREF(modjep);
             Py_DECREF(fqnToPyType);
             return NULL;

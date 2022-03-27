@@ -27,6 +27,11 @@
 
 #include "Jep.h"
 
+/*
+ * https://bugs.python.org/issue2897
+ * structmember.h must be included to use PyMemberDef
+ */
+#include "structmember.h"
 
 /*
  * Adds a single inner class as attributes to the pyjclass. This will check if
@@ -71,10 +76,7 @@ static PyObject* pyjclass_add_inner_class(JNIEnv *env, PyJClassObject *topClz,
         charName = jstring2char(env, shortName);
 
         if (PyDict_SetItemString(topClz->attr, charName, attrClz) != 0) {
-            printf("Error adding inner class %s\n", charName);
-        } else {
-            PyObject *pyname = PyUnicode_FromString(charName);
-            Py_DECREF(pyname);
+            return NULL;
         }
         Py_DECREF(attrClz); // parent class will hold the reference
         release_utf_char(env, shortName, charName);
@@ -134,17 +136,63 @@ static PyObject* pyjclass_add_inner_classes(JNIEnv *env,
     return (PyObject*) topClz;
 }
 
-
-static int pyjclass_init(JNIEnv *env, PyObject *pyjob)
+/*
+ * Populate an attrs dict with all the Java methods and fields for the given
+ * class. This is currently the only way static methods and fields are made
+ * available. There is no known use for non-static fields but for now they are
+ * left in for backwards compatiblity, consider removing them in the future.
+ */
+static PyObject* pyjclass_init_attr(JNIEnv *env, jclass clazz)
 {
-    ((PyJClassObject*) pyjob)->constructor = NULL;
+    PyObject *attr = PyDict_New();
+    if (!attr) {
+        return attr;
+    }
+
+    if (!(*env)->IsAssignableFrom(env, clazz, JOBJECT_TYPE)) {
+        /*
+         * Don't bother with primitive types, they don't work with PyJType and they
+         * don't have any fields or methods.
+         */
+        return attr;
+    }
+    PyTypeObject* type = PyJType_Get(env, clazz);
+    if (!type) {
+        Py_DecRef(attr);
+        return NULL;
+    }
+    PyObject *key, *value;
+    Py_ssize_t pos = 0;
+    while (PyDict_Next(type->tp_dict, &pos, &key, &value)) {
+        if (PyJMethod_Check(value) || PyJMultiMethod_Check(value)
+                || PyJField_Check(value) ) {
+            if (PyDict_SetItem(attr, key, value) != 0) {
+                Py_DecRef((PyObject*) type);
+                Py_DecRef(attr);
+                return NULL;
+            }
+        }
+    }
+    Py_DecRef((PyObject*) type);
+    return attr;
+}
+
+static int pyjclass_init(JNIEnv *env, PyObject *pyobj)
+{
+    PyJClassObject *pyjclass = (PyJClassObject*) pyobj;
+
+    pyjclass->constructor = NULL;
+    pyjclass->attr = pyjclass_init_attr(env, ((PyJObject*) pyobj)->clazz);
+    if (pyjclass->attr == NULL) {
+        return 0;
+    }
 
     /*
      * attempt to add public inner classes as attributes since lots of people
      * code with public enum.  Note this will not allow the inner class to be
      * imported separately, it must be accessed through the enclosing class.
      */
-    if (!pyjclass_add_inner_classes(env, (PyJClassObject*) pyjob)) {
+    if (!pyjclass_add_inner_classes(env, pyjclass)) {
         /*
          * let's just print the error to stderr and continue on without
          * inner class support, it's not the end of the world
@@ -173,6 +221,7 @@ static void pyjclass_dealloc(PyJClassObject *self)
 {
 #if USE_DEALLOC
     Py_CLEAR(self->constructor);
+    Py_CLEAR(self->attr);
     PyJClass_Type.tp_base->tp_dealloc((PyObject*) self);
 #endif
 }
@@ -276,12 +325,80 @@ static PyObject* pyjclass_call(PyJClassObject *self,
     return result;
 }
 
+// get attribute 'name' for object.
+// uses obj->attr dict for storage.
+// returns new reference.
+static PyObject* pyjclass_getattro(PyObject *obj, PyObject *name)
+{
+    PyObject *ret = PyObject_GenericGetAttr(obj, name);
+    if (ret == NULL) {
+        return NULL;
+    } else if (PyJMethod_Check(ret) || PyJMultiMethod_Check(ret)) {
+        /*
+         * TODO Should not bind non-static methods to pyjclass objects, but not
+         * sure yet how to handle multimethods and static methods.
+         */
+        PyObject* wrapper = PyMethod_New(ret, (PyObject*) obj);
+        Py_DECREF(ret);
+        return wrapper;
+    } else if (PyJField_Check(ret)) {
+        PyObject *resolved = pyjfield_get((PyJFieldObject *) ret, (PyJObject*) obj);
+        Py_DECREF(ret);
+        return resolved;
+    }
+    return ret;
+}
+
+
+// set attribute v for object.
+// uses obj->attr dictionary for storage.
+static int pyjclass_setattro(PyObject *obj, PyObject *name, PyObject *v)
+{
+    PyObject *cur = NULL;
+    if (v == NULL) {
+        PyErr_Format(PyExc_TypeError,
+                     "Deleting attributes from PyJObjects is not allowed.");
+        return -1;
+    }
+    PyJObject *pyjobj = (PyJObject*) obj;
+    PyJClassObject *pyjclass = (PyJClassObject*) obj;
+    cur = PyDict_GetItem(pyjclass->attr, name);
+    if (PyErr_Occurred()) {
+        return -1;
+    }
+
+    if (cur == NULL) {
+        PyErr_Format(PyExc_AttributeError, "'%s' object has no attribute '%s'.",
+                     PyUnicode_AsUTF8(pyjobj->javaClassName), PyUnicode_AsUTF8(name));
+        return -1;
+    }
+
+    if (!PyJField_Check(cur)) {
+        if (PyJMethod_Check(cur) || PyJMultiMethod_Check(cur)) {
+            PyErr_Format(PyExc_AttributeError, "'%s' object cannot assign to method '%s'.",
+                         PyUnicode_AsUTF8(pyjobj->javaClassName), PyUnicode_AsUTF8(name));
+        } else {
+            PyErr_Format(PyExc_AttributeError,
+                         "'%s' object cannot assign to attribute '%s'.",
+                         PyUnicode_AsUTF8(pyjobj->javaClassName), PyUnicode_AsUTF8(name));
+        }
+        return -1;
+    }
+
+    return pyjfield_set((PyJFieldObject *) cur, pyjobj, v);
+}
+
+
 static PyTypeObject* pyjclass_GetPyType(PyJClassObject* self)
 {
     JNIEnv* env = pyembed_get_env();
     return PyJType_Get(env, self->clazz);
 }
 
+static PyMemberDef pyjclass_members[] = {
+    {"__dict__", T_OBJECT, offsetof(PyJClassObject, attr), READONLY},
+    {0}
+};
 
 static PyGetSetDef pyjclass_getset[] = {
     {"__pytype__", (getter) pyjclass_GetPyType, NULL},
@@ -305,8 +422,8 @@ PyTypeObject PyJClass_Type = {
     0,                                        /* tp_hash  */
     (ternaryfunc) pyjclass_call,              /* tp_call */
     0,                                        /* tp_str */
-    0,                                        /* tp_getattro */
-    0,                                        /* tp_setattro */
+    pyjclass_getattro,                        /* tp_getattro */
+    pyjclass_setattro,                        /* tp_setattro */
     0,                                        /* tp_as_buffer */
     Py_TPFLAGS_DEFAULT,                       /* tp_flags */
     "jclass",                                 /* tp_doc */
@@ -317,13 +434,13 @@ PyTypeObject PyJClass_Type = {
     0,                                        /* tp_iter */
     0,                                        /* tp_iternext */
     0,                                        /* tp_methods */
-    0,                                        /* tp_members */
+    pyjclass_members,                         /* tp_members */
     pyjclass_getset,                          /* tp_getset */
     0, // &PyJObject_Type                     /* tp_base */
     0,                                        /* tp_dict */
     0,                                        /* tp_descr_get */
     0,                                        /* tp_descr_set */
-    0,                                        /* tp_dictoffset */
+    offsetof(PyJClassObject, attr),           /* tp_dictoffset */
     0,                                        /* tp_init */
     0,                                        /* tp_alloc */
     NULL,                                     /* tp_new */

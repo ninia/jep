@@ -776,6 +776,16 @@ EXIT_ERROR:
     return NULL;
 }
 
+static PyObject* pyjmethod_descr_get(PyObject *func, PyObject *obj,
+                                     PyObject *type)
+{
+    if (obj == Py_None || obj == NULL) {
+        Py_INCREF(func);
+        return func;
+    }
+    return PyMethod_New(func, obj);
+}
+
 static PyMemberDef pyjmethod_members[] = {
     {
         "__name__", T_OBJECT_EX, offsetof(PyJMethodObject, pyMethodName), READONLY,
@@ -818,7 +828,7 @@ PyTypeObject PyJMethod_Type = {
     0,                                        /* tp_getset */
     0,                                        /* tp_base */
     0,                                        /* tp_dict */
-    0,                                        /* tp_descr_get */
+    pyjmethod_descr_get,                      /* tp_descr_get */
     0,                                        /* tp_descr_set */
     0,                                        /* tp_dictoffset */
     0,                                        /* tp_init */
