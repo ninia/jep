@@ -46,7 +46,6 @@ extern PyTypeObject PyJObject_Type;
 #define PyJObject_FIELDS \
     jobject   object;    \
     jclass    clazz;     \
-    PyObject *attr;      \
     PyObject *javaClassName;
 
 typedef struct {

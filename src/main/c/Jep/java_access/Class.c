@@ -30,6 +30,8 @@
 static jmethodID getComponentType   = 0;
 static jmethodID getConstructors    = 0;
 static jmethodID getDeclaredClasses = 0;
+static jmethodID getDeclaredFields  = 0;
+static jmethodID getDeclaredMethods = 0;
 static jmethodID getFields          = 0;
 static jmethodID getMethods         = 0;
 static jmethodID getModifiers       = 0;
@@ -72,6 +74,30 @@ jobjectArray java_lang_Class_getDeclaredClasses(JNIEnv* env, jclass this)
     if (JNI_METHOD(getDeclaredClasses, env, JCLASS_TYPE, "getDeclaredClasses",
                    "()[Ljava/lang/Class;")) {
         result = (jobjectArray) (*env)->CallObjectMethod(env, this, getDeclaredClasses);
+    }
+    Py_END_ALLOW_THREADS
+    return result;
+}
+
+jobjectArray java_lang_Class_getDeclaredFields(JNIEnv* env, jclass this)
+{
+    jobjectArray result = NULL;
+    Py_BEGIN_ALLOW_THREADS
+    if (JNI_METHOD(getDeclaredFields, env, JCLASS_TYPE, "getDeclaredFields",
+                   "()[Ljava/lang/reflect/Field;")) {
+        result = (jobjectArray) (*env)->CallObjectMethod(env, this, getDeclaredFields);
+    }
+    Py_END_ALLOW_THREADS
+    return result;
+}
+
+jobjectArray java_lang_Class_getDeclaredMethods(JNIEnv* env, jclass this)
+{
+    jobjectArray result = NULL;
+    Py_BEGIN_ALLOW_THREADS
+    if (JNI_METHOD(getDeclaredMethods, env, JCLASS_TYPE, "getDeclaredMethods",
+                   "()[Ljava/lang/reflect/Method;")) {
+        result = (jobjectArray) (*env)->CallObjectMethod(env, this, getDeclaredMethods);
     }
     Py_END_ALLOW_THREADS
     return result;

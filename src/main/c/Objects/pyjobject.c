@@ -33,19 +33,11 @@
  */
 #include "structmember.h"
 
-/* Set the object attributes from the cache */
+/* Set the class name */
 static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
 {
     jstring className     = NULL;
     PyObject *pyClassName = NULL;
-    PyObject* modjep      = NULL;
-    PyObject* fqnToPyJAttrs = NULL;
-    PyObject *cachedAttrs = NULL;
-
-    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
-        process_java_exception(env);
-        return 0;
-    }
 
     /*
      * Attach the attribute java_name to the PyJObject instance to assist
@@ -53,163 +45,13 @@ static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
      */
     className = java_lang_Class_getName(env, pyjob->clazz);
     if (process_java_exception(env) || !className) {
-        goto EXIT_ERROR;
+        return 0;
     }
     pyClassName = jstring_As_PyString(env, className);
     pyjob->javaClassName = pyClassName;
+    (*env)->DeleteLocalRef(env, className);
 
-    /*
-     * Get methods for the PyJObject, optimized for performance.  The code
-     * below is very similar to previous versions except methods are now
-     * cached in memory.
-     *
-     * Previously every time you instantiate a PyJObject, Jep would get the
-     * complete list of methods through reflection, turn them into PyJMethods,
-     * and add them as attributes to the PyJObject.
-     *
-     * Now Jep retains a Python dictionary in memory with a key of the fully
-     * qualified Java classname to a list of PyJMethods and PyJMultiMethods.
-     * Since the Java methods will never change at runtime for a particular
-     * Class, this is safe and drastically speeds up PyJObject instantiation
-     * by reducing reflection calls. We continue to set and reuse the
-     * PyJMethods and PyJMultiMethods attributes on the PyJObject instance,
-     * but if pyjobject_getattro sees a PyJMethod or PyJMultiMethod, it will
-     * put it inside a PyMethod and return that, enabling the reuse of the
-     * PyJMethod or PyJMultiMethod for this particular object instance.
-     *
-     * We have the GIL at this point, so we can safely assume we're
-     * synchronized and multiple threads will not alter the dictionary at the
-     * same time.
-     */
-    modjep = PyImport_ImportModule("_jep");
-    if (!modjep) {
-        goto EXIT_ERROR;
-    }
-    fqnToPyJAttrs = PyObject_GetAttrString(modjep, "__javaAttributeCache__");
-    if (!fqnToPyJAttrs) {
-        goto EXIT_ERROR;
-    }
-
-    cachedAttrs = PyDict_GetItem(fqnToPyJAttrs, pyClassName);
-    if (cachedAttrs == NULL) {
-        int i, len = 0;
-        jobjectArray methodArray = NULL;
-        jobjectArray fieldArray  = NULL;
-
-        cachedAttrs = PyDict_New();
-
-        // - GetMethodID fails when you pass the clazz object, it expects
-        //   a java.lang.Class jobject.
-        // - if you CallObjectMethod with the langClass jclass object,
-        //   it'll return an array of methods, but they're methods of the
-        //   java.lang.reflect.Method class -- not ->object.
-        //
-        // so what i did here was find the methodid using langClass,
-        // but then i call the method using clazz. methodIds for java
-        // classes are shared....
-        methodArray = java_lang_Class_getMethods(env, pyjob->clazz);
-        if (process_java_exception(env) || !methodArray) {
-            goto EXIT_ERROR;
-        }
-
-        /*
-         * For each method, create a new PyJMethod object and either add it to
-         * the cached methods list or a PyJMultiMethod.
-         */
-        len = (*env)->GetArrayLength(env, methodArray);
-        for (i = 0; i < len; i++) {
-            PyJMethodObject *pymethod = NULL;
-            jobject rmethod = NULL;
-
-            rmethod = (*env)->GetObjectArrayElement(env, methodArray, i);
-            pymethod = PyJMethod_New(env, rmethod);
-
-            if (!pymethod) {
-                continue;
-            }
-
-            /*
-             * For every method of this name, check to see if a PyJMethod or
-             * PyJMultiMethod is already in the cache with the same name. If
-             * so, turn it into a PyJMultiMethod or add it to the existing
-             * PyJMultiMethod.
-             */
-            if (pymethod->pyMethodName && PyUnicode_Check(pymethod->pyMethodName)) {
-                PyObject* cached = PyDict_GetItem(cachedAttrs, pymethod->pyMethodName);
-                if (cached == NULL) {
-                    if (PyDict_SetItem(cachedAttrs, pymethod->pyMethodName,
-                                       (PyObject*) pymethod) != 0) {
-                        goto EXIT_ERROR;
-                    }
-                } else if (PyJMethod_Check(cached)) {
-                    PyObject* multimethod = PyJMultiMethod_New((PyObject*) pymethod, cached);
-                    PyDict_SetItem(cachedAttrs, pymethod->pyMethodName, multimethod);
-                    Py_DECREF(multimethod);
-                } else if (PyJMultiMethod_Check(cached)) {
-                    PyJMultiMethod_Append(cached, (PyObject*) pymethod);
-                }
-            }
-
-            Py_DECREF(pymethod);
-            (*env)->DeleteLocalRef(env, rmethod);
-        } // end of looping over available methods
-
-        //  process fields
-        fieldArray = java_lang_Class_getFields(env, pyjob->clazz);
-        if (process_java_exception(env) || !fieldArray) {
-            goto EXIT_ERROR;
-        }
-
-        // for each field, create a pyjfield object and
-        // add to the internal members list.
-        len = (*env)->GetArrayLength(env, fieldArray);
-        for (i = 0; i < len; i++) {
-            jobject          rfield   = NULL;
-            PyJFieldObject *pyjfield = NULL;
-
-            rfield = (*env)->GetObjectArrayElement(env, fieldArray, i);
-
-            pyjfield = PyJField_New(env, rfield);
-
-            if (!pyjfield) {
-                continue;
-            }
-
-            if (pyjfield->pyFieldName && PyUnicode_Check(pyjfield->pyFieldName)) {
-                if (PyDict_SetItem(cachedAttrs, pyjfield->pyFieldName,
-                                   (PyObject*) pyjfield) != 0) {
-                    goto EXIT_ERROR;
-                }
-            }
-
-            Py_DECREF(pyjfield);
-            (*env)->DeleteLocalRef(env, rfield);
-        }
-        (*env)->DeleteLocalRef(env, fieldArray);
-
-        PyDict_SetItem(fqnToPyJAttrs, pyClassName, cachedAttrs);
-        Py_DECREF(cachedAttrs); // fqnToPyJAttrs will hold the reference
-    } // end of setting up cache for this Java Class
-
-    if (pyjob->object) {
-        Py_INCREF(cachedAttrs);
-        pyjob->attr = cachedAttrs;
-    } else {
-        /* PyJClass may add additional attributes so use a copy */
-        pyjob->attr = PyDict_Copy(cachedAttrs);
-    }
-
-    Py_XDECREF(modjep);
-    Py_XDECREF(fqnToPyJAttrs);
-    (*env)->PopLocalFrame(env, NULL);
     return 1;
-
-
-EXIT_ERROR:
-    Py_XDECREF(modjep);
-    Py_XDECREF(fqnToPyJAttrs);
-    (*env)->PopLocalFrame(env, NULL);
-    return 0;
 }
 
 
@@ -253,7 +95,6 @@ static void pyjobject_dealloc(PyJObject *self)
         }
     }
 
-    Py_CLEAR(self->attr);
     Py_CLEAR(self->javaClassName);
     Py_TYPE((PyObject*) self)->tp_free((PyObject*) self);
 #endif
@@ -275,49 +116,6 @@ static PyObject* pyjobject_str(PyJObject *self)
 
     return pyres;
 }
-
-// call __repr__() on jobject. returns null on error.
-// expected to return new reference.
-static PyObject* pyjobject_repr(PyJObject *self)
-{
-    PyObject   *pyres   = NULL;
-    JNIEnv     *env;
-    jmethodID  __repr__ = 0;
-    jstring    jrepr    = NULL;
-
-    //check if __repr__ method exists on java object
-    if (self->object && self->clazz) {
-        PyObject *repr = PyDict_GetItemString(self->attr, "__repr__");
-        if (repr) {
-            env   = pyembed_get_env();
-
-            Py_BEGIN_ALLOW_THREADS
-            if (JNI_METHOD(__repr__, env, self->clazz, "__repr__", "()Ljava/lang/String;")) {
-                jrepr = (jstring) (*env)->CallObjectMethod(env, self->object, __repr__);
-            } else {
-                //method does not exist, clear exception
-                if ((*env)->ExceptionCheck(env)) {
-                    (*env)->ExceptionClear(env);
-                }
-            }
-            Py_END_ALLOW_THREADS
-            if (process_java_exception(env)) {
-                return NULL;
-            }
-            if (jrepr != NULL) {
-                pyres = jstring_As_PyString(env, jrepr);
-            }
-            (*env)->DeleteLocalRef(env, jrepr);
-        }
-    }
-
-    if (pyres == NULL) {
-        //default (see: PyObject_Repr)
-        pyres =  PyUnicode_FromFormat("<%s object at %p>", Py_TYPE(self)->tp_name, self);
-    }
-    return pyres;
-}
-
 
 static PyObject* pyjobject_richcompare(PyJObject *self,
                                        PyObject *_other,
@@ -437,69 +235,6 @@ static PyObject* pyjobject_richcompare(PyJObject *self,
     return Py_NotImplemented;
 }
 
-
-// get attribute 'name' for object.
-// uses obj->attr dict for storage.
-// returns new reference.
-static PyObject* pyjobject_getattro(PyObject *obj, PyObject *name)
-{
-    PyObject *ret = PyObject_GenericGetAttr(obj, name);
-    if (ret == NULL) {
-        return NULL;
-    } else if (PyJMethod_Check(ret) || PyJMultiMethod_Check(ret)) {
-        /*
-         * TODO Should not bind non-static methods to pyjclass objects, but not
-         * sure yet how to handle multimethods and static methods.
-         */
-        PyObject* wrapper = PyMethod_New(ret, (PyObject*) obj);
-        Py_DECREF(ret);
-        return wrapper;
-    } else if (PyJField_Check(ret)) {
-        PyObject *resolved = pyjfield_get((PyJFieldObject *) ret, (PyJObject*) obj);
-        Py_DECREF(ret);
-        return resolved;
-    }
-    return ret;
-}
-
-
-// set attribute v for object.
-// uses obj->attr dictionary for storage.
-static int pyjobject_setattro(PyJObject *obj, PyObject *name, PyObject *v)
-{
-    PyObject *cur = NULL;
-    if (v == NULL) {
-        PyErr_Format(PyExc_TypeError,
-                     "Deleting attributes from PyJObjects is not allowed.");
-        return -1;
-    }
-
-    cur = PyDict_GetItem(obj->attr, name);
-    if (PyErr_Occurred()) {
-        return -1;
-    }
-
-    if (cur == NULL) {
-        PyErr_Format(PyExc_AttributeError, "'%s' object has no attribute '%s'.",
-                     PyUnicode_AsUTF8(obj->javaClassName), PyUnicode_AsUTF8(name));
-        return -1;
-    }
-
-    if (!PyJField_Check(cur)) {
-        if (PyJMethod_Check(cur) || PyJMultiMethod_Check(cur)) {
-            PyErr_Format(PyExc_AttributeError, "'%s' object cannot assign to method '%s'.",
-                         PyUnicode_AsUTF8(obj->javaClassName), PyUnicode_AsUTF8(name));
-        } else {
-            PyErr_Format(PyExc_AttributeError,
-                         "'%s' object cannot assign to attribute '%s'.",
-                         PyUnicode_AsUTF8(obj->javaClassName), PyUnicode_AsUTF8(name));
-        }
-        return -1;
-    }
-
-    return pyjfield_set((PyJFieldObject *) cur, obj, v);
-}
-
 static Py_hash_t pyjobject_hash(PyJObject *self)
 {
     JNIEnv *env    = pyembed_get_env();
@@ -557,7 +292,6 @@ static PyMethodDef pyjobject_methods[] = {
 
 
 static PyMemberDef pyjobject_members[] = {
-    {"__dict__", T_OBJECT, offsetof(PyJObject, attr), READONLY},
     {"java_name", T_OBJECT, offsetof(PyJObject, javaClassName), READONLY},
     {0}
 };
@@ -573,15 +307,15 @@ PyTypeObject PyJObject_Type = {
     0,                                        /* tp_getattr */
     0,                                        /* tp_setattr */
     0,                                        /* tp_compare */
-    (reprfunc) pyjobject_repr,                /* tp_repr */
+    0,                                        /* tp_repr */
     0,                                        /* tp_as_number */
     0,                                        /* tp_as_sequence */
     0,                                        /* tp_as_mapping */
     (hashfunc) pyjobject_hash,                /* tp_hash  */
     0,                                        /* tp_call */
     (reprfunc) pyjobject_str,                 /* tp_str */
-    (getattrofunc) pyjobject_getattro,        /* tp_getattro */
-    (setattrofunc) pyjobject_setattro,        /* tp_setattro */
+    0,                                        /* tp_getattro */
+    0,                                        /* tp_setattro */
     0,                                        /* tp_as_buffer */
     Py_TPFLAGS_DEFAULT |
     Py_TPFLAGS_BASETYPE,                      /* tp_flags */
@@ -599,7 +333,7 @@ PyTypeObject PyJObject_Type = {
     0,                                        /* tp_dict */
     0,                                        /* tp_descr_get */
     0,                                        /* tp_descr_set */
-    offsetof(PyJObject, attr),                /* tp_dictoffset */
+    0,                                        /* tp_dictoffset */
     0,                                        /* tp_init */
     0,                                        /* tp_alloc */
     NULL,                                     /* tp_new */
