@@ -177,11 +177,6 @@ static int initjep(JNIEnv *env, jboolean hasSharedModules)
         PyModule_AddStringConstant(modjep, "JCHAR_ID", "c");
         PyModule_AddStringConstant(modjep, "JBYTE_ID", "b");
         PyModule_AddIntConstant(modjep, "JEP_NUMPY_ENABLED", JEP_NUMPY_ENABLED);
-        PyObject *javaAttrCache = PyDict_New();
-        if (!javaAttrCache) {
-            Py_DECREF(modjep);
-            return -1;
-        }
         PyObject *javaTypeCache = PyDict_New();
         if (!javaTypeCache) {
             Py_DECREF(modjep);
