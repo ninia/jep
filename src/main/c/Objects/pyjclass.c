@@ -141,6 +141,10 @@ static PyObject* pyjclass_add_inner_classes(JNIEnv *env,
  * class. This is currently the only way static methods and fields are made
  * available. There is no known use for non-static fields but for now they are
  * left in for backwards compatiblity, consider removing them in the future.
+ *
+ * Since the method and fields for a class are added to the type and the type
+ * is cached, this can just copy the attributes from he type and avoid any
+ * reflection.
  */
 static PyObject* pyjclass_init_attr(JNIEnv *env, jclass clazz)
 {

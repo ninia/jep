@@ -184,7 +184,8 @@ static PyObject* getBaseTypes(JNIEnv *env, PyObject *fqnToPyType, jclass clazz)
 
 /*
  * Adding empty slots to the type dict to prevent creation of __dict__ for
- * every instance and ensures all attributes go through pyjfield.
+ * every instance and ensures all attribute access goes through the original
+ * Java object using pyjfield, pyjmethod or pyjmultimethod.
  */
 static int addSlots(PyObject* dict)
 {
