@@ -143,7 +143,7 @@ static PyObject* pyjclass_add_inner_classes(JNIEnv *env,
  * left in for backwards compatiblity, consider removing them in the future.
  *
  * Since the method and fields for a class are added to the type and the type
- * is cached, this can just copy the attributes from he type and avoid any
+ * is cached, this can just copy the attributes from the type and avoid any
  * reflection.
  */
 static PyObject* pyjclass_init_attr(JNIEnv *env, jclass clazz)
