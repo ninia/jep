@@ -37,9 +37,6 @@
 #ifndef _Included_pyjlist
 #define _Included_pyjlist
 
-extern PyTypeObject PyJList_Type;
-
-#define PyJList_Check(pyobj) \
-    PyObject_TypeCheck(pyobj, &PyJList_Type)
+extern PyType_Spec PyJList_Spec;
 
 #endif // ndef pyjlist

@@ -31,59 +31,106 @@ static PyTypeObject* pyjtype_get_cached(JNIEnv*, PyObject*, jclass);
 static int addMethods(JNIEnv*, PyObject*, jclass);
 
 /*
- * Add the statically defined wrapper types to the base cache of types.
+ * Populate pyjmethods for a type and add it to the cache. This is for custom
+ * types with extra logic in c since we are not able to add pyjmethods before
+ * creating the type.
+ *
+ * Returns a borrowed reference to the type on success, NULL on failure.
+ */
+static PyTypeObject* addCustomTypeToTypeDict(JNIEnv *env, PyObject* fqnToPyType,
+        jclass class, PyTypeObject *type)
+{
+    if (PyDict_SetItemString(fqnToPyType, type->tp_name, (PyObject*) type)) {
+        return NULL;
+    }
+    /*
+     * The custom wrapper types need to have their methods added since they are
+     * not defined when the type is created. None of the types have fields so
+     * no need to addFields.
+     */
+    if (addMethods(env, type->tp_dict, class) != 0) {
+        return NULL;
+    }
+    return type;
+}
+
+/*
+ * Create a type from a spec and add it to the cache. This accepts a base type
+ * which can be NULL for interfaces that are not extending another interface.
+ * This will also populate the pyjmethods for the created type.
+ *
+ * Returns a borrowed reference to the type on success, NULL on failure.
+ */
+static PyTypeObject* addSpecToTypeDict(JNIEnv *env, PyObject* fqnToPyType,
+                                       jclass class, PyType_Spec *spec, PyTypeObject *base)
+{
+    /* TODO Starting in 3.10 bases can be a single type so there will be no need to make a tuple. */
+    PyObject *bases = NULL;
+    if (base) {
+        bases = PyTuple_Pack(1, base);
+        if (!bases) {
+            return NULL;
+        }
+    }
+    PyTypeObject *type = (PyTypeObject*) PyType_FromSpecWithBases(spec, bases);
+    Py_XDECREF(bases);
+    if (!type) {
+        return NULL;
+    }
+    PyTypeObject *result = addCustomTypeToTypeDict(env, fqnToPyType, class, type);
+    Py_DECREF(type);
+    return result;
+}
+
+/*
+ * Populate the cache of types with the types that have custom logic defined
+ * in c. We need to ensure that the inheritance tree is built in the correct
+ * order, i.e. from the top down.  For example, we need to set the base type
+ * for PyJCollection to PyJIterable before we set the base type for PyJList
+ * to PyJCollection. Interfaces that are not extending another interface
+ * should not set the base type because interfaces are added to Python types
+ * using multiple inheritance and only one superclass can define a custom
+ * structure.
  *
  * Returns 0 on success and -1 on failure
  */
-static int populateBaseTypeDict(JNIEnv *env, PyObject* fqnToPyType)
+static int populateCustomTypeDict(JNIEnv *env, PyObject* fqnToPyType)
 {
-    /*
-     * NULL terminated array of type that are statically defined,
-     * must be in same order as baseClasses
-     */
-    PyTypeObject* baseTypes[] = {
-        &PyJAutoCloseable_Type,
-        &PyJBuffer_Type,
-        &PyJCollection_Type,
-        &PyJIterable_Type,
-        &PyJIterator_Type,
-        &PyJList_Type,
-        &PyJMap_Type,
-        &PyJNumber_Type,
-        &PyJObject_Type,
-        NULL
-    };
-    /*
-     * NULL terminated array of java classes that have statically defined types,
-     * must be in same order as baseTypes
-     */
-    jclass baseClasses[] = {
-        JAUTOCLOSEABLE_TYPE,
-        JBUFFER_TYPE,
-        JCOLLECTION_TYPE,
-        JITERABLE_TYPE,
-        JITERATOR_TYPE,
-        JLIST_TYPE,
-        JMAP_TYPE,
-        JNUMBER_TYPE,
-        JOBJECT_TYPE,
-        NULL
-    };
-    int i;
-    for (i = 0 ; baseTypes[i] != NULL ; i += 1) {
-        PyTypeObject* type = baseTypes[i];
-        if (PyDict_SetItemString(fqnToPyType, type->tp_name, (PyObject*) type)) {
-            return -1;
-        }
-        /*
-         * The statically defined wrapper types need to have their methods added
-         * since they are not defined when the type is created. None of the types
-         * have fields so no need to addFields.
-         */
-        if (addMethods(env, type->tp_dict, baseClasses[i]) != 0) {
-            return -1;
-        }
-
+    if (!addSpecToTypeDict(env, fqnToPyType, JAUTOCLOSEABLE_TYPE,
+                           &PyJAutoCloseable_Spec, NULL)) {
+        return -1;
+    }
+    if (!addSpecToTypeDict(env, fqnToPyType, JITERATOR_TYPE, &PyJIterator_Spec,
+                           NULL)) {
+        return -1;
+    }
+    PyTypeObject *pyjiterable = addSpecToTypeDict(env, fqnToPyType, JITERABLE_TYPE,
+                                &PyJIterable_Spec, NULL);
+    if (!pyjiterable) {
+        return -1;
+    }
+    PyTypeObject *pyjcollection = addSpecToTypeDict(env, fqnToPyType,
+                                  JCOLLECTION_TYPE, &PyJCollection_Spec, pyjiterable);
+    if (!pyjcollection) {
+        return -1;
+    }
+    if (!addSpecToTypeDict(env, fqnToPyType, JLIST_TYPE, &PyJList_Spec,
+                           pyjcollection)) {
+        return -1;
+    }
+    if (!addSpecToTypeDict(env, fqnToPyType, JMAP_TYPE, &PyJMap_Spec, NULL)) {
+        return -1;
+    }
+    if (!addSpecToTypeDict(env, fqnToPyType, JNUMBER_TYPE, &PyJNumber_Spec,
+                           &PyJObject_Type)) {
+        return -1;
+    }
+    /* TODO In python 3.8 buffer protocol was added to spec so pybuffer type can use a spec */
+    if (!addCustomTypeToTypeDict(env, fqnToPyType, JBUFFER_TYPE, &PyJBuffer_Type)) {
+        return -1;
+    }
+    if (!addCustomTypeToTypeDict(env, fqnToPyType, JOBJECT_TYPE, &PyJObject_Type)) {
+        return -1;
     }
     return 0;
 }
@@ -388,7 +435,7 @@ PyTypeObject* PyJType_Get(JNIEnv *env, jclass clazz)
         Py_DECREF(modjep);
         return NULL;
     } else if (PyDict_Size(fqnToPyType) == 0) {
-        if (populateBaseTypeDict(env, fqnToPyType)) {
+        if (populateCustomTypeDict(env, fqnToPyType)) {
             Py_DECREF(modjep);
             Py_DECREF(fqnToPyType);
             return NULL;

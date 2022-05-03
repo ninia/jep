@@ -38,9 +38,6 @@
 #ifndef _Included_pyjcollection
 #define _Included_pyjcollection
 
-extern PyTypeObject PyJCollection_Type;
-
-#define PyJCollection_Check(pyobj) \
-    PyObject_TypeCheck(pyobj, &PyJCollection_Type)
+extern PyType_Spec PyJCollection_Spec;
 
 #endif // ndef pyjcollection

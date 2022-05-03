@@ -37,9 +37,6 @@
 #ifndef _Included_pyjautocloseable
 #define _Included_pyjautocloseable
 
-extern PyTypeObject PyJAutoCloseable_Type;
-
-#define PyJAutoCloseable_Check(pyobj) \
-    PyObject_TypeCheck(pyobj, &PyJAutoCloseable_Type)
+extern PyType_Spec PyJAutoCloseable_Spec;
 
 #endif // ndef pyjautocloseable

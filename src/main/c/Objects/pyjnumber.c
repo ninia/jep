@@ -28,6 +28,17 @@
 
 #include "Jep.h"
 
+static int pyjnumber_check(JNIEnv *env, PyObject* obj)
+{
+    if (!PyJObject_Check(obj)) {
+        return 0;
+    }
+    PyJObject *jobj = (PyJObject*) obj;
+    if (!jobj->object) {
+        return 0;
+    }
+    return (*env)->IsInstanceOf(env, jobj->object, JNUMBER_TYPE);
+}
 
 static PyObject* java_number_to_pythonintlong(JNIEnv *env, PyObject* n)
 {
@@ -70,7 +81,7 @@ static PyObject* java_number_to_python(JNIEnv *env, PyObject* n)
 }
 
 #define TO_PYTHON_NUMBER(env, var)\
-    if (PyJNumber_Check(var)) {\
+    if (pyjnumber_check(env, var)) {\
         var = java_number_to_python(env, var);\
         if (var == NULL){\
             return NULL;\
@@ -193,7 +204,7 @@ static int pyjnumber_nonzero(PyObject *x)
     JNIEnv *env    = pyembed_get_env();
     int     result = -1;
 
-    if (PyJNumber_Check(x)) {
+    if (pyjnumber_check(env, x)) {
         x = java_number_to_python(env, x);
         if (x == NULL) {
             return result;
@@ -233,8 +244,7 @@ static PyObject* pyjnumber_index(PyObject *x)
         result = PyNumber_Index(x);
         Py_DECREF(x);
         return result;
-    }
-    else {
+    } else {
         PyErr_Format(PyExc_TypeError, "list indices must be integers, not %s",
                      Py_TYPE(x)->tp_name);
         return NULL;
@@ -274,7 +284,7 @@ static Py_hash_t pyjnumber_hash(PyObject *self)
     JNIEnv   *env    = pyembed_get_env();
     Py_hash_t result = -1;
 
-    if (PyJNumber_Check(self)) {
+    if (pyjnumber_check(env, self)) {
         self = java_number_to_python(env, self);
         if (self == NULL) {
             return result;
@@ -286,85 +296,30 @@ static Py_hash_t pyjnumber_hash(PyObject *self)
     return result;
 }
 
-
-static PyNumberMethods pyjnumber_number_methods = {
-    (binaryfunc) pyjnumber_add,                 /* nb_add */
-    (binaryfunc) pyjnumber_subtract,            /* nb_subtract */
-    (binaryfunc) pyjnumber_multiply,            /* nb_multiply */
-    (binaryfunc) pyjnumber_remainder,           /* nb_remainder */
-    (binaryfunc) pyjnumber_divmod,              /* nb_divmod */
-    (ternaryfunc) pyjnumber_power,              /* nb_power */
-    (unaryfunc) pyjnumber_negative,             /* nb_neg */
-    (unaryfunc) pyjnumber_positive,             /* nb_pos */
-    (unaryfunc) pyjnumber_absolute,             /* nb_abs */
-    (inquiry) pyjnumber_nonzero,                /* nb_nonzero */
-    0,                                          /* nb_invert */
-    0,                                          /* nb_lshift */
-    0,                                          /* nb_rshift */
-    0,                                          /* nb_and */
-    0,                                          /* nb_xor */
-    0,                                          /* nb_or */
-    (unaryfunc) pyjnumber_int,                  /* nb_int */
-    0,                                          /* nb_reserved */
-    (unaryfunc) pyjnumber_float,                /* nb_float */
-    0,                                          /* inplace_add */
-    0,                                          /* inplace_subtract */
-    0,                                          /* inplace_multiply */
-    0,                                          /* inplace_remainder */
-    0,                                          /* inplace_power */
-    0,                                          /* inplace_lshift */
-    0,                                          /* inplace_rshift */
-    0,                                          /* inplace_and */
-    0,                                          /* inplace_xor */
-    0,                                          /* inplace_or */
-
-    (binaryfunc) pyjnumber_floordivide,         /* nb_floor_divide */
-    (binaryfunc) pyjnumber_truedivide,          /* nb_true_divide */
-    0,                                          /* nb_inplace_floor_divide */
-    0,                                          /* nb_inplace_true_divide */
-    (unaryfunc) pyjnumber_index,                /* nb_index */
+static PyType_Slot slots[] = {
+    {Py_tp_doc, "Jep java.lang.Number"},
+    {Py_tp_hash, (void*) pyjnumber_hash},
+    {Py_tp_richcompare, (void*) pyjnumber_richcompare},
+    {Py_nb_add, (void*) pyjnumber_add},
+    {Py_nb_subtract, (void*) pyjnumber_subtract},
+    {Py_nb_multiply, (void*) pyjnumber_multiply},
+    {Py_nb_remainder, (void*) pyjnumber_remainder},
+    {Py_nb_divmod, (void*) pyjnumber_divmod},
+    {Py_nb_power, (void*) pyjnumber_power},
+    {Py_nb_negative, (void*) pyjnumber_negative},
+    {Py_nb_positive, (void*) pyjnumber_positive},
+    {Py_nb_absolute, (void*) pyjnumber_absolute},
+    {Py_nb_bool, (void*) pyjnumber_nonzero},
+    {Py_nb_int, (void*) pyjnumber_int},
+    {Py_nb_float, (void*) pyjnumber_float},
+    {Py_nb_floor_divide, (void*) pyjnumber_floordivide},
+    {Py_nb_true_divide, (void*) pyjnumber_truedivide},
+    {Py_nb_index, (void*) pyjnumber_index},
+    {0, NULL},
 };
-
-/*
- * Inherits from PyJObject_Type
- */
-PyTypeObject PyJNumber_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    "java.lang.Number",
-    sizeof(PyJObject),
-    0,
-    0,                                        /* tp_dealloc */
-    0,                                        /* tp_print */
-    0,                                        /* tp_getattr */
-    0,                                        /* tp_setattr */
-    0,                                        /* tp_compare */
-    0,                                        /* tp_repr */
-    &pyjnumber_number_methods,                /* tp_as_number */
-    0,                                        /* tp_as_sequence */
-    0,                                        /* tp_as_mapping */
-    pyjnumber_hash,                           /* tp_hash  */
-    0,                                        /* tp_call */
-    0,                                        /* tp_str */
-    0,                                        /* tp_getattro */
-    0,                                        /* tp_setattro */
-    0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /* tp_flags */
-    "Jep java.lang.Number",                   /* tp_doc */
-    0,                                        /* tp_traverse */
-    0,                                        /* tp_clear */
-    pyjnumber_richcompare,                    /* tp_richcompare */
-    0,                                        /* tp_weaklistoffset */
-    0,                                        /* tp_iter */
-    0,                                        /* tp_iternext */
-    0,                                        /* tp_methods */
-    0,                                        /* tp_members */
-    0,                                        /* tp_getset */
-    0, // &PyJObject_Type                     /* tp_base */
-    0,                                        /* tp_dict */
-    0,                                        /* tp_descr_get */
-    0,                                        /* tp_descr_set */
-    0,                                        /* tp_dictoffset */
-    0,                                        /* tp_init */
-    0,                                        /* tp_alloc */
-    NULL,                                     /* tp_new */
+PyType_Spec PyJNumber_Spec = {
+    .name = "java.lang.Number",
+    .basicsize = sizeof(PyJObject),
+    .flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+    .slots = slots
 };

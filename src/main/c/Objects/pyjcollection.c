@@ -80,62 +80,17 @@ FINALLY:
     return result;
 }
 
-
-static PySequenceMethods pyjcollection_seq_methods = {
-    pyjcollection_len,      /* sq_length */
-    0,                      /* sq_concat */
-    0,                      /* sq_repeat */
-    0,                      /* sq_item */
-    0,                      /* sq_slice */
-    0,                      /* sq_ass_item */
-    0,                      /* sq_ass_slice */
-    pyjcollection_contains, /* sq_contains */
-    0,                      /* sq_inplace_concat */
-    0,                      /* sq_inplace_repeat */
+static PyType_Slot slots[] = {
+    // NOTE: Inherited `tp_iter` from PyJIterable
+    {Py_tp_doc, "Jep java.util.Collection"},
+    // sequence slots
+    {Py_sq_length, (void*) pyjcollection_len},
+    {Py_sq_contains, (void*) pyjcollection_contains},
+    {0, NULL},
 };
-
-
-/*
- * Inherits from PyJIterable_Type
- */
-PyTypeObject PyJCollection_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    "java.util.Collection",
-    0,
-    0,
-    0,                                        /* tp_dealloc */
-    0,                                        /* tp_print */
-    0,                                        /* tp_getattr */
-    0,                                        /* tp_setattr */
-    0,                                        /* tp_compare */
-    0,                                        /* tp_repr */
-    0,                                        /* tp_as_number */
-    &pyjcollection_seq_methods,               /* tp_as_sequence */
-    0,                                        /* tp_as_mapping */
-    0,                                        /* tp_hash  */
-    0,                                        /* tp_call */
-    0,                                        /* tp_str */
-    0,                                        /* tp_getattro */
-    0,                                        /* tp_setattro */
-    0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT |                      /* tp_flags */
-    Py_TPFLAGS_BASETYPE,
-    "Jep java.util.Collection",               /* tp_doc */
-    0,                                        /* tp_traverse */
-    0,                                        /* tp_clear */
-    0,                                        /* tp_richcompare */
-    0,                                        /* tp_weaklistoffset */
-    0, // inherited                           /* tp_iter */
-    0,                                        /* tp_iternext */
-    0,                                        /* tp_methods */
-    0,                                        /* tp_members */
-    0,                                        /* tp_getset */
-    0, // &PyJIterable_Type                   /* tp_base */
-    0,                                        /* tp_dict */
-    0,                                        /* tp_descr_get */
-    0,                                        /* tp_descr_set */
-    0,                                        /* tp_dictoffset */
-    0,                                        /* tp_init */
-    0,                                        /* tp_alloc */
-    NULL,                                     /* tp_new */
+PyType_Spec PyJCollection_Spec = {
+    .name = "java.util.Collection",
+    .basicsize = 0,
+    .flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+    .slots = slots,
 };

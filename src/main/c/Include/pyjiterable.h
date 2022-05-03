@@ -37,9 +37,6 @@
 #ifndef _Included_pyjiterable
 #define _Included_pyjiterable
 
-extern PyTypeObject PyJIterable_Type;
-
-#define PyJIterable_Check(pyobj) \
-    PyObject_TypeCheck(pyobj, &PyJIterable_Type)
+extern PyType_Spec PyJIterable_Spec;
 
 #endif // ndef pyjiterable
