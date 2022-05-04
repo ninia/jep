@@ -20,7 +20,7 @@ from commands.install_lib import jep_install
 from commands.java import build_java, get_java_home, get_java_include,\
     get_java_linker_args, build_jar, get_java_lib_folders, get_java_libraries, setup_java
 from commands.javadoc import javadoc
-from commands.python import get_python_libs, get_python_linker_args
+from commands.python import get_libpython, get_python_libs, get_python_linker_args
 from commands.scripts import build_scripts
 from commands.test import test
 from commands.util import is_windows
@@ -65,7 +65,13 @@ if __name__ == '__main__':
               ('JEP_NUMPY_ENABLED', numpy_found),
               ('VERSION', '"{0}"'.format(VERSION)),
           ]
-    ldlib = sysconfig.get_config_var('LDLIBRARY')
+    ldlib = get_libpython()
+    if ldlib:
+        # a libpython was found, so use the basename of the discovered path
+        ldlib = os.path.basename(ldlib)
+    else:
+        # no libpython was found, so use LDLIBRARY blindly
+        ldlib = sysconfig.get_config_var('LDLIBRARY')
     if ldlib:
         defines.append(('PYTHON_LDLIBRARY', '"' + ldlib + '"'))
     if is_windows():
