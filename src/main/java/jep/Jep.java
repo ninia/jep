@@ -73,7 +73,7 @@ public abstract class Jep implements Interpreter {
 
     private boolean interactive = false;
 
-    private final MemoryManager memoryManager = new MemoryManager();
+    private final MemoryManager memoryManager;
 
     private final boolean isSubInterpreter;
 
@@ -125,10 +125,10 @@ public abstract class Jep implements Interpreter {
      */
     @Deprecated
     public Jep(JepConfig config) throws JepException {
-        this(config, true);
+        this(config, true, new MemoryManager());
     }
 
-    protected Jep(JepConfig config, boolean useSubInterpreter)
+    protected Jep(JepConfig config, boolean useSubInterpreter, MemoryManager memoryManager)
             throws JepException {
         MainInterpreter mainInterpreter = MainInterpreter.getMainInterpreter();
         if (threadUsed.get()) {
@@ -141,6 +141,7 @@ public abstract class Jep implements Interpreter {
         }
 
         this.isSubInterpreter = useSubInterpreter;
+        this.memoryManager = memoryManager;
 
         if (config.classLoader == null) {
             this.classLoader = this.getClass().getClassLoader();
@@ -157,6 +158,7 @@ public abstract class Jep implements Interpreter {
         threadUsed.set(true);
         this.thread = Thread.currentThread();
         configureInterpreter(config);
+        this.memoryManager.openInterpreter(this);
     }
 
     protected void configureInterpreter(JepConfig config) throws JepException {
@@ -438,7 +440,7 @@ public abstract class Jep implements Interpreter {
             }
         }
 
-        getMemoryManager().cleanupReferences();
+        getMemoryManager().closeInterpreter(this);
 
         // don't attempt close twice if something goes wrong
         this.closed = true;

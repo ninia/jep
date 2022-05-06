@@ -29,7 +29,10 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.WeakHashMap;
 
+import jep.Jep;
+import jep.JepAccess;
 import jep.JepException;
 
 /**
@@ -41,12 +44,22 @@ import jep.JepException;
  * @author Nate Jensen
  * @since 3.8
  */
-public final class MemoryManager {
+public final class MemoryManager extends JepAccess{
 
-    private ReferenceQueue<PyObject> refQueue = new ReferenceQueue<>();
+    private final ThreadLocal<Jep> interpreters = new ThreadLocal<Jep>();
 
-    private Set<PyPointer> pointers = Collections
+    private final Set<Jep> interpreterSet = Collections
+            .newSetFromMap(new WeakHashMap<Jep, Boolean>());
+    
+    private final ReferenceQueue<PyObject> refQueue = new ReferenceQueue<>();
+
+    private final Set<PyPointer> pointers = Collections
             .newSetFromMap(new IdentityHashMap<PyPointer, Boolean>());
+
+    public void openInterpreter(Jep jep) {
+        this.interpreters.set(jep);
+        this.interpreterSet.add(jep);
+    }
 
     protected ReferenceQueue<PyObject> getReferenceQueue() throws JepException {
         cleanupWeakReferences();
@@ -62,23 +75,29 @@ public final class MemoryManager {
     }
 
     /**
-     * Cleans out all the known references to PyPointers associated with this
-     * Interpreter.
+     * Stop managing memory for an interpreter. Any PyPointers managed by this
+     * object will no longer be usable from the interpreter thread. If this is
+     * the last interpreter used by this manager then all PyPointers managed by
+     * this will be disposed.
      * 
      * @throws JepException
      *             if an error occurs
      */
-    public void cleanupReferences() throws JepException {
-        Iterator<PyPointer> itr = pointers.iterator();
-        while (itr.hasNext()) {
-            PyPointer ptr = itr.next();
-            /*
-             * ptr.dispose() will remove from the set, so we remove it here
-             * first to avoid ConcurrentModificationException
-             */
-            itr.remove();
-            ptr.dispose();
+    public void closeInterpreter(Jep jep) throws JepException {
+        if (interpreterSet.size() == 1) {
+            Iterator<PyPointer> itr = pointers.iterator();
+            while (itr.hasNext()) {
+                PyPointer ptr = itr.next();
+                /*
+                 * ptr.dispose() will remove from the set, so we remove it here
+                 * first to avoid ConcurrentModificationException
+                 */
+                itr.remove();
+                ptr.dispose();
+            }
         }
+        interpreters.remove();
+        interpreterSet.remove(jep);
     }
 
     /**
@@ -97,4 +116,19 @@ public final class MemoryManager {
         }
     }
 
+    private Jep getThreadLocalJep() throws JepException{
+        Jep jep = interpreters.get();
+        if (jep == null) {
+            throw new JepException("Invalid thread access.");
+        }
+        return jep;
+    }
+
+    protected long getThreadState() throws JepException{
+        return getThreadState(getThreadLocalJep());
+    }
+
+    protected ClassLoader getClassLoader() {
+        return getClassLoader(getThreadLocalJep());
+    }
 }

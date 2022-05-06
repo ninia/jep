@@ -46,6 +46,9 @@ PyObject* JPyObject_As_PyObject(JNIEnv *env, jobject jobj)
 {
     PyObject *ret;
     jlong l = jep_python_PyObject_getPyObject(env, jobj);
+    if (process_java_exception(env)) {
+        return NULL;
+    }
     ret = (PyObject*) l;
     Py_INCREF(ret);
     return ret;

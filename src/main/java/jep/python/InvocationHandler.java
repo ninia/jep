@@ -120,9 +120,7 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args)
             throws Throwable {
-        pyObject.checkValid();
-
-        return invoke(proxy, pyObject.pointer.tstate, pyObject.pointer.pyObject,
+        return invoke(proxy, pyObject.tstate(), pyObject.pointer.pyObject,
                 method, args, this.functionalInterface);
     }
 
