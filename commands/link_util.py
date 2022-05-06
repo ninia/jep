@@ -35,7 +35,7 @@ def link_native_lib(output_dir, jep_lib_path):
         # Apple says to put the file at /Library/Java/Extensions/libjep.jnilib,
         # which is good for a permanent install but not so good when using
         # virtualenv or testing.
-        subprocess.run(['ln',
+        subprocess.check_call(['ln',
                '-sf',
                '{0}'.format(jep_lib),
                '{0}'.format(os.path.join(output_dir, 'libjep.jnilib')), ])
@@ -43,7 +43,7 @@ def link_native_lib(output_dir, jep_lib_path):
     else:
         # Otherwise, setuptools outputs 'jep.so' which needs to be linked
         # to 'libjep.so'. Otherwise the JVM will not find the library.
-        subprocess.run(['ln',
+        subprocess.check_call(['ln',
                '-sf',
                '{0}'.format(jep_lib),
                '{0}'.format(os.path.join(output_dir, 'libjep.so')),
