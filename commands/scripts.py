@@ -1,17 +1,17 @@
 """
-Fork of distutils' build_scripts command to handle creating
+Fork of setuptools' build_scripts command to handle creating
 jep shell script and/or jep.bat script with proper setup to ensure
 the jep interpreter can be run from the command line.
 """
 
+import logging
 import os
 import sys
+import sysconfig
+
 from stat import ST_MODE
-from distutils.core import Command
+from setuptools import Command
 from distutils.dep_util import newer
-from distutils.util import convert_path
-from distutils import log
-from distutils import sysconfig
 from commands.util import is_osx
 from commands.util import is_windows
 from commands.python import get_libpython
@@ -59,6 +59,9 @@ class build_scripts(Command):
         self.mkpath(self.build_dir)
         outfiles = []
 
+
+        bdist_egg = self.get_finalized_command('bdist_egg')
+
         install = self.get_finalized_command('install')
         context = dict(
             version=self.distribution.metadata.get_version(),
@@ -70,6 +73,7 @@ class build_scripts(Command):
             ld_preload='',
             pythonhome='',
             pythonexecutable='',
+            egg_dir=os.path.basename(bdist_egg.egg_output),
         )
 
         if os.environ.get('VIRTUAL_ENV'):
@@ -108,12 +112,12 @@ class build_scripts(Command):
         for script in self.scripts:
             if is_windows():
                 script = '{0}.bat'.format(script)
-            script = convert_path(script)
+            script = os.path.normpath(script)
             outfile = os.path.join(self.build_dir, os.path.basename(script))
             outfiles.append(outfile)
 
             if not self.force and not newer(script, outfile):
-                log.debug("not copying %s (up-to-date)", script)
+                logging.debug("not copying %s (up-to-date)", script)
                 continue
 
             # Always open the file, but ignore failures in dry-run mode --
@@ -126,7 +130,7 @@ class build_scripts(Command):
                     raise
                 f = None
 
-            log.info("copying and adjusting %s -> %s", script,
+            logging.info("copying and adjusting %s -> %s", script,
                      self.build_dir)
             if not self.dry_run:
                 outf = open(outfile, "w")
@@ -138,12 +142,12 @@ class build_scripts(Command):
         if os.name == 'posix':
             for file in outfiles:
                 if self.dry_run:
-                    log.info("changing mode of %s", file)
+                    logging.info("changing mode of %s", file)
                 else:
                     oldmode = os.stat(file)[ST_MODE] & 0o7777
                     newmode = (oldmode | 0o555) & 0o7777
                     if newmode != oldmode:
-                        log.info("changing mode of %s from %o to %o",
+                        logging.info("changing mode of %s from %o to %o",
                                  file, oldmode, newmode)
                         os.chmod(file, newmode)
 

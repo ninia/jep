@@ -6,16 +6,23 @@
 {ld_library_path}
 {ld_preload}
 
-cp="{install_lib}jep/jep-{version}.jar"
+jep_dir={install_lib}jep
+
+if [ ! -d "$jep_dir" ]
+then
+    jep_dir={install_lib}{egg_dir}/jep
+fi
+
+cp="$jep_dir/jep-{version}.jar"
 if test "x$CLASSPATH" != "x"; then
     cp="$cp":"$CLASSPATH"
 fi
 
-jni_path="{install_lib}jep"
+jni_path=$jep_dir
 
 args=$*
 if test "x$args" = "x"; then
-  args="{install_lib}jep/console.py"
+  args="$jep_dir/console.py"
 fi
 
 exec java -classpath "$cp" -Djava.library.path="$jni_path" jep.Run $args

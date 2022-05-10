@@ -1,6 +1,5 @@
-from __future__ import print_function
-from distutils.cmd import Command
-from distutils import sysconfig
+from setuptools import Command
+# https://github.com/pypa/setuptools/issues/2698
 from distutils.errors import DistutilsExecError
 from commands.util import configure_error
 from commands.util import is_osx
@@ -11,6 +10,7 @@ from commands.java import get_java_home
 import os
 import os.path
 import sys
+import sysconfig
 
 
 class test(Command):

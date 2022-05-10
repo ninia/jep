@@ -1,4 +1,4 @@
-from distutils.dist import Distribution
+from setuptools.dist import Distribution
 
 
 class JepDistribution(Distribution):
