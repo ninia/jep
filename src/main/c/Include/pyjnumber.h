@@ -37,10 +37,6 @@
 #ifndef _Included_pyjnumber
 #define _Included_pyjnumber
 
-extern PyTypeObject PyJNumber_Type;
-
-#define PyJNumber_Check(pyobj) \
-    PyObject_TypeCheck(pyobj, &PyJNumber_Type)
-
+extern PyType_Spec PyJNumber_Spec;
 
 #endif // ndef pyjnumber

@@ -37,10 +37,6 @@
 #ifndef _Included_pyjmap
 #define _Included_pyjmap
 
-extern PyTypeObject PyJMap_Type;
-
-#define PyJMap_Check(pyobj) \
-    PyObject_TypeCheck(pyobj, &PyJMap_Type)
-
+extern PyType_Spec PyJMap_Spec;
 
 #endif // ndef pyjmap

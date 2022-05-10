@@ -60,47 +60,15 @@ static PyObject* pyjiterator_next(PyObject* self)
     return NULL;
 }
 
-
-/*
- * Inherits from PyJObject_Type
- */
-PyTypeObject PyJIterator_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    "java.util.Iterator",
-    0,
-    0,
-    0,                                        /* tp_dealloc */
-    0,                                        /* tp_print */
-    0,                                        /* tp_getattr */
-    0,                                        /* tp_setattr */
-    0,                                        /* tp_compare */
-    0,                                        /* tp_repr */
-    0,                                        /* tp_as_number */
-    0,                                        /* tp_as_sequence */
-    0,                                        /* tp_as_mapping */
-    0,                                        /* tp_hash  */
-    0,                                        /* tp_call */
-    0,                                        /* tp_str */
-    0,                                        /* tp_getattro */
-    0,                                        /* tp_setattro */
-    0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /* tp_flags */
-    "Jep java.util.Iterator",                 /* tp_doc */
-    0,                                        /* tp_traverse */
-    0,                                        /* tp_clear */
-    0,                                        /* tp_richcompare */
-    0,                                        /* tp_weaklistoffset */
-    PyObject_SelfIter,                        /* tp_iter */
-    (iternextfunc) pyjiterator_next,          /* tp_iternext */
-    0,                                        /* tp_methods */
-    0,                                        /* tp_members */
-    0,                                        /* tp_getset */
-    0, // &PyJObject_Type                     /* tp_base */
-    0,                                        /* tp_dict */
-    0,                                        /* tp_descr_get */
-    0,                                        /* tp_descr_set */
-    0,                                        /* tp_dictoffset */
-    0,                                        /* tp_init */
-    0,                                        /* tp_alloc */
-    NULL,                                     /* tp_new */
+static PyType_Slot slots[] = {
+    {Py_tp_doc, "Jep java.util.Iterator"},
+    {Py_tp_iter, (void*) PyObject_SelfIter},
+    {Py_tp_iternext, (void*) pyjiterator_next},
+    {0, NULL},
+};
+PyType_Spec PyJIterator_Spec = {
+    .name = "java.util.Iterator",
+    .basicsize = 0,
+    .flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+    .slots = slots,
 };

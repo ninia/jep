@@ -247,14 +247,6 @@ void pyembed_preinit(JNIEnv *env,
  * need to ensure that all the tp_base are set for the subtypes before we
  * possibly use those subtypes.
  *
- * Furthermore, we need to ensure that the inheritance tree is built in the
- * correct order, i.e. from the top down.  For example, we need to set that
- * PyJCollection's tp_base extends PyJIterable before we set that PyJList's
- * tp_base extends PyJCollection. Interfaces that are not extending another
- * interface should not set tp_base because interfaces are added to Python
- * types using multiple inheritance and only one superclass can define a
- * custom structure.
- *
  * See https://docs.python.org/3/extending/newtypes.html
  */
 static int pyjtypes_ready(void)
@@ -269,47 +261,10 @@ static int pyjtypes_ready(void)
         return -1;
     }
 
-    if (!PyJNumber_Type.tp_base) {
-        PyJNumber_Type.tp_base = &PyJObject_Type;
-    }
-    if (PyType_Ready(&PyJNumber_Type) < 0) {
-        return -1;
-    }
-
-    if (PyType_Ready(&PyJIterable_Type) < 0) {
-        return -1;
-    }
-
-    if (PyType_Ready(&PyJIterator_Type) < 0) {
-        return -1;
-    }
-
-    if (!PyJCollection_Type.tp_base) {
-        PyJCollection_Type.tp_base = &PyJIterable_Type;
-    }
-    if (PyType_Ready(&PyJCollection_Type) < 0) {
-        return -1;
-    }
-
-    if (!PyJList_Type.tp_base) {
-        PyJList_Type.tp_base = &PyJCollection_Type;
-    }
-    if (PyType_Ready(&PyJList_Type) < 0) {
-        return -1;
-    }
-
-    if (PyType_Ready(&PyJMap_Type) < 0) {
-        return -1;
-    }
-
     if (!PyJBuffer_Type.tp_base) {
         PyJBuffer_Type.tp_base = &PyJObject_Type;
     }
     if (PyType_Ready(&PyJBuffer_Type) < 0) {
-        return -1;
-    }
-
-    if (PyType_Ready(&PyJAutoCloseable_Type) < 0) {
         return -1;
     }
 

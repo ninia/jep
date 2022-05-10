@@ -36,10 +36,6 @@
 #ifndef _Included_pyjiterator
 #define _Included_pyjiterator
 
-extern PyTypeObject PyJIterator_Type;
-
-#define PyJIterator_Check(pyobj) \
-    PyObject_TypeCheck(pyobj, &PyJIterator_Type)
-
+extern PyType_Spec PyJIterator_Spec;
 
 #endif // ndef pyjiterator
