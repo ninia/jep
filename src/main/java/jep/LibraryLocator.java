@@ -61,6 +61,7 @@ final class LibraryLocator {
     private final String pythonHome;
 
     private LibraryLocator(PyConfig pyConfig) {
+        String pythonHome;
         if (pyConfig != null) {
             ignoreEnv = pyConfig.ignoreEnvironmentFlag != 0
                     && pyConfig.ignoreEnvironmentFlag != -1;
@@ -74,6 +75,13 @@ final class LibraryLocator {
             noUserSite = false;
             pythonHome = null;
         }
+        if (pythonHome == null && !ignoreEnv) {
+            pythonHome = System.getenv("PYTHONHOME");
+            if (pythonHome == null) {
+                pythonHome = System.getenv("VIRTUAL_ENV");
+            }
+        }
+        this.pythonHome = pythonHome;
 
         String libraryName = System.mapLibraryName("jep");
         if (libraryName.endsWith(".dylib")) {
@@ -116,10 +124,6 @@ final class LibraryLocator {
     private boolean searchSitePackages() {
         if (noSite) {
             return false;
-        }
-        String pythonHome = this.pythonHome;
-        if (pythonHome == null && !ignoreEnv) {
-            pythonHome = System.getenv("PYTHONHOME");
         }
         if (pythonHome != null) {
             for (String libDirName : new String[] { "lib", "lib64", "Lib" }) {
@@ -269,10 +273,6 @@ final class LibraryLocator {
      * @return true if libpython was found and loaded.
      */
     private boolean findPythonLibrary(String libraryName) {
-        String pythonHome = this.pythonHome;
-        if (pythonHome == null && !ignoreEnv) {
-            pythonHome = System.getenv("PYTHONHOME");
-        }
         if (pythonHome != null) {
             for (String libDirName : new String[] { "lib", "lib64", "Lib" }) {
                 File libDir = new File(pythonHome, libDirName);
@@ -295,10 +295,6 @@ final class LibraryLocator {
      * @return true if pythonXX.dll was found and loaded.
      */
     private boolean findPythonLibraryWindows() {
-        String pythonHome = this.pythonHome;
-        if (pythonHome == null && !ignoreEnv) {
-            pythonHome = System.getenv("PYTHONHOME");
-        }
         if (pythonHome != null) {
             Pattern re = Pattern.compile("^python\\d\\d+\\.dll$");
             for (File file : new File(pythonHome).listFiles()) {
