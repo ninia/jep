@@ -256,10 +256,17 @@ public class ClassList implements ClassEnquirer {
          * different ClassLoader than classes (e.g. tomcat), while the Jep.class
          * ClassLoader is useful if running inside an OSGi container as a Bundle
          * (e.g. eclipse).
+         * If there is no context ClassLoader then system ClassLoader will be tried.
          */
+        boolean hasContextClassloader = Thread.currentThread() != null
+                && Thread.currentThread().getContextClassLoader() != null;
+        ClassLoader parentClassLoader = hasContextClassloader
+                ? Thread.currentThread().getContextClassLoader()
+                : ClassLoader.getSystemClassLoader();
         ClassLoader[] classloadersToTry = new ClassLoader[] {
-                Thread.currentThread().getContextClassLoader(),
-                Jep.class.getClassLoader() };
+                    parentClassLoader,
+                    Jep.class.getClassLoader()
+        };
         String rsc = "jep/classlist_";
         if (version.startsWith("1.8")) {
             rsc += "8";
