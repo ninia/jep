@@ -1,4 +1,3 @@
-from __future__ import print_function
 import subprocess
 from subprocess import PIPE
 from contextlib import contextmanager
