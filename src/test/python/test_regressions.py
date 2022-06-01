@@ -27,3 +27,7 @@ class TestRegressions(unittest.TestCase):
     def test_close_with_threads(self):
         jep_pipe(build_java_process_cmd('jep.test.TestCloseWithThreads'))
 
+    def test_pyjtype_mro(self):
+        # Both these throw errors with the default MRO
+        jep.findClass('jep.test.TestPyJType$ProblemClass')
+        jep.findClass('jep.test.TestPyJType$ProblemInterface')
