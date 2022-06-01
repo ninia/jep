@@ -27,6 +27,8 @@
 
 #include "Jep.h"
 
+static PyTypeObject PyJType_Type;
+
 static PyTypeObject* pyjtype_get_cached(JNIEnv*, PyObject*, jclass);
 static int addMethods(JNIEnv*, PyObject*, jclass);
 
@@ -346,9 +348,16 @@ static int addFields(JNIEnv* env, PyObject* dict, jclass clazz)
 static PyTypeObject* pyjtype_get_new(JNIEnv *env, PyObject *fqnToPyType,
                                      PyObject *typeName, jclass clazz)
 {
+
     if (!(*env)->IsAssignableFrom(env, clazz, JOBJECT_TYPE)) {
         PyErr_Format(PyExc_TypeError, "Cannot create a pyjtype for primitive type: %s",
                      PyUnicode_AsUTF8(typeName));
+        return NULL;
+    }
+    if (!PyJType_Type.tp_base) {
+        PyJType_Type.tp_base = &PyType_Type;
+    }
+    if (PyType_Ready(&PyJType_Type) < 0) {
         return NULL;
     }
 
@@ -386,7 +395,7 @@ static PyTypeObject* pyjtype_get_new(JNIEnv *env, PyObject *fqnToPyType,
          * type(shortName, bases, dict) in python.
          * See https://docs.python.org/3/library/functions.html#type
          */
-        type = (PyTypeObject*) PyObject_CallFunctionObjArgs((PyObject*) &PyType_Type,
+        type = (PyTypeObject*) PyObject_CallFunctionObjArgs((PyObject*) &PyJType_Type,
                 shortName, bases, dict, NULL);
     }
     Py_DECREF(bases);
@@ -446,3 +455,100 @@ PyTypeObject* PyJType_Get(JNIEnv *env, jclass clazz)
     Py_DECREF(fqnToPyType);
     return result;
 }
+
+static int merge_mro(PyObject* bases, PyObject* mro_result)
+{
+    Py_ssize_t n = PyTuple_Size(bases);
+    for (Py_ssize_t i = 0; i < n; i++) {
+        PyObject *base = PyTuple_GetItem(bases, i);
+        if (!PySequence_Contains(mro_result, base)) {
+            PyList_Append(mro_result, base);
+        }
+    }
+    return 0;
+}
+
+/*
+ * Define a custom MRO for Python types that mirror Java classes. Java classes
+ * can define a class hierarchy that is not able to be resolved with the
+ * default Python MRO. Since Java does not support actual multiple inheritance
+ * a simplified MRO does not cause problems as long as the non-interface
+ * classes are in order. This simply merges all the mro's from the base types
+ * in order. The first base will be the non-interface super class so all
+ * non-interface inheritance takes precedence over interfaces.
+ */
+static PyObject* pyjtype_mro(PyObject* self, PyObject* unused)
+{
+    PyTypeObject* type = (PyTypeObject*) self;
+    PyObject* mro_result = PyList_New(0);
+    PyList_Append(mro_result, self);
+
+    PyObject *bases = type->tp_bases;
+    Py_ssize_t n = PyTuple_Size(bases);
+    for (Py_ssize_t i = 0; i < n; i++) {
+        PyObject *base = PyTuple_GetItem(bases, i);
+        if (!PySequence_Contains(mro_result, base)) {
+            PyList_Append(mro_result, base);
+        }
+        merge_mro(((PyTypeObject*) base)->tp_mro, mro_result);
+    }
+    PyObject* new_mro = PySequence_Tuple(mro_result);
+    Py_DECREF(mro_result);
+    return new_mro;
+}
+
+
+static PyMethodDef pyjtype_methods[] = {
+    {
+        "mro",
+        pyjtype_mro,
+        METH_NOARGS,
+        "Implements a custom MRO algorithm compatible with all Java Class hierarchies"
+    },
+
+    { NULL, NULL }
+};
+
+
+static PyTypeObject PyJType_Type = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    "PyJType",                                /* tp_name */
+    0,                                        /* tp_basicsize */
+    0,                                        /* tp_itemsize */
+    0,                                        /* tp_dealloc */
+    0,                                        /* tp_print */
+    0,                                        /* tp_getattr */
+    0,                                        /* tp_setattr */
+    0,                                        /* tp_compare */
+    0,                                        /* tp_repr */
+    0,                                        /* tp_as_number */
+    0,                                        /* tp_as_sequence */
+    0,                                        /* tp_as_mapping */
+    0,                                        /* tp_hash  */
+    0,                                        /* tp_call */
+    0,                                        /* tp_str */
+    0,                                        /* tp_getattro */
+    0,                                        /* tp_setattro */
+    0,                                        /* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT |
+    Py_TPFLAGS_TYPE_SUBCLASS,                 /* tp_flags */
+    0,                                        /* tp_doc */
+    0,                                        /* tp_traverse */
+    0,                                        /* tp_clear */
+    0,                                        /* tp_richcompare */
+    0,                                        /* tp_weaklistoffset */
+    0,                                        /* tp_iter */
+    0,                                        /* tp_iternext */
+    pyjtype_methods,                          /* tp_methods */
+    0,                                        /* tp_members */
+    0,                                        /* tp_getset */
+    0,                                        /* tp_base */
+    0,                                        /* tp_dict */
+    0,                                        /* tp_descr_get */
+    0,                                        /* tp_descr_set */
+    0,                                        /* tp_dictoffset */
+    0,                                        /* tp_init */
+    0,                                        /* tp_alloc */
+    NULL,                                     /* tp_new */
+};
+
