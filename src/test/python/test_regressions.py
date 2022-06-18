@@ -31,3 +31,7 @@ class TestRegressions(unittest.TestCase):
         # Both these throw errors with the default MRO
         jep.findClass('jep.test.TestPyJType$ProblemClass')
         jep.findClass('jep.test.TestPyJType$ProblemInterface')
+        ChildTestingMethodInheritance = jep.findClass('jep.test.TestPyJType$ChildTestingMethodInheritance')
+        self.assertEquals('ParentClassWithMethod', ChildTestingMethodInheritance().checkPrecedence())
+        ClassInheritingDefault = jep.findClass('jep.test.TestPyJType$ClassInheritingDefault')
+        self.assertEquals('InterfaceWithDefault', ClassInheritingDefault().checkPrecedence())

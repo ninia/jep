@@ -24,4 +24,26 @@ public class TestPyJType {
 
     public static class InheritedProblemClass implements ProblemInterface {
     }
+
+    public static interface InterfaceWithDefault {
+        public default String checkPrecedence() {
+            return "InterfaceWithDefault";
+        }
+    }
+
+    public static class ParentClassWithMethod {
+        public String checkPrecedence() {
+            return "ParentClassWithMethod";
+        }
+    }
+
+    /**
+     * In Java the parent class method will override interface default method. PyJType should match Java behavior.
+     */
+    public static class ChildTestingMethodInheritance extends ParentClassWithMethod implements InterfaceWithDefault {
+    }
+
+    public static class ClassInheritingDefault implements InterfaceWithDefault {
+    }
+
 }

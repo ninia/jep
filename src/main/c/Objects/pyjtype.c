@@ -456,13 +456,30 @@ PyTypeObject* PyJType_Get(JNIEnv *env, jclass clazz)
     return result;
 }
 
-static int merge_mro(PyObject* bases, PyObject* mro_result)
+/*
+ * Given a base type for a class, merge the mro from the base into the mro list
+ * for a new type. The mro entries from the base type that are not in the list
+ * will be appended to the list.
+ *
+ * Returns 0 on success. Returns -1 and sets an exception if an error occurs.
+ */
+static int merge_mro(PyTypeObject* base, PyObject* mro_list)
 {
-    Py_ssize_t n = PyTuple_Size(bases);
+    PyObject* base_mro = base->tp_mro;
+    if (!base_mro || !PyTuple_Check(base_mro)) {
+        PyErr_SetString(PyExc_TypeError, "Invalid mro in base type.");
+        return -1;
+    }
+    Py_ssize_t n = PyTuple_Size(base_mro);
     for (Py_ssize_t i = 0; i < n; i++) {
-        PyObject *base = PyTuple_GetItem(bases, i);
-        if (!PySequence_Contains(mro_result, base)) {
-            PyList_Append(mro_result, base);
+        PyObject *next = PyTuple_GetItem(base_mro, i);
+        int contains = PySequence_Contains(mro_list, next);
+        if (contains < 0) {
+            return -1;
+        } else if (contains == 0) {
+            if (PyList_Append(mro_list, next)) {
+                return -1;
+            }
         }
     }
     return 0;
@@ -480,21 +497,37 @@ static int merge_mro(PyObject* bases, PyObject* mro_result)
 static PyObject* pyjtype_mro(PyObject* self, PyObject* unused)
 {
     PyTypeObject* type = (PyTypeObject*) self;
-    PyObject* mro_result = PyList_New(0);
-    PyList_Append(mro_result, self);
+    PyObject* mro_list = PyList_New(0);
+    if (!mro_list) {
+        return NULL;
+    }
+    if (PyList_Append(mro_list, self)) {
+        Py_DECREF(mro_list);
+        return NULL;
+    }
 
     PyObject *bases = type->tp_bases;
     Py_ssize_t n = PyTuple_Size(bases);
     for (Py_ssize_t i = 0; i < n; i++) {
         PyObject *base = PyTuple_GetItem(bases, i);
-        if (!PySequence_Contains(mro_result, base)) {
-            PyList_Append(mro_result, base);
+        int contains = PySequence_Contains(mro_list, base);
+        if (contains < 0) {
+            Py_DECREF(mro_list);
+            return NULL;
+        } else if (contains == 0) {
+            if (PyList_Append(mro_list, base)) {
+                Py_DECREF(mro_list);
+                return NULL;
+            }
         }
-        merge_mro(((PyTypeObject*) base)->tp_mro, mro_result);
+        if (merge_mro(((PyTypeObject*) base), mro_list)) {
+            Py_DECREF(mro_list);
+            return NULL;
+        }
     }
-    PyObject* new_mro = PySequence_Tuple(mro_result);
-    Py_DECREF(mro_result);
-    return new_mro;
+    PyObject* mro_tuple = PySequence_Tuple(mro_list);
+    Py_DECREF(mro_list);
+    return mro_tuple;
 }
 
 
