@@ -1,0 +1,34 @@
+Jep 4.1 Release Notes
+*********************
+This is a minor version increment that mostly includes bug fixes and internal
+cleanup. This release maintains compatibility with Python versions >= 3.5 and
+Java versions >= 1.8. Thanks to all the contributors who have submitted code to
+improve this release.
+
+Build switched to setuptools
+****************************
+For compatibity with future Python versions implementing 
+`PEP 693 https://peps.python.org/pep-0693/`_ the build system has been modified
+to use setuptools instead of distutils. This should not require changes for
+most users. The prefered command to install jep from a source directory is now 
+`pip install .`.
+
+Improvements to finding libraries
+*********************************
+* Additional logic was added to help the jep script find libpython in conda
+  environments.
+* In a venv jep will check more locations to find libpython and libjep.
+
+Custom MRO for generated Python Types
+*************************************
+The Python types that jep creates for a Java class will use a custom Method
+Resolution Order(MRO). This should not affect classes that already work in jep, 
+but it will allow Scala classes to be used in Python and may help other cases 
+where complex Java types couldn't be used in Python in the jep 4.0 release.
+
+Internal Cleanup and Improvements
+*********************************
+Minor bug fixes, code cleanup, build compatibility improvements and more.
+Compare branches on github for the full set of changes.
+
+
