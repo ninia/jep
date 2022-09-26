@@ -106,10 +106,10 @@ public class TestSharedInterpreter extends Thread {
             t.join();
             String test2 = list.getAttr("pop", PyCallable.class).callAs(String.class);
             String test = list.getAttr("pop", PyCallable.class).callAs(String.class);
-            if (!test.equals("test")) {
+            if (!"test".equals(test)) {
                 throw new IllegalStateException("Expecting 'test', not " + test); 
             }
-            if (!test2.equals("test2")) {
+            if (!"test2".equals(test2)) {
                 throw new IllegalStateException("Expecting 'test2', not " + test2); 
             }
             /* Make sure it doesn't work on threads without interpreters or in SubInterpreters. */

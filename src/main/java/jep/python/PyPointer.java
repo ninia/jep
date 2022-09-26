@@ -75,8 +75,8 @@ public class PyPointer extends WeakReference<PyObject> {
      */
     protected synchronized void dispose() throws JepException {
         if (!disposed) {
-            decref(memoryManager.getThreadState(), pyObject);
             disposed = true;
+            decref(memoryManager.getThreadState(), pyObject);
             memoryManager.removeReference(this);
         }
     }
