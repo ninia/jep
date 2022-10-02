@@ -13,6 +13,14 @@ to use setuptools instead of distutils. This should not require changes for
 most users. The prefered command to install jep from a source directory is now 
 `pip install .`.
 
+PyObject can be shared between SharedInterpreters
+*************************************************
+In Java an instance of jep.python.PyObject(or any subclass) that is from a 
+SharedInterpreter can now be used on other Threads where a SharedInterpreter
+is currently active. At least one SharedInterpreter must remain open for this
+sharing because when the last SharedInterpreter is closed the PyObject becomes
+invalid to avoid memory leaks.
+
 Improvements to finding libraries
 *********************************
 * Additional logic was added to help the jep script find libpython in conda

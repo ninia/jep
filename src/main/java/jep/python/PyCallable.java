@@ -103,9 +103,8 @@ public class PyCallable extends PyObject {
      */
     public <T> T callAs(Class<T> expectedType, Object... args)
             throws JepException {
-        checkValid();
-        return expectedType.cast(call(pointer.tstate, pointer.pyObject, args,
-                null, expectedType));
+        return expectedType.cast(call(tstate(), pointer.pyObject, args, null,
+                expectedType));
     }
 
     /**
@@ -137,9 +136,8 @@ public class PyCallable extends PyObject {
      */
     public <T> T callAs(Class<T> expectedType, Map<String, Object> kwargs)
             throws JepException {
-        checkValid();
-        return expectedType.cast(call(pointer.tstate, pointer.pyObject, null,
-                kwargs, expectedType));
+        return expectedType.cast(call(tstate(), pointer.pyObject, null, kwargs,
+                expectedType));
     }
 
     /**
@@ -176,9 +174,8 @@ public class PyCallable extends PyObject {
      */
     public <T> T callAs(Class<T> expectedType, Object[] args,
             Map<String, Object> kwargs) throws JepException {
-        checkValid();
-        return expectedType.cast(call(pointer.tstate, pointer.pyObject, args,
-                kwargs, expectedType));
+        return expectedType.cast(call(tstate(), pointer.pyObject, args, kwargs,
+                expectedType));
     }
 
     private native Object call(long tstate, long pyObject, Object[] args,

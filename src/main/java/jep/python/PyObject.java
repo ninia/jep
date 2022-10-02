@@ -52,9 +52,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      *             if an error occurs
      */
     protected PyObject(Jep jep, long pyObject) throws JepException {
-        super(jep);
-        this.pointer = new PyPointer(this, getMemoryManager(), getThreadState(),
-                pyObject);
+        this.pointer = new PyPointer(this, getMemoryManager(jep), pyObject);
     }
 
     /**
@@ -62,33 +60,27 @@ public class PyObject extends JepAccess implements AutoCloseable {
      * 
      * @return the address of the native PyObject
      */
-    protected long getPyObject() {
+    protected long getPyObject() throws JepException {
+        tstate();
         return pointer.pyObject;
     }
 
     /**
-     * Check if PyObject is valid.
+     * Get the valid jep thread state for this object.
      * 
      * @throws JepException
      *             if it is not safe to use this python object
      */
-    @SuppressWarnings("deprecation")
-    protected void checkValid() throws JepException {
-        jep.isValidThread();
+    protected long tstate() throws JepException {
         if (this.pointer.isDisposed()) {
             throw new JepException(
                     getClass().getSimpleName() + " has been closed.");
         }
+        return pointer.memoryManager.getThreadState();
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     public void close() throws JepException {
-        /*
-         * Do not use isValid() because there should be no exception if this is
-         * already closed.
-         */
-        jep.isValidThread();
         this.pointer.dispose();
     }
 
@@ -105,9 +97,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      * @since 3.8
      */
     public Object getAttr(String attr_name) throws JepException {
-        checkValid();
-        return getAttr(pointer.tstate, pointer.pyObject, attr_name,
-                Object.class);
+        return getAttr(tstate(), pointer.pyObject, attr_name, Object.class);
     }
 
     /**
@@ -128,9 +118,8 @@ public class PyObject extends JepAccess implements AutoCloseable {
      * @since 3.8
      */
     public <T> T getAttr(String attr_name, Class<T> clazz) throws JepException {
-        checkValid();
         return clazz.cast(
-                getAttr(pointer.tstate, pointer.pyObject, attr_name, clazz));
+                getAttr(tstate(), pointer.pyObject, attr_name, clazz));
     }
 
     private native Object getAttr(long tstate, long pyObject, String attr_name,
@@ -151,8 +140,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      * @since 3.8
      */
     public void setAttr(String attr_name, Object o) throws JepException {
-        checkValid();
-        setAttr(pointer.tstate, pointer.pyObject, attr_name, o);
+        setAttr(tstate(), pointer.pyObject, attr_name, o);
     }
 
     private native void setAttr(long tstate, long pyObject, String attr_name,
@@ -171,8 +159,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      * @since 3.8
      */
     public void delAttr(String attr_name) throws JepException {
-        checkValid();
-        delAttr(pointer.tstate, pointer.pyObject, attr_name);
+        delAttr(tstate(), pointer.pyObject, attr_name);
     }
 
     private native void delAttr(long tstate, long pyObject, String attr_name)
@@ -200,8 +187,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        checkValid();
-        return equals(pointer.tstate, pointer.pyObject, obj);
+        return equals(tstate(), pointer.pyObject, obj);
     }
 
     /**
@@ -210,8 +196,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      */
     @Override
     public String toString() {
-        checkValid();
-        return toString(pointer.tstate, pointer.pyObject);
+        return toString(tstate(), pointer.pyObject);
     }
 
     /**
@@ -222,8 +207,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      */
     @Override
     public int hashCode() {
-        checkValid();
-        Long value = hashCode(pointer.tstate, pointer.pyObject);
+        Long value = hashCode(tstate(), pointer.pyObject);
         return value.hashCode();
     }
 
@@ -260,7 +244,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      */
     public <T> T proxy(Class<T> primaryInterface, Class<?>... extraInterfaces)
             throws JepException {
-        ClassLoader loader = getClassLoader();
+        ClassLoader loader = pointer.memoryManager.getClassLoader();
         Class<?>[] interfaces = null;
         if (extraInterfaces == null || extraInterfaces.length == 0) {
             interfaces = new Class<?>[] { primaryInterface };
@@ -290,8 +274,7 @@ public class PyObject extends JepAccess implements AutoCloseable {
      * @since 3.9
      */
     public <T> T as(Class<T> expectedType) throws JepException {
-        return expectedType
-                .cast(as(pointer.tstate, pointer.pyObject, expectedType));
+        return expectedType.cast(as(tstate(), pointer.pyObject, expectedType));
     }
 
     private native Object as(long tstate, long pyObject, Class<?> expectedType)

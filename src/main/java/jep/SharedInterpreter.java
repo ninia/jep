@@ -24,6 +24,8 @@
  */
 package jep;
 
+import jep.python.MemoryManager;
+
 /**
  * Class for creating instances of Interpreters which share all imported
  * modules. In this case each SharedInterpreter still maintains distinct global
@@ -50,10 +52,12 @@ public class SharedInterpreter extends Jep {
 
     private static JepConfig config = new JepConfig();
 
+    private static final MemoryManager memoryManager = new MemoryManager();
+
     private static boolean initialized = false;
 
     public SharedInterpreter() throws JepException {
-        super(config, false);
+        super(config, false, memoryManager);
         exec("__name__ = '__main__'");
     }
 

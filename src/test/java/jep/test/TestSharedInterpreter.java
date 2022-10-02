@@ -2,6 +2,11 @@ package jep.test;
 
 import jep.Interpreter;
 import jep.SharedInterpreter;
+import jep.SubInterpreter;
+import jep.JepException;
+
+import jep.python.PyObject;
+import jep.python.PyCallable;
 
 /**
  * Tests that jep works without using sub-interpreters and verified that all
@@ -17,6 +22,7 @@ public class TestSharedInterpreter extends Thread {
         testSharedModule();
         testSharedJep();
         testSharedTypes();
+        testSharedJPyObject();
     }
 
     public static void testSharedModule() throws Throwable{
@@ -82,6 +88,53 @@ public class TestSharedInterpreter extends Thread {
             boolean pass = interp.getValue("id(type(sampleArrayList)) == id(type(sys.sampleArrayList))", Boolean.class);
             if (!pass) {
                 throw new IllegalStateException("types are different");
+            }
+        }
+    }
+
+    public static void testSharedJPyObject() throws Throwable {
+        try (Interpreter interp = new SharedInterpreter()) {
+            PyObject list = interp.getValue("[]", PyObject.class);
+            Thread t = new Thread(() -> {
+                try (Interpreter interp2 = new SharedInterpreter()) {
+                    list.getAttr("append", PyCallable.class).call("test");
+                    interp2.set("l", list);
+                    interp2.exec("l.append('test2')");
+                }
+            });
+            t.start();
+            t.join();
+            String test2 = list.getAttr("pop", PyCallable.class).callAs(String.class);
+            String test = list.getAttr("pop", PyCallable.class).callAs(String.class);
+            if (!"test".equals(test)) {
+                throw new IllegalStateException("Expecting 'test', not " + test); 
+            }
+            if (!"test2".equals(test2)) {
+                throw new IllegalStateException("Expecting 'test2', not " + test2); 
+            }
+            /* Make sure it doesn't work on threads without interpreters or in SubInterpreters. */
+            boolean[] pass = { true };
+            t = new Thread(() -> {
+                try {
+                    list.getAttr("append", PyCallable.class).call("test");
+                    pass[0] = false;
+                } catch (JepException e) {
+                }
+                try (Interpreter interp2 = new SubInterpreter()) {
+                    list.getAttr("append", PyCallable.class).call("test");
+                    pass[0] = false;
+                } catch (JepException e) {
+                }
+                try (Interpreter interp2 = new SubInterpreter()) {
+                    interp2.set("l", list);
+                    pass[0] = false;
+                } catch (JepException e) {
+                }
+            });
+            t.start();
+            t.join();
+            if (!pass[0]) {
+                throw new IllegalStateException("Invalid thread access should throw JepException");
             }
         }
     }

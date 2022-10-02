@@ -38,21 +38,18 @@ import jep.python.MemoryManager;
  */
 public abstract class JepAccess {
 
-    protected final Jep jep;
-
-    protected JepAccess(Jep jep) {
-        this.jep = jep;
+    protected JepAccess() {
     }
 
-    protected long getThreadState() {
+    protected long getThreadState(Jep jep) {
         return jep.getThreadState();
     }
 
-    protected ClassLoader getClassLoader() {
+    protected ClassLoader getClassLoader(Jep jep) {
         return jep.getClassLoader();
     }
 
-    protected MemoryManager getMemoryManager() {
+    protected MemoryManager getMemoryManager(Jep jep) {
         return jep.getMemoryManager();
     }
 }
