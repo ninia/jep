@@ -30,3 +30,4 @@ except ImportError:
 from .version import __VERSION__, VERSION
 from .java_import_hook import *
 from .shared_modules_hook import *
+__version__ = VERSION
