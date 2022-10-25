@@ -8,10 +8,10 @@ improve this release.
 Build switched to setuptools
 ****************************
 For compatibity with future Python versions implementing 
-`PEP 693 https://peps.python.org/pep-0693/`_ the build system has been modified
+`PEP 632 <https://peps.python.org/pep-0632/>`_ the build system has been modified
 to use setuptools instead of distutils. This should not require changes for
 most users. The prefered command to install jep from a source directory is now 
-`pip install .`.
+``pip install .``.
 
 PyObject can be shared between SharedInterpreters
 *************************************************
