@@ -392,12 +392,57 @@ static int pyjclass_setattro(PyObject *obj, PyObject *name, PyObject *v)
     return pyjfield_set((PyJFieldObject *) cur, pyjobj, v);
 }
 
-
 static PyTypeObject* pyjclass_GetPyType(PyJClassObject* self)
 {
     JNIEnv* env = pyembed_get_env();
     return PyJType_Get(env, self->clazz);
 }
+
+static PyObject* pyjclass_IsInstance(PyJClassObject* self, PyObject* inst)
+{
+    PyObject* type = (PyObject*) pyjclass_GetPyType(self);
+    if (!type) {
+        return NULL;
+    }
+    int result = PyObject_IsInstance(inst, type);
+    Py_DECREF(type);
+    return PyBool_FromLong(result);
+}
+
+static PyObject* pyjclass_IsSubclass(PyJClassObject* self, PyObject* sub)
+{
+    PyObject* type = (PyObject*) pyjclass_GetPyType(self);
+    if (!type) {
+        return NULL;
+    }
+    int result;
+    if (PyJClass_Check(sub)) {
+        PyObject* subtype = (PyObject*) pyjclass_GetPyType((PyJClassObject*) sub);
+        if (!subtype) {
+            Py_DECREF(type);
+            return NULL;
+        }
+        result = PyObject_IsSubclass(subtype, type);
+        Py_DECREF(subtype);
+    } else {
+        result = PyObject_IsSubclass(sub, type);
+    }
+    Py_DECREF(type);
+    return PyBool_FromLong(result);
+}
+
+PyMethodDef pyjclass_methods[] = {
+    {
+        "__instancecheck__",
+        (PyCFunction) pyjclass_IsInstance, METH_O, NULL
+    },
+    {
+        "__subclasscheck__",
+        (PyCFunction) pyjclass_IsSubclass, METH_O, NULL
+    },
+    { NULL, NULL }
+};
+
 
 static PyMemberDef pyjclass_members[] = {
     {"__dict__", T_OBJECT, offsetof(PyJClassObject, attr), READONLY},
@@ -437,7 +482,7 @@ PyTypeObject PyJClass_Type = {
     0,                                        /* tp_weaklistoffset */
     0,                                        /* tp_iter */
     0,                                        /* tp_iternext */
-    0,                                        /* tp_methods */
+    pyjclass_methods,                         /* tp_methods */
     pyjclass_members,                         /* tp_members */
     pyjclass_getset,                          /* tp_getset */
     0, // &PyJObject_Type                     /* tp_base */
