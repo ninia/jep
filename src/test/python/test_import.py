@@ -57,4 +57,10 @@ class TestImport(unittest.TestCase):
         from java.util import Date
         self.assertTrue(isinstance(Date(), Object.__pytype__))
         self.assertTrue(isinstance(Date(), Serializable.__pytype__))
+        self.assertTrue(issubclass(Date.__pytype__, Object.__pytype__))
+        self.assertTrue(issubclass(Date.__pytype__, Serializable.__pytype__))
+        self.assertTrue(isinstance(Date(), Object))
+        self.assertTrue(isinstance(Date(), Serializable))
+        self.assertTrue(issubclass(Date, Object))
+        self.assertTrue(issubclass(Date, Serializable))
 
