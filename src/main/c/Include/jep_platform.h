@@ -35,7 +35,10 @@
 #include <Python.h>
 #include <assert.h>
 
-static_assert(PY_MAJOR_VERSION >= 3,"There is no Python 2 support!");
+#if PY_MAJOR_VERSION < 3
+    static_assert(PY_MAJOR_VERSION >= 3,"There is no Python 2 support!");
+#endif
+
 #ifdef WIN32
     #include "winconfig.h"
 #endif
