@@ -39,4 +39,13 @@ Internal Cleanup and Improvements
 Minor bug fixes, code cleanup, build compatibility improvements and more.
 Compare branches on github for the full set of changes.
 
+instanceof works with PyJClass(4.1.1 and later)
+***********************************************
+Starting in 4.1.1 the Python builtin ``isinstance`` function can be used with
+imported PyJClasses as shown below:
+::
+    >>> from java.lang import Object, StringBuilder
+    >>> sb = StringBuilder()
+    >>> isinstance(sb, Object)
+    True
 
