@@ -471,7 +471,8 @@ static int merge_mro(PyTypeObject* base, PyObject* mro_list)
         return -1;
     }
     Py_ssize_t n = PyTuple_Size(base_mro);
-    for (Py_ssize_t i = 0; i < n; i++) {
+    Py_ssize_t i = 0;
+    for (i = 0; i < n; i++) {
         PyObject *next = PyTuple_GetItem(base_mro, i);
         int contains = PySequence_Contains(mro_list, next);
         if (contains < 0) {
@@ -508,7 +509,8 @@ static PyObject* pyjtype_mro(PyObject* self, PyObject* unused)
 
     PyObject *bases = type->tp_bases;
     Py_ssize_t n = PyTuple_Size(bases);
-    for (Py_ssize_t i = 0; i < n; i++) {
+    Py_ssize_t i = 0;
+    for (i = 0; i < n; i++) {
         PyObject *base = PyTuple_GetItem(bases, i);
         int contains = PySequence_Contains(mro_list, base);
         if (contains < 0) {
