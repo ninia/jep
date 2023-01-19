@@ -72,6 +72,6 @@ int PyJMethod_GetParameterCount(PyJMethodObject*, JNIEnv*);
  * This function does not need to be called before using calling this method, it is only
  * necessary for resolving method overloading.
  */
-int PyJMethod_CheckArguments(PyJMethodObject*, JNIEnv*, PyObject*);
+int PyJMethod_CheckArguments(PyJMethodObject*, JNIEnv*, PyObject*, jboolean);
 
 #endif // ndef pyjmethod

@@ -136,10 +136,13 @@ static PyObject* pyjmultimethod_call(PyObject *multimethod,
     for (methodPosition = 0; methodPosition < methodCount; methodPosition += 1) {
         PyJMethodObject* method = (PyJMethodObject*) PyList_GetItem(mm->methodList,
                                   methodPosition);
-        if (PyJMethod_GetParameterCount(method, env) == argsSize) {
+        int parameterCount = PyJMethod_GetParameterCount(method, env);
+        jboolean varargs = java_lang_reflect_Method_isVarArgs(env, method->rmethod);
+        if ((parameterCount == argsSize) || (varargs && argsSize >= parameterCount - 1)) {
             if (cand) {
                 if (!candMatch) {
-                    candMatch = PyJMethod_CheckArguments(cand, env, args);
+                    jboolean candvarargs = java_lang_reflect_Method_isVarArgs(env, cand->rmethod);
+                    candMatch = PyJMethod_CheckArguments(cand, env, args, candvarargs);
                 }
                 if (PyErr_Occurred()) {
                     cand = NULL;
@@ -148,7 +151,7 @@ static PyObject* pyjmultimethod_call(PyObject *multimethod,
                     // cand was not compatible, replace it with method.
                     cand = method;
                 } else {
-                    int methodMatch = PyJMethod_CheckArguments(method, env, args);
+                    int methodMatch = PyJMethod_CheckArguments(method, env, args, varargs);
                     if (methodMatch > candMatch) {
                         cand = method;
                         candMatch = methodMatch;

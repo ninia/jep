@@ -162,16 +162,17 @@ int PyJMethod_GetParameterCount(PyJMethodObject *method, JNIEnv *env)
 
 
 int PyJMethod_CheckArguments(PyJMethodObject* method, JNIEnv *env,
-                             PyObject* args)
+                             PyObject* args, jboolean varargs)
 {
     int matchTotal = 1;
     int parampos;
 
-    if (PyJMethod_GetParameterCount(method, env) != (PyTuple_Size(args) - 1)) {
+    if (!varargs && PyJMethod_GetParameterCount(method, env) != (PyTuple_Size(args) - 1)) {
         return 0;
     }
 
-    for (parampos = 0; parampos < method->lenParameters; parampos += 1) {
+    int comparisonCount = (method->lenParameters < PyTuple_Size(args) - 1) ? method->lenParameters : PyTuple_Size(args) - 1;
+    for (parampos = 0; parampos < comparisonCount; parampos += 1) {
         PyObject* param       = PyTuple_GetItem(args, parampos + 1);
         int       paramTypeId;
         int       match;
