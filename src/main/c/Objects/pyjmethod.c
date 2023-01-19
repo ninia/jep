@@ -187,6 +187,11 @@ int PyJMethod_CheckArguments(PyJMethodObject* method, JNIEnv *env,
         paramTypeId = get_jtype(env, paramType);
 
         match = pyarg_matches_jtype(env, param, paramType, paramTypeId);
+        if (match == 0 && varargs && paramTypeId == JARRAY_ID) {
+            jclass arrayType = java_lang_Class_getComponentType(env, paramType);
+            int arrayTypeId = get_jtype(env, arrayType);
+            match += pyarg_matches_jtype(env, param, arrayType, arrayTypeId);
+        }
         (*env)->DeleteLocalRef(env, paramType);
         if (PyErr_Occurred()) {
             matchTotal = -1;
