@@ -81,3 +81,12 @@ class TestTypes(unittest.TestCase):
         # chooses the int method and gets a TypeError
         self.assertEqual(TestOverload.any_primitive(2147483648), 'long')
 
+    def test_varargs(self):
+        self.assertTrue(TestOverload.varargs() == 'String...args' or TestOverload.varargs() == 'int...args')
+        self.assertEqual(TestOverload.varargs(0), 'int...args')
+        self.assertEqual(TestOverload.varargs("a"), 'String...args')
+        self.assertEqual(TestOverload.varargs(0,1,2), 'int...args')
+        self.assertEqual(TestOverload.varargs("a", "b", "c"), 'String...args')
+        self.assertEqual(TestOverload.varargs(0, "a"), 'int i, String...args')
+        self.assertEqual(TestOverload.varargs("a", 0, "b", "c", "d"), 'String s, int i, String...args')
+

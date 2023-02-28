@@ -139,4 +139,24 @@ public class TestOverload {
     public static String Object_or_Class(Class<?> c) {
         return "Class";
     }
+
+    public static String varargs(String...args) {        
+        return "String...args";
+	}
+	
+	public static String varargs(int...args) {
+        return "int...args";
+	}
+	
+	public static String varargs(int i, String...args) {
+        return "int i, String...args";
+	}	
+	
+	public static String varargs(String s, int i, String...args) {
+        return "String s, int i, String...args";
+	}
+    
+    public static String varargs(String[] arr, Object... args) {
+        return "String[] arr, Object... args";
+    }
 }
