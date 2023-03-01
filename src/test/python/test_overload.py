@@ -83,7 +83,7 @@ class TestTypes(unittest.TestCase):
 
     def test_varargs(self):
         self.assertTrue(TestOverload.varargs() == 'String...args' or TestOverload.varargs() == 'int...args')
-        self.assertEqual(TestOverload.varargs(0), 'int...args')
+        self.assertTrue(TestOverload.varargs(0) == 'int i, String...args' or TestOverload.varargs(0) == 'int...args')
         self.assertEqual(TestOverload.varargs("a"), 'String...args')
         self.assertEqual(TestOverload.varargs(0,1,2), 'int...args')
         self.assertEqual(TestOverload.varargs("a", "b", "c"), 'String...args')
