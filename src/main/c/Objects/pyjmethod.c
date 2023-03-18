@@ -162,21 +162,22 @@ int PyJMethod_GetParameterCount(PyJMethodObject *method, JNIEnv *env)
 
 
 int PyJMethod_CheckArguments(PyJMethodObject* method, JNIEnv *env,
-                             PyObject* args)
+                             PyObject* args, jboolean varargs)
 {
     int matchTotal = 1;
     int parampos;
 
-    if (PyJMethod_GetParameterCount(method, env) != (PyTuple_Size(args) - 1)) {
+    if (!varargs && PyJMethod_GetParameterCount(method, env) != (PyTuple_Size(args) - 1)) {
         return 0;
     }
 
-    for (parampos = 0; parampos < method->lenParameters; parampos += 1) {
+    for (parampos = 0; parampos < PyTuple_Size(args) - 1; parampos += 1) {
         PyObject* param       = PyTuple_GetItem(args, parampos + 1);
         int       paramTypeId;
         int       match;
+        int       paramindex  = (varargs && parampos > method->lenParameters - 1) ? method->lenParameters - 1 : parampos;
         jclass    paramType   = (jclass) (*env)->GetObjectArrayElement(env,
-                                method->parameters, parampos);
+                                method->parameters, paramindex);
 
         if (process_java_exception(env) || !paramType) {
             matchTotal = -1;
@@ -186,6 +187,11 @@ int PyJMethod_CheckArguments(PyJMethodObject* method, JNIEnv *env,
         paramTypeId = get_jtype(env, paramType);
 
         match = pyarg_matches_jtype(env, param, paramType, paramTypeId);
+        if (match == 0 && varargs && paramTypeId == JARRAY_ID && parampos >= method->lenParameters - 1) {
+            jclass arrayType = java_lang_Class_getComponentType(env, paramType);
+            int arrayTypeId = get_jtype(env, arrayType);
+            match += pyarg_matches_jtype(env, param, arrayType, arrayTypeId);
+        }
         (*env)->DeleteLocalRef(env, paramType);
         if (PyErr_Occurred()) {
             matchTotal = -1;
