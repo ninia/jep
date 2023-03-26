@@ -25,8 +25,8 @@
 package jep.python;
 
 import java.lang.ref.ReferenceQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Collections;
-import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -49,12 +49,13 @@ public final class MemoryManager extends JepAccess{
     private final ThreadLocal<Jep> interpreters = new ThreadLocal<Jep>();
 
     private final Set<Jep> interpreterSet = Collections
-            .newSetFromMap(new WeakHashMap<Jep, Boolean>());
+            .synchronizedSet(Collections.newSetFromMap(
+                    new WeakHashMap<Jep, Boolean>()));
     
     private final ReferenceQueue<PyObject> refQueue = new ReferenceQueue<>();
 
     private final Set<PyPointer> pointers = Collections
-            .newSetFromMap(new IdentityHashMap<PyPointer, Boolean>());
+            .newSetFromMap(new ConcurrentHashMap<PyPointer, Boolean>());
 
     public void openInterpreter(Jep jep) {
         this.interpreters.set(jep);
