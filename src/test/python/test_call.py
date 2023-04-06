@@ -73,7 +73,7 @@ class TestTypes(unittest.TestCase):
         result = self.test.testObjectPassThrough(l)
         for i in range(50):
             result = result[0]
-        self.assertEquals(self.test, result[0])
+        self.assertEqual(self.test, result[0])
 
     def test_overload(self):
         builder = StringBuilder()
@@ -98,7 +98,7 @@ class TestTypes(unittest.TestCase):
         # In a normal call python will end up removing the empty kwargs before
         # it reaches jep objects so use __func__ to call more directly.
         a.add.__func__(a, 1, *l, **d)
-        self.assertEquals(1, a.size.__func__(a, *l, **d))
+        self.assertEqual(1, a.size.__func__(a, *l, **d))
 
     def test_callback(self):
         expected = ArrayList([1, 2, 3, 4, 5])
@@ -120,7 +120,7 @@ class TestTypes(unittest.TestCase):
         def runTask():
             a.append(1)
         Executors.callable(runTask).call()
-        self.assertEquals(len(a), 1)
+        self.assertEqual(len(a), 1)
 
     def test_vararg(self):
         from java.util import Arrays

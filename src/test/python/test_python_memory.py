@@ -9,8 +9,8 @@
 #
 # Be very careful changing any of the format, things that seem harmless can
 # impact the refcount, for example changing the assert to something like this:
-#     self.assertEquals(refcount1, sys.gettotalrefcount() - 1)
-# will not work because python will create new references for self.assertEquals,
+#     self.assertEqual(refcount1, sys.gettotalrefcount() - 1)
+# will not work because python will create new references for self.assertEqual,
 # the implicit self argument, and refcount1.
 
 import unittest
@@ -30,7 +30,7 @@ class TestPythonRefCounts(unittest.TestCase):
         result = self.obj.hashCode
         del result
         refcount2 = sys.gettotalrefcount()
-        self.assertEquals(refcount1, refcount2 - 1)
+        self.assertEqual(refcount1, refcount2 - 1)
 
     def test_method_call(self):
         # First call to hashCode will cache info about the hashCode method
@@ -39,21 +39,21 @@ class TestPythonRefCounts(unittest.TestCase):
         result = self.obj.hashCode()
         del result
         refcount2 = sys.gettotalrefcount()
-        self.assertEquals(refcount1, refcount2 - 1)
+        self.assertEqual(refcount1, refcount2 - 1)
 
     def test_package_import(self):
         refcount1 = sys.gettotalrefcount()
         import java.lang as result
         del result
         refcount2 = sys.gettotalrefcount()
-        self.assertEquals(refcount1, refcount2 - 1)
+        self.assertEqual(refcount1, refcount2 - 1)
 
     def test_class_import(self):
         refcount1 = sys.gettotalrefcount()
         from java.lang import Object as result
         del result
         refcount2 = sys.gettotalrefcount()
-        self.assertEquals(refcount1, refcount2 - 1)
+        self.assertEqual(refcount1, refcount2 - 1)
 
     def test_construction(self):
         from java.lang import Object
@@ -61,7 +61,7 @@ class TestPythonRefCounts(unittest.TestCase):
         result = Object()
         del result
         refcount2 = sys.gettotalrefcount()
-        self.assertEquals(refcount1, refcount2 - 1)
+        self.assertEqual(refcount1, refcount2 - 1)
 
     def test_field_access(self):
         from java.lang import System
@@ -72,7 +72,7 @@ class TestPythonRefCounts(unittest.TestCase):
         result = System.out
         del result
         refcount2 = sys.gettotalrefcount()
-        self.assertEquals(refcount1, refcount2 - 1)
+        self.assertEqual(refcount1, refcount2 - 1)
 
     def test_array_creation(self):
         from jep import jarray
@@ -81,7 +81,7 @@ class TestPythonRefCounts(unittest.TestCase):
         result = jarray(1, Object)
         del result
         refcount2 = sys.gettotalrefcount()
-        self.assertEquals(refcount1, refcount2 - 1)
+        self.assertEqual(refcount1, refcount2 - 1)
 
     def test_array_assignment(self):
         from jep import jarray
@@ -90,7 +90,7 @@ class TestPythonRefCounts(unittest.TestCase):
         refcount1 = sys.gettotalrefcount()
         arr[0] = self.obj
         refcount2 = sys.gettotalrefcount()
-        self.assertEquals(refcount1, refcount2 - 1)
+        self.assertEqual(refcount1, refcount2 - 1)
 
     def test_array_access(self):
         from jep import jarray
@@ -101,7 +101,7 @@ class TestPythonRefCounts(unittest.TestCase):
         result = arr[0]
         del result
         refcount2 = sys.gettotalrefcount()
-        self.assertEquals(refcount1, refcount2 - 1)
+        self.assertEqual(refcount1, refcount2 - 1)
 
     def test_number_compare(self):
         x = 5
@@ -111,7 +111,7 @@ class TestPythonRefCounts(unittest.TestCase):
         result = x < y
         del result
         refcount2 = sys.gettotalrefcount()
-        self.assertEquals(refcount1, refcount2 - 1)
+        self.assertEqual(refcount1, refcount2 - 1)
 
     def test_list_setslice(self):
         from java.util import ArrayList
@@ -121,7 +121,7 @@ class TestPythonRefCounts(unittest.TestCase):
         refcount1 = sys.gettotalrefcount()
         jlist[2:4] = [7, 19]
         refcount2 = sys.gettotalrefcount()
-        self.assertEquals(refcount1, refcount2 - 1)
+        self.assertEqual(refcount1, refcount2 - 1)
 
     def test_dir_class(self):
         from java.util import ArrayList
@@ -129,4 +129,4 @@ class TestPythonRefCounts(unittest.TestCase):
         result = dir(ArrayList)
         del result
         refcount2 = sys.gettotalrefcount()
-        self.assertEquals(refcount1, refcount2 - 1)
+        self.assertEqual(refcount1, refcount2 - 1)

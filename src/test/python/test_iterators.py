@@ -26,4 +26,4 @@ class TestIterators(unittest.TestCase):
         iterator = TestIteratorable()
         iterable = TestIteratorable()
         for item in iterable:
-            self.assertEquals(item, next(iterator))
+            self.assertEqual(item, next(iterator))

@@ -32,6 +32,6 @@ class TestRegressions(unittest.TestCase):
         jep.findClass('jep.test.TestPyJType$ProblemClass')
         jep.findClass('jep.test.TestPyJType$ProblemInterface')
         ChildTestingMethodInheritance = jep.findClass('jep.test.TestPyJType$ChildTestingMethodInheritance')
-        self.assertEquals('ParentClassWithMethod', ChildTestingMethodInheritance().checkPrecedence())
+        self.assertEqual('ParentClassWithMethod', ChildTestingMethodInheritance().checkPrecedence())
         ClassInheritingDefault = jep.findClass('jep.test.TestPyJType$ClassInheritingDefault')
-        self.assertEquals('InterfaceWithDefault', ClassInheritingDefault().checkPrecedence())
+        self.assertEqual('InterfaceWithDefault', ClassInheritingDefault().checkPrecedence())
