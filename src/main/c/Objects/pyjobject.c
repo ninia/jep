@@ -33,28 +33,6 @@
  */
 #include "structmember.h"
 
-/* Set the class name */
-static int pyjobject_init(JNIEnv *env, PyJObject *pyjob)
-{
-    jstring className     = NULL;
-    PyObject *pyClassName = NULL;
-
-    /*
-     * Attach the attribute java_name to the PyJObject instance to assist
-     * developers with understanding the type at runtime.
-     */
-    className = java_lang_Class_getName(env, pyjob->clazz);
-    if (process_java_exception(env) || !className) {
-        return 0;
-    }
-    pyClassName = jstring_As_PyString(env, className);
-    pyjob->javaClassName = pyClassName;
-    (*env)->DeleteLocalRef(env, className);
-
-    return 1;
-}
-
-
 PyObject* PyJObject_New(JNIEnv *env, PyTypeObject* type, jobject obj,
                         jclass class)
 {
@@ -63,7 +41,7 @@ PyObject* PyJObject_New(JNIEnv *env, PyTypeObject* type, jobject obj,
     if (obj) {
         pyjob->object = (*env)->NewGlobalRef(env, obj);
     } else {
-        /* THis should only happen for pyjclass*/
+        /* This should only happen for pyjclass*/
         pyjob->object = NULL;
     }
     if (class) {
@@ -75,11 +53,7 @@ PyObject* PyJObject_New(JNIEnv *env, PyTypeObject* type, jobject obj,
         class = NULL;
     }
 
-    if (pyjobject_init(env, pyjob)) {
-        return (PyObject*) pyjob;
-    }
-    Py_DECREF((PyObject*) pyjob);
-    return NULL;
+    return (PyObject*) pyjob;
 }
 
 static void pyjobject_dealloc(PyJObject *self)
@@ -95,7 +69,6 @@ static void pyjobject_dealloc(PyJObject *self)
         }
     }
 
-    Py_CLEAR(self->javaClassName);
     Py_TYPE((PyObject*) self)->tp_free((PyObject*) self);
 #endif
 }
@@ -183,9 +156,8 @@ static PyObject* pyjobject_richcompare(PyJObject *self,
             jint result;
             jthrowable exc;
             if (!(*env)->IsInstanceOf(env, self->object, JCOMPARABLE_TYPE)) {
-                const char* jname = PyUnicode_AsUTF8(self->javaClassName);
                 PyErr_Format(PyExc_TypeError, "Invalid comparison operation for Java type %s",
-                             jname);
+                             ((PyObject*) self)->ob_type->tp_name);
                 return NULL;
             }
 
@@ -279,6 +251,21 @@ static PyObject* pyjobject_synchronized(PyObject* self, PyObject* args)
     return monitor;
 }
 
+static PyObject* pyjobject_getJavaClassName(PyJObject* pyjob)
+{
+    JNIEnv* env = pyembed_get_env();
+    jstring className     = NULL;
+    PyObject *pyClassName = NULL;
+
+    className = java_lang_Class_getName(env, pyjob->clazz);
+    if (process_java_exception(env) || !className) {
+        return NULL;
+    }
+    pyClassName = jstring_As_PyString(env, className);
+    (*env)->DeleteLocalRef(env, className);
+    return pyClassName;
+}
+
 static PyMethodDef pyjobject_methods[] = {
     {
         "synchronized",
@@ -290,12 +277,14 @@ static PyMethodDef pyjobject_methods[] = {
     { NULL, NULL }
 };
 
-
-static PyMemberDef pyjobject_members[] = {
-    {"java_name", T_OBJECT, offsetof(PyJObject, javaClassName), READONLY},
-    {0}
+/*
+ * Attach the attribute java_name to the PyJObject instance to assist
+ * developers with understanding the type at runtime.
+ */
+static PyGetSetDef pyjobject_getset[] = {
+    {"java_name", (getter) pyjobject_getJavaClassName, NULL},
+    {NULL} /* Sentinel */
 };
-
 
 PyTypeObject PyJObject_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
@@ -327,8 +316,8 @@ PyTypeObject PyJObject_Type = {
     0,                                        /* tp_iter */
     0,                                        /* tp_iternext */
     pyjobject_methods,                        /* tp_methods */
-    pyjobject_members,                        /* tp_members */
-    0,                                        /* tp_getset */
+    0,                                        /* tp_members */
+    pyjobject_getset,                         /* tp_getset */
     0,                                        /* tp_base */
     0,                                        /* tp_dict */
     0,                                        /* tp_descr_get */

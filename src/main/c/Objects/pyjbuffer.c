@@ -107,7 +107,7 @@ getbuf(PyObject* self, Py_buffer *view, int flags)
     if (descr->type == NULL) {
         view->buf = NULL;
         PyErr_Format(PyExc_TypeError, "Python buffer access is not allowed for %s",
-                     PyUnicode_AsUTF8(pyjob->javaClassName));
+                     self->ob_type->tp_name);
         return -1;
     }
     view->obj = (PyObject*)self;

@@ -58,8 +58,6 @@ static void raiseTypeError(JNIEnv *env, PyObject *pyobject, jclass expectedType)
     expTypeName = (*env)->GetStringUTFChars(env, expTypeJavaName, 0);
     if (PyJClass_Check(pyobject)) {
         actTypeName = "java.lang.Class";
-    } else if (PyJObject_Check(pyobject)) {
-        actTypeName = PyUnicode_AsUTF8(((PyJObject*) pyobject)->javaClassName);
     } else {
         actTypeName = pyobject->ob_type->tp_name;
     }

@@ -372,20 +372,24 @@ static int pyjclass_setattro(PyObject *obj, PyObject *name, PyObject *v)
     }
 
     if (cur == NULL) {
+        PyObject* javaClassName = PyObject_GetAttrString(obj, "java_name");
         PyErr_Format(PyExc_AttributeError, "'%s' object has no attribute '%s'.",
-                     PyUnicode_AsUTF8(pyjobj->javaClassName), PyUnicode_AsUTF8(name));
+                     PyUnicode_AsUTF8(javaClassName), PyUnicode_AsUTF8(name));
+        Py_DECREF(javaClassName);
         return -1;
     }
 
     if (!PyJField_Check(cur)) {
+        PyObject* javaClassName = PyObject_GetAttrString(obj, "java_name");
         if (PyJMethod_Check(cur) || PyJMultiMethod_Check(cur)) {
             PyErr_Format(PyExc_AttributeError, "'%s' object cannot assign to method '%s'.",
-                         PyUnicode_AsUTF8(pyjobj->javaClassName), PyUnicode_AsUTF8(name));
+                         PyUnicode_AsUTF8(javaClassName), PyUnicode_AsUTF8(name));
         } else {
             PyErr_Format(PyExc_AttributeError,
                          "'%s' object cannot assign to attribute '%s'.",
-                         PyUnicode_AsUTF8(pyjobj->javaClassName), PyUnicode_AsUTF8(name));
+                         PyUnicode_AsUTF8(javaClassName), PyUnicode_AsUTF8(name));
         }
+        Py_DECREF(javaClassName);
         return -1;
     }
 
