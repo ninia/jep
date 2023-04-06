@@ -196,8 +196,7 @@ public interface Interpreter extends AutoCloseable {
      * For Python containers, such as lists and dictionaries, getValue will
      * recursively move through the container and convert each item. If the type
      * of the value retrieved is not supported, Jep will fall back to returning
-     * a String representation of the object. This fallback behavior will
-     * probably change in the future and should not be relied upon.
+     * a PyObject representation of the object.
      * </p>
      * 
      * @param str
