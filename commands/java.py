@@ -269,13 +269,28 @@ class build_jar(Command):
                 os.makedirs(dest_dir)
             shutil.copy(src, dest)
 
-        self.spawn([self.jar, '-cf', 'build/java/jep-{0}-sources.jar'.format(self.version), '-C', 'build/java/jep.src/main/java', 'jep'])
-        self.spawn([self.jar, '-cfe', 'build/java/jep-{0}.jar'.format(self.version), 'jep.Run', '-C', 'build/java', 'jep'])
-        self.spawn([self.jar, '-cf', 'build/java/jep-{0}-test-sources.jar'.format(self.version), '-C', 'build/java/jep.test.src/test/java', 'jep'])
-        self.spawn([self.jar, '-cfe', 'build/java/jep-{0}-test.jar'.format(self.version), 'test.jep.Test', '-C', 'build/java/test', 'jep'])
+        self.setup_meta_inf(os.path.join('build', 'java'))
+
+        self.spawn([self.jar, '-cf', 'build/java/jep-{0}-sources.jar'.format(self.version), '-C', 'build/java/jep.src/main/java', 'jep', '-C', 'build/java', 'META-INF'])
+        self.spawn([self.jar, '-cfe', 'build/java/jep-{0}.jar'.format(self.version), 'jep.Run', '-C', 'build/java', 'jep', '-C', 'build/java', 'META-INF'])
+        self.spawn([self.jar, '-cf', 'build/java/jep-{0}-test-sources.jar'.format(self.version), '-C', 'build/java/jep.test.src/test/java', 'jep', '-C', 'build/java', 'META-INF'])
+        self.spawn([self.jar, '-cfe', 'build/java/jep-{0}-test.jar'.format(self.version), 'test.jep.Test', '-C', 'build/java/test', 'jep', '-C', 'build/java', 'META-INF'])
+
 
     def run(self):
         if not skip_java_build(self):
             self.build()
         else:
             logging.debug('skipping packing jar files (up to date)')
+
+    def setup_meta_inf(self, dest_dir):
+        pom_dir = os.path.join(dest_dir, 'META-INF', 'maven', 'black.ninia', 'jep')
+        if not os.path.exists(pom_dir):
+            os.makedirs(pom_dir)
+        shutil.copy('pom.xml', pom_dir)
+        pom_props ="""artifactId=jep
+groupId=black.ninia
+version="""
+        pom_props += self.version
+        with open(os.path.join(pom_dir, 'pom.properties'), 'w') as f:
+            f.write(pom_props)
