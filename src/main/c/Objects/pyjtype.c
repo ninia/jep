@@ -435,23 +435,20 @@ static PyTypeObject* pyjtype_get_cached(JNIEnv *env, PyObject *fqnToPyType,
 
 PyTypeObject* PyJType_Get(JNIEnv *env, jclass clazz)
 {
-    PyObject* modjep = PyImport_ImportModule("_jep");
+    PyObject* modjep = pyembed_get_jep_module();
     if (!modjep) {
         return NULL;
     }
     PyObject* fqnToPyType = PyObject_GetAttrString(modjep, "__javaTypeCache__");
     if (!fqnToPyType) {
-        Py_DECREF(modjep);
         return NULL;
     } else if (PyDict_Size(fqnToPyType) == 0) {
         if (populateCustomTypeDict(env, fqnToPyType)) {
-            Py_DECREF(modjep);
             Py_DECREF(fqnToPyType);
             return NULL;
         }
     }
     PyTypeObject* result = pyjtype_get_cached(env, fqnToPyType, clazz);
-    Py_DECREF(modjep);
     Py_DECREF(fqnToPyType);
     return result;
 }

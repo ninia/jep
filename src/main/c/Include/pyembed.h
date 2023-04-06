@@ -67,6 +67,7 @@ jobject pyembed_getvalue(JNIEnv*, intptr_t, char*, jclass);
 
 JNIEnv* pyembed_get_env(void);
 JepThread* pyembed_get_jepthread(void);
+PyObject* pyembed_get_jep_module(void);
 
 // -------------------------------------------------- set() methods
 

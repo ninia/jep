@@ -138,7 +138,7 @@ static struct PyModuleDef jep_module_def = {
     PyModuleDef_HEAD_INIT,
     "_jep",              /* m_name */
     "_jep",              /* m_doc */
-    -1,                  /* m_size */
+    0,                   /* m_size */
     jep_methods,         /* m_methods */
     NULL,                /* m_reload */
     NULL,                /* m_traverse */
@@ -184,6 +184,10 @@ static int initjep(JNIEnv *env, jboolean hasSharedModules)
         }
         if (PyModule_AddObject(modjep, "__javaTypeCache__", javaTypeCache)) {
             Py_DECREF(javaTypeCache);
+            Py_DECREF(modjep);
+            return -1;
+        }
+        if (PyState_AddModule(modjep, &jep_module_def)) {
             Py_DECREF(modjep);
             return -1;
         }
@@ -693,6 +697,15 @@ JepThread* pyembed_get_jepthread(void)
                         "No Jep instance available on current thread.");
     }
     return ret;
+}
+
+PyObject* pyembed_get_jep_module(void)
+{
+    PyObject* modjep = PyState_FindModule(&jep_module_def);
+    if (!modjep) {
+        PyErr_SetString(PyExc_ModuleNotFoundError, "Module _jep was not found.");
+    }
+    return modjep;
 }
 
 static PyObject* pyembed_jproxy(PyObject *self, PyObject *args)
