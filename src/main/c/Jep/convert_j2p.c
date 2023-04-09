@@ -89,6 +89,35 @@ static PyObject* Character_As_PyObject(JNIEnv *env, jobject jobj)
     return jchar_As_PyObject(c);
 }
 
+/*
+ * This function calls user configurable conversion functions to convert a Java
+ * Object into a Python equivelant. The argument must be a PyJObject and if
+ * a conversion function is defined it will be called and the result of the
+ * conversion is returned. If there is no conversion function the argument is
+ * returned. NULL is returned if an exception occurs, in which case the Python
+ * exception is set. Py_DECREF is called on the argument unless it is also the
+ * return value.
+ */
+static PyObject* pyjobject_convert_pyobject(PyObject* pyjob)
+{
+    PyObject* result = pyjob;
+    /* PyObject_HasAttr is not used to improve performance */
+    PyObject* topy = PyObject_GetAttrString(pyjob, "_to_python");
+    if (topy != NULL) {
+        Py_DECREF(pyjob);
+#if PY_MAJOR_VERSION > 3 || PY_MINOR_VERSION >= 9
+        result = PyObject_CallNoArgs(topy);
+#else
+        result = PyObject_CallObject(topy, NULL);
+#endif
+        Py_DECREF(topy);
+    } else {
+        /* This is exactly what is done in PyObject_HasAttr. */
+        PyErr_Clear();
+    }
+    return result;
+}
+
 static PyObject* jnumber_As_PyObject(JNIEnv *env, jobject jobj, jclass class)
 {
     if ((*env)->IsSameObject(env, class, JBYTE_OBJ_TYPE)) {
@@ -140,9 +169,13 @@ static PyObject* jnumber_As_PyObject(JNIEnv *env, jobject jobj, jclass class)
         }
         PyObject* pyint = PyLong_FromUnicodeObject(pystr, 10);
         Py_DECREF(pystr);
-	return pyint;
+        return pyint;
     } else {
-        return jobject_As_PyJObject(env, jobj, class);
+        PyObject* result = jobject_As_PyJObject(env, jobj, class);
+        if (result) {
+            result = pyjobject_convert_pyobject(result);
+        }
+        return result;
     }
 
 }
@@ -209,6 +242,9 @@ PyObject* jobject_As_PyObject(JNIEnv *env, jobject jobj)
 
             if (!result && !proxy_exc_occurred) {
                 result = jobject_As_PyJObject(env, jobj, class);
+                if (result) {
+                    result = pyjobject_convert_pyobject(result);
+                }
 #if JEP_NUMPY_ENABLED
                 /*
                  * check for jep/DirectNDArray and autoconvert to numpy.ndarray

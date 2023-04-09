@@ -77,6 +77,7 @@ static void handle_startup_exception(JNIEnv*, const char*);
 static PyObject* pyembed_findclass(PyObject*, PyObject*);
 static PyObject* pyembed_forname(PyObject*, PyObject*);
 static PyObject* pyembed_jproxy(PyObject*, PyObject*);
+static PyObject* pyembed_set_j2p_converter(PyObject*, PyObject*);
 
 static int maybe_pyc_file(FILE*, const char*, const char*, int);
 static void pyembed_run_pyc(JepThread*, FILE*);
@@ -130,6 +131,28 @@ static struct PyMethodDef jep_methods[] = {
         "Create a Proxy class for a Python object.\n"
         "Accepts two arguments: ([a class object], [list of java interfaces "
         "to implement, string names])"
+    },
+
+    {
+        "setJavaToPythonConverter",
+        pyembed_set_j2p_converter,
+        METH_VARARGS,
+        "Register a function for converting a Java Object of a specific Class to a Python equivelant.\n"
+        "\n"
+        "Accepts two arguments: (a pyjclass or pyjtype, a conversion function)\n"
+        "\n"
+        "When Jep converts a Java object of the type given in the first arg to a Python Object the given conversion\n"
+        "function will be called. This is used to extend the builtin Jep conversions to new types.\n"
+        "\n"
+        "A conversion function is any Python callable that takes a single argument. Jep will pass a Java Object as the\n"
+        "argument and the conversion function should return a Python representation of that argument. If there are\n"
+        "cases where no conversion is needed then the conversion function can return the argument without modification.\n"
+        "\n"
+        "Conversion functions are applied to all subclasses, so a conversion function for Map will be applied to\n"
+        "HashMap, TreeMap, and any other subclasses of Map. More specific conversion functions can be registered to\n"
+        "subclasses to override the conversion function for the parent class.\n"
+        "\n"
+        "None can be set as the conversion function to remove any previously defined conversion function."
     },
 
     { NULL, NULL }
@@ -785,6 +808,45 @@ static PyObject* pyembed_jproxy(PyObject *self, PyObject *args)
     return result;
 }
 
+static PyObject* pyembed_set_j2p_converter(PyObject *self, PyObject *args)
+{
+    PyObject      *pytarget;
+    PyObject      *topy;
+
+    if (!PyArg_ParseTuple(args, "OO:setJavaToPythonConverter",
+                          &pytarget,
+                          &topy)) {
+        return NULL;
+    }
+
+    if (PyJClass_Check(pytarget)) {
+        pytarget = PyObject_GetAttrString(pytarget, "__pytype__");
+        if (!pytarget) {
+            return NULL;
+        }
+        /* Types are cached so it is safe to borrow a ref */
+        Py_DECREF(pytarget);
+    } else if (!PyType_Check(pytarget)) {
+        PyErr_SetString(PyExc_RuntimeError,
+                        "First argument to setJavaToPythonConverter must be a Java Class or Type");
+        return NULL;
+    }
+    if (PyCallable_Check(topy)) {
+        if (PyObject_SetAttrString(pytarget, "_to_python", topy) != 0) {
+            return NULL;
+        }
+    } else if (topy == Py_None) {
+        if (PyObject_HasAttrString(pytarget, "_to_python") &&
+                PyObject_DelAttrString(pytarget, "_to_python") == -1) {
+            return NULL;
+        }
+    } else {
+        PyErr_SetString(PyExc_RuntimeError,
+                        "Second argument to setJavaToPythonConverter must be Callable");
+        return NULL;
+    }
+    Py_RETURN_NONE;
+}
 
 static PyObject* pyembed_forname(PyObject *self, PyObject *args)
 {
