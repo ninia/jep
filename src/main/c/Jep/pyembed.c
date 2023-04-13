@@ -137,7 +137,7 @@ static struct PyMethodDef jep_methods[] = {
         "setJavaToPythonConverter",
         pyembed_set_j2p_converter,
         METH_VARARGS,
-        "Register a function for converting a Java Object of a specific Class to a Python equivelant.\n"
+        "Register a function for converting a Java Object of a specific Class to a Python equivelent.\n"
         "\n"
         "Accepts two arguments: (a pyjclass or pyjtype, a conversion function)\n"
         "\n"

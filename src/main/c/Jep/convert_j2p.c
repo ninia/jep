@@ -91,7 +91,7 @@ static PyObject* Character_As_PyObject(JNIEnv *env, jobject jobj)
 
 /*
  * This function calls user configurable conversion functions to convert a Java
- * Object into a Python equivelant. The argument must be a PyJObject and if
+ * Object into a Python equivelent. The argument must be a PyJObject and if
  * a conversion function is defined it will be called and the result of the
  * conversion is returned. If there is no conversion function the argument is
  * returned. NULL is returned if an exception occurs, in which case the Python
