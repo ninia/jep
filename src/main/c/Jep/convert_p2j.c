@@ -1067,8 +1067,6 @@ jobject PyObject_As_jobject(JNIEnv *env, PyObject *pyobject,
         if ((*env)->IsAssignableFrom(env, pyjobject->clazz, expectedType)) {
             return (*env)->NewLocalRef(env, pyjobject->object);
         }
-    } else if ((*env)->IsSameObject(env, expectedType, JPYOBJECT_TYPE)) {
-        return PyObject_As_JPyObject(env, pyobject);
     } else if (PyUnicode_Check(pyobject)) {
         return pyunicode_as_jobject(env, pyobject, expectedType);
     } else if (PyBool_Check(pyobject)) {
@@ -1097,7 +1095,11 @@ jobject PyObject_As_jobject(JNIEnv *env, PyObject *pyobject,
             return NULL;
         } else if ((*env)->IsAssignableFrom(env, JPYCALLABLE_TYPE, expectedType)) {
             return PyCallable_As_JPyCallable(env, pyobject);
+        } else if ((*env)->IsAssignableFrom(env, JSTRING_TYPE, expectedType)) {
+            return (jobject) PyObject_As_jstring(env, pyobject);
         }
+    } else if ((*env)->IsSameObject(env, expectedType, JPYOBJECT_TYPE)) {
+        return PyObject_As_JPyObject(env, pyobject);
 #if JEP_NUMPY_ENABLED
     } else if (npy_array_check(pyobject)) {
         return convert_pyndarray_jobject(env, pyobject, expectedType);

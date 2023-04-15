@@ -207,6 +207,13 @@ public class TestGetJPyObject {
             throw new IllegalStateException(
                     "Java equals(JPyObject) does not work as expected");
         }
+
+        PyObject object = interp.getValue("object", PyObject.class);
+        PyObject callable = interp.getValue("object", PyCallable.class);
+        if (!object.equals(callable) || !callable.equals(object)) {
+            throw new IllegalStateException(
+                    "JPyObject equals() does not work as expected");
+        }
     }
 
     public static void testHashCode(Interpreter interp) throws JepException {

@@ -143,6 +143,17 @@ public class TestGetWithClass {
         }
     }
 
+    public static void testString(Interpreter interp) throws JepException {
+        String s = interp.getValue("object", String.class);
+        if (!s.equals("<class 'object'>")) {
+            throw new IllegalStateException(s + " is not '<class 'object'>'");
+        }
+        s = interp.getValue("object()", String.class);
+        if (!s.startsWith("<object object at ")) {
+            throw new IllegalStateException(s + " is not '<object object at ...>'");
+        }
+    }
+
     public static void main(String[] args) throws JepException {
         try (Interpreter interp = new SubInterpreter()) {
             testStr(interp);
@@ -153,6 +164,7 @@ public class TestGetWithClass {
             testDict(interp);
             testNone(interp);
             testIncompatible(interp);
+            testString(interp);
         }
     }
 
