@@ -56,32 +56,6 @@ public class TestPyBuiltins {
         return true;
     }
 
-    private boolean testCompile() {
-        PyObject code = builtins.compile("1 + 1", "<string>", "eval");
-        Number result = (Number) builtins.eval(code, globals);
-        if (result.intValue() != 2){
-            failure = "compile builtin does not return 1 + 1 = 2";
-            return false;
-        }
-        try {
-            code = builtins.compile("(:", "<string>", "eval");
-            failure = "Compile did not detect syntax error";
-        } catch (JepException e) {
-            if (!e.getMessage().contains("SyntaxError")) {
-                failure = "Not a SyntaxError: " + e.getMessage();
-            }
-        }
-        try {
-            code = builtins.compile(7, "<string>", "eval");
-            failure = "Compile did not detect type error";
-        } catch (JepException e) {
-            if (!e.getMessage().contains("TypeError")) {
-                failure = "Not a TypeError: " + e.getMessage();
-            }
-        }
-        return true;
-    }
-
     private boolean testDelAttr() {
         subobject.setAttr("name", "value");
         builtins.delattr(subobject, "name");
@@ -143,14 +117,6 @@ public class TestPyBuiltins {
                 failure = "Not a SyntaxError: " + e.getMessage();
             }
         }
-        try {
-            result = (Number) builtins.eval(7, globals, locals);
-            failure = "Eval did not detect type error";
-        } catch (JepException e) {
-            if (!e.getMessage().contains("TypeError")) {
-                failure = "Not a TypeError: " + e.getMessage();
-            }
-        }
         return true;
     }
 
@@ -175,14 +141,6 @@ public class TestPyBuiltins {
                 failure = "Not a SyntaxError: " + e.getMessage();
             }
         }
-        try {
-            builtins.exec(7, globals);
-            failure = "Exec did not detect type error";
-        } catch (JepException e) {
-            if (!e.getMessage().contains("TypeError")) {
-                failure = "Not a TypeError: " + e.getMessage();
-            }
-        }
         return true;
     }
 
@@ -193,19 +151,17 @@ public class TestPyBuiltins {
             failure = "frozenset builtin does not return an empty set";
             return false;
         }
-        setBuiltin = builtins.frozenset(new String[] {"1", "2", "3"});
+        String[] array = new String[] {"1", "2", "3"};
         setGetValue = interp.getValue("{'1','2','3'}", PyObject.class);
+        setBuiltin = builtins.frozenset(array);
         if (!setBuiltin.equals(setGetValue)){
-            failure = "frozenset builtin does not return a full set";
+            failure = "frozenset builtin does not return a set from array";
             return false;
         }
-        try {
-            builtins.frozenset(7);
-            failure = "Frozen set did not detect type error";
-        } catch (JepException e) {
-            if (!e.getMessage().contains("TypeError")) {
-                failure = "Not a TypeError: " + e.getMessage();
-            }
+        setBuiltin = builtins.frozenset(Arrays.asList(array));
+        if (!setBuiltin.equals(setGetValue)){
+            failure = "frozenset builtin does not return a set from List";
+            return false;
         }
         return true;
     }
@@ -297,19 +253,17 @@ public class TestPyBuiltins {
             failure = "list builtin does not return an empty list";
             return false;
         }
-        listBuiltin = builtins.list(new String[] {"1", "2", "3"});
+        String[] array = new String[] {"1", "2", "3"};
         listGetValue = interp.getValue("['1','2','3']", PyObject.class);
+        listBuiltin = builtins.list(array);
         if (!listBuiltin.equals(listGetValue)){
-            failure = "list builtin does not return a full list";
+            failure = "list builtin does not return a list from array";
             return false;
         }
-        try {
-            builtins.list(7);
-            failure = "List did not detect type error";
-        } catch (JepException e) {
-            if (!e.getMessage().contains("TypeError")) {
-                failure = "Not a TypeError: " + e.getMessage();
-            }
+        listBuiltin = builtins.list(Arrays.asList(array));
+        if (!listBuiltin.equals(listGetValue)){
+            failure = "list builtin does not return a list from List";
+            return false;
         }
         return true;
     }
@@ -330,19 +284,17 @@ public class TestPyBuiltins {
             failure = "set builtin does not return an empty set";
             return false;
         }
-        setBuiltin = builtins.set(new String[] {"1", "2", "3"});
+        String[] array = new String[] {"1", "2", "3"};
         setGetValue = interp.getValue("{'1','2','3'}", PyObject.class);
+        setBuiltin = builtins.set(array);
         if (!setBuiltin.equals(setGetValue)){
-            failure = "set builtin does not return a full set";
+            failure = "set builtin does not return a set from array";
             return false;
         }
-        try {
-            builtins.set(7);
-            failure = "Set did not detect type error";
-        } catch (JepException e) {
-            if (!e.getMessage().contains("TypeError")) {
-                failure = "Not a TypeError: " + e.getMessage();
-            }
+        setBuiltin = builtins.set(Arrays.asList(array));
+        if (!setBuiltin.equals(setGetValue)){
+            failure = "set builtin does not return a set from List";
+            return false;
         }
         return true;
     }
@@ -363,19 +315,17 @@ public class TestPyBuiltins {
             failure = "tuple builtin does not return an empty tuple";
             return false;
         }
-        tupleBuiltin = builtins.tuple(new String[] {"1", "2", "3"});
+        String[] array = new String[] {"1", "2", "3"};
         tupleGetValue = interp.getValue("('1','2','3')", PyObject.class);
+        tupleBuiltin = builtins.tuple(array);
         if (!tupleBuiltin.equals(tupleGetValue)){
-            failure = "tuple builtin does not return a full tuple";
+            failure = "tuple builtin does not return a tuple from array";
             return false;
         }
-        try {
-            builtins.tuple(7);
-            failure = "Tuple did not detect type error";
-        } catch (JepException e) {
-            if (!e.getMessage().contains("TypeError")) {
-                failure = "Not a TypeError: " + e.getMessage();
-            }
+        tupleBuiltin = builtins.tuple(Arrays.asList(array));
+        if (!tupleBuiltin.equals(tupleGetValue)){
+            failure = "tuple builtin does not return a tuple from List";
+            return false;
         }
         return true;
     }
@@ -400,9 +350,6 @@ public class TestPyBuiltins {
             globals = interp.getValue("{}", PyObject.class);
             locals = interp.getValue("{}", PyObject.class);
             if (!testCallable()) {
-                return;
-            }
-            if (!testCompile()) {
                 return;
             }
             if (!testDelAttr()) {

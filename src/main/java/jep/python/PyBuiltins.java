@@ -40,57 +40,57 @@ public interface PyBuiltins {
 
     public boolean callable(Object object);
 
-    public PyObject compile(Object source, String filename, String mode);
-
-    public PyObject compile(Object source, String filename, String mode, int flags);
-
-    public PyObject compile(Object source, String filename, String mode, int flags, boolean dont_inherit);
-
-    public PyObject compile(Object source, String filename, String mode, int flags, boolean dont_inherit, int optimize);
-
-    public void delattr(Object object, String name);
+    public void delattr(PyObject object, String name);
 
     public PyObject dict();
 
-    public String[] dir(Object object);
+    public String[] dir(PyObject object);
 
-    public Object eval(Object object, PyObject globals);
+    public Object eval(String expression, PyObject globals);
 
-    public Object eval(Object object, PyObject globals, PyObject locals);
+    public Object eval(String expression, PyObject globals, PyObject locals);
 
-    public void exec(Object object, PyObject globals);
+    public void exec(String code, PyObject globals);
 
-    public void exec(Object object, PyObject globals, PyObject locals);
+    public void exec(String code, PyObject globals, PyObject locals);
 
     public PyObject frozenset();
 
-    public PyObject frozenset(Object iterable);
+    public PyObject frozenset(Iterable<?> iterable);
 
-    public Object getattr(Object object, String name);
+    public PyObject frozenset(Object[] array);
 
-    public boolean hasattr(Object object, String name);
+    public Object getattr(PyObject object, String name);
+
+    public boolean hasattr(PyObject object, String name);
 
     public long id(PyObject object);
 
-    public boolean isinstance(Object object, PyObject classinfo);
+    public boolean isinstance(PyObject object, PyObject classinfo);
 
     public boolean issubclass(PyObject cls, PyObject classinfo);
 
     public PyObject list();
 
-    public PyObject list(Object iterable);
+    public PyObject list(Iterable<?> iterable);
+
+    public PyObject list(Object[] array);
 
     public PyObject object();
 
     public PyObject set();
 
-    public PyObject set(Object iterable);
+    public PyObject set(Iterable<?> iterable);
 
-    public void setattr(Object object, String name, Object value);
+    public PyObject set(Object[] array);
+
+    public void setattr(PyObject object, String name, Object value);
 
     public PyObject tuple();
 
-    public PyObject tuple(Object iterable);
+    public PyObject tuple(Iterable<?> iterable);
+
+    public PyObject tuple(Object[] array);
 
     public PyCallable type(PyObject object);
 
