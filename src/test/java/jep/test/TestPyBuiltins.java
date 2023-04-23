@@ -1,6 +1,7 @@
 package jep.test;
 
-import java.util.Set;
+import java.util.Arrays;
+import java.util.List;
 
 import jep.Interpreter;
 import jep.SharedInterpreter;
@@ -64,7 +65,7 @@ public class TestPyBuiltins {
     private boolean testDelAttr() {
         subobject.setAttr("name", "value");
         builtins.delattr(subobject, "name");
-        Set<String> dir = Set.of(builtins.dir(subobject));
+        List<String> dir = Arrays.asList(builtins.dir(subobject));
         if (dir.contains("name")){
             failure = "delattr builtin does not delete value";
             return false;
@@ -83,7 +84,7 @@ public class TestPyBuiltins {
     }
 
     private boolean testDir() {
-        Set<String> dir = Set.of(builtins.dir(object));
+        List<String> dir = Arrays.asList(builtins.dir(object));
         if (!dir.contains("__str__")){
             failure = "dir builtin does not report __str__";
             return false;
@@ -125,7 +126,7 @@ public class TestPyBuiltins {
         return true;
     }
 
-    private boolean testiFrozenSet() {
+    private boolean testFrozenSet() {
         PyObject setBuiltin = builtins.frozenset();
         PyObject setGetValue = interp.getValue("frozenset()", PyObject.class);
         if (!setBuiltin.equals(setGetValue)){
@@ -143,7 +144,7 @@ public class TestPyBuiltins {
 
     private boolean testGetAttr() {
         if (builtins.getattr(object, "__str__") == null){
-            failure = "hasattr builtin does not find __str__";
+            failure = "getattr builtin does not find __str__";
             return false;
         }
         return true;
@@ -215,7 +216,7 @@ public class TestPyBuiltins {
 
     private boolean testObject() {
         PyObject o = builtins.object();
-        if (!o.equals(object)){
+        if (!builtins.isinstance(object, objectType)){
             failure = "object builtin does not return an empty object";
             return false;
         }
@@ -291,6 +292,9 @@ public class TestPyBuiltins {
             if (!testDelAttr()) {
                 return;
             }
+            if (!testDict()) {
+                return;
+            }
             if (!testDir()) {
                 return;
             }
@@ -298,6 +302,9 @@ public class TestPyBuiltins {
                 return;
             }
             if (!testExec()) {
+                return;
+            }
+            if (!testFrozenSet()) {
                 return;
             }
             if (!testGetAttr()) {
@@ -315,7 +322,19 @@ public class TestPyBuiltins {
             if (!testIsSubClass()) {
                 return;
             }
+            if (!testList()) {
+                return;
+            }
+            if (!testObject()) {
+                return;
+            }
+            if (!testSet()) {
+                return;
+            }
             if (!testSetAttr()) {
+                return;
+            }
+            if (!testTuple()) {
                 return;
             }
             if (!testType()) {

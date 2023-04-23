@@ -26,12 +26,14 @@ package jep.python;
 
 import jep.Interpreter;
 
-/*
+/**
  * Interface for accessing some of the functions of the Python builtins module from Java.
- * More information on specific functions can be found at https://docs.python.org/3.5/library/functions.html
- *
+ * More information on specific functions can be found in the
+ * <a href="https://docs.python.org/3/library/functions.html">Python Documentation</a>
+ * <p>
  * To use this interface create an {@link Interpreter} and call {@link PyBuiltins#get(Interpreter)}.
- *
+ * <p>
+ * PyBuiltins are not thread safe and have the same thread related restrictions as {@link PyObject}.
  * @since 4.2
  */
 public interface PyBuiltins {
@@ -46,9 +48,9 @@ public interface PyBuiltins {
 
     public PyObject compile(Object source, String filename, String mode, int flags, boolean dont_inherit, int optimize);
 
-    public PyObject dict();
-
     public void delattr(Object object, String name);
+
+    public PyObject dict();
 
     public String[] dir(Object object);
 
