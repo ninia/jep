@@ -49,6 +49,10 @@ public class TestPyBuiltins {
             failure = "callable builtin returns an object is callable";
             return false;
         }
+        if (builtins.callable(7)){
+            failure = "callable builtin returns a number is callable";
+            return false;
+        }
         return true;
     }
 
@@ -58,6 +62,22 @@ public class TestPyBuiltins {
         if (result.intValue() != 2){
             failure = "compile builtin does not return 1 + 1 = 2";
             return false;
+        }
+        try {
+            code = builtins.compile("(:", "<string>", "eval");
+            failure = "Compile did not detect syntax error";
+        } catch (JepException e) {
+            if (!e.getMessage().contains("SyntaxError")) {
+                failure = "Not a SyntaxError: " + e.getMessage();
+            }
+        }
+        try {
+            code = builtins.compile(7, "<string>", "eval");
+            failure = "Compile did not detect type error";
+        } catch (JepException e) {
+            if (!e.getMessage().contains("TypeError")) {
+                failure = "Not a TypeError: " + e.getMessage();
+            }
         }
         return true;
     }
@@ -69,6 +89,14 @@ public class TestPyBuiltins {
         if (dir.contains("name")){
             failure = "delattr builtin does not delete value";
             return false;
+        }
+        try {
+            builtins.delattr(subobject, "fakeAttribute");
+            failure = "delattr did not detect attribute error";
+        } catch (JepException e) {
+            if (!e.getMessage().contains("AttributeError")) {
+                failure = "Not a AttributeError: " + e.getMessage();
+            }
         }
         return true;
     }
@@ -107,6 +135,22 @@ public class TestPyBuiltins {
             failure = "eval builtin with locals does not return 1 + 1 = 2";
             return false;
         }
+        try {
+            result = (Number) builtins.eval("(:", globals, locals);
+            failure = "Eval did not detect syntax error";
+        } catch (JepException e) {
+            if (!e.getMessage().contains("SyntaxError")) {
+                failure = "Not a SyntaxError: " + e.getMessage();
+            }
+        }
+        try {
+            result = (Number) builtins.eval(7, globals, locals);
+            failure = "Eval did not detect type error";
+        } catch (JepException e) {
+            if (!e.getMessage().contains("TypeError")) {
+                failure = "Not a TypeError: " + e.getMessage();
+            }
+        }
         return true;
     }
 
@@ -122,6 +166,22 @@ public class TestPyBuiltins {
         if (result.intValue() != 2){
             failure = "exec builtin with locals does not return 1 + 1 = 2";
             return false;
+        }
+        try {
+            builtins.exec("(:", globals);
+            failure = "Exec did not detect syntax error";
+        } catch (JepException e) {
+            if (!e.getMessage().contains("SyntaxError")) {
+                failure = "Not a SyntaxError: " + e.getMessage();
+            }
+        }
+        try {
+            builtins.exec(7, globals);
+            failure = "Exec did not detect type error";
+        } catch (JepException e) {
+            if (!e.getMessage().contains("TypeError")) {
+                failure = "Not a TypeError: " + e.getMessage();
+            }
         }
         return true;
     }
@@ -139,6 +199,14 @@ public class TestPyBuiltins {
             failure = "frozenset builtin does not return a full set";
             return false;
         }
+        try {
+            builtins.frozenset(7);
+            failure = "Frozen set did not detect type error";
+        } catch (JepException e) {
+            if (!e.getMessage().contains("TypeError")) {
+                failure = "Not a TypeError: " + e.getMessage();
+            }
+        }
         return true;
     }
 
@@ -146,6 +214,14 @@ public class TestPyBuiltins {
         if (builtins.getattr(object, "__str__") == null){
             failure = "getattr builtin does not find __str__";
             return false;
+        }
+        try {
+            builtins.getattr(subobject, "fakeAttribute");
+            failure = "getattr did not detect attribute error";
+        } catch (JepException e) {
+            if (!e.getMessage().contains("AttributeError")) {
+                failure = "Not a AttributeError: " + e.getMessage();
+            }
         }
         return true;
     }
@@ -183,6 +259,14 @@ public class TestPyBuiltins {
             failure = "isinstance builtin returns an object is a subtype";
             return false;
         }
+        try {
+            builtins.isinstance(object, object);
+            failure = "isinstance did not detect type error";
+        } catch (JepException e) {
+            if (!e.getMessage().contains("TypeError")) {
+                failure = "Not a TypeError: " + e.getMessage();
+            }
+        }
         return true;
     }
 
@@ -191,9 +275,17 @@ public class TestPyBuiltins {
             failure = "issubclass builtin returns subtype is not a subclass of object";
             return false;
         }
-        if (builtins.isinstance(subtypeOne, subtypeTwo)){
+        if (builtins.issubclass(subtypeOne, subtypeTwo)){
             failure = "issubclass builtin returns unrelated subtype is a subclass";
             return false;
+        }
+        try {
+            builtins.issubclass(object, object);
+            failure = "issubclass did not detect type error";
+        } catch (JepException e) {
+            if (!e.getMessage().contains("TypeError")) {
+                failure = "Not a TypeError: " + e.getMessage();
+            }
         }
         return true;
     }
@@ -210,6 +302,14 @@ public class TestPyBuiltins {
         if (!listBuiltin.equals(listGetValue)){
             failure = "list builtin does not return a full list";
             return false;
+        }
+        try {
+            builtins.list(7);
+            failure = "List did not detect type error";
+        } catch (JepException e) {
+            if (!e.getMessage().contains("TypeError")) {
+                failure = "Not a TypeError: " + e.getMessage();
+            }
         }
         return true;
     }
@@ -236,6 +336,14 @@ public class TestPyBuiltins {
             failure = "set builtin does not return a full set";
             return false;
         }
+        try {
+            builtins.set(7);
+            failure = "Set did not detect type error";
+        } catch (JepException e) {
+            if (!e.getMessage().contains("TypeError")) {
+                failure = "Not a TypeError: " + e.getMessage();
+            }
+        }
         return true;
     }
 
@@ -260,6 +368,14 @@ public class TestPyBuiltins {
         if (!tupleBuiltin.equals(tupleGetValue)){
             failure = "tuple builtin does not return a full tuple";
             return false;
+        }
+        try {
+            builtins.tuple(7);
+            failure = "Tuple did not detect type error";
+        } catch (JepException e) {
+            if (!e.getMessage().contains("TypeError")) {
+                failure = "Not a TypeError: " + e.getMessage();
+            }
         }
         return true;
     }
