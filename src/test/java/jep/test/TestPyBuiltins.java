@@ -1,7 +1,9 @@
 package jep.test;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import jep.Interpreter;
 import jep.SharedInterpreter;
@@ -80,6 +82,16 @@ public class TestPyBuiltins {
         PyObject dictGetValue = interp.getValue("{}", PyObject.class);
         if (!dictBuiltin.equals(dictGetValue)){
             failure = "dict builtin does not return an empty dict";
+            return false;
+        }
+        Map<String,Integer> map = new HashMap<>();
+        map.put("a", 1);
+        map.put("b", 2);
+        map.put("c", 3);
+        dictBuiltin = builtins.dict(map);
+        dictGetValue = interp.getValue("{'a':1, 'b':2, 'c':3}", PyObject.class);
+        if (!dictBuiltin.equals(dictGetValue)){
+            failure = "dict builtin does not return a dict from map";
             return false;
         }
         return true;
