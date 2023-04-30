@@ -120,9 +120,25 @@ static int populateCustomTypeDict(JNIEnv *env, PyObject* fqnToPyType)
                            pyjcollection)) {
         return -1;
     }
-    if (!addSpecToTypeDict(env, fqnToPyType, JMAP_TYPE, &PyJMap_Spec, NULL)) {
+    PyObject* collectionAbc = PyImport_ImportModule("collections.abc");
+    if (!collectionAbc) {
         return -1;
     }
+    PyObject* mapping = PyObject_GetAttrString(collectionAbc, "Mapping");
+    if (!mapping) {
+        Py_DECREF(collectionAbc);
+        return -1;
+    }
+    Py_DECREF(collectionAbc);
+    if (!PyType_Check(mapping)) {
+        Py_DECREF(mapping);
+        return -1;
+    }
+    if (!addSpecToTypeDict(env, fqnToPyType, JMAP_TYPE, &PyJMap_Spec, (PyTypeObject*) mapping)) {
+        Py_DECREF(mapping);
+        return -1;
+    }
+    Py_DECREF(mapping);
     if (!addSpecToTypeDict(env, fqnToPyType, JNUMBER_TYPE, &PyJNumber_Spec,
                            &PyJObject_Type)) {
         return -1;

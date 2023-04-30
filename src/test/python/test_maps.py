@@ -1,5 +1,7 @@
 import unittest
 
+from collections.abc import Mapping
+
 from java.util import HashMap
 
 
@@ -40,6 +42,12 @@ class TestMaps(unittest.TestCase):
         jmap = makeJavaMap()
         pymap = makePythonDict()
         self.assertEqual(len(jmap), len(pymap))
+
+    def test_mapping(self):
+        jmap = makeJavaMap()
+        self.assertTrue(isinstance(jmap, Mapping))
+        pymap = makePythonDict()
+        self.assertEqual(dict(jmap), pymap)
 
     def test_del(self):
         jmap = makeJavaMap()
