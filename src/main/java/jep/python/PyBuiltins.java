@@ -24,6 +24,8 @@
  */
 package jep.python;
 
+import java.util.Map;
+
 import jep.Interpreter;
 
 /**
