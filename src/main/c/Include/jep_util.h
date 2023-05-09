@@ -133,6 +133,7 @@ extern jclass JDOUBLE_ARRAY_TYPE;
     F(JCHAR_OBJ_TYPE, "java/lang/Character") \
     F(JCHARBUFFER_TYPE, "java/nio/CharBuffer") \
     F(JNUMBER_TYPE, "java/lang/Number") \
+    F(JEXECUTABLE_TYPE, "java/lang/reflect/Executable") \
     F(JMEMBER_TYPE, "java/lang/reflect/Member") \
     F(JMETHOD_TYPE, "java/lang/reflect/Method") \
     F(JFIELD_TYPE, "java/lang/reflect/Field") \

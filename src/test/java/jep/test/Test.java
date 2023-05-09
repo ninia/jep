@@ -24,6 +24,8 @@ public class Test implements Runnable {
 
     private boolean testEval = false;
 
+    private String[] constructorVarArgs;
+
     public static ClassLoader restrictedClassLoader = new ClassLoader() {
         @Override
         public Class<?> loadClass(final String name)
@@ -40,6 +42,18 @@ public class Test implements Runnable {
 
     public Test(boolean testEval) {
         this.testEval = testEval;
+    }
+
+    public Test(String arg1, String arg2) {
+        /* Args aren't currently needed, just ensure varargs aren't set. */
+    }
+
+    public Test(String... varargs) {
+        this.constructorVarArgs = varargs;
+    }
+
+    public String[] getConstructorVarArgs() {
+        return constructorVarArgs;
     }
 
     public static enum TestEnum {

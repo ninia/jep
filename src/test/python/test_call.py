@@ -127,7 +127,7 @@ class TestTypes(unittest.TestCase):
         self.assertSequenceEqual((), Arrays.asList())
         self.assertSequenceEqual(("1"), Arrays.asList("1"))
         self.assertSequenceEqual(("1","2"), Arrays.asList("1","2"))
-        # Passing a tuple should convert the tuple elemnts to the varargs array.
+        # Passing a tuple should convert the tuple elements to the varargs array.
         self.assertSequenceEqual(("1","2"), Arrays.asList(("1","2")))
         # instance method as opposed to static method above
         self.assertSequenceEqual(("1","2"), self.test.testAllVarArgs("1","2"))
@@ -136,3 +136,11 @@ class TestTypes(unittest.TestCase):
         # mixing normal args with varargs
         self.assertSequenceEqual(("1","2", "3"), self.test.testMixedVarArgs("1","2", "3"))
         self.assertSequenceEqual(("1","2", "3", "4"), self.test.testMixedVarArgs("1","2", "3", "4"))
+
+    def test_constructor_varargs(self):
+        self.assertSequenceEqual(("1", ), Test("1").getConstructorVarArgs());
+        # Non-varargs should be chosen over varargs when possible
+        self.assertEqual(None, Test("1", "2").getConstructorVarArgs());
+        self.assertSequenceEqual(("1", "2", "3"), Test("1", "2", "3").getConstructorVarArgs());
+        # Passing a tuple should convert the tuple elements to the varargs array.
+        self.assertSequenceEqual(("1", "2", "3"), Test(("1", "2", "3")).getConstructorVarArgs());

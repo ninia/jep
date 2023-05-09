@@ -28,14 +28,24 @@
 #include "Jep.h"
 
 static jmethodID getParameterTypes = 0;
+static jmethodID isVarArgs         = 0;
 
-jobjectArray java_lang_reflect_Constructor_getParameterTypes(JNIEnv* env,
+jobjectArray java_lang_reflect_Executable_getParameterTypes(JNIEnv* env,
         jobject this)
 {
     jobjectArray result = NULL;
-    if (JNI_METHOD(getParameterTypes, env, JCONSTRUCTOR_TYPE, "getParameterTypes",
+    if (JNI_METHOD(getParameterTypes, env, JEXECUTABLE_TYPE, "getParameterTypes",
                    "()[Ljava/lang/Class;")) {
         result = (jobjectArray) (*env)->CallObjectMethod(env, this, getParameterTypes);
+    }
+    return result;
+}
+
+jboolean java_lang_reflect_Executable_isVarArgs(JNIEnv* env, jobject this)
+{
+    jboolean result = JNI_FALSE;
+    if (JNI_METHOD(isVarArgs, env, JEXECUTABLE_TYPE, "isVarArgs", "()Z")) {
+        result = (*env)->CallBooleanMethod(env, this, isVarArgs);
     }
     return result;
 }

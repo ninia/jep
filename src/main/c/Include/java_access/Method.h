@@ -28,8 +28,6 @@
 #ifndef _Included_java_lang_reflect_Method
 #define _Included_java_lang_reflect_Method
 
-jobjectArray java_lang_reflect_Method_getParameterTypes(JNIEnv*, jobject);
 jclass       java_lang_reflect_Method_getReturnType(JNIEnv*, jobject);
-jboolean     java_lang_reflect_Method_isVarArgs(JNIEnv*, jobject);
 
 #endif // ndef java_lang_reflect_Method

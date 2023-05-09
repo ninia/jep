@@ -137,11 +137,11 @@ static PyObject* pyjmultimethod_call(PyObject *multimethod,
         PyJMethodObject* method = (PyJMethodObject*) PyList_GetItem(mm->methodList,
                                   methodPosition);
         int parameterCount = PyJMethod_GetParameterCount(method, env);
-        jboolean varargs = java_lang_reflect_Method_isVarArgs(env, method->rmethod);
+        jboolean varargs = java_lang_reflect_Executable_isVarArgs(env, method->rmethod);
         if ((parameterCount == argsSize) || (varargs && argsSize >= parameterCount - 1)) {
             if (cand) {
                 if (!candMatch) {
-                    jboolean candvarargs = java_lang_reflect_Method_isVarArgs(env, cand->rmethod);
+                    jboolean candvarargs = java_lang_reflect_Executable_isVarArgs(env, cand->rmethod);
                     candMatch = PyJMethod_CheckArguments(cand, env, args, candvarargs);
                 }
                 if (PyErr_Occurred()) {
