@@ -138,7 +138,6 @@ extern jclass JDOUBLE_ARRAY_TYPE;
     F(JMETHOD_TYPE, "java/lang/reflect/Method") \
     F(JFIELD_TYPE, "java/lang/reflect/Field") \
     F(JAVA_PROXY_TYPE, "java/lang/reflect/Proxy") \
-    F(JCONSTRUCTOR_TYPE, "java/lang/reflect/Constructor") \
     F(JTHROWABLE_TYPE, "java/lang/Throwable") \
     F(JMODIFIER_TYPE, "java/lang/reflect/Modifier") \
     F(JARRAYLIST_TYPE, "java/util/ArrayList") \
