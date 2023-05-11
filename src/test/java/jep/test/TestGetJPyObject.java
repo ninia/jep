@@ -346,6 +346,48 @@ public class TestGetJPyObject {
         }
     }
 
+    private static interface TestVarArgsProxy {
+        public String[] allvarargs(String... args);
+        public String[] oneargthenvarargs(String arg, String... args);
+        public int[] allvarargs(int... args);
+        public int[] oneargthenvarargs(int arg, int... args);
+    }
+
+    public static void testProxyVarargs(Interpreter interp) throws JepException {
+        StringBuilder testVarArgsSrc = new StringBuilder();
+        testVarArgsSrc.append("class TestVarArgs(object):\n");
+        testVarArgsSrc.append("    def allvarargs(self, *args):\n");
+        testVarArgsSrc.append("        return args\n");
+        testVarArgsSrc.append("    def oneargthenvarargs(self, arg, *args):\n");
+        testVarArgsSrc.append("        return args\n");
+        interp.exec(testVarArgsSrc.toString());
+        TestVarArgsProxy test = interp.getValue("TestVarArgs()", PyObject.class).proxy(TestVarArgsProxy.class);
+        String[] strargs = test.allvarargs("One", "Two", "Three");
+        if (!Arrays.equals(strargs, new String[] {"One", "Two", "Three"})) {
+            throw new IllegalStateException("TestVarArgs.allvarargs returned wrong value: " + Arrays.toString(strargs));
+        }
+        strargs = test.oneargthenvarargs("One", "Two", "Three");
+        if (!Arrays.equals(strargs, new String[] {"Two", "Three"})) {
+            throw new IllegalStateException("TestVarArgs.oneargthenvarargs returned wrong value: " + Arrays.toString(strargs));
+        }
+        strargs = test.oneargthenvarargs("One");
+        if (strargs.length != 0) {
+            throw new IllegalStateException("TestVarArgs.oneargthenvarargs returned wrong value: " + Arrays.toString(strargs));
+        }
+        int[] intargs = test.allvarargs(1, 2, 3);
+        if (!Arrays.equals(intargs, new int[] {1, 2, 3})) {
+            throw new IllegalStateException("TestVarArgs.allvarargs returned wrong value: " + Arrays.toString(intargs));
+        }
+        intargs = test.oneargthenvarargs(1, 2, 3);
+        if (!Arrays.equals(intargs, new int[] {2, 3})) {
+            throw new IllegalStateException("TestVarArgs.oneargthenvarargs returned wrong value: " + Arrays.toString(intargs));
+        }
+        intargs = test.oneargthenvarargs(1);
+        if (intargs.length != 0) {
+            throw new IllegalStateException("TestVarArgs.oneargthenvarargs returned wrong value: " + Arrays.toString(intargs));
+        }
+    }
+
     public static void testAs(Interpreter interp) throws JepException {
         int[] test = { 1, 2, 3 };
         interp.set("test", test);
@@ -368,6 +410,7 @@ public class TestGetJPyObject {
             testThreading(interp);
             testClosing(interp);
             testProxy(interp);
+            testProxyVarargs(interp);
             testAs(interp);
         }
         testClosingJep();
