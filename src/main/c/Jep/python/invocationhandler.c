@@ -43,7 +43,7 @@ static jobject invokeDefault(JNIEnv *env, jobject obj, jobject method,
     jobject      result    = NULL;
 
     if (args) {
-        argTypes = java_lang_reflect_Method_getParameterTypes(env, method);
+        argTypes = java_lang_reflect_Executable_getParameterTypes(env, method);
         if ((*env)->ExceptionOccurred(env)) {
             return NULL;
         }

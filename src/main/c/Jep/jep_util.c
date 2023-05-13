@@ -500,6 +500,8 @@ int pyarg_matches_jtype(JNIEnv *env,
         switch (paramTypeId) {
         case JBOOLEAN_ID:
             return 1;
+        case JARRAY_ID:
+            return 3;
         case JOBJECT_ID:
             if ((*env)->IsSameObject(env, JOBJECT_TYPE, paramType)) {
                 return 2;
@@ -513,6 +515,8 @@ int pyarg_matches_jtype(JNIEnv *env,
         switch (paramTypeId) {
         case JBOOLEAN_ID:
             return 1;
+        case JARRAY_ID:
+            return 3;
         case JOBJECT_ID:
             if ((*env)->IsSameObject(env, JOBJECT_TYPE, paramType)) {
                 return 2;

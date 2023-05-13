@@ -1,7 +1,7 @@
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2016-2022 JEP AUTHORS.
+   Copyright (c) 2016-2023 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -25,9 +25,10 @@
    distribution.
 */
 
-#ifndef _Included_java_lang_reflect_Constructor
-#define _Included_java_lang_reflect_Constructor
+#ifndef _Included_java_lang_reflect_Executable
+#define _Included_java_lang_reflect_Executable
 
-jobjectArray java_lang_reflect_Constructor_getParameterTypes(JNIEnv*, jobject);
+jobjectArray java_lang_reflect_Executable_getParameterTypes(JNIEnv*, jobject);
+jboolean     java_lang_reflect_Executable_isVarArgs(JNIEnv*, jobject);
 
-#endif // ndef java_lang_reflect_Constructor
+#endif // ndef java_lang_reflect_Executable

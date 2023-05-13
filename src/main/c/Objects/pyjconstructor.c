@@ -46,7 +46,7 @@ static int pyjconstructor_init(JNIEnv *env, PyJMethodObject *self)
 
     self->methodId = (*env)->FromReflectedMethod(env, self->rmethod);
 
-    paramArray = java_lang_reflect_Constructor_getParameterTypes(env,
+    paramArray = java_lang_reflect_Executable_getParameterTypes(env,
                  self->rmethod);
     if (process_java_exception(env) || !paramArray) {
         goto EXIT_ERROR;
@@ -113,26 +113,50 @@ int PyJConstructor_Check(PyObject* object)
 static PyObject* pyjconstructor_call(PyJMethodObject *self, PyObject *args,
                                      PyObject *keywords)
 {
-    PyObject      *firstArg    = NULL;
-    PyJObject     *clazz       = NULL;
-    JNIEnv        *env         = NULL;
-    int            pos         = 0;
-    jvalue        *jargs       = NULL;
-    int           foundArray   = 0; /* if params includes pyjarray instance */
-    PyThreadState *_save       = NULL;
-    jobject   obj  = NULL;
-    PyObject *pobj = NULL;
+    JNIEnv        *env              = NULL;
+    Py_ssize_t     lenPyArgsGiven   = 0;
+    int            lenJArgsExpected = 0;
+    /* The number of normal arguments before any varargs */
+    int            lenJArgsNormal   = 0;
+    PyObject      *firstArg         = NULL;
+    PyJObject     *clazz            = NULL;
+    int            pos              = 0;
+    jvalue        *jargs            = NULL;
+    /* if params includes pyjarray instance */
+    int            foundArray       = 0;
+    jobject        obj              = NULL;
+    PyObject      *pobj             = NULL;
 
     if (keywords != NULL && PyDict_Size(keywords) > 0) {
-        PyErr_Format(PyExc_TypeError, "Keywords are not supported.");
+        PyErr_Format(PyExc_RuntimeError, "Keywords are not supported.");
         return NULL;
     }
 
-    if (self->lenParameters != PyTuple_GET_SIZE(args) - 1) {
-        PyErr_Format(PyExc_RuntimeError,
-                     "Invalid number of arguments: %i, expected %i.", (int) PyTuple_GET_SIZE(args),
-                     self->lenParameters + 1);
+    lenPyArgsGiven = PyTuple_Size(args);
+
+    env = pyembed_get_env();
+    lenJArgsExpected = PyJMethod_GetParameterCount(self, env);
+    if (lenJArgsExpected == -1) {
         return NULL;
+    }
+    /* Python gives one more arg than java expects for self/this. */
+    if (lenJArgsExpected != lenPyArgsGiven - 1) {
+        jboolean varargs = java_lang_reflect_Executable_isVarArgs(env, self->rmethod);
+        if (process_java_exception(env)) {
+            return NULL;
+        }
+        if (!varargs || lenJArgsExpected > lenPyArgsGiven) {
+            PyErr_Format(PyExc_RuntimeError,
+                         "Invalid number of arguments: %i, expected %i.",
+                         (int) lenPyArgsGiven,
+                         lenJArgsExpected + 1);
+            return NULL;
+        }
+        /* The last argument will be handled as varargs, so not a normal arg */
+        lenJArgsNormal = lenJArgsExpected - 1;
+    } else {
+        /* No varargs, all args are normal */
+        lenJArgsNormal = lenJArgsExpected;
     }
 
     firstArg = PyTuple_GetItem(args, 0);
@@ -144,23 +168,23 @@ static PyObject* pyjconstructor_call(PyJMethodObject *self, PyObject *args,
     }
     clazz = (PyJObject*) firstArg;
 
-
-    // ------------------------------ build jargs off python values
-    env = pyembed_get_env();
-    if ((*env)->PushLocalFrame(env, JLOCAL_REFS + self->lenParameters) != 0) {
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS + lenJArgsExpected) != 0) {
         process_java_exception(env);
         return NULL;
     }
 
-    jargs = (jvalue *) PyMem_Malloc(sizeof(jvalue) * self->lenParameters);
-
-    for (pos = 0; pos < self->lenParameters; pos++) {
+    jargs = (jvalue *) PyMem_Malloc(sizeof(jvalue) * lenJArgsExpected);
+    if (jargs == NULL) {
+        (*env)->PopLocalFrame(env, NULL);
+        return PyErr_NoMemory();
+    }
+    for (pos = 0; pos < lenJArgsNormal; pos++) {
         PyObject *param = NULL;
         int paramTypeId = -1;
         jclass paramType = (jclass) (*env)->GetObjectArrayElement(env,
                            self->parameters, pos);
 
-        param = PyTuple_GetItem(args, pos + 1); /* borrowed */
+        param = PyTuple_GetItem(args, pos + 1);
         if (PyErr_Occurred()) {
             goto EXIT_ERROR;
         }
@@ -172,18 +196,60 @@ static PyObject* pyjconstructor_call(PyJMethodObject *self, PyObject *args,
 
         jargs[pos] = convert_pyarg_jvalue(env, param, paramType, paramTypeId, pos);
         if (PyErr_Occurred()) {
-            goto EXIT_ERROR;
+            if (pos == (lenJArgsExpected - 1)
+                    && PyErr_ExceptionMatches(PyExc_TypeError)) {
+                jboolean varargs = java_lang_reflect_Executable_isVarArgs(env, self->rmethod);
+                if ((*env)->ExceptionOccurred(env)) {
+                    /* Cannot convert to python since there is already a python exception */
+                    (*env)->ExceptionClear(env);
+                    goto EXIT_ERROR;
+                }
+                if (varargs) {
+                    /* Retry the last arg as array for varargs */
+                    PyErr_Clear();
+                    lenJArgsNormal -= 1;
+                } else {
+                    goto EXIT_ERROR;
+                }
+            }
         }
 
         (*env)->DeleteLocalRef(env, paramType);
     }
+    if (lenJArgsNormal + 1 == lenJArgsExpected) {
+        /* Need to process last arg as varargs. */
+        PyObject *param = NULL;
+        jclass paramType = (jclass) (*env)->GetObjectArrayElement(env,
+                           self->parameters, lenJArgsExpected - 1);
+        if (lenPyArgsGiven == lenJArgsExpected) {
+            /*
+             * Python args are normally one longer than expected to allow for
+             * this/self so if it isn't then nothing was given for the varargs
+             */
+            param = PyTuple_New(0);
+        } else {
+            param = PyTuple_GetSlice(args, lenJArgsExpected, lenPyArgsGiven);
+        }
+        if (PyErr_Occurred()) {
+            goto EXIT_ERROR;
+        }
 
-    Py_UNBLOCK_THREADS;
+        jargs[lenJArgsExpected - 1] = convert_pyarg_jvalue(env, param, paramType,
+                                      JARRAY_ID,
+                                      lenJArgsExpected - 1);
+        Py_DecRef(param);
+        if (PyErr_Occurred()) {
+            goto EXIT_ERROR;
+        }
+        (*env)->DeleteLocalRef(env, paramType);
+    }
+
+    Py_BEGIN_ALLOW_THREADS;
     obj = (*env)->NewObjectA(env,
                              clazz->clazz,
                              self->methodId,
                              jargs);
-    Py_BLOCK_THREADS;
+    Py_END_ALLOW_THREADS;
     if (process_java_exception(env) || !obj) {
         goto EXIT_ERROR;
     }
@@ -197,7 +263,7 @@ static PyObject* pyjconstructor_call(PyJMethodObject *self, PyObject *args,
 
     // re pin array if needed
     if (foundArray) {
-        for (pos = 0; pos < self->lenParameters; pos++) {
+        for (pos = 0; pos < lenJArgsNormal; pos++) {
             PyObject *param = PyTuple_GetItem(args, pos);
             if (param && pyjarray_check(param)) {
                 pyjarray_pin((PyJArrayObject *) param);

@@ -89,7 +89,7 @@ static int pyjmethod_init(JNIEnv *env, PyJMethodObject *self)
         goto EXIT_ERROR;
     }
 
-    paramArray = java_lang_reflect_Method_getParameterTypes(env, self->rmethod);
+    paramArray = java_lang_reflect_Executable_getParameterTypes(env, self->rmethod);
     if (process_java_exception(env) || !paramArray) {
         goto EXIT_ERROR;
     }
@@ -167,8 +167,11 @@ int PyJMethod_CheckArguments(PyJMethodObject* method, JNIEnv *env,
     int matchTotal = 1;
     int parampos;
 
-    if (!varargs && PyJMethod_GetParameterCount(method, env) != (PyTuple_Size(args) - 1)) {
-        return 0;
+    if (!varargs) {
+        if (PyJMethod_GetParameterCount(method, env) != (PyTuple_Size(args) - 1)) {
+            return 0;
+        }
+        matchTotal += 1;
     }
 
     for (parampos = 0; parampos < PyTuple_Size(args) - 1; parampos += 1) {
@@ -240,7 +243,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
     }
     /* Python gives one more arg than java expects for self/this. */
     if (lenJArgsExpected != lenPyArgsGiven - 1) {
-        jboolean varargs = java_lang_reflect_Method_isVarArgs(env, self->rmethod);
+        jboolean varargs = java_lang_reflect_Executable_isVarArgs(env, self->rmethod);
         if (process_java_exception(env)) {
             return NULL;
         }
@@ -305,7 +308,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
         if (PyErr_Occurred()) {
             if (pos == (lenJArgsExpected - 1)
                     && PyErr_ExceptionMatches(PyExc_TypeError)) {
-                jboolean varargs = java_lang_reflect_Method_isVarArgs(env, self->rmethod);
+                jboolean varargs = java_lang_reflect_Executable_isVarArgs(env, self->rmethod);
                 if ((*env)->ExceptionOccurred(env)) {
                     /* Cannot convert to python since there is already a python exception */
                     (*env)->ExceptionClear(env);
