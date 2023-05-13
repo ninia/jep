@@ -69,7 +69,7 @@ class TestNumpy(unittest.TestCase):
         """
         import numpy
 
-        za = numpy.zeros((15, 5), numpy.bool)
+        za = numpy.zeros((15, 5), bool)
         za.fill(True)
         self.assertTrue(self.test.callBooleanMethod(za))
 
