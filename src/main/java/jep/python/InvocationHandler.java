@@ -24,7 +24,9 @@
  */
 package jep.python;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
 import jep.Jep;
 import jep.JepException;
@@ -120,6 +122,15 @@ public class InvocationHandler implements java.lang.reflect.InvocationHandler {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args)
             throws Throwable {
+        if (method.isVarArgs()) {
+            Object vargs = args[args.length - 1];
+            int vlen = Array.getLength(vargs);
+            Object[] nargs = Arrays.copyOf(args, args.length + vlen - 1);
+            for (int i = 0; i < vlen ; i += 1) {
+                nargs[args.length + i - 1] = Array.get(vargs, i);
+            }
+            args = nargs;
+        }
         return invoke(proxy, pyObject.tstate(), pyObject.pointer.pyObject,
                 method, args, this.functionalInterface);
     }
