@@ -8,6 +8,7 @@ contributors who have submitted code to improve this release.
 Improved support for varargs
 ****************************
 Support for varargs has been implemented in several places
+
 * Varargs support has improved for choosing which overloaded Java method to
   call from Python. *Contributed by @andvazqu.* 
 * Java constructors using varargs can now be called from Python.
@@ -18,14 +19,14 @@ Custom converters for Java Objects in Python
 Developers can now configure custom converters for creating a Python object
 from a Java object. For more details on how to register a custom converter see
 `the wiki <https://github.com/ninia/jep/wiki/Accessing-Java-Objects-in-Python#custom-conversion-functions>`_
-or exec `help(jep.setJavaToPythonConverter)` in a Jep interpreter.
+or exec ``help(jep.setJavaToPythonConverter)`` in a Jep interpreter.
 
 PyJType for java.util.Map now extends collections.abc.Mapping
 *************************************************************
 This allows Java Maps to be used in Python anywhere a Python mapping is
 expected. Before this change Java Maps are missing functionality such as
-item(), keys(), and values() which are now automatically added by
-extending collections.abc.Mapping.
+``tems()``, ``keys()``, and ``values()`` which are now automatically added by
+extending ``collections.abc.Mapping``.
 
 Additions of PyBuiltins
 ***********************
