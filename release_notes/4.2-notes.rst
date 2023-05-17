@@ -25,7 +25,7 @@ PyJType for java.util.Map now extends collections.abc.Mapping
 *************************************************************
 This allows Java Maps to be used in Python anywhere a Python mapping is
 expected. Before this change Java Maps are missing functionality such as
-``tems()``, ``keys()``, and ``values()`` which are now automatically added by
+``items()``, ``keys()``, and ``values()`` which are now automatically added by
 extending ``collections.abc.Mapping``.
 
 Additions of PyBuiltins
