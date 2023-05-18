@@ -222,6 +222,11 @@ static int initjep(JNIEnv *env, jboolean hasSharedModules)
         }
         /* still held by sys.modules. */
         Py_DECREF(modjep);
+#if JEP_NUMPY_ENABLED
+        if (load_numpy_conversions(env)) {
+            return -1;
+        }
+#endif
     }
     return 0;
 }
