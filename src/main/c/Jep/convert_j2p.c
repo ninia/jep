@@ -218,10 +218,6 @@ PyObject* jobject_As_PyObject(JNIEnv *env, jobject jobj)
         result = Character_As_PyObject(env, jobj);
     } else if ((*env)->IsAssignableFrom(env, class, JPYOBJECT_TYPE)) {
         result = JPyObject_As_PyObject(env, jobj);
-#if JEP_NUMPY_ENABLED
-    } else if (jndarray_check(env, jobj)) {
-        result = convert_jndarray_pyndarray(env, jobj);
-#endif
     } else {
         jboolean array = java_lang_Class_isArray(env, class);
         if ((*env)->ExceptionCheck(env)) {
@@ -245,22 +241,6 @@ PyObject* jobject_As_PyObject(JNIEnv *env, jobject jobj)
                 if (result) {
                     result = pyjobject_convert_pyobject(result);
                 }
-#if JEP_NUMPY_ENABLED
-                /*
-                 * check for jep/DirectNDArray and autoconvert to numpy.ndarray
-                 * pyjobject
-                 */
-                if (jdndarray_check(env, jobj)) {
-                    PyObject* ndarray = convert_jdndarray_pyndarray(env, result);
-                    if (ndarray) {
-                        result = ndarray;
-                    } else {
-                        Py_CLEAR(result);
-                    }
-                } else if (PyErr_Occurred()) {
-                    Py_CLEAR(result);
-                }
-#endif
             }
         }
     }

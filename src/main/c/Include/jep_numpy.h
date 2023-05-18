@@ -43,17 +43,13 @@
 /* this whole file is a no-op if numpy support is disabled */
 #if JEP_NUMPY_ENABLED
 
-    /* methods to support numpy <-> java conversion */
+    /* methods to support numpy -> java conversion */
     int npy_scalar_check(PyObject*);
     jobject convert_npy_scalar_jobject(JNIEnv*, PyObject*, jclass);
     int npy_array_check(PyObject*);
-    int jndarray_check(JNIEnv*, jobject);
     jobject convert_pyndarray_jobject(JNIEnv*, PyObject*, jclass);
-    PyObject* convert_jndarray_pyndarray(JNIEnv*, jobject);
 
-    int jdndarray_check(JNIEnv*, jobject);
-    PyObject* convert_jdndarray_pyndarray(JNIEnv*, PyObject*);
-
+    int load_numpy_conversions(JNIEnv*);
 #endif // if numpy is enabled
 
 
