@@ -80,7 +80,7 @@ public abstract class Jep implements Interpreter {
     // windows requires this as unix newline...
     private static final String LINE_SEP = "\n";
     
-    private boolean useCurrentThread = false;
+    private boolean useCurrentThread = true;
 
     /**
      * Tracks if this thread has been used for an interpreter before. Using
