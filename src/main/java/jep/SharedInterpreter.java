@@ -60,6 +60,11 @@ public class SharedInterpreter extends Jep {
         super(config, false, memoryManager);
         exec("__name__ = '__main__'");
     }
+    
+    public SharedInterpreter(boolean useCurrentThread) throws JepException {
+	this();
+	setUseCurrentThread(useCurrentThread);
+    }
 
     @Override
     protected void configureInterpreter(JepConfig config) throws JepException {

@@ -79,6 +79,8 @@ public abstract class Jep implements Interpreter {
 
     // windows requires this as unix newline...
     private static final String LINE_SEP = "\n";
+    
+    private boolean useCurrentThread = false;
 
     /**
      * Tracks if this thread has been used for an interpreter before. Using
@@ -212,6 +214,10 @@ public abstract class Jep implements Interpreter {
 
     private native long init(ClassLoader classloader, boolean hasSharedModules,
             boolean useSubinterpreter) throws JepException;
+    
+    public void setUseCurrentThread(boolean flag) {
+	this.useCurrentThread = flag;
+    }
 
     /**
      * Checks if the current thread is valid for the method call. All calls must
@@ -226,7 +232,7 @@ public abstract class Jep implements Interpreter {
      */
     @Deprecated
     public void isValidThread() throws JepException {
-        if (this.thread != Thread.currentThread())
+        if (this.useCurrentThread && this.thread != Thread.currentThread())
             throw new JepException("Invalid thread access.");
         if (this.closed)
             throw new JepException("Jep instance has been closed.");
