@@ -130,8 +130,13 @@ public abstract class Jep implements Interpreter {
 
     protected Jep(JepConfig config, boolean useSubInterpreter, MemoryManager memoryManager)
             throws JepException {
+        this(config, useSubInterpreter, memoryManager, false);
+    }
+
+    protected Jep(JepConfig config, boolean useSubInterpreter, MemoryManager memoryManager, boolean useSharedMemory)
+            throws JepException {
         MainInterpreter mainInterpreter = MainInterpreter.getMainInterpreter();
-        if (threadUsed.get()) {
+        if (!useSharedMemory && threadUsed.get()) {
             Thread current = Thread.currentThread();
             StringBuilder warning = new StringBuilder(THREAD_WARN)
                     .append("Unsafe reuse of thread ").append(current.getName())

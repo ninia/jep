@@ -24,6 +24,8 @@
  */
 package jep;
 
+import jep.python.MemoryManager;
+
 /**
  * Class for creating instances of Interpreters which are sandboxed from other
  * Interpreters. Sub-interpreters isolate different SubInterpreter instances,
@@ -61,6 +63,10 @@ public class SubInterpreter extends Jep {
     @SuppressWarnings("deprecation")
     public SubInterpreter(JepConfig config) throws JepException {
         super(config);
+    }
+
+    public SubInterpreter(JepConfig config, MemoryManager memoryManager, boolean useSharedMemory) throws JepException {
+        super(config, true, memoryManager, useSharedMemory);
     }
 
 }
