@@ -24,6 +24,8 @@
  */
 package jep;
 
+import jep.python.MemoryManager;
+
 import java.io.File;
 import java.io.OutputStream;
 import java.util.Collections;
@@ -57,6 +59,8 @@ public class JepConfig {
     protected OutputStream redirectStderr = null;
 
     protected Set<String> sharedModules = null;
+
+    protected MemoryManager sharedMemoryManager = null;
 
     /**
      * Sets a path of directories separated by File.pathSeparator that will be
@@ -199,6 +203,15 @@ public class JepConfig {
      */
     public SubInterpreter createSubInterpreter() throws JepException {
         return new SubInterpreter(this);
+    }
+
+    public SubInterpreter createSubInterpreterSharedMemory() {
+        if (sharedMemoryManager == null) {
+            SubInterpreter interpreter = new SubInterpreter(this);
+            sharedMemoryManager = interpreter.getMemoryManager();
+            return interpreter;
+        }
+        return new SubInterpreter(this, sharedMemoryManager, true);
     }
 
 }
