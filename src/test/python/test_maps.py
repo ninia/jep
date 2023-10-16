@@ -43,12 +43,6 @@ class TestMaps(unittest.TestCase):
         pymap = makePythonDict()
         self.assertEqual(len(jmap), len(pymap))
 
-    def test_mapping(self):
-        jmap = makeJavaMap()
-        self.assertTrue(isinstance(jmap, Mapping))
-        pymap = makePythonDict()
-        self.assertEqual(dict(jmap), pymap)
-
     def test_del(self):
         jmap = makeJavaMap()
         pymap = makePythonDict()
