@@ -1,7 +1,5 @@
 import unittest
 
-from collections.abc import Mapping
-
 from java.util import HashMap
 
 
@@ -58,3 +56,23 @@ class TestMaps(unittest.TestCase):
         for i in jmap:
             pydict[i] = jmap[i]
         self.assertEqual(pydict, pymap)
+
+    def test_keys(self):
+        jmap = makeJavaMap()
+        keylist = jmap.keys()
+        self.assertIn("a", keylist)
+        self.assertIn("b", keylist)
+        self.assertIn("c", keylist)
+        self.assertNotIn("d", keylist)
+        self.assertNotIn(2, keylist)
+
+    def test_items(self):
+        jmap = makeJavaMap()
+        itemlist = jmap.items()
+        self.assertIn(("a", -1), itemlist)
+        self.assertIn(("b", 2), itemlist)
+        self.assertIn(("c", "XYZ"), itemlist)
+        self.assertNotIn(("a", 1), itemlist)
+        self.assertNotIn(("a", 2), itemlist)
+        self.assertNotIn("a", itemlist)
+        self.assertNotIn(2, itemlist)

@@ -21,6 +21,11 @@ from a Java object. For more details on how to register a custom converter see
 `the wiki <https://github.com/ninia/jep/wiki/Accessing-Java-Objects-in-Python#custom-conversion-functions>`_
 or exec ``help(jep.setJavaToPythonConverter)`` in a Jep interpreter.
 
+PyJType for java.util.Map now implements keys() and items()
+***********************************************************
+This allows Java Maps to be easily converted to Python dictionaries in
+situations where duck typing is not good enough and a dictionary is required.
+
 Additions of PyBuiltins
 ***********************
 The `PyBuiltins <http://ninia.github.io/jep/javadoc/4.2/jep/python/PyBuiltin.html>`_
