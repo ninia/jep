@@ -76,3 +76,9 @@ class TestMaps(unittest.TestCase):
         self.assertNotIn(("a", 2), itemlist)
         self.assertNotIn("a", itemlist)
         self.assertNotIn(2, itemlist)
+
+    def test_map_to_dict(self):
+        jmap = makeJavaMap()
+        pydict = dict(jmap)
+        for k in pydict:
+            self.assertEqual(pydict[k], jmap[k])
