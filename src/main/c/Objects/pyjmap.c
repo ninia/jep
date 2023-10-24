@@ -258,6 +258,7 @@ static PyObject* pyjmap_items(PyObject* self, PyObject* args)
 
     entrySet = java_util_Map_entrySet(env, pyjob->object);
     if (process_java_exception(env) || !entrySet) {
+        PyErr_SetString(PyExc_RuntimeError, "Map.entrySet() returned null");
         goto FINALLY;
     }
 
@@ -272,7 +273,7 @@ static PyObject* pyjmap_items(PyObject* self, PyObject* args)
     }
 
     pylist = PyList_New(size);
-    while (java_util_Iterator_hasNext(env, itr)) {
+    while (index < size) {
         jobject  next;
         jobject  key;
         jobject  value;
@@ -283,7 +284,8 @@ static PyObject* pyjmap_items(PyObject* self, PyObject* args)
         next = java_util_Iterator_next(env, itr);
         if (!next) {
             if (!process_java_exception(env)) {
-                THROW_JEP(env, "Map.entrySet().iterator().next() returned null");
+                PyErr_SetString(PyExc_RuntimeError,
+                                "Map.entrySet().iterator().next() returned null");
             }
             Py_DECREF(pylist);
             goto FINALLY;
@@ -326,7 +328,6 @@ static PyObject* pyjmap_items(PyObject* self, PyObject* args)
         Py_DECREF(pyval);
 
         if (PyList_SetItem(pylist, index, pytuple) != 0) {
-            process_py_exception(env);
             Py_DECREF(pytuple);
             Py_DECREF(pylist);
             goto FINALLY;
