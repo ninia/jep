@@ -231,7 +231,7 @@ static PyObject* pyjmap_keys(PyObject* self, PyObject* args)
     }
 
     keyset = java_util_Map_keySet(env, pyjob->object);
-    if (process_java_exception(env) || !keyset) {
+    if (process_java_exception(env)) {
         goto FINALLY;
     }
 
@@ -257,8 +257,10 @@ static PyObject* pyjmap_items(PyObject* self, PyObject* args)
     }
 
     entrySet = java_util_Map_entrySet(env, pyjob->object);
-    if (process_java_exception(env) || !entrySet) {
-        PyErr_SetString(PyExc_RuntimeError, "Map.entrySet() returned null");
+    if (!entrySet) {
+        if (!process_java_exception(env)) {
+            PyErr_SetString(PyExc_RuntimeError, "Map.entrySet() returned null");
+        }
         goto FINALLY;
     }
 
@@ -268,7 +270,10 @@ static PyObject* pyjmap_items(PyObject* self, PyObject* args)
     }
 
     itr = java_lang_Iterable_iterator(env, entrySet);
-    if (process_java_exception(env) || !itr) {
+    if (!itr) {
+        if (!process_java_exception(env)) {
+            PyErr_SetString(PyExc_RuntimeError, "Map.entrySet().iterator() returned null");
+        }
         goto FINALLY;
     }
 
