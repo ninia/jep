@@ -278,7 +278,7 @@ static PyObject* pyjmap_items(PyObject* self, PyObject* args)
     }
 
     pylist = PyList_New(size);
-    while (index < size) {
+    for (index = 0;  index < size; index++) {
         jobject  next;
         jobject  key;
         jobject  value;
@@ -346,8 +346,7 @@ static PyObject* pyjmap_items(PyObject* self, PyObject* args)
             (*env)->DeleteLocalRef(env, value);
         }
 
-        index += 1;
-    }  // end of while loop
+    }  // end of for loop
 
     result = pylist;
 FINALLY:
