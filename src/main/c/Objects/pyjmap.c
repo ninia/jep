@@ -43,7 +43,6 @@ static Py_ssize_t pyjmap_len(PyObject *self)
     return len;
 }
 
-
 /*
  * Method for checking if a key is in the dictionary.  For example,
  * if key in o:
@@ -70,7 +69,6 @@ static int pyjmap_contains_key(PyObject *self, PyObject *key)
         goto FINALLY;
     }
 
-
     if (jresult) {
         result = 1;
     } else {
@@ -80,7 +78,6 @@ FINALLY:
     (*env)->PopLocalFrame(env, NULL);
     return result;
 }
-
 
 /*
  * Method for the getting items with the [key] operator on pyjmap.  For
@@ -189,7 +186,6 @@ FINALLY:
     return result;
 }
 
-
 /*
  * Method for iterating over the keys of the dictionary.  For example,
  * for key in o:
@@ -211,7 +207,6 @@ static PyObject* pyjmap_getiter(PyObject* obj)
         goto FINALLY;
     }
 
-
     iter = java_lang_Iterable_iterator(env, set);
     if (process_java_exception(env) || !iter) {
         goto FINALLY;
@@ -223,6 +218,158 @@ FINALLY:
     return result;
 }
 
+static PyObject* pyjmap_keys(PyObject* self, PyObject* args)
+{
+    jobject    keyset = NULL;
+    PyObject  *result = NULL;
+    PyJObject *pyjob  = (PyJObject*) self;
+    JNIEnv    *env    = pyembed_get_env();
+
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
+        process_java_exception(env);
+        return NULL;
+    }
+
+    keyset = java_util_Map_keySet(env, pyjob->object);
+    if (process_java_exception(env)) {
+        goto FINALLY;
+    }
+
+    result = jobject_As_PyObject(env, keyset);
+FINALLY:
+    (*env)->PopLocalFrame(env, NULL);
+    return result;
+}
+
+static PyObject* pyjmap_items(PyObject* self, PyObject* args)
+{
+    jobject    entrySet = NULL;
+    jobject    itr      = NULL;
+    PyObject  *pylist   = NULL;
+    PyObject  *result   = NULL;
+    int        size     = 0;
+    int        index    = 0;
+    PyJObject *pyjob    = (PyJObject*) self;
+    JNIEnv    *env      = pyembed_get_env();
+
+    if ((*env)->PushLocalFrame(env, JLOCAL_REFS) != 0) {
+        process_java_exception(env);
+    }
+
+    entrySet = java_util_Map_entrySet(env, pyjob->object);
+    if (!entrySet) {
+        if (!process_java_exception(env)) {
+            PyErr_SetString(PyExc_RuntimeError, "Map.entrySet() returned null");
+        }
+        goto FINALLY;
+    }
+
+    size = java_util_Map_size(env, pyjob->object);
+    if (process_java_exception(env)) {
+        goto FINALLY;
+    }
+
+    itr = java_lang_Iterable_iterator(env, entrySet);
+    if (!itr) {
+        if (!process_java_exception(env)) {
+            PyErr_SetString(PyExc_RuntimeError, "Map.entrySet().iterator() returned null");
+        }
+        goto FINALLY;
+    }
+
+    pylist = PyList_New(size);
+    for (index = 0;  index < size; index++) {
+        jobject  next;
+        jobject  key;
+        jobject  value;
+        PyObject *pykey;
+        PyObject *pyval;
+        PyObject *pytuple;
+
+        next = java_util_Iterator_next(env, itr);
+        if (!next) {
+            if (!process_java_exception(env)) {
+                PyErr_SetString(PyExc_RuntimeError,
+                                "Map.entrySet().iterator().next() returned null");
+            }
+            Py_DECREF(pylist);
+            goto FINALLY;
+        }
+
+        // convert Map.Entry's key to a PyObject*
+        key = java_util_Map_Entry_getKey(env, next);
+        if (process_java_exception(env)) {
+            Py_DECREF(pylist);
+            goto FINALLY;
+        }
+        pykey = jobject_As_PyObject(env, key);
+        if (!pykey) {
+            Py_DECREF(pylist);
+            goto FINALLY;
+        }
+
+        // convert Map.Entry's value to a PyObject*
+        value = java_util_Map_Entry_getValue(env, next);
+        if (process_java_exception(env)) {
+            Py_DECREF(pykey);
+            Py_DECREF(pylist);
+            goto FINALLY;
+        }
+        pyval = jobject_As_PyObject(env, value);
+        if (!pyval) {
+            Py_DECREF(pykey);
+            Py_DECREF(pylist);
+            goto FINALLY;
+        }
+
+        pytuple = PyTuple_Pack(2, pykey, pyval);
+        if (!pytuple) {
+            Py_DECREF(pykey);
+            Py_DECREF(pyval);
+            Py_DECREF(pylist);
+            goto FINALLY;
+        }
+        Py_DECREF(pykey);
+        Py_DECREF(pyval);
+
+        if (PyList_SetItem(pylist, index, pytuple) != 0) {
+            Py_DECREF(pytuple);
+            Py_DECREF(pylist);
+            goto FINALLY;
+        }
+
+        (*env)->DeleteLocalRef(env, next);
+        if (key) {
+            (*env)->DeleteLocalRef(env, key);
+        }
+        if (value) {
+            (*env)->DeleteLocalRef(env, value);
+        }
+
+    }  // end of for loop
+
+    result = pylist;
+FINALLY:
+    (*env)->PopLocalFrame(env, NULL);
+    return result;
+}
+
+static PyMethodDef pyjmap_methods[] = {
+    {
+        "keys",
+        pyjmap_keys,
+        METH_NOARGS,
+        "Returns a list of keys in the map"
+    },
+    {
+        "items",
+        pyjmap_items,
+        METH_NOARGS,
+        "Returns a list of the items in the map, where each item is a tuple containing a key-value pair"
+    },
+    { NULL, NULL }
+};
+
 static PyType_Slot slots[] = {
     {Py_tp_doc, "Jep java.util.Map"},
     {Py_tp_iter, (void*) pyjmap_getiter},
@@ -232,6 +379,8 @@ static PyType_Slot slots[] = {
     {Py_mp_length, (void*) pyjmap_len},
     {Py_mp_subscript, (void*) pyjmap_getitem},
     {Py_mp_ass_subscript, (void*) pyjmap_setitem},
+    // methods slot
+    {Py_tp_methods, (void*) pyjmap_methods},
     {0, NULL},
 };
 PyType_Spec PyJMap_Spec = {

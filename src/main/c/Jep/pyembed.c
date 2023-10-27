@@ -987,78 +987,24 @@ jobject pyembed_invoke_as(JNIEnv *env,
 
     // convert Java arguments to a Python dictionary
     if (kwargs != NULL) {
-        jobject entrySet;
-        jobject itr;
+        PyObject* pyjkwargs;
 
+        pyjkwargs = jobject_As_PyObject(env, kwargs);
+        if (!pyjkwargs) {
+            goto EXIT;
+        }
         pykwargs = PyDict_New();
-        entrySet = java_util_Map_entrySet(env, kwargs);
-        if ((*env)->ExceptionCheck(env)) {
+        if (!pykwargs) {
+            process_py_exception(env);
+            Py_DECREF(pyjkwargs);
             goto EXIT;
         }
-        itr = java_lang_Iterable_iterator(env, entrySet);
-        if ((*env)->ExceptionCheck(env)) {
+        if (PyDict_Update(pykwargs, pyjkwargs) != 0) {
+            process_py_exception(env);
+            Py_DECREF(pyjkwargs);
             goto EXIT;
         }
-
-        while (java_util_Iterator_hasNext(env, itr)) {
-            jobject  next;
-            jobject  key;
-            jobject  value;
-            PyObject *pykey;
-            PyObject *pyval;
-
-            next = java_util_Iterator_next(env, itr);
-            if (!next) {
-                if (!(*env)->ExceptionCheck(env)) {
-                    THROW_JEP(env, "Map.entrySet().iterator().next() returned null");
-                }
-                goto EXIT;
-            }
-
-            // convert Map.Entry's key to a PyObject*
-            key = java_util_Map_Entry_getKey(env, next);
-            if ((*env)->ExceptionCheck(env)) {
-                goto EXIT;
-            }
-            pykey = jobject_As_PyObject(env, key);
-            if (!pykey) {
-                goto EXIT;
-            }
-
-            // convert Map.Entry's value to a PyObject*
-            value = java_util_Map_Entry_getValue(env, next);
-            if ((*env)->ExceptionCheck(env)) {
-                Py_XDECREF(pykey);
-                goto EXIT;
-            }
-            pyval = jobject_As_PyObject(env, value);
-            if (!pyval) {
-                Py_DECREF(pykey);
-                goto EXIT;
-            }
-
-            if (PyDict_SetItem(pykwargs, pykey, pyval)) {
-                process_py_exception(env);
-                Py_DECREF(pykey);
-                Py_DECREF(pyval);
-                goto EXIT;
-            }
-            Py_DECREF(pykey);
-            Py_DECREF(pyval);
-
-            (*env)->DeleteLocalRef(env, next);
-            if (key) {
-                (*env)->DeleteLocalRef(env, key);
-            }
-            if (value) {
-                (*env)->DeleteLocalRef(env, value);
-            }
-        }
-    } // end of while loop
-
-    // if hasNext() threw an exception
-    if ((*env)->ExceptionCheck(env)) {
-        goto EXIT;
+        Py_DECREF(pyjkwargs);
     }
 
     pyret = PyObject_Call(callable, pyargs, pykwargs);
