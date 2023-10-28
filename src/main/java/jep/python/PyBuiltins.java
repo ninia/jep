@@ -46,6 +46,8 @@ public interface PyBuiltins {
 
     public PyObject dict();
 
+    public PyObject dict(Map<?,?> mapping);
+
     public String[] dir(PyObject object);
 
     public Object eval(String expression, PyObject globals);
