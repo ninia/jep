@@ -135,8 +135,8 @@ public abstract class Jep implements Interpreter {
             Thread current = Thread.currentThread();
             StringBuilder warning = new StringBuilder(THREAD_WARN)
                     .append("Unsafe reuse of thread ").append(current.getName())
-                    .append(" for another Python sub-interpreter.\n")
-                    .append("Please close() the previous Jep instance to ensure stability.");
+                    .append(" for another Python Interpreter.\n")
+                    .append("Please close() the previous Interpreter to ensure stability.");
             throw new JepException(warning.toString());
         }
 
@@ -152,9 +152,19 @@ public abstract class Jep implements Interpreter {
         boolean hasSharedModules = config.sharedModules != null
                 && !config.sharedModules.isEmpty();
 
+        if (hasSharedModules && config.subInterpOptions.useMainObmalloc == 0) {
+            throw new JepException("Shared modules can only be used with a shared allocator.");
+        }
+
         this.interactive = config.interactive;
+        SubInterpreterOptions interpOptions = config.subInterpOptions;
         this.tstate = init(this.classLoader, hasSharedModules,
-                useSubInterpreter);
+                useSubInterpreter, interpOptions.isolated,
+		interpOptions.useMainObmalloc,
+                interpOptions.allowFork, interpOptions.allowExec,
+                interpOptions.allowThreads, interpOptions.allowDaemonThreads,
+                interpOptions.checkMultiInterpeExtensions,
+                interpOptions.ownGIL);
         threadUsed.set(true);
         this.thread = Thread.currentThread();
         configureInterpreter(config);
@@ -211,7 +221,9 @@ public abstract class Jep implements Interpreter {
     }
 
     private native long init(ClassLoader classloader, boolean hasSharedModules,
-            boolean useSubinterpreter) throws JepException;
+            boolean useSubinterpreter, boolean isolated, int useMainObmalloc,
+	    int allowFork, int allowExec, int allowThreads, int allowDaemonThreads,
+            int checkMultiInterpExtensions, int ownGIL) throws JepException;
 
     /**
      * Checks if the current thread is valid for the method call. All calls must

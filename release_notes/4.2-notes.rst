@@ -66,3 +66,15 @@ called from Python using both varargs and kwargs:
         // do stuff
     }
 
+Support for isolated SubInterpreter
+***********************************
+When using Python 3.12 or greater it is now possible to created isolated
+SubInterpreters which have separate GILs to improve concurrency. This feature
+can be enabled by setting the 
+`SubInterpreterOptions <https://ninia.github.io/jep/javadoc/4.2/jep/SubInterpreterOptions.html>`_
+on
+`JepConfig <https://ninia.github.io/jep/javadoc/4.2/jep/JepConfig.html>`_
+to SubInterpreterOptions.isolated(). For more details about how
+isolated sub-interpreters are different from ordinary interpreters refer to
+`PEP-684 <https://peps.python.org/pep-0684/>`_
+

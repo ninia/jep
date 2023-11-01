@@ -559,7 +559,10 @@ void pyembed_shared_import(JNIEnv *env, jstring module)
 }
 
 intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller,
-                             jboolean hasSharedModules, jboolean usesubinterpreter)
+                             jboolean hasSharedModules, jboolean usesubinterpreter,
+                             jboolean isolated, jint useMainObmalloc, jint allowFork,
+			     jint allowExec, jint allowThreads, jint allowDaemonThreads,
+                             jint checkMultiInterpExtensions, jint ownGIL)
 {
     JepThread *jepThread;
     PyObject  *tdict, *globals;
@@ -583,8 +586,45 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller,
     if (usesubinterpreter) {
         PyEval_AcquireThread(mainThreadState);
 
+#if PY_MAJOR_VERSION > 3 || PY_MINOR_VERSION >= 12
+        PyInterpreterConfig config; 
+	if (isolated) {
+            config = (PyInterpreterConfig) _PyInterpreterConfig_INIT;
+        } else {
+            config = (PyInterpreterConfig) _PyInterpreterConfig_LEGACY_INIT;
+        }
+        if (useMainObmalloc != -1) {
+            config.use_main_obmalloc = useMainObmalloc;
+        }
+        if (allowFork != -1) {
+            config.allow_fork = allowFork;
+        }
+        if (allowExec != -1) {
+            config.allow_exec = allowExec;
+        }
+        if (allowThreads != -1) {
+            config.allow_threads = allowThreads;
+        }
+        if (allowDaemonThreads != -1) {
+            config.allow_daemon_threads = allowDaemonThreads;
+        }
+        if (checkMultiInterpExtensions != -1) {
+            config.check_multi_interp_extensions = checkMultiInterpExtensions;
+        }
+        if (ownGIL == 0) {
+            config.gil = PyInterpreterConfig_SHARED_GIL;
+        } else if (ownGIL == 1) {
+            config.gil = PyInterpreterConfig_OWN_GIL;
+        }
+        PyStatus status = Py_NewInterpreterFromConfig(&(jepThread->tstate), &config);
+        if (PyStatus_Exception(status)) {
+            THROW_JEP(env, status.err_msg);
+            free(jepThread);
+            return 0;
+        }
+#else
         jepThread->tstate = Py_NewInterpreter();
-
+#endif
         /*
          * Py_NewInterpreter() seems to take the thread state, but we're going to
          * save/release and reacquire it since that doesn't seem documented
