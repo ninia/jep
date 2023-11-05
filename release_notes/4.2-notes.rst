@@ -31,3 +31,18 @@ Additions of PyBuiltins
 The `PyBuiltins <http://ninia.github.io/jep/javadoc/4.2/jep/python/PyBuiltin.html>`_
 class provides makes it easier to call some of the builtin Python functions
 from Java.
+
+Java FunctionalInterfaces are automatically callable in Python 
+**************************************************************
+When a Java object implementing a
+`FunctionalInterface <https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/FunctionalInterface.html>`_
+is used in Python it is automatically 
+`callable <https://docs.python.org/3/glossary.html#term-callable>`_
+and the `__call__` method will be set to the abstract method of the interface.
+Similar to the Java compiler, the type is not required to have the
+FunctionalInterface annotation to be treated as a functional interface.
+For example a Kava Function can be called directly without using the accept method:
+::
+    from java.util.function import Function
+    identity = Function.identity()
+    result = identity("abc") # Same behavior as identity.accept("abc")

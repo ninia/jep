@@ -261,6 +261,17 @@ static int addMethods(JNIEnv* env, PyObject* dict, jclass clazz)
         process_java_exception(env);
         return -1;
     }
+    /**
+     * If the clazz is an interface assume it is a functional interface until
+     * we find more than one abstract method. FunctionalInterfaces are
+     * automatically callable in Python.
+     */
+    jboolean functionalInterface = java_lang_Class_isInterface(env, clazz);
+    if (process_java_exception(env)) {
+        return -1;
+    }
+    PyObject* oneAbstractPyJMethod = NULL;
+
     int i;
     int len = (*env)->GetArrayLength(env, methodArray);
     for (i = 0; i < len; i += 1) {
@@ -269,6 +280,28 @@ static int addMethods(JNIEnv* env, PyObject* dict, jclass clazz)
 
         if (!pymethod) {
             return -1;
+        }
+
+        if (functionalInterface == JNI_TRUE) {
+            jint modifiers = java_lang_reflect_Member_getModifiers(env, rmethod);
+            jboolean isAbstract;
+            if (process_java_exception(env)) {
+                Py_DECREF(pymethod);
+                return -1;
+            }
+            isAbstract = java_lang_reflect_Modifier_isAbstract(env, modifiers);
+            if (process_java_exception(env)) {
+                Py_DECREF(pymethod);
+                return -1;
+            }
+            if (isAbstract) {
+                if (oneAbstractPyJMethod) {
+                    functionalInterface = JNI_FALSE;
+                    oneAbstractPyJMethod = NULL;
+                } else {
+                    oneAbstractPyJMethod = (PyObject*) pymethod;
+                }
+            }
         }
 
         /*
@@ -286,7 +319,10 @@ static int addMethods(JNIEnv* env, PyObject* dict, jclass clazz)
             }
         } else if (PyJMethod_Check(cached)) {
             PyObject* multimethod = PyJMultiMethod_New((PyObject*) pymethod, cached);
-            PyDict_SetItem(dict, pymethod->pyMethodName, multimethod);
+            if (PyDict_SetItem(dict, pymethod->pyMethodName, multimethod) != 0) {
+                Py_DECREF(multimethod);
+                return -1;
+            }
             Py_DECREF(multimethod);
         } else if (PyJMultiMethod_Check(cached)) {
             PyJMultiMethod_Append(cached, (PyObject*) pymethod);
@@ -296,6 +332,9 @@ static int addMethods(JNIEnv* env, PyObject* dict, jclass clazz)
         (*env)->DeleteLocalRef(env, rmethod);
     }
     (*env)->DeleteLocalRef(env, methodArray);
+    if (functionalInterface == JNI_TRUE && oneAbstractPyJMethod) {
+        return PyDict_SetItemString(dict, "__call__", oneAbstractPyJMethod);
+    }
     return 0;
 }
 
