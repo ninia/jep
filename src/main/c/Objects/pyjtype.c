@@ -263,8 +263,8 @@ static int addMethods(JNIEnv* env, PyObject* dict, jclass clazz)
     }
     /**
      * If the clazz is an interface assume it is a functional interface until
-     * we find more than one abstract method. FunctionalInterfaces are
-     * automatically callable in Python.
+     * we find more than one abstract method or no abstract methods.
+     * FunctionalInterfaces are automatically callable in Python.
      */
     jboolean functionalInterface = java_lang_Class_isInterface(env, clazz);
     if (process_java_exception(env)) {
@@ -296,6 +296,11 @@ static int addMethods(JNIEnv* env, PyObject* dict, jclass clazz)
             }
             if (isAbstract) {
                 if (oneAbstractPyJMethod) {
+                    /*
+		     * If there is already one abstract method and this method is also
+		     * abstract then this isn't a functional interface and there is no need
+		     * to keep track of abstract methods.
+		     */
                     functionalInterface = JNI_FALSE;
                     oneAbstractPyJMethod = NULL;
                 } else {
