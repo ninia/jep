@@ -54,6 +54,27 @@ static int pyjconstructor_init(JNIEnv *env, PyJMethodObject *self)
 
     self->parameters    = (*env)->NewGlobalRef(env, paramArray);
     self->lenParameters = (*env)->GetArrayLength(env, paramArray);
+    jobject jpymethod = java_lang_reflect_AnnotatedElement_getAnnotation(env,
+                        self->rmethod, JPYMETHOD_TYPE);
+    if (jpymethod) {
+        self->isVarArgs = jep_PyMethod_varargs(env, jpymethod);
+        if (process_java_exception(env)) {
+            goto EXIT_ERROR;
+        }
+        self->isKwArgs = jep_PyMethod_kwargs(env, jpymethod);
+        if (process_java_exception(env)) {
+            goto EXIT_ERROR;
+        }
+    } else {
+        if (process_java_exception(env)) {
+            goto EXIT_ERROR;
+        }
+        self->isVarArgs = java_lang_reflect_Executable_isVarArgs(env, self->rmethod);
+        if (process_java_exception(env)) {
+            goto EXIT_ERROR;
+        }
+        self->isKwArgs = 0;
+    }
     (*env)->PopLocalFrame(env, NULL);
     return 1;
 
@@ -127,11 +148,6 @@ static PyObject* pyjconstructor_call(PyJMethodObject *self, PyObject *args,
     jobject        obj              = NULL;
     PyObject      *pobj             = NULL;
 
-    if (keywords != NULL && PyDict_Size(keywords) > 0) {
-        PyErr_Format(PyExc_RuntimeError, "Keywords are not supported.");
-        return NULL;
-    }
-
     lenPyArgsGiven = PyTuple_Size(args);
 
     env = pyembed_get_env();
@@ -139,13 +155,12 @@ static PyObject* pyjconstructor_call(PyJMethodObject *self, PyObject *args,
     if (lenJArgsExpected == -1) {
         return NULL;
     }
+    if (self->isKwArgs) {
+        lenJArgsExpected -= 1;
+    }
     /* Python gives one more arg than java expects for self/this. */
     if (lenJArgsExpected != lenPyArgsGiven - 1) {
-        jboolean varargs = java_lang_reflect_Executable_isVarArgs(env, self->rmethod);
-        if (process_java_exception(env)) {
-            return NULL;
-        }
-        if (!varargs || lenJArgsExpected > lenPyArgsGiven) {
+        if (!self->isVarArgs || lenJArgsExpected > lenPyArgsGiven) {
             PyErr_Format(PyExc_RuntimeError,
                          "Invalid number of arguments: %i, expected %i.",
                          (int) lenPyArgsGiven,
@@ -157,6 +172,10 @@ static PyObject* pyjconstructor_call(PyJMethodObject *self, PyObject *args,
     } else {
         /* No varargs, all args are normal */
         lenJArgsNormal = lenJArgsExpected;
+    }
+    if (!self->isKwArgs && keywords != NULL && PyDict_Size(keywords) > 0) {
+        PyErr_SetString(PyExc_RuntimeError, "Keywords are not supported.");
+        return NULL;
     }
 
     firstArg = PyTuple_GetItem(args, 0);
@@ -173,7 +192,11 @@ static PyObject* pyjconstructor_call(PyJMethodObject *self, PyObject *args,
         return NULL;
     }
 
-    jargs = (jvalue *) PyMem_Malloc(sizeof(jvalue) * lenJArgsExpected);
+    if (self->isKwArgs) {
+        jargs = (jvalue *) PyMem_Malloc(sizeof(jvalue) * (lenJArgsExpected + 1));
+    } else {
+        jargs = (jvalue *) PyMem_Malloc(sizeof(jvalue) * lenJArgsExpected);
+    }
     if (jargs == NULL) {
         (*env)->PopLocalFrame(env, NULL);
         return PyErr_NoMemory();
@@ -198,13 +221,7 @@ static PyObject* pyjconstructor_call(PyJMethodObject *self, PyObject *args,
         if (PyErr_Occurred()) {
             if (pos == (lenJArgsExpected - 1)
                     && PyErr_ExceptionMatches(PyExc_TypeError)) {
-                jboolean varargs = java_lang_reflect_Executable_isVarArgs(env, self->rmethod);
-                if ((*env)->ExceptionOccurred(env)) {
-                    /* Cannot convert to python since there is already a python exception */
-                    (*env)->ExceptionClear(env);
-                    goto EXIT_ERROR;
-                }
-                if (varargs) {
+                if (self->isVarArgs) {
                     /* Retry the last arg as array for varargs */
                     PyErr_Clear();
                     lenJArgsNormal -= 1;
@@ -242,6 +259,20 @@ static PyObject* pyjconstructor_call(PyJMethodObject *self, PyObject *args,
             goto EXIT_ERROR;
         }
         (*env)->DeleteLocalRef(env, paramType);
+    }
+    if (self->isKwArgs) {
+        if (keywords) {
+            jclass paramType = (jclass) (*env)->GetObjectArrayElement(env,
+                               self->parameters, lenJArgsExpected);
+            jargs[lenJArgsExpected] = convert_pyarg_jvalue(env, keywords, paramType,
+                                      JOBJECT_ID, lenJArgsExpected);
+            if (PyErr_Occurred()) {
+                goto EXIT_ERROR;
+            }
+            (*env)->DeleteLocalRef(env, paramType);
+        } else {
+            jargs[lenJArgsExpected].l = NULL;
+        }
     }
 
     Py_BEGIN_ALLOW_THREADS;

@@ -46,3 +46,23 @@ For example a Java Function can be called directly without using the accept meth
     from java.util.function import Function
     identity = Function.identity()
     result = identity("abc") # Same behavior as identity.accept("abc")
+
+Java Methods can be Annotated to accept Python kwargs
+*****************************************************
+The `@PyMethod <http://ninia.github.io/jep/javadoc/4.2/jep/PyMethod.html>`_ 
+annotation can be used on a constructor or method in a Java class to customize
+the behavior of Jep when the method is called from Python. The most notable 
+customization is the ability to pass kwargs from Python to Java. Jep will
+automatically convert the kwargs to a PyObject or Map. It is still possible
+for a Java method to accept varargs from Python using Java style varargs syntax
+but the ``@PyMethod`` provides an additional way to specify a Java method
+accepts varargs that enables mixing varargs and kwargs. 
+
+For example the following Java method signature shows a method that can be
+called from Python using both varargs and kwargs:
+::
+    @PyMethod(varargs=true, kwargs=true)
+    public void exampleMethod(Object[] varargs, Map<String,Object> kwargs) {
+        // do stuff
+    }
+

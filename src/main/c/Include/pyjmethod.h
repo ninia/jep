@@ -49,6 +49,8 @@ typedef struct {
     jobjectArray      parameters;          /* array of jclass parameter types */
     int               lenParameters;       /* length of parameters above */
     int               isStatic;            /* if method is static */
+    int               isVarArgs;           /* if the method takes varargs */
+    int               isKwArgs;            /* if the method takes kwargs */
 } PyJMethodObject;
 
 /* Create a new PyJMethod from a java.lang.reflect.Method*/
@@ -72,6 +74,6 @@ int PyJMethod_GetParameterCount(PyJMethodObject*, JNIEnv*);
  * This function does not need to be called before using calling this method, it is only
  * necessary for resolving method overloading.
  */
-int PyJMethod_CheckArguments(PyJMethodObject*, JNIEnv*, PyObject*, jboolean);
+int PyJMethod_CheckArguments(PyJMethodObject*, JNIEnv*, PyObject*, PyObject*);
 
 #endif // ndef pyjmethod

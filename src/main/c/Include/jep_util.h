@@ -134,6 +134,7 @@ extern jclass JDOUBLE_ARRAY_TYPE;
     F(JCHARBUFFER_TYPE, "java/nio/CharBuffer") \
     F(JNUMBER_TYPE, "java/lang/Number") \
     F(JEXECUTABLE_TYPE, "java/lang/reflect/Executable") \
+    F(JANNOTATED_ELEMENT_TYPE, "java/lang/reflect/AnnotatedElement") \
     F(JMEMBER_TYPE, "java/lang/reflect/Member") \
     F(JMETHOD_TYPE, "java/lang/reflect/Method") \
     F(JFIELD_TYPE, "java/lang/reflect/Field") \
@@ -156,6 +157,7 @@ extern jclass JDOUBLE_ARRAY_TYPE;
     F(JEP_EXC_TYPE, "jep/JepException") \
     F(JPYOBJECT_TYPE, "jep/python/PyObject") \
     F(JPYCALLABLE_TYPE, "jep/python/PyCallable") \
+    F(JPYMETHOD_TYPE, "jep/PyMethod") \
     NUMPY_CLASS_TABLE(F)
 
 #if JEP_NUMPY_ENABLED

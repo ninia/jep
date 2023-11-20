@@ -133,6 +133,8 @@ class TestTypes(unittest.TestCase):
         self.assertSequenceEqual(("1","2"), self.test.testAllVarArgs("1","2"))
         # Multiple varargs goes through a different path then just one vararg so be sure to hit both.
         self.assertSequenceEqual(("1"), self.test.testAllVarArgs("1"))
+        # Varags with a @PyMethod annotation
+        self.assertSequenceEqual(("1","2"), self.test.testAllVarArgsAnnotated("1","2"))
         # mixing normal args with varargs
         self.assertSequenceEqual(("1","2", "3"), self.test.testMixedVarArgs("1","2", "3"))
         self.assertSequenceEqual(("1","2", "3", "4"), self.test.testMixedVarArgs("1","2", "3", "4"))
@@ -144,3 +146,37 @@ class TestTypes(unittest.TestCase):
         self.assertSequenceEqual(("1", "2", "3"), Test("1", "2", "3").getConstructorVarArgs());
         # Passing a tuple should convert the tuple elements to the varargs array.
         self.assertSequenceEqual(("1", "2", "3"), Test(("1", "2", "3")).getConstructorVarArgs());
+
+    def test_kwarg(self):
+        expected = {"k1":"v1", "k2":"v2"};
+        actual = self.test.testKwArgsMap(k1="v1", k2="v2")
+        self.assertEqual(expected, dict(actual))
+        actual = self.test.testKwArgsMap(**expected)
+        self.assertEqual(expected, dict(actual))
+        actual = self.test.testKwArgsDict(k1="v1", k2="v2")
+        self.assertEqual(expected, actual)
+        actual = self.test.testKwArgsDict(**expected)
+        self.assertEqual(expected, actual)
+
+        actual = self.test.testKwArgsMap()
+        self.assertEqual(None, actual)
+        actual = self.test.testKwArgsDict()
+        self.assertEquals(None, actual)
+
+        varargs = ("1", "2")
+        result = self.test.testVarAndKwArgsMap(*varargs, **expected)
+        self.assertSequenceEqual(varargs, result[:2])
+        self.assertEqual(expected, dict(result[2]))
+
+        varargs = ("1", "2")
+        result = self.test.testMixedVarAndKwArgsMap("0", *varargs, **expected)
+        self.assertEqual("0", result[0])
+        self.assertSequenceEqual(varargs, result[1:3])
+        self.assertEqual(expected, dict(result[3]))
+
+        # When no kwargs are provided a method without kwargs should take precedence over a method with kwargs
+        self.assertEqual("No Args", self.test.testKwArgsOverloaded())
+        # But when kwargs are provided the kwargs method should be chosen
+        self.assertEqual(expected, self.test.testKwArgsOverloaded(**expected))
+
+
