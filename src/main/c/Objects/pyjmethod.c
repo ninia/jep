@@ -192,7 +192,7 @@ int PyJMethod_CheckArguments(PyJMethodObject* method, JNIEnv *env,
     int paramCount = PyJMethod_GetParameterCount(method, env);
     if (keywords != NULL) {
         if (PyDict_Size(keywords) == 0) {
-            keywords == NULL;
+            keywords = NULL;
         } else if (!method->isKwArgs) {
             return -1;
         } else {
@@ -244,19 +244,41 @@ int PyJMethod_CheckArguments(PyJMethodObject* method, JNIEnv *env,
     return matchTotal;
 }
 
-// pyjmethod_call. where the magic happens.
-//
-// okay, some of the magic -- we already the methodId, so we don't have
-// to reflect. we just have to parse the arguments from python,
-// check them against the java args, and call the java function.
-//
-// easy. :-)
+
+/*
+ * This function contains much of the same logic as pyjconstructor_call. Ensure
+ * any changes here are done there if needed. If you reading this and see a way
+ * to reduce the redundancy please do.
+ *
+ * This function primarily does two things.
+ *  1) Convert the python method arguments to java objects
+ *  2) Call a Java method
+ *
+ * Several different factors make the conversion of args complicated:
+ *  1) Python includes a reference to this/self as the first arg but Java needs
+ *     this/self separate from the other args.
+ *  2) Varargs are appended to the args by Python but Java varargs are a
+ *     seperate array.
+ *  3) Kwargs in Java are an ordinary arg but in Python they are passed
+ *     separatly.
+ *  4) Primitive PyjArrays are pinned in Python, before passing to Java the
+ *     contents must be commited so Java is aware of changes by Python and
+ *     after the call they must be repinned to reflect any changes made in Java
+ *     during the call.
+ *
+ * For the actual JNI call to Java the main complication is that there are
+ * separate JNI function calls for methods depending on the return type and
+ * whether it is static. All different variations are handled by this function
+ * so there is alot of code to find the right JNI call.
+ *
+ */
 static PyObject* pyjmethod_call(PyJMethodObject *self,
                                 PyObject *args,
                                 PyObject *keywords)
 {
     JNIEnv        *env              = NULL;
     Py_ssize_t     lenPyArgsGiven   = 0;
+    /* The number of args Java expects, excluding kwargs */
     int            lenJArgsExpected = 0;
     /* The number of normal arguments before any varargs */
     int            lenJArgsNormal   = 0;

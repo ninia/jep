@@ -133,6 +133,10 @@ static PyObject* pyjmultimethod_call(PyObject *multimethod,
                                   methodPosition);
         int parameterCount = PyJMethod_GetParameterCount(method, env);
         if (keywords && PyDict_Size(keywords) > 0 && !method->isKwArgs) {
+            /* 
+	     * keywords were passed in but this method does not support
+	     * keywords so keep looking at other methods.
+	     */
             continue;
         } else if (method->isKwArgs) {
             parameterCount -= 1;
