@@ -116,11 +116,6 @@ static PyObject* pyjmultimethod_call(PyObject *multimethod,
     Py_ssize_t        argsSize       = 0;
     JNIEnv*           env            = NULL;
 
-    if (keywords != NULL && PyDict_Size(keywords) > 0) {
-        PyErr_Format(PyExc_RuntimeError, "Keywords are not supported.");
-        return NULL;
-    }
-
     if (!PyJMultiMethod_Check(multimethod)) {
         PyErr_SetString(PyExc_TypeError,
                         "pyjmultimethod_call_internal received incorrect type");
@@ -137,12 +132,16 @@ static PyObject* pyjmultimethod_call(PyObject *multimethod,
         PyJMethodObject* method = (PyJMethodObject*) PyList_GetItem(mm->methodList,
                                   methodPosition);
         int parameterCount = PyJMethod_GetParameterCount(method, env);
-        jboolean varargs = java_lang_reflect_Executable_isVarArgs(env, method->rmethod);
-        if ((parameterCount == argsSize) || (varargs && argsSize >= parameterCount - 1)) {
+        if (keywords && PyDict_Size(keywords) > 0 && !method->isKwArgs) {
+            continue;
+        } else if (method->isKwArgs) {
+            parameterCount -= 1;
+        }
+        if ((parameterCount == argsSize) || (method->isVarArgs
+                                             && argsSize >= parameterCount - 1)) {
             if (cand) {
                 if (!candMatch) {
-                    jboolean candvarargs = java_lang_reflect_Executable_isVarArgs(env, cand->rmethod);
-                    candMatch = PyJMethod_CheckArguments(cand, env, args, candvarargs);
+                    candMatch = PyJMethod_CheckArguments(cand, env, args, keywords);
                 }
                 if (PyErr_Occurred()) {
                     cand = NULL;
@@ -151,7 +150,7 @@ static PyObject* pyjmultimethod_call(PyObject *multimethod,
                     // cand was not compatible, replace it with method.
                     cand = method;
                 } else {
-                    int methodMatch = PyJMethod_CheckArguments(method, env, args, varargs);
+                    int methodMatch = PyJMethod_CheckArguments(method, env, args, keywords);
                     if (methodMatch > candMatch) {
                         cand = method;
                         candMatch = methodMatch;

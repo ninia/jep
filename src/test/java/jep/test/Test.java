@@ -4,12 +4,16 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Map;
 
 import jep.Interpreter;
 import jep.Jep;
 import jep.JepConfig;
 import jep.JepException;
+import jep.PyMethod;
 import jep.SubInterpreter;
+import jep.python.PyObject;
 
 /**
  * Test.java
@@ -285,6 +289,46 @@ public class Test implements Runnable {
         result[1] = regArg2;
         System.arraycopy(args, 0, result, 2, args.length);
         return result;
+    }
+
+    @PyMethod(varargs=true)
+    public String[] testAllVarArgsAnnotated(String[] args) {
+        return args;
+    }
+
+    @PyMethod(kwargs=true)
+    public Map<String,Object> testKwArgsMap(Map<String,Object> kwargs) {
+        return kwargs;
+    }
+
+    @PyMethod(kwargs=true)
+    public PyObject testKwArgsDict(PyObject kwargs) {
+        return kwargs;
+    }
+    
+    @PyMethod(varargs=true, kwargs=true)
+    public Object[] testVarAndKwArgsMap(Object[] varargs, Map<String,Object> kwargs) {
+        Object[] result = Arrays.copyOf(varargs, varargs.length + 1);
+        result[varargs.length] = kwargs;
+        return result;
+    }
+
+    @PyMethod(varargs=true, kwargs=true)
+    public Object[] testMixedVarAndKwArgsMap(Object arg, Object[] varargs, Map<String,Object> kwargs) {
+        Object[] result = new Object[varargs.length + 2];
+        result[0] = arg;
+        System.arraycopy(varargs, 0, result, 1, varargs.length);
+        result[varargs.length + 1] = kwargs;
+        return result;
+    }
+
+    @PyMethod(kwargs=true)
+    public PyObject testKwArgsOverloaded(PyObject kwargs) {
+        return kwargs;
+    }
+
+    public String testKwArgsOverloaded() {
+        return "No Args";
     }
 
     public static Object[] test20Args(Object arg1, Object arg2, Object arg3,
