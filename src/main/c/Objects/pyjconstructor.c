@@ -131,11 +131,18 @@ int PyJConstructor_Check(PyObject* object)
 }
 
 
+/*
+ * This function contains much of the same logic as pyjmethod_call. Refer
+ * to the top level comment on that function for a summary of the behavior
+ * here. Also ensure any changes here are done there if needed. If you
+ * reading this and see a way to reduce the redundancy please do.
+ */
 static PyObject* pyjconstructor_call(PyJMethodObject *self, PyObject *args,
                                      PyObject *keywords)
 {
     JNIEnv        *env              = NULL;
     Py_ssize_t     lenPyArgsGiven   = 0;
+    /* The number of args Java expects, excluding kwargs */
     int            lenJArgsExpected = 0;
     /* The number of normal arguments before any varargs */
     int            lenJArgsNormal   = 0;

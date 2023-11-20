@@ -52,7 +52,7 @@ public @interface PyMethod {
     public boolean varargs() default false;
 
     /**
-     * Set to true to indicate that this Java method should except keyword
+     * Set to true to indicate that this Java method should accept keyword
      * arguments when it is called from Python. The last argument must be a type
      * that is compatible with a Jep dict, such as a Map or PyObject.
      */
