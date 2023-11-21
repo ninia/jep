@@ -278,9 +278,8 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 {
     JNIEnv        *env              = NULL;
     Py_ssize_t     lenPyArgsGiven   = 0;
-    /* The number of args Java expects, excluding kwargs */
     int            lenJArgsExpected = 0;
-    /* The number of normal arguments before any varargs */
+    /* The number of normal arguments before any varargs or kwargs */
     int            lenJArgsNormal   = 0;
     PyObject      *firstArg         = NULL;
     PyJObject     *instance         = NULL;
@@ -289,6 +288,12 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
     jvalue        *jargs            = NULL;
     /* if params includes pyjarray instance */
     int            foundArray       = 0;
+    /*
+     * Whether varargs need special processing. When one vararg is given it
+     * might be processed as a normal arg so this is a bit more complicated
+     * than self->isVarArgs
+     */
+    int            needToDoVarArgs  = 0;
 
     lenPyArgsGiven = PyTuple_Size(args);
 
@@ -297,12 +302,13 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
     if (lenJArgsExpected == -1) {
         return NULL;
     }
+    lenJArgsNormal = lenJArgsExpected;
     if (self->isKwArgs) {
-        lenJArgsExpected -= 1;
+        lenJArgsNormal -= 1;
     }
     /* Python gives one more arg than java expects for self/this. */
-    if (lenJArgsExpected != lenPyArgsGiven - 1) {
-        if (!self->isVarArgs || lenJArgsExpected > lenPyArgsGiven) {
+    if (lenJArgsNormal != lenPyArgsGiven - 1) {
+        if (!self->isVarArgs || lenJArgsNormal > lenPyArgsGiven) {
             PyErr_Format(PyExc_RuntimeError,
                          "Invalid number of arguments: %i, expected %i.",
                          (int) lenPyArgsGiven,
@@ -310,10 +316,8 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
             return NULL;
         }
         /* The last argument will be handled as varargs, so not a normal arg */
-        lenJArgsNormal = lenJArgsExpected - 1;
-    } else {
-        /* No varargs, all args are normal */
-        lenJArgsNormal = lenJArgsExpected;
+        lenJArgsNormal -= 1;
+        needToDoVarArgs = 1;
     }
     if (!self->isKwArgs && keywords != NULL && PyDict_Size(keywords) > 0) {
         PyErr_SetString(PyExc_RuntimeError, "Keywords are not supported.");
@@ -342,11 +346,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
         return NULL;
     }
 
-    if (self->isKwArgs) {
-        jargs = (jvalue *) PyMem_Malloc(sizeof(jvalue) * (lenJArgsExpected + 1));
-    } else {
-        jargs = (jvalue *) PyMem_Malloc(sizeof(jvalue) * lenJArgsExpected);
-    }
+    jargs = (jvalue *) PyMem_Malloc(sizeof(jvalue) * lenJArgsExpected);
     if (jargs == NULL) {
         (*env)->PopLocalFrame(env, NULL);
         return PyErr_NoMemory();
@@ -375,6 +375,7 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
                     /* Retry the last arg as array for varargs */
                     PyErr_Clear();
                     lenJArgsNormal -= 1;
+                    needToDoVarArgs = 1;
                 } else {
                     goto EXIT_ERROR;
                 }
@@ -383,27 +384,27 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
 
         (*env)->DeleteLocalRef(env, paramType);
     }
-    if (lenJArgsNormal + 1 == lenJArgsExpected) {
+    if (needToDoVarArgs) {
         /* Need to process last arg as varargs. */
         PyObject *param = NULL;
         jclass paramType = (jclass) (*env)->GetObjectArrayElement(env,
-                           self->parameters, lenJArgsExpected - 1);
-        if (lenPyArgsGiven == lenJArgsExpected) {
+                           self->parameters, lenJArgsNormal);
+        if (lenPyArgsGiven == (lenJArgsNormal + 1)) {
             /*
              * Python args are normally one longer than expected to allow for
              * this/self so if it isn't then nothing was given for the varargs
              */
             param = PyTuple_New(0);
         } else {
-            param = PyTuple_GetSlice(args, lenJArgsExpected, lenPyArgsGiven);
+            param = PyTuple_GetSlice(args, lenJArgsNormal + 1, lenPyArgsGiven);
         }
         if (PyErr_Occurred()) {
             goto EXIT_ERROR;
         }
 
-        jargs[lenJArgsExpected - 1] = convert_pyarg_jvalue(env, param, paramType,
-                                      JARRAY_ID,
-                                      lenJArgsExpected - 1);
+        jargs[lenJArgsNormal] = convert_pyarg_jvalue(env, param, paramType,
+                                JARRAY_ID,
+                                lenJArgsNormal);
         Py_DecRef(param);
         if (PyErr_Occurred()) {
             goto EXIT_ERROR;
@@ -413,15 +414,15 @@ static PyObject* pyjmethod_call(PyJMethodObject *self,
     if (self->isKwArgs) {
         if (keywords) {
             jclass paramType = (jclass) (*env)->GetObjectArrayElement(env,
-                               self->parameters, lenJArgsExpected);
-            jargs[lenJArgsExpected] = convert_pyarg_jvalue(env, keywords, paramType,
-                                      JOBJECT_ID, lenJArgsExpected);
+                               self->parameters, lenJArgsExpected - 1);
+            jargs[lenJArgsExpected - 1] = convert_pyarg_jvalue(env, keywords, paramType,
+                                          JOBJECT_ID, lenJArgsExpected - 1);
             if (PyErr_Occurred()) {
                 goto EXIT_ERROR;
             }
             (*env)->DeleteLocalRef(env, paramType);
         } else {
-            jargs[lenJArgsExpected].l = NULL;
+            jargs[lenJArgsExpected - 1].l = NULL;
         }
     }
 
