@@ -258,9 +258,9 @@ int PyJMethod_CheckArguments(PyJMethodObject* method, JNIEnv *env,
  *  1) Python includes a reference to this/self as the first arg but Java needs
  *     this/self separate from the other args.
  *  2) Varargs are appended to the args by Python but Java varargs are a
- *     seperate array.
+ *     separate array.
  *  3) Kwargs in Java are an ordinary arg but in Python they are passed
- *     separatly.
+ *     separately.
  *  4) Primitive PyjArrays are pinned in Python, before passing to Java the
  *     contents must be commited so Java is aware of changes by Python and
  *     after the call they must be repinned to reflect any changes made in Java
