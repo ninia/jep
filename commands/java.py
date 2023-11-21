@@ -1,5 +1,8 @@
 from setuptools import Command
-from setuptools.dep_util import newer_group
+try:
+    from setuptools.modified import newer_group
+except ImportError:
+    from setuptools.dep_util import newer_group
 
 import shutil
 import os

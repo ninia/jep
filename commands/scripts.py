@@ -11,7 +11,10 @@ import sysconfig
 
 from stat import ST_MODE
 from setuptools import Command
-from distutils.dep_util import newer
+try:
+    from setuptools.modified import newer
+except ImportError:
+    from distutils.dep_util import newer
 from commands.util import is_osx
 from commands.util import is_windows
 from commands.python import get_libpython
