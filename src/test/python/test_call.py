@@ -161,7 +161,7 @@ class TestTypes(unittest.TestCase):
         actual = self.test.testKwArgsMap()
         self.assertEqual(None, actual)
         actual = self.test.testKwArgsDict()
-        self.assertEquals(None, actual)
+        self.assertEqual(None, actual)
 
         varargs = ("1", "2")
         result = self.test.testVarAndKwArgsMap(*varargs, **expected)
