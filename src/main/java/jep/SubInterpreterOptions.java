@@ -61,9 +61,9 @@ public class SubInterpreterOptions {
      * allocator state. Otherwise it will use (share) the main interpreter’s.
      * 
      * If this is false then check_multi_interp_extensions must be true. If this
-     * is true then gil must not be true.
+     * is true then own GIL must not be true.
      *
-     * Shared Modules cannot be used when this is set to true.
+     * Shared Modules cannot be used when this is set to false.
      *
      * @param useMainObmalloc
      *            whether the sub-interpreter will share the main interpreter's
@@ -77,8 +77,8 @@ public class SubInterpreterOptions {
     }
 
     /**
-     * If this is 0 then the runtime will not support forking the process in
-     * any thread where the sub-interpreter is currently active. Otherwise
+     * If this is false then the runtime will not support forking the process
+     * in any thread where the sub-interpreter is currently active. Otherwise
      * fork is unrestricted.
      *
      * Note that the subprocess module still works when fork is disallowed.
@@ -111,8 +111,8 @@ public class SubInterpreterOptions {
     }
 
     /**
-     * If this is false then the sub-interpreter’s threading module won’t
-     * create threads. Otherwise threads are allowed.
+     * If this is false then the sub-interpreter’s threading module won’t be
+     * able to create threads. Otherwise threads are allowed.
      *
      * @param allowThreads
      *            whether the  sub-interpreter will allow threads.
@@ -125,8 +125,8 @@ public class SubInterpreterOptions {
     }
 
     /**
-     * If this is false then the sub-interpreter’s threading module won’t
-     * create daemon threads. Otherwise daemon threads are allowed 
+     * If this is false then the sub-interpreter’s threading module won’t be
+     * able to create daemon threads. Otherwise daemon threads are allowed 
      * (as long as allowThreads is true).
      *
      * @param allowDaemonThreads
@@ -165,7 +165,7 @@ public class SubInterpreterOptions {
      * If this is true then useMainObmalloc must be false.
      *
      * @param ownGIL
-     *            whether the  sub-interpreter will use its own GIL.
+     *            whether the sub-interpreter will use its own GIL.
      * @return a reference to this SubInterpreterOptions
      *
      */
