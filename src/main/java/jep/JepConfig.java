@@ -58,6 +58,8 @@ public class JepConfig {
 
     protected Set<String> sharedModules = null;
 
+    protected SubInterpreterOptions subInterpOptions = SubInterpreterOptions.legacy();
+
     /**
      * Sets a path of directories separated by File.pathSeparator that will be
      * appended to the sub-intepreter's <code>sys.path</code>
@@ -158,6 +160,10 @@ public class JepConfig {
      * that use the c-api. For a complete discussion of the types of problems
      * that can require shared modules see the documentation on
      * shared_modules_hook.py.
+     *
+     * Note that shared modules cannot be used in a sub-interpreter that has its
+     * own allocation state which also means shared modules cannot be used in a
+     * sub-interpreter with its own GIL.
      * 
      * @param sharedModules
      *            a set of module names that should be shared
@@ -189,10 +195,26 @@ public class JepConfig {
     }
 
     /**
+     * Set the configuration options for a sub-interpreter. These options
+     * are only used in Python version 3.12 or later, when using earlier versions
+     * of Python these options are ignored. These options are only used for SubInterpreter
+     * and should not be set when configuring SharedInterpreter.
+     *
+     * @param subInterpOptions
+     *            the sub-interpreter options
+     * @return a reference to this JepConfig
+     * 
+     * @since 4.2
+     */
+    public JepConfig setSubInterpreterOptions(SubInterpreterOptions subInterpOptions) {
+        this.subInterpOptions = subInterpOptions;
+        return this;
+    }
+
+    /**
      * Creates a new Jep instance and its associated sub-interpreter with this
      * JepConfig.
      * 
-     * @return a new SubInterpreter instance
      * @throws JepException
      *             if an error occurs
      * @since 3.9
