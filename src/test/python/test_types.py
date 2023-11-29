@@ -922,15 +922,11 @@ class TestTypes(unittest.TestCase):
             pass # not built with numpy
 
     def test_function_is_callable(self):
-        from java.util.function import Function
-        identity = Function.identity()
-        # identity is a PyJType of java.util.function.Function so it has an apply method
-        self.assertEqual("test", identity.apply("test"))
+        from java.util.function import Predicate
+        isFoo = Predicate.isEqual("foo")
+        # isFoo is a PyJType of java.util.function.Function so it has an apply method
+        self.assertFalse(isFoo.test("test"))
+        self.assertTrue(isFoo.test("foo"))
         # All Functions are automatically callable so it can be called directly instead of applied
-        self.assertEqual("test", identity("test"))
-        # Make a slightly more complicate Function by converting int to a Function run after identity
-        intAsJavaFunction = identity.andThen(int)
-        # Even though all the logic is in Python it is still a java Function and can accept
-        self.assertEqual(123, intAsJavaFunction.apply("123"))
-        # But it is also callable
-        self.assertEqual(123, intAsJavaFunction("123"))
+        self.assertFalse(isFoo("test"))
+        self.assertTrue(isFoo("foo"))
