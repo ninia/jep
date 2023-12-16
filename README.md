@@ -1,9 +1,9 @@
 Jep - Java Embedded Python
 ===========================
 
-[![Python: 3.5, 3.6, 3.7, 3.8, 3.9, 3.10, 3.11](https://img.shields.io/pypi/pyversions/Jep.svg)](https://pypi.org/pypi/jep)
+[![Python: 3.6, 3.7, 3.8, 3.9, 3.10, 3.11, 3.12](https://img.shields.io/pypi/pyversions/Jep.svg)](https://pypi.org/pypi/jep)
 [![License: zlib/libpng](https://img.shields.io/pypi/l/Jep.svg)](https://pypi.org/pypi/jep)
-[![Pypi: v4.1.0](https://img.shields.io/pypi/v/Jep.svg)](https://pypi.org/pypi/jep)
+[![Pypi: v4.2.0](https://img.shields.io/pypi/v/Jep.svg)](https://pypi.org/pypi/jep)
 [![Docs: wiki](https://img.shields.io/badge/docs-wiki-orange.svg)](https://github.com/ninia/jep/wiki)
 [![Docs: JavaDoc](https://img.shields.io/badge/docs-javadoc-orange.svg)](javadoc)
 
@@ -35,7 +35,7 @@ Building and installing require the JDK, Python, and optionally numpy to be inst
 
 Dependencies
 ------------
-* Python >= 3.5
+* Python >= 3.6
 * Java >= 1.8
 * NumPy >= 1.7 (optional)
 
