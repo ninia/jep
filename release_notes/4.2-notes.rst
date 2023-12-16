@@ -28,7 +28,7 @@ situations where duck typing is not good enough and a dictionary is required.
 
 Additions of PyBuiltins
 ***********************
-The `PyBuiltins <http://ninia.github.io/jep/javadoc/4.2/jep/python/PyBuiltin.html>`_
+The `PyBuiltins <http://ninia.github.io/jep/javadoc/4.2/jep/python/PyBuiltins.html>`_
 class provides makes it easier to call some of the builtin Python functions
 from Java.
 
