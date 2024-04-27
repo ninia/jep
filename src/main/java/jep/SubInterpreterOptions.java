@@ -58,7 +58,7 @@ public class SubInterpreterOptions {
 
     /**
      * If this is false then the sub-interpreter will use its own "object"
-     * allocator state. Otherwise it will use (share) the main interpreter’s.
+     * allocator state. Otherwise it will use (share) the main interpreter's.
      * 
      * If this is false then check_multi_interp_extensions must be true. If this
      * is true then own GIL must not be true.
@@ -111,7 +111,7 @@ public class SubInterpreterOptions {
     }
 
     /**
-     * If this is false then the sub-interpreter’s threading module won’t be
+     * If this is false then the sub-interpreter's threading module won't be
      * able to create threads. Otherwise threads are allowed.
      *
      * @param allowThreads
@@ -125,7 +125,7 @@ public class SubInterpreterOptions {
     }
 
     /**
-     * If this is false then the sub-interpreter’s threading module won’t be
+     * If this is false then the sub-interpreter's threading module won't be
      * able to create daemon threads. Otherwise daemon threads are allowed 
      * (as long as allowThreads is true).
      *
@@ -159,8 +159,8 @@ public class SubInterpreterOptions {
 
     /**
      * This determines the operation of the GIL for the sub-interpreter. When
-     * this is false use (share) the main interpreter’s GIL. When this is true
-     * use the sub-interpreter’s own GIL.
+     * this is false use (share) the main interpreter's GIL. When this is true
+     * use the sub-interpreter's own GIL.
      *
      * If this is true then useMainObmalloc must be false.
      *
