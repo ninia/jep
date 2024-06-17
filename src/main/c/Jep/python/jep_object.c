@@ -109,6 +109,7 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_setAttr
         goto EXIT;
     }
     ret = PyObject_SetAttrString(pyObject, attrName, pyAttr);
+    Py_DECREF(pyAttr);
     if (ret == -1) {
         process_py_exception(env);
     }
