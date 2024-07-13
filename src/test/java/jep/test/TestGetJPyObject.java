@@ -114,7 +114,7 @@ public class TestGetJPyObject {
         }
     }
 
-    public static void testSetAttrRefCount(Interpreter interp) throws JepException {
+    public static void testRefCount(Interpreter interp) throws JepException {
         AtomicInteger delCount = new AtomicInteger();
         interp.set("delCount", delCount);
         interp.exec("class Simple:\n" +
@@ -122,12 +122,23 @@ public class TestGetJPyObject {
                     "        delCount.getAndIncrement()"
         );
         PyCallable simple = interp.getValue("Simple", PyCallable.class);
+        /* Check for leaks in setAttr() */
         PyObject obj1 = simple.callAs(PyObject.class);
         PyObject obj2 = simple.callAs(PyObject.class);
         obj1.setAttr("member", obj2);
         obj2.close();
         obj1.close();
         /* When a PyObject is deleted any attributes without other references should also be deleted. */
+        if (delCount.get() != 2) {
+            throw new IllegalStateException("Expecting 2 deletions but got " + delCount.get());
+        }
+        delCount.set(0);
+        /* Check for leaks in equals() */
+        obj1 = simple.callAs(PyObject.class);
+        obj2 = simple.callAs(PyObject.class);
+        obj1.equals(obj2);
+        obj2.close();
+        obj1.close();
         if (delCount.get() != 2) {
             throw new IllegalStateException("Expecting 2 deletions but got " + delCount.get());
         }
@@ -422,7 +433,7 @@ public class TestGetJPyObject {
             testIdentity(interp);
             testGetAttr(interp);
             testSetAttr(interp);
-            testSetAttrRefCount(interp);
+            testRefCount(interp);
             testDelAttr(interp);
             testJPyCallable(interp);
             testToString(interp);
