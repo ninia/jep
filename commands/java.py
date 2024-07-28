@@ -10,9 +10,10 @@ import fnmatch
 import traceback
 import sys
 import logging
+import subprocess
 
 from commands.util import configure_error
-from commands.util import is_osx
+from commands.util import is_osx, is_linux
 from commands.util import shell
 from commands.util import CommandFailed
 from commands.util import warning
@@ -47,6 +48,19 @@ def get_java_home():
             return _java_home
         except CommandFailed:
             traceback.print_exc()
+
+    if is_linux():
+        try:
+            result = subprocess.run(
+                ["bash", "-c", "readlink -f $(which javac) | sed 's:/bin/javac::'"],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            _java_home = result.stdout.strip()
+            return _java_home
+        except subprocess.CalledProcessError as e:
+            print(e)
 
     configure_error(
         'Please set the environment variable JAVA_HOME to a path containing the JDK.')
