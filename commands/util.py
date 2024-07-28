@@ -5,7 +5,7 @@ import sys
 
 
 def configure_error(*args, **kw):
-    print("Error: ", file=sys.stderr)
+    print('Error: ', file=sys.stderr)
     print(file=sys.stderr, *args, **kw)
     sys.exit(1)
 
@@ -15,26 +15,21 @@ def warning(*args):
 
 
 def is_osx():
-    return "macosx" in get_platform()
-
-
-def is_linux():
-    return "linux" in get_platform()
+    return 'macosx' in get_platform()
 
 
 def is_windows():
-    return "win" in get_platform()
+    return 'win' in get_platform()
 
 
 def is_bsd():
-    return "bsd" in get_platform()
+    return 'bsd' in get_platform()
 
 
 class CommandFailed(Exception):
     """
     The command failed to run for any reason
     """
-
     pass
 
 
@@ -48,7 +43,7 @@ class CommandError(CommandFailed):
         super(CommandError, self).__init__(message)
 
 
-class CommandResult(namedtuple("Result", "stdout, stderr, returncode, failed")):
+class CommandResult(namedtuple('Result', 'stdout, stderr, returncode, failed')):
     pass
 
 
@@ -87,10 +82,11 @@ def shell(command, capture=True):
 
     try:
         cmd_arg = command if is_windows() else [command]
-        p = subprocess.Popen(cmd_arg, shell=True, stdout=out_stream, stderr=err_stream)
+        p = subprocess.Popen(cmd_arg, shell=True,
+                             stdout=out_stream, stderr=err_stream)
         stdout, stderr = p.communicate()
     except Exception:
-        e = CommandFailed("command failed", sys.exc_info()[1])
+        e = CommandFailed('command failed', sys.exc_info()[1])
         e.__traceback__ = sys.exc_info()[2]
         raise e
 
@@ -103,9 +99,7 @@ def shell(command, capture=True):
 
     if result.failed:
         msg = "Encountered an error (return code %s) while executing '%s'" % (
-            p.returncode,
-            command,
-        )
+            p.returncode, command)
         raise CommandError(message=msg, result=result)
 
     return result
