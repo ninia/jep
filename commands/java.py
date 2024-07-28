@@ -11,7 +11,6 @@ import fnmatch
 import traceback
 import sys
 import logging
-import subprocess
 
 from commands.util import configure_error
 from commands.util import is_osx, is_linux
@@ -51,7 +50,7 @@ def get_java_home():
         except CommandFailed:
             traceback.print_exc()
 
-    if is_linux():
+    if linux():
         try:
             result = subprocess.run(
                 ["bash", "-c", "readlink -f $(which javac) | sed 's:/bin/javac::'"],
