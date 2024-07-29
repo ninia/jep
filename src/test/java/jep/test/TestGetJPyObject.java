@@ -3,6 +3,7 @@ package jep.test;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.util.Arrays;
 import java.util.Deque;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import jep.Interpreter;
 import jep.JepException;
@@ -110,6 +111,36 @@ public class TestGetJPyObject {
              * We want an exception as Jep should not have allowed null. Python
              * will crash when we use the CPython API if the attr_name is null.
              */
+        }
+    }
+
+    public static void testRefCount(Interpreter interp) throws JepException {
+        AtomicInteger delCount = new AtomicInteger();
+        interp.set("delCount", delCount);
+        interp.exec("class Simple:\n" +
+                    "    def __del__(self):\n" +
+                    "        delCount.getAndIncrement()"
+        );
+        PyCallable simple = interp.getValue("Simple", PyCallable.class);
+        /* Check for leaks in setAttr() */
+        PyObject obj1 = simple.callAs(PyObject.class);
+        PyObject obj2 = simple.callAs(PyObject.class);
+        obj1.setAttr("member", obj2);
+        obj2.close();
+        obj1.close();
+        /* When a PyObject is deleted any attributes without other references should also be deleted. */
+        if (delCount.get() != 2) {
+            throw new IllegalStateException("Expecting 2 deletions but got " + delCount.get());
+        }
+        delCount.set(0);
+        /* Check for leaks in equals() */
+        obj1 = simple.callAs(PyObject.class);
+        obj2 = simple.callAs(PyObject.class);
+        obj1.equals(obj2);
+        obj2.close();
+        obj1.close();
+        if (delCount.get() != 2) {
+            throw new IllegalStateException("Expecting 2 deletions but got " + delCount.get());
         }
     }
 
@@ -402,6 +433,7 @@ public class TestGetJPyObject {
             testIdentity(interp);
             testGetAttr(interp);
             testSetAttr(interp);
+            testRefCount(interp);
             testDelAttr(interp);
             testJPyCallable(interp);
             testToString(interp);

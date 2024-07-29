@@ -114,6 +114,7 @@ JNIEXPORT void JNICALL Java_jep_python_PyObject_setAttr
     }
 
 EXIT:
+    Py_XDECREF(pyAttr);
     PyEval_ReleaseThread(jepThread->tstate);
     release_utf_char(env, str, attrName);
 }
