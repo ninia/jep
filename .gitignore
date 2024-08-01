@@ -1,6 +1,7 @@
 *.o
 *.pyo
 autom4te.cache/
+Makefile
 *.class
 *~
 config.h
