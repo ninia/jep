@@ -26,6 +26,10 @@ def is_bsd():
     return 'bsd' in get_platform()
 
 
+def is_linux():
+    return "linux" in get_platform()
+
+
 class CommandFailed(Exception):
     """
     The command failed to run for any reason

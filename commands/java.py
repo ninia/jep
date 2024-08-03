@@ -10,9 +10,10 @@ import fnmatch
 import traceback
 import sys
 import logging
+from pathlib import Path
 
 from commands.util import configure_error
-from commands.util import is_osx
+from commands.util import is_osx, is_linux
 from commands.util import shell
 from commands.util import CommandFailed
 from commands.util import warning
@@ -47,6 +48,12 @@ def get_java_home():
             return _java_home
         except CommandFailed:
             traceback.print_exc()
+
+    if is_linux():
+        javac_path = shutil.which('javac')
+        if javac_path is not None:
+            _java_home = Path(javac_path).resolve().parent.parent.as_posix()
+            return _java_home
 
     configure_error(
         'Please set the environment variable JAVA_HOME to a path containing the JDK.')
