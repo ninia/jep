@@ -48,7 +48,7 @@ public interface ClassEnquirer {
      * Java packages unless a ClassEnquirer explicitly chooses to include them.
      */
     public static final String[] RESTRICTED_PKG_NAMES = new String[] { "io",
-            "re" };
+            "re", "py4j" };
 
     /**
      * Checks if the name is likely available in Java as a package. A return
