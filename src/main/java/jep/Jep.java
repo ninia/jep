@@ -438,17 +438,40 @@ public abstract class Jep implements Interpreter {
         }
 
         if (isSubInterpreter) {
-            exec("import sys");
-            Boolean hasThreads = getValue("'threading' in sys.modules",
-                    Boolean.class);
-            if (hasThreads.booleanValue()) {
-                Integer count = getValue(
-                        "sys.modules['threading'].active_count()",
-                        Integer.class);
-                if (count.intValue() > 1) {
-                    throw new JepException(
-                            "All threads must be stopped before closing Jep.");
-                }
+            /*
+             * All background threads must complete before closing an
+             * interpreter.
+             *
+             * If threading is not already imported then there are no other
+             * threads so avoid importing threading because that creates new
+             * objects that aren't needed.
+             *
+             * In recent Python versions(>=3.13) there will always be at least
+             * 2 active threads here, the main thread on the main interpreter
+             * and this thread running the sub-interpreter.
+             *
+             * In older versions of python the minimum number of active threads
+             * should be 1 because each sub-interpreter would treat the first
+             * thread on that interpreter as the main thread.
+             *
+             * This behavior change in python was caused by
+             * https://github.com/python/cpython/issues/114271
+             */  
+            exec("def _check_single_thread():\n" +
+                 "  import sys\n" +
+                 "  if 'threading' in sys.modules:\n" +
+                 "    import threading\n" +
+                 "    if sys.version_info.major == 3 \\\n" +
+                 "          and sys.version_info.minor < 13:\n" +
+                 "      return threading.active_count() <= 1\n" +
+                 "    else:\n" +
+                 "      return threading.active_count() <= 2\n" +
+                 "  else:\n" +
+                 "    return True\n");
+            Boolean singleThread = getValue("_check_single_thread()", Boolean.class);
+            if (!singleThread.booleanValue()) {
+                throw new JepException(
+                        "All threads must be stopped before closing Jep.");
             }
         }
 
