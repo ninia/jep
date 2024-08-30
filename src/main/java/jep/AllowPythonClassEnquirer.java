@@ -75,7 +75,7 @@ public class AllowPythonClassEnquirer implements ClassEnquirer {
     @Override
     public boolean isJavaPackage(String name) {
         for (String pyPkg : pyPkgNames) {
-            if (name.startsWith(pyPkg)) {
+            if (name.equals(pyPkg) || name.startsWith(pyPkg + ".")) {
                 return false;
             }
         }
