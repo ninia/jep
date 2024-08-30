@@ -88,6 +88,7 @@ public class TestAllowPythonEnquirer {
              */
             interp.exec("from java.util import HashMap");
         } catch (Exception e) {
+            e.printStackTrace();
             System.err.println(
                     "Expected a successful Python import of 'from io import BytesIO'"
                             + " and a successful Java import of 'from java.util import HashMap");
@@ -100,10 +101,10 @@ public class TestAllowPythonEnquirer {
          */
         config = new JepConfig();
         config.setClassEnquirer(
-                new AllowPythonClassEnquirer(allJavaEnquirer, "java"));
+                new AllowPythonClassEnquirer(allJavaEnquirer, "java.lang.ref"));
         try (Interpreter interp = config.createSubInterpreter()) {
             interp.exec("moduleNotFound = False");
-            interp.exec("try:\n" + "    from java.util import ArrayList\n"
+            interp.exec("try:\n" + "    from java.lang.ref import Reference\n"
                     + "except ModuleNotFoundError as e:\n"
                     + "    moduleNotFound = True");
             boolean moduleNotFoundErrorWasRaised = interp
@@ -116,12 +117,12 @@ public class TestAllowPythonEnquirer {
             }
 
             /*
-             * Verify javax still works even though java was declared as a
-             * Python package (i.e. so it's a little smarter than doing just a
-             * String.startsWith()). It would throw an uncaught exception if the
-             * import failed.
+             * Verify java.lang.reflect still works even though java.lang.ref
+             * was declared as a Python package (i.e. so it's a little smarter
+             * than doing just a String.startsWith()). It would throw an
+             * uncaught exception if the import failed.
              */
-            interp.exec("from javax.xml.bind import JAXB");
+            interp.exec("from java.lang.reflect import Method");
         }
     }
 
