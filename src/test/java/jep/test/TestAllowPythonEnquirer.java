@@ -16,13 +16,14 @@ import jep.JepException;
 public class TestAllowPythonEnquirer {
 
     /**
-     * Mock naive ClassEnquirer that thinks every package is a Java package.
+     * Mock naive ClassEnquirer that thinks Java packages are re and java.
      */
-    public static class EverythingIsJavaClassEnquirer implements ClassEnquirer {
+    public static class ReAndJavaClassEnquirer implements ClassEnquirer {
 
         @Override
         public boolean isJavaPackage(String name) {
-            return true;
+            return "re".equals(name) || "java".equals(name)
+                    || name.startsWith("java.");
         }
 
         @Override
@@ -39,49 +40,47 @@ public class TestAllowPythonEnquirer {
 
     public static void main(String[] args) throws JepException {
         /*
-         * Test that the always Java enquirer fails to import a Python type that
+         * Test that the re and java enquirer fails to import a Python type that
          * exists
          */
         JepConfig config = new JepConfig();
-        ClassEnquirer allJavaEnquirer = new EverythingIsJavaClassEnquirer();
-        config.setClassEnquirer(allJavaEnquirer);
+        ClassEnquirer reJavaEnquirer = new ReAndJavaClassEnquirer();
+        config.setClassEnquirer(reJavaEnquirer);
         try (Interpreter interp = config.createSubInterpreter()) {
 
             boolean gotClassNotFoundException = false;
             try {
-                interp.exec("import sys");
-                interp.exec("if 'io' in sys.modules:\n"
-                        + "    sys.modules.pop('io')");
-                interp.exec("from io import BytesIO");
+                interp.exec("from re import Pattern");
             } catch (JepException e) {
                 if (e.getCause() instanceof ClassNotFoundException) {
                     /*
-                     * Tested ok, we expected a failure to import io as it tried
-                     * to import BytesIO from Java. ClassNotFoundException
-                     * indicates it was a failure to import from Java.
+                     * Tested ok, we expected a failure to import as it tried to
+                     * import Pattern from re package as if it was a Java class.
+                     * ClassNotFoundException indicates it was a failure to
+                     * import from Java.
                      */
                     gotClassNotFoundException = true;
+                } else {
+                    throw e;
                 }
             }
 
             if (!gotClassNotFoundException) {
                 System.err.println(
-                        "Expected a failed Java import of 'from io import BytesIO'");
+                        "Expected a failed Java import of 'from re import Pattern'");
                 System.exit(1);
             }
         }
 
         /*
-         * Test that the allow python enquirer does not delegate to the all Java
-         * enquirer when encountering io
+         * Test that the allow python enquirer does not delegate to the re and java
+         * enquirer when encountering re
          */
         config = new JepConfig();
         config.setClassEnquirer(
-                new AllowPythonClassEnquirer(allJavaEnquirer, "io"));
+                new AllowPythonClassEnquirer(reJavaEnquirer, "re"));
         try (Interpreter interp = config.createSubInterpreter()) {
-            interp.exec("import sys");
-            interp.exec("if 'io' in sys.modules:\n    sys.modules.pop('io')");
-            interp.exec("from io import BytesIO");
+            interp.exec("from re import Pattern");
             /*
              * This should still work as java.util.HashMap is on the classpath
              * and the enquirer should indicate it's a Java import
@@ -90,7 +89,7 @@ public class TestAllowPythonEnquirer {
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println(
-                    "Expected a successful Python import of 'from io import BytesIO'"
+                    "Expected a successful Python import of 'from re import Pattern'"
                             + " and a successful Java import of 'from java.util import HashMap");
             System.exit(1);
         }
@@ -101,7 +100,7 @@ public class TestAllowPythonEnquirer {
          */
         config = new JepConfig();
         config.setClassEnquirer(
-                new AllowPythonClassEnquirer(allJavaEnquirer, "java.lang.ref"));
+                new AllowPythonClassEnquirer(reJavaEnquirer, "java.lang.ref"));
         try (Interpreter interp = config.createSubInterpreter()) {
             interp.exec("moduleNotFound = False");
             interp.exec("try:\n" + "    from java.lang.ref import Reference\n"
@@ -111,8 +110,9 @@ public class TestAllowPythonEnquirer {
                     .getValue("moduleNotFound", Boolean.class);
             if (!moduleNotFoundErrorWasRaised) {
                 System.err.println("Expected ModuleNotFoundError when running "
-                        + "'from java import util'"
-                        + " with ClassEnquirer that considers java package as a Python package");
+                        + "'from java.lang.ref import Reference'"
+                        + " with ClassEnquirer that considers the "
+                        + "java.lang.ref package as a Python package");
                 System.exit(1);
             }
 
