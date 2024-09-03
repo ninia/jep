@@ -50,6 +50,9 @@ public class TestAllowPythonEnquirer {
 
             boolean gotClassNotFoundException = false;
             try {
+                interp.exec("import sys");
+                interp.exec("if 're' in sys.modules:\n"
+                        + "    sys.modules.pop('re')");
                 interp.exec("from re import Pattern");
             } catch (JepException e) {
                 if (e.getCause() instanceof ClassNotFoundException) {
@@ -73,8 +76,8 @@ public class TestAllowPythonEnquirer {
         }
 
         /*
-         * Test that the allow python enquirer does not delegate to the re and java
-         * enquirer when encountering re
+         * Test that the allow python enquirer does not delegate to the re and
+         * java enquirer when encountering re
          */
         config = new JepConfig();
         config.setClassEnquirer(
