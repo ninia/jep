@@ -703,6 +703,7 @@ void pyembed_thread_close(JNIEnv *env, intptr_t _jepThread)
     Py_DECREF(key);
 
     Py_CLEAR(jepThread->globals);
+    PyGC_Collect();
 
     if (jepThread->classloader) {
         (*env)->DeleteGlobalRef(env, jepThread->classloader);
