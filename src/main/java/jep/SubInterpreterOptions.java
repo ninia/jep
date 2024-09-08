@@ -36,6 +36,12 @@ package jep;
  */
 public class SubInterpreterOptions {
 
+    /*
+     * -1 is used to indicate not set, in which case we will not set it in
+     * the native code and the setting will be Python's default. A value of 0
+     * or 1 will cause the value to be set in the native code.
+     */
+
     protected boolean isolated;
 
     protected int useMainObmalloc = -1;
@@ -190,6 +196,16 @@ public class SubInterpreterOptions {
      */
     public static SubInterpreterOptions isolated() {
         return new SubInterpreterOptions(true);
+    }
+
+    @Override
+    public String toString() {
+        return "SubInterpreterOptions [isolated=" + isolated
+                + ", useMainObmalloc=" + useMainObmalloc + ", allowFork="
+                + allowFork + ", allowExec=" + allowExec + ", allowThreads="
+                + allowThreads + ", allowDaemonThreads=" + allowDaemonThreads
+                + ", checkMultiInterpeExtensions=" + checkMultiInterpeExtensions
+                + ", ownGIL=" + ownGIL + "]";
     }
 
 }

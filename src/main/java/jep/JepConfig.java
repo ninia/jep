@@ -223,4 +223,14 @@ public class JepConfig {
         return new SubInterpreter(this);
     }
 
+    @Override
+    public String toString() {
+        return "JepConfig [interactive=" + interactive + ", includePath="
+                + includePath + ", classLoader=" + classLoader
+                + ", classEnquirer=" + classEnquirer + ", redirectStdout="
+                + redirectStdout + ", redirectStderr=" + redirectStderr
+                + ", sharedModules=" + sharedModules + ", subInterpOptions="
+                + subInterpOptions + "]";
+    }
+
 }

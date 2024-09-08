@@ -35,6 +35,12 @@ package jep;
  */
 public class PyConfig {
 
+    /*
+     * -1 is used to indicate not set, in which case we will not set it in
+     * the native code and the setting will be Python's default. A value of 0
+     * or greater will cause the value to be set in the native code.
+     */
+
     protected int noSiteFlag = -1;
 
     protected int noUserSiteDirectory = -1;
@@ -161,5 +167,16 @@ public class PyConfig {
         this.pythonHome = pythonHome;
         return this;
     }
+
+    @Override
+    public String toString() {
+        return "PyConfig [noSiteFlag=" + noSiteFlag + ", noUserSiteDirectory="
+                + noUserSiteDirectory + ", ignoreEnvironmentFlag="
+                + ignoreEnvironmentFlag + ", verboseFlag=" + verboseFlag
+                + ", optimizeFlag=" + optimizeFlag + ", dontWriteBytecodeFlag="
+                + dontWriteBytecodeFlag + ", hashRandomizationFlag="
+                + hashRandomizationFlag + ", pythonHome=" + pythonHome + "]";
+    }
+
 
 }

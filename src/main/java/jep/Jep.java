@@ -160,7 +160,7 @@ public abstract class Jep implements Interpreter {
         SubInterpreterOptions interpOptions = config.subInterpOptions;
         this.tstate = init(this.classLoader, hasSharedModules,
                 useSubInterpreter, interpOptions.isolated,
-		interpOptions.useMainObmalloc,
+                interpOptions.useMainObmalloc,
                 interpOptions.allowFork, interpOptions.allowExec,
                 interpOptions.allowThreads, interpOptions.allowDaemonThreads,
                 interpOptions.checkMultiInterpeExtensions,
