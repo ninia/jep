@@ -25,21 +25,23 @@
 package jep;
 
 /**
- * A configuration object containing additional options for constructing a SubInterpreter.
+ * A configuration object containing additional options for constructing a
+ * SubInterpreter.
  *
  * These options map directly to the options documented at
  * https://docs.python.org/3/c-api/init.html#c.PyInterpreterConfig.
  * 
- * These options are ignored if a Python version earlier than 3.12 is used with Jep.
+ * These options are ignored if a Python version earlier than 3.12 is used with
+ * Jep.
  *
  * @since 4.2
  */
 public class SubInterpreterOptions {
 
     /*
-     * -1 is used to indicate not set, in which case we will not set it in
-     * the native code and the setting will be Python's default. A value of 0
-     * or 1 will cause the value to be set in the native code.
+     * -1 is used to indicate not set, in which case we will not set it in the
+     * native code and the setting will be Python's default. A value of 0 or 1
+     * will cause the value to be set in the native code.
      */
 
     protected boolean isolated;
@@ -54,11 +56,11 @@ public class SubInterpreterOptions {
 
     protected int allowDaemonThreads = -1;
 
-    protected int checkMultiInterpeExtensions = -1;
+    protected int checkMultiInterpExtensions = -1;
 
     protected int ownGIL = -1;
 
-    protected SubInterpreterOptions(boolean isolated){
+    protected SubInterpreterOptions(boolean isolated) {
         this.isolated = isolated;
     }
 
@@ -83,14 +85,14 @@ public class SubInterpreterOptions {
     }
 
     /**
-     * If this is false then the runtime will not support forking the process
-     * in any thread where the sub-interpreter is currently active. Otherwise
-     * fork is unrestricted.
+     * If this is false then the runtime will not support forking the process in
+     * any thread where the sub-interpreter is currently active. Otherwise fork
+     * is unrestricted.
      *
      * Note that the subprocess module still works when fork is disallowed.
      *
      * @param allowFork
-     *            whether the  sub-interpreter will allow fork.
+     *            whether the sub-interpreter will allow fork.
      * @return a reference to this SubInterpreterOptions
      *
      */
@@ -107,7 +109,7 @@ public class SubInterpreterOptions {
      * Note that the subprocess module still works when exec is disallowed.
      *
      * @param allowExec
-     *            whether the  sub-interpreter will allow exec.
+     *            whether the sub-interpreter will allow exec.
      * @return a reference to this SubInterpreterOptions
      *
      */
@@ -121,7 +123,7 @@ public class SubInterpreterOptions {
      * able to create threads. Otherwise threads are allowed.
      *
      * @param allowThreads
-     *            whether the  sub-interpreter will allow threads.
+     *            whether the sub-interpreter will allow threads.
      * @return a reference to this SubInterpreterOptions
      *
      */
@@ -132,15 +134,16 @@ public class SubInterpreterOptions {
 
     /**
      * If this is false then the sub-interpreter's threading module won't be
-     * able to create daemon threads. Otherwise daemon threads are allowed 
-     * (as long as allowThreads is true).
+     * able to create daemon threads. Otherwise daemon threads are allowed (as
+     * long as allowThreads is true).
      *
      * @param allowDaemonThreads
-     *            whether the  sub-interpreter will allow daemon threads.
+     *            whether the sub-interpreter will allow daemon threads.
      * @return a reference to this SubInterpreterOptions
      *
      */
-    public SubInterpreterOptions setAllowDaemonThreads(boolean allowDaemonThreads) {
+    public SubInterpreterOptions setAllowDaemonThreads(
+            boolean allowDaemonThreads) {
         this.allowDaemonThreads = allowDaemonThreads ? 1 : 0;
         return this;
     }
@@ -154,12 +157,38 @@ public class SubInterpreterOptions {
      * This must be true if useMainObmalloc is false.
      *
      * @param checkMultiInterpeExtensions
-     *            whether the  sub-interpreter will restrict import of legacy modules
+     *            whether the sub-interpreter will restrict import of legacy
+     *            modules
+     * @return a reference to this SubInterpreterOptions
+     * @deprecated Deprecated in Jep 4.2.1. This method is misspelled and has a
+     *             typo in the name. Please use the correctly named
+     *             {@link setCheckMultiInterpExtensions}. The misspelled method
+     *             will be removed in Jep 4.3.
+     *
+     */
+    @Deprecated
+    public SubInterpreterOptions setCheckMultiInterpeExtensions(
+            boolean checkMultiInterpeExtensions) {
+        return this.setCheckMultiInterpExtensions(checkMultiInterpeExtensions);
+    }
+
+    /**
+     * If this is false then all extension modules may be imported, including
+     * legacy (single-phase init) modules, in any thread where the
+     * sub-interpreter is currently active. Otherwise only multi-phase init
+     * extension modules (see PEP 489) may be imported.
+     *
+     * This must be true if useMainObmalloc is false.
+     *
+     * @param checkMultiInterpExtensions
+     *            whether the sub-interpreter will restrict import of legacy
+     *            modules
      * @return a reference to this SubInterpreterOptions
      *
      */
-    public SubInterpreterOptions setCheckMultiInterpeExtensions(boolean checkMultiInterpeExtensions) {
-        this.checkMultiInterpeExtensions = checkMultiInterpeExtensions ? 1 : 0;
+    public SubInterpreterOptions setCheckMultiInterpExtensions(
+            boolean checkMultiInterpExtensions) {
+        this.checkMultiInterpExtensions = checkMultiInterpExtensions ? 1 : 0;
         return this;
     }
 
@@ -181,8 +210,8 @@ public class SubInterpreterOptions {
     }
 
     /**
-     * Create a new SubInterpreterOptions with the default legacy settings.
-     * All settings can be changed using the setters in this class.
+     * Create a new SubInterpreterOptions with the default legacy settings. All
+     * settings can be changed using the setters in this class.
      */
     public static SubInterpreterOptions legacy() {
         return new SubInterpreterOptions(false);
@@ -192,7 +221,8 @@ public class SubInterpreterOptions {
      * Create a new SubInterpreterOptions with the default isolated settings.
      * Using these settings eliminates GIL contention but may not be compatible
      * with all third party modules. These settings are not compatible with
-     * shared modules. All settings can be changed using the setters in this class.
+     * shared modules. All settings can be changed using the setters in this
+     * class.
      */
     public static SubInterpreterOptions isolated() {
         return new SubInterpreterOptions(true);
@@ -204,7 +234,7 @@ public class SubInterpreterOptions {
                 + ", useMainObmalloc=" + useMainObmalloc + ", allowFork="
                 + allowFork + ", allowExec=" + allowExec + ", allowThreads="
                 + allowThreads + ", allowDaemonThreads=" + allowDaemonThreads
-                + ", checkMultiInterpeExtensions=" + checkMultiInterpeExtensions
+                + ", checkMultiInterpExtensions=" + checkMultiInterpExtensions
                 + ", ownGIL=" + ownGIL + "]";
     }
 
