@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import jep.Interpreter;
@@ -23,8 +24,6 @@ import jep.python.PyObject;
  * @author Mike Johnson
  */
 public class Test implements Runnable {
-
-    private Interpreter interp = null;
 
     private boolean testEval = false;
 
@@ -70,11 +69,9 @@ public class Test implements Runnable {
         for (int i = 0; i < 1; i++) {
             System.out.println("running i: " + i);
 
-            try {
-                File pwd = new File(".");
-
-                this.interp = new SubInterpreter(
-                        new JepConfig().addIncludePaths(pwd.getAbsolutePath()));
+            File pwd = new File(".");
+            try (Interpreter interp = new SubInterpreter(
+                        new JepConfig().addIncludePaths(pwd.getAbsolutePath()))) {
                 interp.set("testo", this);
                 interp.set("test", "value from java.");
                 interp.set("testi", i);
@@ -180,22 +177,8 @@ public class Test implements Runnable {
                 System.out.println("Java caught error:");
                 t.printStackTrace();
                 break;
-            } finally {
-                System.out.println("**** close me");
-                if (interp != null) {
-                    try {
-                        interp.close();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
             }
         }
-    }
-
-    // get the jep used for this class
-    public Interpreter getJep() {
-        return this.interp;
     }
 
     @Override
@@ -207,8 +190,8 @@ public class Test implements Runnable {
         return TestEnum.One;
     }
 
-    public ArrayList getObject() {
-        ArrayList<String> ret = new ArrayList<String>();
+    public List<String> getObject() {
+        List<String> ret = new ArrayList<>();
         ret.add("list 0");
         return ret;
     }
@@ -262,7 +245,7 @@ public class Test implements Runnable {
                     "                  " + "array[" + i + "] = " + p[i]);
     }
 
-    public void sendMeSomeStuff(String v, ArrayList a) {
+    public void sendMeSomeStuff(String v, List<?> a) {
         System.out.println("got some stuff:   v = " + v + " and a = " + a);
     }
 
@@ -388,11 +371,8 @@ public class Test implements Runnable {
     }
 
     public static void main(String argv[]) throws Throwable {
-        Interpreter interp = new SubInterpreter();
-        try {
+        try (Interpreter interp = new SubInterpreter()) {
             interp.runScript("runtests.py");
-        } finally {
-            interp.close();
         }
     }
 } // Test

@@ -163,7 +163,7 @@ public abstract class Jep implements Interpreter {
                 interpOptions.useMainObmalloc,
                 interpOptions.allowFork, interpOptions.allowExec,
                 interpOptions.allowThreads, interpOptions.allowDaemonThreads,
-                interpOptions.checkMultiInterpeExtensions,
+                interpOptions.checkMultiInterpExtensions,
                 interpOptions.ownGIL);
         threadUsed.set(true);
         this.thread = Thread.currentThread();

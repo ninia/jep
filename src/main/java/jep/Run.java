@@ -123,7 +123,7 @@ public class Run {
         }
 
         // setup argv
-        StringBuffer b = new StringBuffer("[");
+        StringBuilder b = new StringBuilder("[");
         // always the first arg
         b.append("'" + file + "',");
         // trailing comma is okay
