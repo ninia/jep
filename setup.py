@@ -29,11 +29,18 @@ numpy_include = []
 numpy_found = 0
 try:
    import numpy
-   include_path = os.path.join(numpy.__path__[0], 'core', 'include')
-   if os.path.exists(include_path):
-      print('numpy include found at', include_path)
+   numpy1_include_path = os.path.join(numpy.__path__[0], 'core', 'include')
+   numpy2_include_path = os.path.join(numpy.__path__[0], '_core', 'include')
+   if os.path.exists(numpy1_include_path):
+      print('numpy include found at', numpy1_include_path)
       numpy_found = 1
-      numpy_include = [include_path]
+      numpy_include = [numpy1_include_path]
+   elif os.path.exists(numpy2_include_path):
+      print('numpy include found at', numpy2_include_path)
+      numpy_found = 1
+      numpy_include = [numpy2_include_path]
+   else:
+      print('numpy include not found')
 except ImportError:
    print('numpy not found, running without numpy support')
 
