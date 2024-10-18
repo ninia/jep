@@ -152,7 +152,9 @@ public abstract class Jep implements Interpreter {
         boolean hasSharedModules = config.sharedModules != null
                 && !config.sharedModules.isEmpty();
 
-        if (hasSharedModules && config.subInterpOptions.useMainObmalloc == 0) {
+        if (hasSharedModules && config.subInterpOptions.isolated) {
+            throw new JepException("Shared modules cannot be used with isolated interpreters.");
+        } else if (hasSharedModules && config.subInterpOptions.useMainObmalloc == 0) {
             throw new JepException("Shared modules can only be used with a shared allocator.");
         }
 

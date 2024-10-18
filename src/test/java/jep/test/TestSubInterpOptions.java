@@ -79,6 +79,25 @@ public class TestSubInterpOptions {
         }
     }
 
+    /**
+     * We can't actually verify the correct malloc is used but we do ned to
+     * verify shared modules can't be mixed with isolated malloc.
+     */
+    public boolean testUseMainObmalloc() {
+        SubInterpreterOptions interpOptions = SubInterpreterOptions.legacy().setUseMainObmalloc(false);
+        JepConfig config = new JepConfig().setSubInterpreterOptions(interpOptions).addSharedModules("os");
+        try (Interpreter interp = new SubInterpreter(config)) {
+            failure = "Shared modules can only be used with a shared allocator.";
+            return false;
+        } catch (JepException e) {
+            if (e.getMessage().equals("Shared modules can only be used with a shared allocator.")) {
+                return true;
+            }
+            failure = e.getMessage();
+            return false;
+        }
+    }
+
     public boolean testIsolated() {
         SubInterpreterOptions interpOptions = SubInterpreterOptions.isolated();
         JepConfig config = new JepConfig().setSubInterpreterOptions(interpOptions);
@@ -89,10 +108,25 @@ public class TestSubInterpOptions {
             return true;
         } catch (JepException e) {
             failure = e.getMessage();
-	    System.out.println(failure);
             return false;
         }
     }
+
+    public boolean testIsolatedWithSharedModule() {
+        SubInterpreterOptions interpOptions = SubInterpreterOptions.isolated();
+        JepConfig config = new JepConfig().setSubInterpreterOptions(interpOptions).addSharedModules("os");
+        try (Interpreter interp = new SubInterpreter(config)) {
+            failure = "Shared modules cannot be used with isolated interpreters.";
+            return false;
+        } catch (JepException e) {
+            if (e.getMessage().equals("Shared modules cannot be used with isolated interpreters.")) {
+                return true;
+            }
+            failure = e.getMessage();
+            return false;
+        }
+    }
+
 
     public void runTest() {
         if (!testForbidFork()) {
@@ -107,7 +141,13 @@ public class TestSubInterpOptions {
         if (!testForbidDaemonThreads()) {
             return;
         }
+        if (!testUseMainObmalloc()) {
+            return;
+        }
         if (!testIsolated()) {
+            return;
+        }
+        if (!testIsolatedWithSharedModule()) {
             return;
         }
     }
