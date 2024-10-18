@@ -7,7 +7,7 @@ import jep.Interpreter;
 import jep.JepConfig;
 import jep.JepException;
 import jep.NDArray;
-import jep.SubInterpreter;
+import jep.SharedInterpreter;
 import jep.python.PyObject;
 
 /**
@@ -311,8 +311,8 @@ public class TestNumpy {
     }
 
     public static void main(String[] args) {
-        try (Interpreter interp = new SubInterpreter(
-                new JepConfig().addIncludePaths("."))) {
+        SharedInterpreter.setConfig(new JepConfig().addIncludePaths("."));
+        try (Interpreter interp = new SharedInterpreter()) {
             TestNumpy test = new TestNumpy();
             test.testNDArraySafety();
             test.testSetAndGet(interp);
