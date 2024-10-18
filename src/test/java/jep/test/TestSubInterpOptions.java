@@ -116,10 +116,10 @@ public class TestSubInterpOptions {
         SubInterpreterOptions interpOptions = SubInterpreterOptions.isolated();
         JepConfig config = new JepConfig().setSubInterpreterOptions(interpOptions).addSharedModules("os");
         try (Interpreter interp = new SubInterpreter(config)) {
-            failure = "Shared modules cannot be used in isolated interpreters.";
+            failure = "Shared modules cannot be used with isolated interpreters.";
             return false;
         } catch (JepException e) {
-            if (e.getMessage().equals("Shared modules can only be used with a shared allocator.")) {
+            if (e.getMessage().equals("Shared modules cannot be used with isolated interpreters.")) {
                 return true;
             }
             failure = e.getMessage();
