@@ -36,9 +36,9 @@ package jep;
 public class PyConfig {
 
     /*
-     * -1 is used to indicate not set, in which case we will not set it in
-     * the native code and the setting will be Python's default. A value of 0
-     * or greater will cause the value to be set in the native code.
+     * -1 is used to indicate not set, in which case we will not set it in the
+     * native code and the setting will be Python's default. A value of 0 or
+     * greater will cause the value to be set in the native code.
      */
 
     protected int noSiteFlag = -1;
@@ -56,6 +56,8 @@ public class PyConfig {
     protected int hashRandomizationFlag = -1;
 
     protected String pythonHome;
+
+    protected String programName;
 
     /**
      * Set the Py_NoSiteFlag variable on the python interpreter. This
@@ -155,7 +157,7 @@ public class PyConfig {
     }
 
     /**
-     * Set the home location on the python interpreter. THis is the location of
+     * Set the home location on the python interpreter. This is the location of
      * the standard python libraries. This corresponds to the environment
      * variable PYTHONHOME.
      * 
@@ -168,15 +170,27 @@ public class PyConfig {
         return this;
     }
 
-    @Override
-    public String toString() {
-        return "PyConfig [noSiteFlag=" + noSiteFlag + ", noUserSiteDirectory="
-                + noUserSiteDirectory + ", ignoreEnvironmentFlag="
-                + ignoreEnvironmentFlag + ", verboseFlag=" + verboseFlag
-                + ", optimizeFlag=" + optimizeFlag + ", dontWriteBytecodeFlag="
-                + dontWriteBytecodeFlag + ", hashRandomizationFlag="
-                + hashRandomizationFlag + ", pythonHome=" + pythonHome + "]";
+    /**
+     * Set the Py_SetProgramName variable on the python interpreter. This is
+     * used to initialize executable and in early error messages during python
+     * initialization.
+     * 
+     * @param programName
+     *            the name of the executable python program.
+     * @return a reference to this PyConfig
+     */
+    public PyConfig setProgramName(String programName) {
+        this.programName = programName;
+        return this;
     }
 
+    @Override
+    public String toString() {
+        return "PyConfig [noSiteFlag=" + noSiteFlag + ", noUserSiteDirectory=" + noUserSiteDirectory
+                + ", ignoreEnvironmentFlag=" + ignoreEnvironmentFlag + ", verboseFlag=" + verboseFlag
+                + ", optimizeFlag=" + optimizeFlag + ", dontWriteBytecodeFlag=" + dontWriteBytecodeFlag
+                + ", hashRandomizationFlag=" + hashRandomizationFlag + ", pythonHome=" + pythonHome + ", programName="
+                + programName + "]";
+    }
 
 }
