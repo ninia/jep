@@ -47,11 +47,12 @@ JNIEXPORT void JNICALL Java_jep_MainInterpreter_setInitParams
  jint optimizeFlag,
  jint dontWriteBytecodeFlag,
  jint hashRandomizationFlag,
- jstring pythonHome)
+ jstring pythonHome,
+ jstring programName)
 {
     pyembed_preinit(env, noSiteFlag, noUserSiteDirectory, ignoreEnvironmentFlag,
                     verboseFlag, optimizeFlag, dontWriteBytecodeFlag,
-                    hashRandomizationFlag, pythonHome);
+                    hashRandomizationFlag, pythonHome, programName);
 }
 
 /*
