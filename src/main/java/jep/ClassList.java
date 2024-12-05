@@ -127,8 +127,11 @@ public class ClassList implements ClassEnquirer {
                         String[] relativePaths = classpath.split(" ");
 
                         for (String relativePath : relativePaths) {
-                            String path = file.getParent() + File.separator
-                                    + relativePath;
+                            String path = relativePath;
+                            String parent = file.getParent();
+                            if (parent != null) {
+                                path = parent + File.separator + relativePath;
+                            }
                             if (!seen.contains(path)) {
                                 queue.add(path);
                                 seen.add(path);
