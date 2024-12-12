@@ -35,3 +35,17 @@ class TestRegressions(unittest.TestCase):
         self.assertEqual('ParentClassWithMethod', ChildTestingMethodInheritance().checkPrecedence())
         ClassInheritingDefault = jep.findClass('jep.test.TestPyJType$ClassInheritingDefault')
         self.assertEqual('InterfaceWithDefault', ClassInheritingDefault().checkPrecedence())
+
+    def test_object_method_count(self):
+        # There was a bug where each new sub-interpreter would add all the
+        # Object methods onto multimethods on the Object type so the
+        # multimethod would grow with each new sub-interpreter.
+        from java.lang import Object
+        self.assertEqual(3, len(Object.wait.__methods__))
+        for i in range(3):
+            SubInterpreterThread = jep.findClass('jep.test.util.SubInterpreterThread')
+            thread = SubInterpreterThread();
+            thread.start();
+            thread.join();
+        from java.lang import Object
+        self.assertEqual(3, len(Object.wait.__methods__))

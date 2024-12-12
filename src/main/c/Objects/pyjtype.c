@@ -33,6 +33,13 @@ static PyTypeObject* pyjtype_get_cached(JNIEnv*, PyObject*, jclass);
 static int addMethods(JNIEnv*, PyObject*, jclass);
 
 /*
+* Flag to indicate if methods have been added to static types. Most types are
+* reinitialized for each interpreter but static types are shared between
+* interpreters and must be initialized only once.
+*/
+static int staticTypesInitialized = 0;
+
+/*
  * Populate pyjmethods for a type and add it to the cache. This is for custom
  * types with extra logic in c since we are not able to add pyjmethods before
  * creating the type.
@@ -127,12 +134,24 @@ static int populateCustomTypeDict(JNIEnv *env, PyObject* fqnToPyType)
                            &PyJObject_Type)) {
         return -1;
     }
-    /* TODO In python 3.8 buffer protocol was added to spec so pybuffer type can use a spec */
-    if (!addCustomTypeToTypeDict(env, fqnToPyType, JBUFFER_TYPE, &PyJBuffer_Type)) {
-        return -1;
-    }
-    if (!addCustomTypeToTypeDict(env, fqnToPyType, JOBJECT_TYPE, &PyJObject_Type)) {
-        return -1;
+    if (staticTypesInitialized) {
+        if (PyDict_SetItemString(fqnToPyType, PyJBuffer_Type.tp_name,
+                                 (PyObject * ) &PyJBuffer_Type)) {
+            return -1;
+        }
+        if (PyDict_SetItemString(fqnToPyType, PyJObject_Type.tp_name,
+                                 (PyObject * ) &PyJObject_Type)) {
+            return -1;
+        }
+    } else {
+        /* TODO In python 3.8 buffer protocol was added to spec so pybuffer type can use a spec */
+        if (!addCustomTypeToTypeDict(env, fqnToPyType, JBUFFER_TYPE, &PyJBuffer_Type)) {
+            return -1;
+        }
+        if (!addCustomTypeToTypeDict(env, fqnToPyType, JOBJECT_TYPE, &PyJObject_Type)) {
+            return -1;
+        }
+        staticTypesInitialized = 1;
     }
     return 0;
 }
@@ -297,10 +316,10 @@ static int addMethods(JNIEnv* env, PyObject* dict, jclass clazz)
             if (isAbstract) {
                 if (oneAbstractPyJMethod) {
                     /*
-		     * If there is already one abstract method and this method is also
-		     * abstract then this isn't a functional interface and there is no need
-		     * to keep track of abstract methods.
-		     */
+                    * If there is already one abstract method and this method is also
+                    * abstract then this isn't a functional interface and there is no need
+                    * to keep track of abstract methods.
+                    */
                     functionalInterface = JNI_FALSE;
                     oneAbstractPyJMethod = NULL;
                 } else {
@@ -440,7 +459,7 @@ static PyTypeObject* pyjtype_get_new(JNIEnv *env, PyObject *fqnToPyType,
          * See https://docs.python.org/3/library/functions.html#type
          */
         type = (PyTypeObject*) PyObject_CallFunctionObjArgs((PyObject*) &PyJType_Type,
-                shortName, bases, dict, NULL);
+               shortName, bases, dict, NULL);
     }
     Py_DECREF(bases);
     Py_DECREF(dict);
