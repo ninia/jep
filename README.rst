@@ -42,7 +42,7 @@ Installation
 Simply run ``pip install --no-cache-dir --no-build-isolation jep`` or download
 the source and run ``pip install .``. Building and installing require the JDK,
 Python, setuptools, and optionally numpy to be installed beforehand. The 
-``--no-cache-dir`` and ``--no-build-isolation` options are not strictly
+``--no-cache-dir`` and ``--no-build-isolation`` options are not strictly
 required, however those settings enable Jep to make customizations for your
 environment such as enabling numpy specific behavior if numpy is installed.
 
