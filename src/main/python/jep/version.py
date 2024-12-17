@@ -23,5 +23,5 @@
 #     distribution.
 #
 
-__VERSION__ = '4.2.2'
+__VERSION__ = '4.3.0'
 VERSION = __VERSION__
