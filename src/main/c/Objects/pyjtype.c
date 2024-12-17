@@ -73,16 +73,7 @@ static PyTypeObject* addCustomTypeToTypeDict(JNIEnv *env, PyObject* fqnToPyType,
 static PyTypeObject* addSpecToTypeDict(JNIEnv *env, PyObject* fqnToPyType,
                                        jclass class, PyType_Spec *spec, PyTypeObject *base)
 {
-    /* TODO Starting in 3.10 bases can be a single type so there will be no need to make a tuple. */
-    PyObject *bases = NULL;
-    if (base) {
-        bases = PyTuple_Pack(1, base);
-        if (!bases) {
-            return NULL;
-        }
-    }
-    PyTypeObject *type = (PyTypeObject*) PyType_FromSpecWithBases(spec, bases);
-    Py_XDECREF(bases);
+    PyTypeObject *type = (PyTypeObject*) PyType_FromSpecWithBases(spec, (PyObject*) base);
     if (!type) {
         return NULL;
     }
@@ -134,20 +125,17 @@ static int populateCustomTypeDict(JNIEnv *env, PyObject* fqnToPyType)
                            &PyJObject_Type)) {
         return -1;
     }
+    if (!addSpecToTypeDict(env, fqnToPyType, JBUFFER_TYPE, &PyJBuffer_Spec,
+                           &PyJObject_Type)) {
+        return -1;
+    }
+
     if (staticTypesInitialized) {
-        if (PyDict_SetItemString(fqnToPyType, PyJBuffer_Type.tp_name,
-                                 (PyObject * ) &PyJBuffer_Type)) {
-            return -1;
-        }
         if (PyDict_SetItemString(fqnToPyType, PyJObject_Type.tp_name,
                                  (PyObject * ) &PyJObject_Type)) {
             return -1;
         }
     } else {
-        /* TODO In python 3.8 buffer protocol was added to spec so pybuffer type can use a spec */
-        if (!addCustomTypeToTypeDict(env, fqnToPyType, JBUFFER_TYPE, &PyJBuffer_Type)) {
-            return -1;
-        }
         if (!addCustomTypeToTypeDict(env, fqnToPyType, JOBJECT_TYPE, &PyJObject_Type)) {
             return -1;
         }

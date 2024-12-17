@@ -37,9 +37,6 @@
 #ifndef _Included_pyjbuffer
 #define _Included_pyjbuffer
 
-extern PyTypeObject PyJBuffer_Type;
-
-#define PyJBuffer_Check(pyobj) \
-    PyObject_TypeCheck(pyobj, &PyJBuffer_Type)
+extern PyType_Spec PyJBuffer_Spec;
 
 #endif // ndef pyjbuffer
