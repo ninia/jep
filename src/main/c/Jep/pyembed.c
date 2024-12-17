@@ -301,14 +301,6 @@ static int pyjtypes_ready(void)
     if (PyType_Ready(&PyJClass_Type) < 0) {
         return -1;
     }
-
-    if (!PyJBuffer_Type.tp_base) {
-        PyJBuffer_Type.tp_base = &PyJObject_Type;
-    }
-    if (PyType_Ready(&PyJBuffer_Type) < 0) {
-        return -1;
-    }
-
     return 0;
 }
 
@@ -381,10 +373,6 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
     }
 
     Py_Initialize();
-
-#if PY_MAJOR_VERSION < 4 && PY_MINOR_VERSION < 7
-    PyEval_InitThreads();
-#endif
 
     if (pyjtypes_ready()) {
         handle_startup_exception(env, "Failed to initialize PyJTypes");
@@ -1386,10 +1374,8 @@ static void pyembed_run_pyc(JepThread *jepThread,
     // Python 3.3 added an extra long containing the size of the source.
     // https://github.com/python/cpython/commit/5136ac0ca21a05691978df8d0650f902c8ca3463
     (void) PyMarshal_ReadLongFromFile(fp);
-#if PY_MAJOR_VERSION > 3 || PY_MINOR_VERSION >= 7
     // PEP 552 added another long
     (void) PyMarshal_ReadLongFromFile(fp);
-#endif
     v = (PyObject *) (intptr_t) PyMarshal_ReadLastObjectFromFile(fp);
     if (v == NULL || !PyCode_Check(v)) {
         Py_XDECREF(v);

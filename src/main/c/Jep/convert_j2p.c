@@ -105,11 +105,7 @@ static PyObject* pyjobject_convert_pyobject(PyObject* pyjob)
     PyObject* topy = PyObject_GetAttrString(pyjob, "_to_python");
     if (topy != NULL) {
         Py_DECREF(pyjob);
-#if PY_MAJOR_VERSION > 3 || PY_MINOR_VERSION >= 9
         result = PyObject_CallNoArgs(topy);
-#else
-        result = PyObject_CallObject(topy, NULL);
-#endif
         Py_DECREF(topy);
     } else {
         /* This is exactly what is done in PyObject_HasAttr. */

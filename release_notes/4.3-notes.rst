@@ -1,0 +1,4 @@
+Jep 4.3 Release Notes
+*********************
+This release drops support for versions of Python older than 3.10.
+

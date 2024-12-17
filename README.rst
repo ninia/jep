@@ -48,7 +48,7 @@ environment such as enabling numpy specific behavior if numpy is installed.
 
 Dependencies
 ------------
-* Python >= 3.6
+* Python >= 3.10
 * Java >= 1.8
 * NumPy >= 1.7 (optional)
 
