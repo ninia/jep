@@ -72,7 +72,7 @@ static PyObject* mainThreadModules = NULL;
 static PyObject* mainThreadModulesLock = NULL;
 
 static int pyembed_is_version_unsafe(void);
-static void handle_startup_exception(JNIEnv*, const char*);
+static void handle_startup_exception(JNIEnv*, const char*, int);
 
 static PyObject* pyembed_findclass(PyObject*, PyObject*);
 static PyObject* pyembed_forname(PyObject*, PyObject*);
@@ -216,16 +216,16 @@ static int initjep(JNIEnv *env, jboolean hasSharedModules)
     PyObject *sysmodules = PyImport_GetModuleDict();
     PyObject *modjep = PyDict_GetItemString(sysmodules, "_jep");
     if (!modjep && PyErr_Occurred()) {
-        handle_startup_exception(env, "Error checking for exisitng module _jep");
+        handle_startup_exception(env, "Error checking for exisitng module _jep", 1);
     } else if (!modjep) {
         modjep = PyModule_Create(&jep_module_def);
         if (!modjep) {
-            handle_startup_exception(env, "Couldn't create module _jep");
+            handle_startup_exception(env, "Couldn't create module _jep", 1);
             return -1;
         }
         if (PyDict_SetItemString(sysmodules, "_jep", modjep) == -1) {
             Py_DECREF(modjep);
-            handle_startup_exception(env, "Couldn't set _jep on sys.modules");
+            handle_startup_exception(env, "Couldn't set _jep on sys.modules", 1);
             return -1;
         }
         PyModule_AddStringConstant(modjep, "JBOOLEAN_ID", "z");
@@ -259,7 +259,7 @@ static int initjep(JNIEnv *env, jboolean hasSharedModules)
         }
         if (pyjtypes_ready(modjep)) {
             Py_DECREF(modjep);
-            handle_startup_exception(env, "Failed to initialize PyJTypes");
+            handle_startup_exception(env, "Failed to initialize PyJTypes", 1);
             return -1;
         }
 
@@ -274,10 +274,11 @@ static int initjep(JNIEnv *env, jboolean hasSharedModules)
     return 0;
 }
 
-static void handle_startup_exception(JNIEnv *env, const char* excMsg)
+static void handle_startup_exception(JNIEnv *env, const char* excMsg,
+                                     int checkpy)
 {
     jclass excClass = (*env)->FindClass(env, "java/lang/IllegalStateException");
-    if (PyErr_Occurred()) {
+    if (checkpy && PyErr_Occurred()) {
         PyErr_Print();
     }
     if (excClass != NULL) {
@@ -434,10 +435,7 @@ void pyembed_startup(JNIEnv *env,
     }
     PyConfig_Clear(&config);
     if (PyStatus_Exception(status)) {
-        jclass excClass = (*env)->FindClass(env, "java/lang/IllegalStateException");
-        if (excClass != NULL) {
-            (*env)->ThrowNew(env, excClass, status.err_msg);
-        }
+        handle_startup_exception(env, status.err_msg, 0);
         // The exit code is ignored, because exiting seems rude.
         return;
     }
@@ -448,31 +446,31 @@ void pyembed_startup(JNIEnv *env,
      */
     sysModule = PyImport_ImportModule("sys");
     if (sysModule == NULL) {
-        handle_startup_exception(env, "Failed to import sys module");
+        handle_startup_exception(env, "Failed to import sys module", 1);
         return;
     }
 
     mainThreadModules = PyObject_GetAttrString(sysModule, "modules");
     if (mainThreadModules == NULL) {
-        handle_startup_exception(env, "Failed to get sys.modules");
+        handle_startup_exception(env, "Failed to get sys.modules", 1);
         return;
     }
     Py_DECREF(sysModule);
 
     threadingModule = PyImport_ImportModule("threading");
     if (threadingModule == NULL) {
-        handle_startup_exception(env, "Failed to import threading module");
+        handle_startup_exception(env, "Failed to import threading module", 1);
         return;
     }
     lockCreator = PyObject_GetAttrString(threadingModule, "Lock");
     if (lockCreator == NULL) {
-        handle_startup_exception(env, "Failed to get Lock attribute");
+        handle_startup_exception(env, "Failed to get Lock attribute", 1);
         return;
     }
 
     mainThreadModulesLock = PyObject_CallObject(lockCreator, NULL);
     if (mainThreadModulesLock == NULL) {
-        handle_startup_exception(env, "Failed to get main thread modules lock");
+        handle_startup_exception(env, "Failed to get main thread modules lock", 1);
         return;
     }
     Py_DECREF(threadingModule);
@@ -522,7 +520,7 @@ int pyembed_is_version_unsafe(void)
         sprintf(msg,
                 "Jep will not initialize because it was compiled against Python %i.%i but is running against Python %s.%s",
                 PY_MAJOR_VERSION, PY_MINOR_VERSION, major, minor);
-        THROW_JEP(env, msg);
+        handle_startup_exception(env, msg, 0);
         free(version);
         free(msg);
         return 1;
@@ -583,7 +581,7 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller,
     JepThread *jepThread;
     PyObject  *tdict, *globals;
     if (cl == NULL) {
-        THROW_JEP(env, "Invalid Classloader.");
+        handle_startup_exception(env, "Invalid Classloader.", 0);
         return 0;
     }
 
@@ -595,7 +593,7 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller,
      */
     jepThread = malloc(sizeof(JepThread));
     if (!jepThread) {
-        THROW_JEP(env, "Out of memory.");
+        handle_startup_exception(env, "Out of memory.", 0);
         return 0;
     }
 
@@ -634,8 +632,9 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller,
         }
         PyStatus status = Py_NewInterpreterFromConfig(&(jepThread->tstate), &config);
         if (PyStatus_Exception(status)) {
-            THROW_JEP(env, status.err_msg);
+            handle_startup_exception(env, status.err_msg, 0);
             free(jepThread);
+            PyEval_ReleaseThread(mainThreadState);
             return 0;
         }
 #else
