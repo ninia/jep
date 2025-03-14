@@ -216,7 +216,7 @@ static int initjep(JNIEnv *env, jboolean hasSharedModules)
     PyObject *sysmodules = PyImport_GetModuleDict();
     PyObject *modjep = PyDict_GetItemString(sysmodules, "_jep");
     if (!modjep && PyErr_Occurred()) {
-        handle_startup_exception(env, "Error checking for exisitng module _jep", 1);
+        handle_startup_exception(env, "Error checking for existing module _jep", 1);
     } else if (!modjep) {
         modjep = PyModule_Create(&jep_module_def);
         if (!modjep) {
