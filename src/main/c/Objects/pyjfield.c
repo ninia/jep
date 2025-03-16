@@ -50,16 +50,13 @@ static void pyjfield_dealloc(PyJFieldObject *self)
 }
 
 
-PyJFieldObject* PyJField_New(JNIEnv *env, jobject rfield)
+PyJFieldObject* PyJField_New(JNIEnv *env, JepModuleState *modState,
+                             jobject rfield)
 {
     PyJFieldObject *pyf;
     jstring          jstr        = NULL;
 
-    if (PyType_Ready(&PyJField_Type) < 0) {
-        return NULL;
-    }
-
-    pyf              = PyObject_NEW(PyJFieldObject, &PyJField_Type);
+    pyf              = PyObject_NEW(PyJFieldObject, modState->PyJField_Type);
     pyf->rfield      = (*env)->NewGlobalRef(env, rfield);
     pyf->pyFieldName = NULL;
     pyf->fieldTypeId = -1;
@@ -150,12 +147,9 @@ EXIT_ERROR:
 }
 
 
-int PyJField_Check(PyObject *obj)
+int PyJField_Check(JepModuleState* modState, PyObject *obj)
 {
-    if (PyObject_TypeCheck(obj, &PyJField_Type)) {
-        return 1;
-    }
-    return 0;
+    return PyObject_TypeCheck(obj, modState->PyJField_Type);
 }
 
 
@@ -646,45 +640,17 @@ static int pyjfield_descr_set(PyObject *field, PyObject *obj, PyObject *value)
     }
 }
 
+static PyType_Slot slots[] = {
+    {Py_tp_doc, "jfield"},
+    {Py_tp_dealloc, pyjfield_dealloc},
+    {Py_tp_descr_set, pyjfield_descr_set},
+    {Py_tp_descr_get, pyjfield_descr_get},
+    {0, NULL},
+};
 
-PyTypeObject PyJField_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    "jep.PyJField",
-    sizeof(PyJFieldObject),
-    0,
-    (destructor) pyjfield_dealloc,            /* tp_dealloc */
-    0,                                        /* tp_print */
-    0,                                        /* tp_getattr */
-    0,                                        /* tp_setattr */
-    0,                                        /* tp_compare */
-    0,                                        /* tp_repr */
-    0,                                        /* tp_as_number */
-    0,                                        /* tp_as_sequence */
-    0,                                        /* tp_as_mapping */
-    0,                                        /* tp_hash  */
-    0,                                        /* tp_call */
-    0,                                        /* tp_str */
-    0,                                        /* tp_getattro */
-    0,                                        /* tp_setattro */
-    0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT |
-    Py_TPFLAGS_IMMUTABLETYPE,                 /* tp_flags */
-    "jfield",                                 /* tp_doc */
-    0,                                        /* tp_traverse */
-    0,                                        /* tp_clear */
-    0,                                        /* tp_richcompare */
-    0,                                        /* tp_weaklistoffset */
-    0,                                        /* tp_iter */
-    0,                                        /* tp_iternext */
-    0,                                        /* tp_methods */
-    0,                                        /* tp_members */
-    0,                                        /* tp_getset */
-    0,                                        /* tp_base */
-    0,                                        /* tp_dict */
-    pyjfield_descr_get,                       /* tp_descr_get */
-    pyjfield_descr_set,                       /* tp_descr_set */
-    0,                                        /* tp_dictoffset */
-    0,                                        /* tp_init */
-    0,                                        /* tp_alloc */
-    NULL,                                     /* tp_new */
+PyType_Spec PyJField_Spec = {
+    .name = "jep.PyJField",
+    .basicsize = sizeof(PyJFieldObject),
+    .flags = Py_TPFLAGS_DEFAULT,
+    .slots = slots
 };

@@ -1,7 +1,7 @@
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2004-2022 JEP AUTHORS.
+   Copyright (c) 2004-2025 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -32,7 +32,7 @@
 #define _Included_pyjmethod
 
 
-extern PyTypeObject PyJMethod_Type;
+extern PyType_Spec PyJMethod_Spec;
 
 /*
  * A callable python object which wraps a java method and is dynamically added
@@ -54,10 +54,10 @@ typedef struct {
 } PyJMethodObject;
 
 /* Create a new PyJMethod from a java.lang.reflect.Method*/
-PyJMethodObject* PyJMethod_New(JNIEnv*, jobject);
+PyJMethodObject* PyJMethod_New(JNIEnv*, JepModuleState*, jobject);
 
 /* Check if the arg is a PyJMethodObject */
-int PyJMethod_Check(PyObject *obj);
+int PyJMethod_Check(JepModuleState*, PyObject *obj);
 
 /*
  * Get the number of parameters the method is expecting. If the method has not
@@ -68,7 +68,7 @@ int PyJMethod_GetParameterCount(PyJMethodObject*, JNIEnv*);
 /*
  * Check if a method is compatible with the types of a tuple of arguments.
  * This will return a 0 if the arguments are not valid for this method and a
- * positive integer if the arguments are valid. Returns a negative value on error. 
+ * positive integer if the arguments are valid. Returns a negative value on error.
  * Larger numbers indicate a better match between the arguments and the expected parameter types.
  * This function uses pyarg_matches_jtype to determine how well arguments match.
  * This function does not need to be called before using calling this method, it is only

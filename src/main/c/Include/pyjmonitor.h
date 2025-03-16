@@ -1,7 +1,7 @@
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2017-2022 JEP AUTHORS.
+   Copyright (c) 2017-2025 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -37,7 +37,7 @@
 #ifndef _Included_pyjmonitor
 #define _Included_pyjmonitor
 
-extern PyTypeObject PyJMonitor_Type;
+extern PyType_Spec PyJMonitor_Spec;
 
 typedef struct {
     PyObject_HEAD
@@ -50,10 +50,5 @@ typedef struct {
  * synchronized on an object.
  */
 PyObject* PyJMonitor_New(jobject);
-
-/*
- * Returns true if the object is a PyJMonitor.
- */
-int PyJMonitor_Check(PyObject*);
 
 #endif // ndef pyjmonitor

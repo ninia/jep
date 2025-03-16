@@ -36,15 +36,12 @@
 
 // called internally to make new PyJMethodObject instances.
 // throws python exception and returns NULL on error.
-PyJMethodObject* PyJMethod_New(JNIEnv *env, jobject rmethod)
+PyJMethodObject* PyJMethod_New(JNIEnv *env, JepModuleState *modState,
+                               jobject rmethod)
 {
     jstring          jname  = NULL;
     PyObject        *pyname = NULL;
     PyJMethodObject *pym    = NULL;
-
-    if (PyType_Ready(&PyJMethod_Type) < 0) {
-        return NULL;
-    }
 
     jname = java_lang_reflect_Member_getName(env, rmethod);
     if (process_java_exception(env) || !jname) {
@@ -53,7 +50,7 @@ PyJMethodObject* PyJMethod_New(JNIEnv *env, jobject rmethod)
     pyname = jstring_As_PyString(env, jname);
     (*env)->DeleteLocalRef(env, jname);
 
-    pym                = PyObject_NEW(PyJMethodObject, &PyJMethod_Type);
+    pym                = PyObject_NEW(PyJMethodObject, modState->PyJMethod_Type);
     pym->rmethod       = (*env)->NewGlobalRef(env, rmethod);
     pym->parameters    = NULL;
     pym->lenParameters = -1;
@@ -169,9 +166,9 @@ static void pyjmethod_dealloc(PyJMethodObject *self)
 }
 
 
-int PyJMethod_Check(PyObject *obj)
+int PyJMethod_Check(JepModuleState *modState, PyObject *obj)
 {
-    return PyObject_TypeCheck(obj, &PyJMethod_Type);
+    return PyObject_TypeCheck(obj, modState->PyJMethod_Type);
 }
 
 int PyJMethod_GetParameterCount(PyJMethodObject *method, JNIEnv *env)
@@ -874,45 +871,18 @@ static PyMemberDef pyjmethod_members[] = {
     {NULL}  /* Sentinel */
 };
 
+static PyType_Slot slots[] = {
+    {Py_tp_doc, "jmethod"},
+    {Py_tp_dealloc, pyjmethod_dealloc},
+    {Py_tp_call, pyjmethod_call},
+    {Py_tp_members, pyjmethod_members},
+    {Py_tp_descr_get, pyjmethod_descr_get},
+    {0, NULL},
+};
 
-PyTypeObject PyJMethod_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    "jep.PyJMethod",
-    sizeof(PyJMethodObject),
-    0,
-    (destructor) pyjmethod_dealloc,           /* tp_dealloc */
-    0,                                        /* tp_print */
-    0,                                        /* tp_getattr */
-    0,                                        /* tp_setattr */
-    0,                                        /* tp_compare */
-    0,                                        /* tp_repr */
-    0,                                        /* tp_as_number */
-    0,                                        /* tp_as_sequence */
-    0,                                        /* tp_as_mapping */
-    0,                                        /* tp_hash  */
-    (ternaryfunc) pyjmethod_call,             /* tp_call */
-    0,                                        /* tp_str */
-    0,                                        /* tp_getattro */
-    0,                                        /* tp_setattro */
-    0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT |
-    Py_TPFLAGS_IMMUTABLETYPE,                 /* tp_flags */
-    "jmethod",                                /* tp_doc */
-    0,                                        /* tp_traverse */
-    0,                                        /* tp_clear */
-    0,                                        /* tp_richcompare */
-    0,                                        /* tp_weaklistoffset */
-    0,                                        /* tp_iter */
-    0,                                        /* tp_iternext */
-    0,                                        /* tp_methods */
-    pyjmethod_members,                        /* tp_members */
-    0,                                        /* tp_getset */
-    0,                                        /* tp_base */
-    0,                                        /* tp_dict */
-    pyjmethod_descr_get,                      /* tp_descr_get */
-    0,                                        /* tp_descr_set */
-    0,                                        /* tp_dictoffset */
-    0,                                        /* tp_init */
-    0,                                        /* tp_alloc */
-    NULL,                                     /* tp_new */
+PyType_Spec PyJMethod_Spec = {
+    .name = "jep.PyJMethod",
+    .basicsize = sizeof(PyJMethodObject),
+    .flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+    .slots = slots
 };

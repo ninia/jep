@@ -155,7 +155,8 @@ static PyObject* pyjclass_add_inner_classes(JNIEnv *env,
  * is cached, this can just copy the attributes from the type and avoid any
  * reflection.
  */
-static PyObject* pyjclass_init_attr(JNIEnv *env, jclass clazz)
+static PyObject* pyjclass_init_attr(JNIEnv *env, JepModuleState *modState,
+                                    jclass clazz)
 {
     PyObject *attr = PyDict_New();
     if (!attr) {
@@ -177,8 +178,8 @@ static PyObject* pyjclass_init_attr(JNIEnv *env, jclass clazz)
     PyObject *key, *value;
     Py_ssize_t pos = 0;
     while (PyDict_Next(type->tp_dict, &pos, &key, &value)) {
-        if (PyJMethod_Check(value) || PyJMultiMethod_Check(value)
-                || PyJField_Check(value) ) {
+        if (PyJMethod_Check(modState, value) || PyJMultiMethod_Check(modState, value)
+                || PyJField_Check(modState, value) ) {
             if (PyDict_SetItem(attr, key, value) != 0) {
                 Py_DecRef((PyObject*) type);
                 Py_DecRef(attr);
@@ -190,12 +191,12 @@ static PyObject* pyjclass_init_attr(JNIEnv *env, jclass clazz)
     return attr;
 }
 
-static int pyjclass_init(JNIEnv *env, PyObject *pyobj)
+static int pyjclass_init(JNIEnv *env, JepModuleState *modState, PyObject *pyobj)
 {
     PyJClassObject *pyjclass = (PyJClassObject*) pyobj;
 
     pyjclass->constructor = NULL;
-    pyjclass->attr = pyjclass_init_attr(env, ((PyJObject*) pyobj)->clazz);
+    pyjclass->attr = pyjclass_init_attr(env, modState, ((PyJObject*) pyobj)->clazz);
     if (pyjclass->attr == NULL) {
         return 0;
     }
@@ -226,7 +227,7 @@ PyObject* PyJClass_Wrap(JNIEnv *env, jobject obj)
     }
     PyObject* pyjob = PyJObject_New(env, modState->PyJClass_Type, NULL, obj);
     if (pyjob) {
-        if (!pyjclass_init(env, pyjob)) {
+        if (!pyjclass_init(env, modState, pyjob)) {
             Py_DecRef(pyjob);
             pyjob = NULL;
         }
@@ -262,6 +263,11 @@ static int pyjclass_init_constructors(PyJClassObject *pyc)
         return -1;
     }
 
+    JepModuleState* modState = pyembed_get_module_state();
+    if (!modState) {
+        return -1;
+    }
+
     initArray = java_lang_Class_getConstructors(env, pyc->clazz);
     if (process_java_exception(env) || !initArray) {
         goto EXIT_ERROR;
@@ -277,7 +283,7 @@ static int pyjclass_init_constructors(PyJClassObject *pyc)
         if (process_java_exception(env) || !constructor) {
             goto EXIT_ERROR;
         }
-        pyjinit = PyJConstructor_New(env, constructor);
+        pyjinit = PyJConstructor_New(env, modState, constructor);
         if (pyjinit == NULL) {
             goto EXIT_ERROR;
         }
@@ -287,14 +293,14 @@ static int pyjclass_init_constructors(PyJClassObject *pyc)
             pycallable = pyjinit;
         } else if (i == 1) {
             PyObject* firstInit = pycallable;
-            pycallable = PyJMultiMethod_New(firstInit, pyjinit);
+            pycallable = PyJMultiMethod_New(modState, firstInit, pyjinit);
             Py_DECREF(firstInit);
             Py_DECREF(pyjinit);
             if (pycallable == NULL) {
                 goto EXIT_ERROR;
             }
         } else {
-            if (PyJMultiMethod_Append(pycallable, pyjinit) == -1) {
+            if (PyJMultiMethod_Append(modState, pycallable, pyjinit) == -1) {
                 Py_DECREF(pyjinit);
                 goto EXIT_ERROR;
             }
@@ -350,7 +356,12 @@ static PyObject* pyjclass_getattro(PyObject *obj, PyObject *name)
     PyObject *ret = PyObject_GenericGetAttr(obj, name);
     if (ret == NULL) {
         return NULL;
-    } else if (PyJMethod_Check(ret) || PyJMultiMethod_Check(ret)) {
+    }
+    JepModuleState* modState = pyembed_get_module_state();
+    if (!modState) {
+        return NULL;
+    }
+    if (PyJMethod_Check(modState, ret) || PyJMultiMethod_Check(modState, ret)) {
         /*
          * TODO Should not bind non-static methods to pyjclass objects, but not
          * sure yet how to handle multimethods and static methods.
@@ -358,7 +369,7 @@ static PyObject* pyjclass_getattro(PyObject *obj, PyObject *name)
         PyObject* wrapper = PyMethod_New(ret, (PyObject*) obj);
         Py_DECREF(ret);
         return wrapper;
-    } else if (PyJField_Check(ret)) {
+    } else if (PyJField_Check(modState, ret)) {
         PyObject *resolved = pyjfield_get((PyJFieldObject *) ret, (PyJObject*) obj);
         Py_DECREF(ret);
         return resolved;
@@ -392,9 +403,13 @@ static int pyjclass_setattro(PyObject *obj, PyObject *name, PyObject *v)
         return -1;
     }
 
-    if (!PyJField_Check(cur)) {
+    JepModuleState* modState = pyembed_get_module_state();
+    if (!modState) {
+        return -1;
+    }
+    if (!PyJField_Check(modState, cur)) {
         PyObject* javaClassName = PyObject_GetAttrString(obj, "java_name");
-        if (PyJMethod_Check(cur) || PyJMultiMethod_Check(cur)) {
+        if (PyJMethod_Check(modState, cur) || PyJMultiMethod_Check(modState, cur)) {
             PyErr_Format(PyExc_AttributeError, "'%s' object cannot assign to method '%s'.",
                          PyUnicode_AsUTF8(javaClassName), PyUnicode_AsUTF8(name));
         } else {

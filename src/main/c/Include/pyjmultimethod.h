@@ -1,7 +1,7 @@
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2015-2022 JEP_AUTHORS.
+   Copyright (c) 2015-2025 JEP_AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -33,7 +33,7 @@
 #define _Included_pyjmultimethod
 
 
-extern PyTypeObject PyJMultiMethod_Type;
+extern PyType_Spec PyJMultiMethod_Spec;
 
 typedef struct {
     PyObject_HEAD
@@ -45,11 +45,11 @@ typedef struct {
  * make a PyJMultiMethod, after creation it is possible to add more than two
  * methods using PyJMultiMethod_Append.
  */
-PyObject* PyJMultiMethod_New(PyObject*, PyObject*);
+PyObject* PyJMultiMethod_New(JepModuleState*, PyObject*, PyObject*);
 /* Args must be a PyJMultiMethodObject and a PyJMethodObject */
-int PyJMultiMethod_Append(PyObject*, PyObject*);
+int PyJMultiMethod_Append(JepModuleState*, PyObject*, PyObject*);
 /* Check if the arg is a PyJMultiMethodObject */
-int PyJMultiMethod_Check(PyObject*);
+int PyJMultiMethod_Check(JepModuleState*, PyObject*);
 /* Get the name of a PyJMultiMethodObject, returns a new reference to the name */
 PyObject* PyJMultiMethod_GetName(PyObject*);
 

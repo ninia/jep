@@ -1,7 +1,7 @@
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2020-2022 JEP AUTHORS.
+   Copyright (c) 2020-2025 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -29,6 +29,8 @@
 
 #ifndef _Included_pyjtype
 #define _Included_pyjtype
+
+extern PyType_Spec PyJType_Spec;
 
 /*
  * Get a PyTypeObject for the java class provided.

@@ -33,6 +33,7 @@
 
 
 extern PyType_Spec PyJArray_Spec;
+extern PyType_Spec PyJArrayIter_Spec;
 
 // c storage for our stuff, managed by python interpreter.
 typedef struct {

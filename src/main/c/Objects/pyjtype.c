@@ -27,10 +27,8 @@
 
 #include "Jep.h"
 
-static PyTypeObject PyJType_Type;
-
-static PyTypeObject* pyjtype_get_cached(JNIEnv*, PyObject*, jclass);
-static int addMethods(JNIEnv*, PyObject*, jclass);
+static PyTypeObject* pyjtype_get_cached(JNIEnv*, JepModuleState*, jclass);
+static int addMethods(JNIEnv*, JepModuleState* modState, PyObject*, jclass);
 
 /*
  * Populate pyjmethods for a type and add it to the cache. This is for custom
@@ -39,10 +37,11 @@ static int addMethods(JNIEnv*, PyObject*, jclass);
  *
  * Returns a borrowed reference to the type on success, NULL on failure.
  */
-static PyTypeObject* addCustomTypeToTypeDict(JNIEnv *env, PyObject* fqnToPyType,
-        jclass class, PyTypeObject *type)
+static PyTypeObject* addCustomTypeToTypeDict(JNIEnv *env,
+        JepModuleState *modState, jclass class, PyTypeObject *type)
 {
-    if (PyDict_SetItemString(fqnToPyType, type->tp_name, (PyObject*) type)) {
+    if (PyDict_SetItemString(modState->pyJTypeCache, type->tp_name,
+                             (PyObject*) type)) {
         return NULL;
     }
     /*
@@ -50,7 +49,7 @@ static PyTypeObject* addCustomTypeToTypeDict(JNIEnv *env, PyObject* fqnToPyType,
      * not defined when the type is created. None of the types have fields so
      * no need to addFields.
      */
-    if (addMethods(env, type->tp_dict, class) != 0) {
+    if (addMethods(env, modState, type->tp_dict, class) != 0) {
         return NULL;
     }
     return type;
@@ -63,7 +62,7 @@ static PyTypeObject* addCustomTypeToTypeDict(JNIEnv *env, PyObject* fqnToPyType,
  *
  * Returns a borrowed reference to the type on success, NULL on failure.
  */
-static PyTypeObject* addSpecToTypeDict(JNIEnv *env, PyObject* fqnToPyType,
+static PyTypeObject* addSpecToTypeDict(JNIEnv *env, JepModuleState *modState,
                                        jclass class, PyType_Spec *spec, PyTypeObject *base)
 {
     PyTypeObject *type = (PyTypeObject*) PyType_FromSpecWithBases(spec,
@@ -71,7 +70,7 @@ static PyTypeObject* addSpecToTypeDict(JNIEnv *env, PyObject* fqnToPyType,
     if (!type) {
         return NULL;
     }
-    PyTypeObject *result = addCustomTypeToTypeDict(env, fqnToPyType, class, type);
+    PyTypeObject *result = addCustomTypeToTypeDict(env, modState, class, type);
     Py_DECREF(type);
     return result;
 }
@@ -88,47 +87,43 @@ static PyTypeObject* addSpecToTypeDict(JNIEnv *env, PyObject* fqnToPyType,
  *
  * Returns 0 on success and -1 on failure
  */
-static int populateCustomTypeDict(JNIEnv *env, PyObject* fqnToPyType)
+static int populateCustomTypeDict(JNIEnv *env, JepModuleState *modState)
 {
-    if (!addSpecToTypeDict(env, fqnToPyType, JAUTOCLOSEABLE_TYPE,
+    if (!addSpecToTypeDict(env, modState, JAUTOCLOSEABLE_TYPE,
                            &PyJAutoCloseable_Spec, NULL)) {
         return -1;
     }
-    if (!addSpecToTypeDict(env, fqnToPyType, JITERATOR_TYPE, &PyJIterator_Spec,
+    if (!addSpecToTypeDict(env, modState, JITERATOR_TYPE, &PyJIterator_Spec,
                            NULL)) {
         return -1;
     }
-    PyTypeObject *pyjiterable = addSpecToTypeDict(env, fqnToPyType, JITERABLE_TYPE,
+    PyTypeObject *pyjiterable = addSpecToTypeDict(env, modState, JITERABLE_TYPE,
                                 &PyJIterable_Spec, NULL);
     if (!pyjiterable) {
         return -1;
     }
-    PyTypeObject *pyjcollection = addSpecToTypeDict(env, fqnToPyType,
+    PyTypeObject *pyjcollection = addSpecToTypeDict(env, modState,
                                   JCOLLECTION_TYPE, &PyJCollection_Spec, pyjiterable);
     if (!pyjcollection) {
         return -1;
     }
-    if (!addSpecToTypeDict(env, fqnToPyType, JLIST_TYPE, &PyJList_Spec,
+    if (!addSpecToTypeDict(env, modState, JLIST_TYPE, &PyJList_Spec,
                            pyjcollection)) {
         return -1;
     }
-    if (!addSpecToTypeDict(env, fqnToPyType, JMAP_TYPE, &PyJMap_Spec, NULL)) {
+    if (!addSpecToTypeDict(env, modState, JMAP_TYPE, &PyJMap_Spec, NULL)) {
         return -1;
     }
-    JepModuleState* modState = pyembed_get_module_state();
-    if (!modState) {
-        return -1;
-    }
-    if (!addSpecToTypeDict(env, fqnToPyType, JNUMBER_TYPE, &PyJNumber_Spec,
+    if (!addSpecToTypeDict(env, modState, JNUMBER_TYPE, &PyJNumber_Spec,
                            modState->PyJObject_Type)) {
         return -1;
     }
-    if (!addSpecToTypeDict(env, fqnToPyType, JBUFFER_TYPE, &PyJBuffer_Spec,
+    if (!addSpecToTypeDict(env, modState, JBUFFER_TYPE, &PyJBuffer_Spec,
                            modState->PyJObject_Type)) {
         return -1;
     }
 
-    if (!addCustomTypeToTypeDict(env, fqnToPyType, JOBJECT_TYPE,
+    if (!addCustomTypeToTypeDict(env, modState, JOBJECT_TYPE,
                                  modState->PyJObject_Type)) {
         return -1;
     }
@@ -169,7 +164,8 @@ static void parseModule(PyObject* typeName, PyObject** moduleName,
  * struct and Python will not allow multiple inheritance of multiple types
  * with a struct, even if they are the same struct.
  */
-static PyObject* getBaseTypes(JNIEnv *env, PyObject *fqnToPyType, jclass clazz)
+static PyObject* getBaseTypes(JNIEnv *env, JepModuleState *modState,
+                              jclass clazz)
 {
     /* Need to count the base types before tuple creation */
     jint numBases = 0;
@@ -198,7 +194,7 @@ static PyObject* getBaseTypes(JNIEnv *env, PyObject *fqnToPyType, jclass clazz)
     if (interface != JNI_TRUE) {
         /* For classes that are not interfaces, the super class is the first type */
         jclass super = java_lang_Class_getSuperclass(env, clazz);
-        PyObject* superType = (PyObject*) pyjtype_get_cached(env, fqnToPyType, super);
+        PyObject* superType = (PyObject*) pyjtype_get_cached(env, modState, super);
         (*env)->DeleteLocalRef(env, super);
         if (!superType) {
             Py_DECREF(bases);
@@ -214,7 +210,7 @@ static PyObject* getBaseTypes(JNIEnv *env, PyObject *fqnToPyType, jclass clazz)
         jclass superI = (jclass) (*env)->GetObjectArrayElement(env, interfaces,
                         interfacesIdx);
         interfacesIdx += 1;
-        PyObject* superType = (PyObject*) pyjtype_get_cached(env, fqnToPyType, superI);
+        PyObject* superType = (PyObject*) pyjtype_get_cached(env, modState, superI);
         (*env)->DeleteLocalRef(env, superI);
         if (!superType) {
             Py_DECREF(bases);
@@ -251,7 +247,8 @@ static int addSlots(PyObject* dict)
  * Look up all Java methods and create pyjmethods that are added to the type
  * dict.
  */
-static int addMethods(JNIEnv* env, PyObject* dict, jclass clazz)
+static int addMethods(JNIEnv* env, JepModuleState* modState, PyObject* dict,
+                      jclass clazz)
 {
     jobjectArray methodArray = java_lang_Class_getMethods(env, clazz);
     if (!methodArray) {
@@ -273,7 +270,7 @@ static int addMethods(JNIEnv* env, PyObject* dict, jclass clazz)
     int len = (*env)->GetArrayLength(env, methodArray);
     for (i = 0; i < len; i += 1) {
         jobject rmethod = (*env)->GetObjectArrayElement(env, methodArray, i);
-        PyJMethodObject *pymethod = PyJMethod_New(env, rmethod);
+        PyJMethodObject *pymethod = PyJMethod_New(env, modState, rmethod);
 
         if (!pymethod) {
             return -1;
@@ -319,15 +316,16 @@ static int addMethods(JNIEnv* env, PyObject* dict, jclass clazz)
                 Py_DECREF(pymethod);
                 return -1;
             }
-        } else if (PyJMethod_Check(cached)) {
-            PyObject* multimethod = PyJMultiMethod_New((PyObject*) pymethod, cached);
+        } else if (PyJMethod_Check(modState, cached)) {
+            PyObject* multimethod = PyJMultiMethod_New(modState, (PyObject*) pymethod,
+                                    cached);
             if (PyDict_SetItem(dict, pymethod->pyMethodName, multimethod) != 0) {
                 Py_DECREF(multimethod);
                 return -1;
             }
             Py_DECREF(multimethod);
-        } else if (PyJMultiMethod_Check(cached)) {
-            PyJMultiMethod_Append(cached, (PyObject*) pymethod);
+        } else if (PyJMultiMethod_Check(modState, cached)) {
+            PyJMultiMethod_Append(modState, cached, (PyObject*) pymethod);
         }
 
         Py_DECREF(pymethod);
@@ -344,7 +342,8 @@ static int addMethods(JNIEnv* env, PyObject* dict, jclass clazz)
  * Look up all Java fields and create pyjmethods that are added to the type
  * dict.
  */
-static int addFields(JNIEnv* env, PyObject* dict, jclass clazz)
+static int addFields(JNIEnv* env, JepModuleState* modState, PyObject* dict,
+                     jclass clazz)
 {
     jobjectArray fieldArray = java_lang_Class_getDeclaredFields(env, clazz);
     if (!fieldArray) {
@@ -364,7 +363,7 @@ static int addFields(JNIEnv* env, PyObject* dict, jclass clazz)
             return -1;
         }
         if (public) {
-            PyJFieldObject *pyjfield = PyJField_New(env, rfield);
+            PyJFieldObject *pyjfield = PyJField_New(env, modState, rfield);
 
             if (!pyjfield) {
                 return -1;
@@ -386,7 +385,7 @@ static int addFields(JNIEnv* env, PyObject* dict, jclass clazz)
  * Create a new PythonType object for the given Java class. The Python type
  * hierarchy will mirror the Java class hierarchy.
  */
-static PyTypeObject* pyjtype_get_new(JNIEnv *env, PyObject *fqnToPyType,
+static PyTypeObject* pyjtype_get_new(JNIEnv *env, JepModuleState *modState,
                                      PyObject *typeName, jclass clazz)
 {
 
@@ -395,15 +394,9 @@ static PyTypeObject* pyjtype_get_new(JNIEnv *env, PyObject *fqnToPyType,
                      PyUnicode_AsUTF8(typeName));
         return NULL;
     }
-    if (!PyJType_Type.tp_base) {
-        PyJType_Type.tp_base = &PyType_Type;
-    }
-    if (PyType_Ready(&PyJType_Type) < 0) {
-        return NULL;
-    }
 
     /* The Python types for the Java super class and any interfaces. */
-    PyObject* bases = getBaseTypes(env, fqnToPyType, clazz);
+    PyObject* bases = getBaseTypes(env, modState, clazz);
     if (!bases) {
         return NULL;
     }
@@ -419,8 +412,8 @@ static PyTypeObject* pyjtype_get_new(JNIEnv *env, PyObject *fqnToPyType,
         Py_DECREF(bases);
         return NULL;
     }
-    if ((addSlots(dict) != 0) || (addMethods(env, dict, clazz) != 0)
-            || (addFields(env, dict, clazz) != 0)) {
+    if ((addSlots(dict) != 0) || (addMethods(env, modState, dict, clazz) != 0)
+            || (addFields(env, modState, dict, clazz) != 0)) {
         Py_DECREF(bases);
         Py_DECREF(dict);
         return NULL;
@@ -436,15 +429,15 @@ static PyTypeObject* pyjtype_get_new(JNIEnv *env, PyObject *fqnToPyType,
          * type(shortName, bases, dict) in python.
          * See https://docs.python.org/3/library/functions.html#type
          */
-        type = (PyTypeObject*) PyObject_CallFunctionObjArgs((PyObject*) &PyJType_Type,
-                shortName, bases, dict, NULL);
+        type = (PyTypeObject*) PyObject_CallFunctionObjArgs((PyObject*)
+                modState->PyJType_Type, shortName, bases, dict, NULL);
     }
     Py_DECREF(bases);
     Py_DECREF(dict);
     Py_XDECREF(moduleName);
     Py_XDECREF(shortName);
     if (type) {
-        PyDict_SetItem(fqnToPyType, typeName, (PyObject*) type);
+        PyDict_SetItem(modState->pyJTypeCache, typeName, (PyObject*) type);
     }
     return type;
 }
@@ -455,7 +448,7 @@ static PyTypeObject* pyjtype_get_new(JNIEnv *env, PyObject *fqnToPyType,
  * to allow for recursion while looking up super classes without needing to
  * look up the jepThread every time.
  */
-static PyTypeObject* pyjtype_get_cached(JNIEnv *env, PyObject *fqnToPyType,
+static PyTypeObject* pyjtype_get_cached(JNIEnv *env, JepModuleState *modState,
                                         jclass clazz)
 {
     jstring className = java_lang_Class_getName(env, clazz);
@@ -464,11 +457,12 @@ static PyTypeObject* pyjtype_get_cached(JNIEnv *env, PyObject *fqnToPyType,
     }
     PyObject *pyClassName = jstring_As_PyString(env, className);
     (*env)->DeleteLocalRef(env, className);
-    PyTypeObject *pyType = (PyTypeObject*) PyDict_GetItem(fqnToPyType, pyClassName);
+    PyTypeObject *pyType = (PyTypeObject*) PyDict_GetItem(modState->pyJTypeCache,
+                           pyClassName);
     if (pyType) {
         Py_INCREF(pyType);
     } else {
-        pyType = pyjtype_get_new(env, fqnToPyType, pyClassName, clazz);
+        pyType = pyjtype_get_new(env, modState, pyClassName, clazz);
     }
     Py_DECREF(pyClassName);
     return pyType;
@@ -476,21 +470,16 @@ static PyTypeObject* pyjtype_get_cached(JNIEnv *env, PyObject *fqnToPyType,
 
 PyTypeObject* PyJType_Get(JNIEnv *env, jclass clazz)
 {
-    PyObject* modjep = pyembed_get_jep_module();
-    if (!modjep) {
+    JepModuleState* modState = pyembed_get_module_state();
+    if (!modState) {
         return NULL;
     }
-    PyObject* fqnToPyType = PyObject_GetAttrString(modjep, "__javaTypeCache__");
-    if (!fqnToPyType) {
-        return NULL;
-    } else if (PyDict_Size(fqnToPyType) == 0) {
-        if (populateCustomTypeDict(env, fqnToPyType)) {
-            Py_DECREF(fqnToPyType);
+    if (PyDict_Size(modState->pyJTypeCache) == 0) {
+        if (populateCustomTypeDict(env, modState)) {
             return NULL;
         }
     }
-    PyTypeObject* result = pyjtype_get_cached(env, fqnToPyType, clazz);
-    Py_DECREF(fqnToPyType);
+    PyTypeObject* result = pyjtype_get_cached(env, modState, clazz);
     return result;
 }
 
@@ -582,46 +571,14 @@ static PyMethodDef pyjtype_methods[] = {
     { NULL, NULL }
 };
 
+static PyType_Slot slots[] = {
+    {Py_tp_methods, pyjtype_methods},
+    {0, NULL},
+};
 
-static PyTypeObject PyJType_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    "PyJType",                                /* tp_name */
-    0,                                        /* tp_basicsize */
-    0,                                        /* tp_itemsize */
-    0,                                        /* tp_dealloc */
-    0,                                        /* tp_print */
-    0,                                        /* tp_getattr */
-    0,                                        /* tp_setattr */
-    0,                                        /* tp_compare */
-    0,                                        /* tp_repr */
-    0,                                        /* tp_as_number */
-    0,                                        /* tp_as_sequence */
-    0,                                        /* tp_as_mapping */
-    0,                                        /* tp_hash  */
-    0,                                        /* tp_call */
-    0,                                        /* tp_str */
-    0,                                        /* tp_getattro */
-    0,                                        /* tp_setattro */
-    0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT |
-    Py_TPFLAGS_TYPE_SUBCLASS |
-    Py_TPFLAGS_IMMUTABLETYPE,                 /* tp_flags */
-    0,                                        /* tp_doc */
-    0,                                        /* tp_traverse */
-    0,                                        /* tp_clear */
-    0,                                        /* tp_richcompare */
-    0,                                        /* tp_weaklistoffset */
-    0,                                        /* tp_iter */
-    0,                                        /* tp_iternext */
-    pyjtype_methods,                          /* tp_methods */
-    0,                                        /* tp_members */
-    0,                                        /* tp_getset */
-    0,                                        /* tp_base */
-    0,                                        /* tp_dict */
-    0,                                        /* tp_descr_get */
-    0,                                        /* tp_descr_set */
-    0,                                        /* tp_dictoffset */
-    0,                                        /* tp_init */
-    0,                                        /* tp_alloc */
-    NULL,                                     /* tp_new */
+PyType_Spec PyJType_Spec = {
+    .name = "PyJType",
+    .basicsize = 0,
+    .flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_TYPE_SUBCLASS,
+    .slots = slots
 };

@@ -1,7 +1,7 @@
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2016-2022 JEP AUTHORS.
+   Copyright (c) 2016-2025 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -31,11 +31,9 @@
 #ifndef _Included_pyjconstructor
 #define _Included_pyjconstructor
 
-extern PyTypeObject PyJConstructor_Type;
+extern PyType_Spec PyJConstructor_Spec;
 
 /* Second arg must be a java.lang.reflect.Constructor */
-PyObject* PyJConstructor_New(JNIEnv*, jobject);
-
-int PyJConstructor_Check(PyObject*);
+PyObject* PyJConstructor_New(JNIEnv*, JepModuleState*, jobject);
 
 #endif // ndef pyjconstructor

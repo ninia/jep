@@ -43,9 +43,20 @@ struct __JepThread {
 typedef struct __JepThread JepThread;
 
 struct __JepModuleState {
+    PyObject *pyJTypeCache;
+
+    PyTypeObject *PyJType_Type;
+    PyTypeObject *PyJField_Type;
+    PyTypeObject *PyJMethod_Type;
+    PyTypeObject *PyJConstructor_Type;
+    PyTypeObject *PyJMultiMethod_Type;
+
     PyTypeObject *PyJObject_Type;
     PyTypeObject *PyJClass_Type;
     PyTypeObject *PyJArray_Type;
+
+    PyTypeObject *PyJMonitor_Type;
+    PyTypeObject *PyJArrayIter_Type;
 };
 typedef struct __JepModuleState JepModuleState;
 

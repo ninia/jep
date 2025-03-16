@@ -1659,21 +1659,19 @@ typedef struct {
     PyJArrayObject *it_seq; /* Set to NULL when iterator is exhausted */
 } PyJArrayIterObject;
 
-PyTypeObject PyJArrayIter_Type;
-
 static PyObject *pyjarray_iter(PyObject *seq)
 {
     PyJArrayIterObject *it;
-
-    if (PyType_Ready(&PyJArrayIter_Type) < 0) {
-        return NULL;
-    }
 
     if (!pyjarray_check(seq)) {
         PyErr_BadInternalCall();
         return NULL;
     }
-    it = PyObject_New(PyJArrayIterObject, &PyJArrayIter_Type);
+    JepModuleState* modState = pyembed_get_module_state();
+    if (!modState) {
+        return NULL;
+    }
+    it = PyObject_New(PyJArrayIterObject, modState->PyJArrayIter_Type);
     if (it == NULL) {
         return NULL;
     }
@@ -1723,51 +1721,17 @@ static int pyjarrayiter_len(PyJArrayIterObject *it)
     return 0;
 }
 
-static PySequenceMethods pyjarrayiter_as_sequence = {
-    (lenfunc) pyjarrayiter_len,               /* sq_length */
-    0,                                        /* sq_concat */
+static PyType_Slot iterslots[] = {
+    {Py_tp_dealloc, pyjarrayiter_dealloc},
+    {Py_sq_length, pyjarrayiter_len},
+    {Py_tp_iter, PyObject_SelfIter},
+    {Py_tp_iternext, pyjarrayiter_next},
+    {0, NULL},
 };
 
-PyObject* pyjarrayiter_getattr(PyObject *one, PyObject *two)
-{
-    return PyObject_GenericGetAttr(one, two);
-}
-
-PyTypeObject PyJArrayIter_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    "jep.PyJArrayIter",                       /* tp_name */
-    sizeof(PyJArrayIterObject),               /* tp_basicsize */
-    0,                                        /* tp_itemsize */
-    /* methods */
-    (destructor) pyjarrayiter_dealloc,        /* tp_dealloc */
-    0,                                        /* tp_print */
-    0,                                        /* tp_getattr */
-    0,                                        /* tp_setattr */
-    0,                                        /* tp_compare */
-    0,                                        /* tp_repr */
-    0,                                        /* tp_as_number */
-    &pyjarrayiter_as_sequence,                /* tp_as_sequence */
-    0,                                        /* tp_as_mapping */
-    0,                                        /* tp_hash */
-    0,                                        /* tp_call */
-    0,                                        /* tp_str */
-    (getattrofunc) pyjarrayiter_dealloc,      /* tp_getattro */
-    0,                                        /* tp_setattro */
-    0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT |
-    Py_TPFLAGS_IMMUTABLETYPE,                 /* tp_flags */
-    0,                                        /* tp_doc */
-    0,                                        /* tp_traverse */
-    0,                                        /* tp_clear */
-    0,                                        /* tp_richcompare */
-    0,                                        /* tp_weaklistoffset */
-    PyObject_SelfIter,                        /* tp_iter */
-    (iternextfunc) pyjarrayiter_next,         /* tp_iternext */
-    0,                                        /* tp_methods */
-    0,                                        /* tp_members */
-    0,                                        /* tp_getset */
-    0, // &PyJObject_Type                     /* tp_base */
-    0,                                        /* tp_dict */
-    0,                                        /* tp_descr_get */
-    0,                                        /* tp_descr_set */
+PyType_Spec PyJArrayIter_Spec = {
+    .name = "jep.PyJArrayIter",
+    .basicsize = sizeof(PyJArrayIterObject),
+    .flags = Py_TPFLAGS_DEFAULT,
+    .slots = iterslots
 };

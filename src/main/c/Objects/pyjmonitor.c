@@ -33,26 +33,17 @@ PyObject* PyJMonitor_New(jobject obj)
     PyJMonitorObject *monitor = NULL;
     JNIEnv           *env     = pyembed_get_env();
 
-    if (PyType_Ready(&PyJMonitor_Type) < 0) {
+    JepModuleState* modState = pyembed_get_module_state();
+    if (!modState) {
         return NULL;
     }
 
-    monitor = PyObject_NEW(PyJMonitorObject,
-                           &PyJMonitor_Type);
+    monitor = PyObject_NEW(PyJMonitorObject, modState->PyJMonitor_Type);
     monitor->lock = (*env)->NewGlobalRef(env, obj);
     if (process_java_exception(env)) {
         return NULL;
     }
     return (PyObject*) monitor;
-}
-
-
-int PyJMonitor_Check(PyObject *obj)
-{
-    if (PyObject_TypeCheck(obj, &PyJMonitor_Type)) {
-        return 1;
-    }
-    return 0;
 }
 
 
@@ -137,48 +128,17 @@ static PyMethodDef pyjmonitor_methods[] = {
     { NULL, NULL }
 };
 
+static PyType_Slot slots[] = {
+    {Py_tp_doc, "jmonitor"},
+    {Py_tp_dealloc, pyjmonitor_dealloc},
+    {Py_tp_getattro, PyObject_GenericGetAttr},
+    {Py_tp_methods, pyjmonitor_methods},
+    {0, NULL},
+};
 
-/*
- * Inherits from PyJObject_Type
- */
-PyTypeObject PyJMonitor_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    "jep.PyJMonitor",
-    sizeof(PyJMonitorObject),
-    0,
-    (destructor) pyjmonitor_dealloc,          /* tp_dealloc */
-    0,                                        /* tp_print */
-    0,                                        /* tp_getattr */
-    0,                                        /* tp_setattr */
-    0,                                        /* tp_compare */
-    0,                                        /* tp_repr */
-    0,                                        /* tp_as_number */
-    0,                                        /* tp_as_sequence */
-    0,                                        /* tp_as_mapping */
-    0,                                        /* tp_hash  */
-    0,                                        /* tp_call */
-    0,                                        /* tp_str */
-    PyObject_GenericGetAttr,                  /* tp_getattro */
-    0,                                        /* tp_setattro */
-    0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT |
-    Py_TPFLAGS_IMMUTABLETYPE,                 /* tp_flags */
-    "jmonitor",                               /* tp_doc */
-    0,                                        /* tp_traverse */
-    0,                                        /* tp_clear */
-    0,                                        /* tp_richcompare */
-    0,                                        /* tp_weaklistoffset */
-    0,                                        /* tp_iter */
-    0,                                        /* tp_iternext */
-    pyjmonitor_methods,                       /* tp_methods */
-    0,                                        /* tp_members */
-    0,                                        /* tp_getset */
-    0,                                        /* tp_base */
-    0,                                        /* tp_dict */
-    0,                                        /* tp_descr_get */
-    0,                                        /* tp_descr_set */
-    0,                                        /* tp_dictoffset */
-    0,                                        /* tp_init */
-    0,                                        /* tp_alloc */
-    NULL,                                     /* tp_new */
+PyType_Spec PyJMonitor_Spec = {
+    .name = "jep.PyJMonitor",
+    .basicsize = sizeof(PyJMonitorObject),
+    .flags = Py_TPFLAGS_DEFAULT,
+    .slots = slots
 };

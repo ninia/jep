@@ -1,7 +1,7 @@
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2004-2022 JEP AUTHORS.
+   Copyright (c) 2004-2025 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -31,7 +31,7 @@
 #ifndef _Included_pyjfield
 #define _Included_pyjfield
 
-extern PyTypeObject PyJField_Type;
+extern PyType_Spec PyJField_Spec;
 
 /* Represents a java field on a java object and allows getting and setting values */
 typedef struct {
@@ -47,8 +47,8 @@ typedef struct {
 } PyJFieldObject;
 
 
-PyJFieldObject* PyJField_New(JNIEnv*, jobject);
-int PyJField_Check(PyObject*);
+PyJFieldObject* PyJField_New(JNIEnv*, JepModuleState*, jobject);
+int PyJField_Check(JepModuleState*, PyObject*);
 
 PyObject* pyjfield_get(PyJFieldObject*, PyJObject*);
 int pyjfield_set(PyJFieldObject*, PyJObject*, PyObject*);

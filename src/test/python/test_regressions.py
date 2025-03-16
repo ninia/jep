@@ -49,3 +49,6 @@ class TestRegressions(unittest.TestCase):
             thread.join();
         from java.lang import Object
         self.assertEqual(3, len(Object.wait.__methods__))
+        
+    def test_isolated_subinterpreter(self):
+        jep_pipe(build_java_process_cmd('jep.test.TestIsolatedSubInterpreter'))
