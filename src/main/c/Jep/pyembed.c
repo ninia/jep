@@ -181,6 +181,25 @@ static void free_jep_module(PyObject* modjep)
     }
 }
 
+static int traverse_jep_module(PyObject* modjep, visitproc visit, void *arg)
+{
+    JepModuleState* modState = (JepModuleState*) PyModule_GetState(modjep);
+    if (modState) {
+        Py_VISIT(modState->pyJTypeCache);
+        Py_VISIT(modState->PyJType_Type);
+        Py_VISIT(modState->PyJField_Type);
+        Py_VISIT(modState->PyJMethod_Type);
+        Py_VISIT(modState->PyJConstructor_Type);
+        Py_VISIT(modState->PyJMultiMethod_Type);
+        Py_VISIT(modState->PyJObject_Type);
+        Py_VISIT(modState->PyJClass_Type);
+        Py_VISIT(modState->PyJArray_Type);
+        Py_VISIT(modState->PyJMonitor_Type);
+        Py_VISIT(modState->PyJArrayIter_Type);
+    }
+    return 0;
+}
+
 static struct PyModuleDef jep_module_def = {
     PyModuleDef_HEAD_INIT,
     "_jep",                     /* m_name */
@@ -188,7 +207,7 @@ static struct PyModuleDef jep_module_def = {
     sizeof(JepModuleState),     /* m_size */
     jep_methods,                /* m_methods */
     NULL,                       /* m_reload */
-    NULL,                       /* m_traverse */
+    traverse_jep_module,        /* m_traverse */
     NULL,                       /* m_clear */
     (freefunc) free_jep_module, /* m_free */
 };

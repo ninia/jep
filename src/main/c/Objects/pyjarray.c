@@ -1683,8 +1683,10 @@ static PyObject *pyjarray_iter(PyObject *seq)
 
 static void pyjarrayiter_dealloc(PyJArrayIterObject *it)
 {
+    PyTypeObject *tp = Py_TYPE(it);
     Py_XDECREF(it->it_seq);
     PyObject_Del(it);
+    Py_DECREF(tp);
 }
 
 static PyObject *pyjarrayiter_next(PyJArrayIterObject *it)
