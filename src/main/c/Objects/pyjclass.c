@@ -265,7 +265,7 @@ static int pyjclass_init_constructors(PyJClassObject *pyc)
 
     JepModuleState* modState = pyembed_get_module_state();
     if (!modState) {
-        return -1;
+        goto EXIT_ERROR;
     }
 
     initArray = java_lang_Class_getConstructors(env, pyc->clazz);
