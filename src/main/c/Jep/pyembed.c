@@ -313,7 +313,7 @@ static int initjep(JNIEnv *env, jboolean hasSharedModules)
             handle_startup_exception(env, "Failed to initialize PyJTypes", 1);
             return -1;
         }
-        Py_INCREF(modjep);
+        Py_INCREF(javaTypeCache);
         modState->pyJTypeCache = javaTypeCache;
 
         /* still held by sys.modules. */

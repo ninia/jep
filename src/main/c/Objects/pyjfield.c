@@ -36,6 +36,7 @@
 static void pyjfield_dealloc(PyJFieldObject *self)
 {
 #if USE_DEALLOC
+    PyTypeObject *tp = Py_TYPE(self);
     JNIEnv *env  = pyembed_get_env();
     if (env) {
         if (self->rfield) {
@@ -46,6 +47,7 @@ static void pyjfield_dealloc(PyJFieldObject *self)
     Py_CLEAR(self->pyFieldName);
 
     PyObject_Del(self);
+    Py_DECREF(tp);
 #endif
 }
 

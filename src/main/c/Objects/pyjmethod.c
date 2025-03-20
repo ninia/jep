@@ -149,6 +149,7 @@ EXIT_ERROR:
 static void pyjmethod_dealloc(PyJMethodObject *self)
 {
 #if USE_DEALLOC
+    PyTypeObject *tp = Py_TYPE(self);
     JNIEnv *env  = pyembed_get_env();
     if (env) {
         if (self->parameters) {
@@ -162,6 +163,7 @@ static void pyjmethod_dealloc(PyJMethodObject *self)
     Py_CLEAR(self->pyMethodName);
 
     PyObject_Del(self);
+    Py_DECREF(tp);
 #endif
 }
 

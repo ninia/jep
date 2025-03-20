@@ -68,6 +68,7 @@ PyObject* PyJObject_New(JNIEnv *env, PyTypeObject* type, jobject obj,
 static void pyjobject_dealloc(PyJObject *self)
 {
 #if USE_DEALLOC
+    PyTypeObject *tp = Py_TYPE(self);
     JNIEnv *env = pyembed_get_env();
     if (env) {
         if (self->object) {
@@ -77,8 +78,8 @@ static void pyjobject_dealloc(PyJObject *self)
             (*env)->DeleteGlobalRef(env, self->clazz);
         }
     }
-
-    Py_TYPE((PyObject*) self)->tp_free((PyObject*) self);
+    tp->tp_free((PyObject*) self);
+    Py_DECREF(tp);
 #endif
 }
 

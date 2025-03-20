@@ -174,8 +174,10 @@ static PyObject* pyjmultimethod_getmethods(PyObject* multimethod)
 
 static void pyjmultimethod_dealloc(PyJMultiMethodObject *self)
 {
+    PyTypeObject *tp = Py_TYPE(self);
     Py_CLEAR(self->methodList);
     PyObject_Del(self);
+    Py_DECREF(tp);
 }
 
 static PyObject* pyjmultimethod_descr_get(PyObject *func, PyObject *obj,
