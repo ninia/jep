@@ -25,7 +25,8 @@ public class TestIsolatedSubInterpreter {
             .withInitial(() -> new SubInterpreter(JEP_CONFIG));
 
     public static void main(String... args) {
-        try (ExecutorService executor = Executors.newFixedThreadPool(12)) {
+        ExecutorService executor = Executors.newFixedThreadPool(12);
+        try {
             List<CompletableFuture<?>> futures = new ArrayList<>();
             for (int i = 0; i < 1000; i++) {
                 futures.add(CompletableFuture.supplyAsync(() -> {
@@ -34,6 +35,8 @@ public class TestIsolatedSubInterpreter {
             }
             CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
                     .join();
+        } finally {
+            executor.shutdown();
         }
 
     }
