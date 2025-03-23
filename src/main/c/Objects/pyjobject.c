@@ -45,7 +45,7 @@ int PyJObject_Check(PyObject *pyobj)
 PyObject* PyJObject_New(JNIEnv *env, PyTypeObject* type, jobject obj,
                         jclass class)
 {
-    PyJObject *pyjob = (PyJObject*) PyType_GenericAlloc(type, 0);
+    PyJObject *pyjob = (PyJObject*) type->tp_alloc(type, 0);
 
     if (obj) {
         pyjob->object = (*env)->NewGlobalRef(env, obj);
@@ -81,6 +81,12 @@ static void pyjobject_dealloc(PyJObject *self)
     tp->tp_free((PyObject*) self);
     Py_DECREF(tp);
 #endif
+}
+
+static int pyjobject_traverse(PyJObject *self, visitproc visit, void *arg)
+{
+    Py_VISIT(Py_TYPE(self));
+    return 0;
 }
 
 // call toString() on jobject. returns null on error.
@@ -299,6 +305,7 @@ static PyGetSetDef pyjobject_getset[] = {
 static PyType_Slot slots[] = {
     {Py_tp_doc, "Jep java.lang.Object"},
     {Py_tp_dealloc, pyjobject_dealloc},
+    {Py_tp_traverse, pyjobject_traverse},
     {Py_tp_hash, pyjobject_hash},
     {Py_tp_str, pyjobject_str},
     {Py_tp_richcompare, pyjobject_richcompare},
@@ -310,6 +317,6 @@ static PyType_Slot slots[] = {
 PyType_Spec PyJObject_Spec = {
     .name = "java.lang.Object",
     .basicsize = sizeof(PyJObject),
-    .flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+    .flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC | Py_TPFLAGS_BASETYPE,
     .slots = slots
 };

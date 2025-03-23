@@ -38,8 +38,8 @@ PyObject* PyJMultiMethod_New(JepModuleState* modState, PyObject* method1,
         PyErr_SetString(PyExc_TypeError, "PyJMultiMethod can only hold PyJMethods");
         return NULL;
     }
-
-    mm = PyObject_NEW(PyJMultiMethodObject, modState->PyJMultiMethod_Type);
+    PyTypeObject *tp = modState->PyJMultiMethod_Type;
+    mm = (PyJMultiMethodObject*) tp->tp_alloc(tp, 0);
     if (mm == NULL) {
         return NULL;
     }
@@ -176,8 +176,15 @@ static void pyjmultimethod_dealloc(PyJMultiMethodObject *self)
 {
     PyTypeObject *tp = Py_TYPE(self);
     Py_CLEAR(self->methodList);
-    PyObject_Del(self);
+    tp->tp_free((PyObject*) self);
     Py_DECREF(tp);
+}
+
+static int pyjmultimethod_traverse(PyJMultiMethodObject *self, visitproc visit, void *arg)
+{
+    Py_VISIT(self->methodList);
+    Py_VISIT(Py_TYPE(self));
+    return 0;
 }
 
 static PyObject* pyjmultimethod_descr_get(PyObject *func, PyObject *obj,
@@ -203,6 +210,7 @@ name as a single callable python object.");
 static PyType_Slot slots[] = {
     {Py_tp_doc, (void*) pyjmultimethod_doc},
     {Py_tp_dealloc, pyjmultimethod_dealloc},
+    {Py_tp_traverse, pyjmultimethod_traverse},
     {Py_tp_call, pyjmultimethod_call},
     {Py_tp_getset, pyjmultimethod_getsetlist},
     {Py_tp_descr_get, pyjmultimethod_descr_get},
@@ -212,6 +220,6 @@ static PyType_Slot slots[] = {
 PyType_Spec PyJMultiMethod_Spec = {
     .name = "jep.PyJMultiMethod",
     .basicsize = sizeof(PyJMultiMethodObject),
-    .flags = Py_TPFLAGS_DEFAULT,
+    .flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,
     .slots = slots
 };

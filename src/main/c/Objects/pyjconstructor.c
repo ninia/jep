@@ -89,7 +89,8 @@ PyObject* PyJConstructor_New(JNIEnv *env, JepModuleState *modState,
 {
     PyJMethodObject* pym = NULL;
 
-    pym = PyObject_NEW(PyJMethodObject, modState->PyJConstructor_Type);
+    PyTypeObject *tp = modState->PyJConstructor_Type;
+    pym = (PyJMethodObject*) tp->tp_alloc(tp, 0);
     pym->rmethod       = (*env)->NewGlobalRef(env, constructor);
     pym->parameters    = NULL;
     pym->lenParameters = 0;

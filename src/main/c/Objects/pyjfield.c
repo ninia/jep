@@ -46,9 +46,17 @@ static void pyjfield_dealloc(PyJFieldObject *self)
 
     Py_CLEAR(self->pyFieldName);
 
-    PyObject_Del(self);
+    tp->tp_free((PyObject*) self);
     Py_DECREF(tp);
 #endif
+}
+
+
+static int pyjfield_traverse(PyJFieldObject *self, visitproc visit, void *arg)
+{
+    Py_VISIT(self->pyFieldName);
+    Py_VISIT(Py_TYPE(self));
+    return 0;
 }
 
 
@@ -58,7 +66,8 @@ PyJFieldObject* PyJField_New(JNIEnv *env, JepModuleState *modState,
     PyJFieldObject *pyf;
     jstring          jstr        = NULL;
 
-    pyf              = PyObject_NEW(PyJFieldObject, modState->PyJField_Type);
+    PyTypeObject* tp = modState->PyJField_Type;
+    pyf              = (PyJFieldObject*) tp->tp_alloc(tp, 0);
     pyf->rfield      = (*env)->NewGlobalRef(env, rfield);
     pyf->pyFieldName = NULL;
     pyf->fieldTypeId = -1;
@@ -645,6 +654,7 @@ static int pyjfield_descr_set(PyObject *field, PyObject *obj, PyObject *value)
 static PyType_Slot slots[] = {
     {Py_tp_doc, "jfield"},
     {Py_tp_dealloc, pyjfield_dealloc},
+    {Py_tp_traverse, pyjfield_traverse},
     {Py_tp_descr_set, pyjfield_descr_set},
     {Py_tp_descr_get, pyjfield_descr_get},
     {0, NULL},
@@ -653,6 +663,6 @@ static PyType_Slot slots[] = {
 PyType_Spec PyJField_Spec = {
     .name = "jep.PyJField",
     .basicsize = sizeof(PyJFieldObject),
-    .flags = Py_TPFLAGS_DEFAULT,
+    .flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,
     .slots = slots
 };

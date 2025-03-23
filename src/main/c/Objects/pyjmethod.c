@@ -50,7 +50,8 @@ PyJMethodObject* PyJMethod_New(JNIEnv *env, JepModuleState *modState,
     pyname = jstring_As_PyString(env, jname);
     (*env)->DeleteLocalRef(env, jname);
 
-    pym                = PyObject_NEW(PyJMethodObject, modState->PyJMethod_Type);
+    PyTypeObject *tp   = modState->PyJMethod_Type;
+    pym                = (PyJMethodObject*) tp->tp_alloc(tp, 0);
     pym->rmethod       = (*env)->NewGlobalRef(env, rmethod);
     pym->parameters    = NULL;
     pym->lenParameters = -1;
@@ -162,9 +163,17 @@ static void pyjmethod_dealloc(PyJMethodObject *self)
 
     Py_CLEAR(self->pyMethodName);
 
-    PyObject_Del(self);
+    tp->tp_free((PyObject*) self);
     Py_DECREF(tp);
 #endif
+}
+
+
+static int pyjmethod_traverse(PyJMethodObject *self, visitproc visit, void *arg)
+{
+    Py_VISIT(self->pyMethodName);
+    Py_VISIT(Py_TYPE(self));
+    return 0;
 }
 
 
@@ -876,6 +885,7 @@ static PyMemberDef pyjmethod_members[] = {
 static PyType_Slot slots[] = {
     {Py_tp_doc, "jmethod"},
     {Py_tp_dealloc, pyjmethod_dealloc},
+    {Py_tp_traverse, pyjmethod_traverse},
     {Py_tp_call, pyjmethod_call},
     {Py_tp_members, pyjmethod_members},
     {Py_tp_descr_get, pyjmethod_descr_get},
@@ -885,6 +895,6 @@ static PyType_Slot slots[] = {
 PyType_Spec PyJMethod_Spec = {
     .name = "jep.PyJMethod",
     .basicsize = sizeof(PyJMethodObject),
-    .flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+    .flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC | Py_TPFLAGS_BASETYPE,
     .slots = slots
 };

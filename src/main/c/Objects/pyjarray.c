@@ -1671,7 +1671,8 @@ static PyObject *pyjarray_iter(PyObject *seq)
     if (!modState) {
         return NULL;
     }
-    it = PyObject_New(PyJArrayIterObject, modState->PyJArrayIter_Type);
+    PyTypeObject* tp = modState->PyJArrayIter_Type;
+    it  = (PyJArrayIterObject*) tp->tp_alloc(tp, 0);
     if (it == NULL) {
         return NULL;
     }
@@ -1685,8 +1686,15 @@ static void pyjarrayiter_dealloc(PyJArrayIterObject *it)
 {
     PyTypeObject *tp = Py_TYPE(it);
     Py_XDECREF(it->it_seq);
-    PyObject_Del(it);
+    tp->tp_free((PyObject*) it);
     Py_DECREF(tp);
+}
+
+static int pyjarrayiter_traverse(PyJArrayIterObject *self, visitproc visit, void *arg)
+{
+    Py_VISIT(self->it_seq);
+    Py_VISIT(Py_TYPE(self));
+    return 0;
 }
 
 static PyObject *pyjarrayiter_next(PyJArrayIterObject *it)
@@ -1725,6 +1733,7 @@ static int pyjarrayiter_len(PyJArrayIterObject *it)
 
 static PyType_Slot iterslots[] = {
     {Py_tp_dealloc, pyjarrayiter_dealloc},
+    {Py_tp_traverse, pyjarrayiter_traverse},
     {Py_sq_length, pyjarrayiter_len},
     {Py_tp_iter, PyObject_SelfIter},
     {Py_tp_iternext, pyjarrayiter_next},
@@ -1734,6 +1743,6 @@ static PyType_Slot iterslots[] = {
 PyType_Spec PyJArrayIter_Spec = {
     .name = "jep.PyJArrayIter",
     .basicsize = sizeof(PyJArrayIterObject),
-    .flags = Py_TPFLAGS_DEFAULT,
+    .flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,
     .slots = iterslots
 };

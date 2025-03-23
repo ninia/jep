@@ -38,7 +38,8 @@ PyObject* PyJMonitor_New(jobject obj)
         return NULL;
     }
 
-    monitor = PyObject_NEW(PyJMonitorObject, modState->PyJMonitor_Type);
+    PyTypeObject* tp = modState->PyJMonitor_Type;
+    monitor = (PyJMonitorObject*) tp->tp_alloc(tp, 0);
     monitor->lock = (*env)->NewGlobalRef(env, obj);
     if (process_java_exception(env)) {
         return NULL;
@@ -106,9 +107,16 @@ void pyjmonitor_dealloc(PyJMonitorObject *self)
         }
     }
 
-    PyObject_Del(self);
+    tp->tp_free((PyObject*) self);
     Py_DECREF(tp);
 #endif
+}
+
+
+static int pyjmonitor_traverse(PyJMonitorObject *self, visitproc visit, void *arg)
+{
+    Py_VISIT(Py_TYPE(self));
+    return 0;
 }
 
 
@@ -133,6 +141,7 @@ static PyMethodDef pyjmonitor_methods[] = {
 static PyType_Slot slots[] = {
     {Py_tp_doc, "jmonitor"},
     {Py_tp_dealloc, pyjmonitor_dealloc},
+    {Py_tp_traverse, pyjmonitor_traverse},
     {Py_tp_getattro, PyObject_GenericGetAttr},
     {Py_tp_methods, pyjmonitor_methods},
     {0, NULL},
@@ -141,6 +150,6 @@ static PyType_Slot slots[] = {
 PyType_Spec PyJMonitor_Spec = {
     .name = "jep.PyJMonitor",
     .basicsize = sizeof(PyJMonitorObject),
-    .flags = Py_TPFLAGS_DEFAULT,
+    .flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,
     .slots = slots
 };
