@@ -36,6 +36,8 @@
 static void pyjfield_dealloc(PyJFieldObject *self)
 {
 #if USE_DEALLOC
+    PyObject_GC_UnTrack(self);
+    PyObject_GC_UnTrack(self);
     PyTypeObject *tp = Py_TYPE(self);
     JNIEnv *env  = pyembed_get_env();
     if (env) {

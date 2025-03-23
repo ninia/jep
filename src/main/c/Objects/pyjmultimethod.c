@@ -174,6 +174,7 @@ static PyObject* pyjmultimethod_getmethods(PyObject* multimethod)
 
 static void pyjmultimethod_dealloc(PyJMultiMethodObject *self)
 {
+    PyObject_GC_UnTrack(self);
     PyTypeObject *tp = Py_TYPE(self);
     Py_CLEAR(self->methodList);
     tp->tp_free((PyObject*) self);

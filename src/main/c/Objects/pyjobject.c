@@ -68,6 +68,7 @@ PyObject* PyJObject_New(JNIEnv *env, PyTypeObject* type, jobject obj,
 static void pyjobject_dealloc(PyJObject *self)
 {
 #if USE_DEALLOC
+    PyObject_GC_UnTrack(self);
     PyTypeObject *tp = Py_TYPE(self);
     JNIEnv *env = pyembed_get_env();
     if (env) {

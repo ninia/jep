@@ -1684,6 +1684,7 @@ static PyObject *pyjarray_iter(PyObject *seq)
 
 static void pyjarrayiter_dealloc(PyJArrayIterObject *it)
 {
+    PyObject_GC_UnTrack(it);
     PyTypeObject *tp = Py_TYPE(it);
     Py_XDECREF(it->it_seq);
     tp->tp_free((PyObject*) it);

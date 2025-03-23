@@ -99,6 +99,7 @@ static PyObject* pyjmonitor_exit(PyObject* self, PyObject* args)
 void pyjmonitor_dealloc(PyJMonitorObject *self)
 {
 #if USE_DEALLOC
+    PyObject_GC_UnTrack(self);
     PyTypeObject *tp = Py_TYPE(self);
     JNIEnv *env = pyembed_get_env();
     if (env) {

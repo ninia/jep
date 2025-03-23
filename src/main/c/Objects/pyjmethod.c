@@ -150,6 +150,7 @@ EXIT_ERROR:
 static void pyjmethod_dealloc(PyJMethodObject *self)
 {
 #if USE_DEALLOC
+    PyObject_GC_UnTrack(self);
     PyTypeObject *tp = Py_TYPE(self);
     JNIEnv *env  = pyembed_get_env();
     if (env) {
