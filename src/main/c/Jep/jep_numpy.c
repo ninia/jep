@@ -73,10 +73,39 @@ static int init_numpy(void)
     return numpyInitialized;
 }
 
+/*
+ * Initialize numpy only if the numpy module has already been imported into the
+ * interpreter. This is used to prevent jep from triggering an import of numpy
+ * for a type check. If numpy is not present in the interpreter then numpy is
+ * not initialized by this function because the type check can be skipped
+ * because the object is not a numpy type. 
+ *
+ * A return value of 1 indicates numpy has been imported and it is safe to use
+ * the numpy C-API for the type check. A value of 0 indicates the numpy C-API
+ * should not be used and the object is not a numpy type.
+ *
+ * This function does not raise errors.
+ */
+static int init_numpy_lazily() {
+    if (!numpyInitialized) {
+        PyObject* key = PyUnicode_FromStringAndSize("numpy", 5);
+        PyObject* module = PyImport_GetModule(key);
+        Py_DECREF(key);
+        if (!module) {
+            PyErr_Clear();
+            return 0;
+        }
+        if (!init_numpy()) {
+            PyErr_Clear();
+            return 0;
+        }
+    }
+    return 1;
+}
+
 int npy_scalar_check(PyObject *obj)
 {
-    if (!init_numpy()) {
-        PyErr_Clear();
+    if (!init_numpy_lazily()) {
         return 0;
     }
     return PyArray_IsScalar(obj, Number);
@@ -190,8 +219,7 @@ jobject convert_npy_scalar_jobject(JNIEnv* env, PyObject *pyobject,
 
 int npy_array_check(PyObject *obj)
 {
-    if (!init_numpy()) {
-        PyErr_Clear();
+    if (!init_numpy_lazily()) {
         return 0;
     }
     return PyArray_Check(obj);
