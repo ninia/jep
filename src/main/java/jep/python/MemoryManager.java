@@ -25,11 +25,11 @@
 package jep.python;
 
 import java.lang.ref.ReferenceQueue;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import jep.Jep;
 import jep.JepAccess;
@@ -44,14 +44,13 @@ import jep.JepException;
  * @author Nate Jensen
  * @since 3.8
  */
-public final class MemoryManager extends JepAccess{
+public final class MemoryManager extends JepAccess {
 
     private final ThreadLocal<Jep> interpreters = new ThreadLocal<Jep>();
 
-    private final Set<Jep> interpreterSet = Collections
-            .synchronizedSet(Collections.newSetFromMap(
-                    new WeakHashMap<Jep, Boolean>()));
-    
+    private final Set<Jep> interpreterSet = Collections.synchronizedSet(
+            Collections.newSetFromMap(new WeakHashMap<Jep, Boolean>()));
+
     private final ReferenceQueue<PyObject> refQueue = new ReferenceQueue<>();
 
     private final Set<PyPointer> pointers = Collections
@@ -83,8 +82,11 @@ public final class MemoryManager extends JepAccess{
      * 
      * @throws JepException
      *             if an error occurs
+     * @return true if the passed in interpreter is the last interpreter for
+     *         this memory manager.
      */
-    public void closeInterpreter(Jep jep) throws JepException {
+    public boolean closeInterpreter(Jep jep) throws JepException {
+        boolean last = false;
         if (interpreterSet.size() == 1) {
             Iterator<PyPointer> itr = pointers.iterator();
             while (itr.hasNext()) {
@@ -96,9 +98,11 @@ public final class MemoryManager extends JepAccess{
                 itr.remove();
                 ptr.dispose();
             }
+            last = true;
         }
         interpreters.remove();
         interpreterSet.remove(jep);
+        return last;
     }
 
     /**
@@ -117,7 +121,7 @@ public final class MemoryManager extends JepAccess{
         }
     }
 
-    private Jep getThreadLocalJep() throws JepException{
+    private Jep getThreadLocalJep() throws JepException {
         Jep jep = interpreters.get();
         if (jep == null) {
             throw new JepException("Invalid thread access.");
@@ -125,7 +129,7 @@ public final class MemoryManager extends JepAccess{
         return jep;
     }
 
-    protected long getThreadState() throws JepException{
+    protected long getThreadState() throws JepException {
         return getThreadState(getThreadLocalJep());
     }
 

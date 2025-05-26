@@ -65,9 +65,9 @@ void pyembed_startup(JNIEnv*, jboolean, jobjectArray, jint, jint, jstring, jint,
 void pyembed_shutdown(JavaVM*);
 void pyembed_shared_import(JNIEnv*, jstring);
 
-intptr_t pyembed_thread_init(JNIEnv*, jobject, jobject, jboolean, jboolean,
-                             jboolean, jint, jint, jint, jint, jint, jint, jint);
-void pyembed_thread_close(JNIEnv*, intptr_t);
+intptr_t pyembed_thread_init_sub(JNIEnv*, jobject, jobject, jboolean, jboolean, jint, jint, jint, jint, jint, jint, jint);
+intptr_t pyembed_thread_init_shared(JNIEnv*, jobject, jobject, intptr_t, jboolean);
+void pyembed_thread_close(JNIEnv*, intptr_t, jboolean);
 
 void pyembed_close(void);
 void pyembed_run(JNIEnv*, intptr_t, char*);

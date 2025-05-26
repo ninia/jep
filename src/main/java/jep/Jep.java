@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2004-2022 JEP AUTHORS.
+ * Copyright (c) 2004-2025 JEP AUTHORS.
  *
  * This file is licensed under the the zlib/libpng License.
  *
@@ -125,10 +125,16 @@ public abstract class Jep implements Interpreter {
      */
     @Deprecated
     public Jep(JepConfig config) throws JepException {
-        this(config, true, new MemoryManager());
+        this(config, true, new MemoryManager(), null, false);
     }
 
-    protected Jep(JepConfig config, boolean useSubInterpreter, MemoryManager memoryManager)
+    protected Jep(JepConfig config, boolean useSubInterpreter,
+            MemoryManager memoryManager) throws JepException {
+        this(config, useSubInterpreter, memoryManager, null, false);
+    }
+
+    protected Jep(JepConfig config, boolean useSubInterpreter,
+            MemoryManager memoryManager, Jep copyFrom, boolean shareGlobals)
             throws JepException {
         MainInterpreter mainInterpreter = MainInterpreter.getMainInterpreter();
         if (threadUsed.get()) {
@@ -149,27 +155,44 @@ public abstract class Jep implements Interpreter {
             this.classLoader = config.classLoader;
         }
 
-        boolean hasSharedModules = config.sharedModules != null
-                && !config.sharedModules.isEmpty();
+        this.interactive = config.interactive;
+        if (useSubInterpreter) {
+            boolean hasSharedModules = config.sharedModules != null
+                    && !config.sharedModules.isEmpty();
 
-        if (hasSharedModules && config.subInterpOptions.isolated) {
-            throw new JepException("Shared modules cannot be used with isolated interpreters.");
-        } else if (hasSharedModules && config.subInterpOptions.useMainObmalloc == 0) {
-            throw new JepException("Shared modules can only be used with a shared allocator.");
+            if (hasSharedModules && config.subInterpOptions.isolated) {
+                throw new JepException(
+                        "Shared modules cannot be used with isolated interpreters.");
+            } else if (hasSharedModules
+                    && config.subInterpOptions.useMainObmalloc == 0) {
+                throw new JepException(
+                        "Shared modules can only be used with a shared allocator.");
+            }
+
+            SubInterpreterOptions interpOptions = config.subInterpOptions;
+            this.tstate = init_sub(this.classLoader, hasSharedModules,
+                    interpOptions.isolated, interpOptions.useMainObmalloc,
+                    interpOptions.allowFork, interpOptions.allowExec,
+                    interpOptions.allowThreads,
+                    interpOptions.allowDaemonThreads,
+                    interpOptions.checkMultiInterpExtensions,
+                    interpOptions.ownGIL);
+        } else if (copyFrom != null) {
+            if (copyFrom.closed) {
+                throw new JepException(
+                        "Cannot use new thread for a closed interpreter.");
+            }
+            this.tstate = init_shared(this.classLoader, copyFrom.tstate,
+                    shareGlobals);
+        } else {
+            this.tstate = init_shared(this.classLoader, 0L, false);
         }
 
-        this.interactive = config.interactive;
-        SubInterpreterOptions interpOptions = config.subInterpOptions;
-        this.tstate = init(this.classLoader, hasSharedModules,
-                useSubInterpreter, interpOptions.isolated,
-                interpOptions.useMainObmalloc,
-                interpOptions.allowFork, interpOptions.allowExec,
-                interpOptions.allowThreads, interpOptions.allowDaemonThreads,
-                interpOptions.checkMultiInterpExtensions,
-                interpOptions.ownGIL);
         threadUsed.set(true);
         this.thread = Thread.currentThread();
-        configureInterpreter(config);
+        if (copyFrom == null) {
+            configureInterpreter(config);
+        }
         this.memoryManager.openInterpreter(this);
     }
 
@@ -222,10 +245,14 @@ public abstract class Jep implements Interpreter {
         exec("del java_import_hook");
     }
 
-    private native long init(ClassLoader classloader, boolean hasSharedModules,
-            boolean useSubinterpreter, boolean isolated, int useMainObmalloc,
-	    int allowFork, int allowExec, int allowThreads, int allowDaemonThreads,
-            int checkMultiInterpExtensions, int ownGIL) throws JepException;
+    private native long init_sub(ClassLoader classloader,
+            boolean hasSharedModules, boolean isolated, int useMainObmalloc,
+            int allowFork, int allowExec, int allowThreads,
+            int allowDaemonThreads, int checkMultiInterpExtensions, int ownGIL)
+            throws JepException;
+
+    private native long init_shared(ClassLoader classloader, long copyFrom,
+            boolean shareGlobals) throws JepException;
 
     /**
      * Checks if the current thread is valid for the method call. All calls must
@@ -410,6 +437,15 @@ public abstract class Jep implements Interpreter {
         return classLoader;
     }
 
+    public Interpreter useThread(boolean shareGlobals) {
+        JepConfig config = new JepConfig();
+        config.classLoader = this.classLoader;
+        config.interactive = this.interactive;
+        return new Jep(config, false, this.memoryManager, this, shareGlobals) {
+
+        };
+    }
+
     /**
      * Shuts down the Python interpreter. Make sure you call this to prevent
      * memory leaks.
@@ -448,9 +484,9 @@ public abstract class Jep implements Interpreter {
              * threads so avoid importing threading because that creates new
              * objects that aren't needed.
              *
-             * In recent Python versions(>=3.13) there will always be at least
-             * 2 active threads here, the main thread on the main interpreter
-             * and this thread running the sub-interpreter.
+             * In recent Python versions(>=3.13) there will always be at least 2
+             * active threads here, the main thread on the main interpreter and
+             * this thread running the sub-interpreter.
              *
              * In older versions of python the minimum number of active threads
              * should be 1 because each sub-interpreter would treat the first
@@ -477,7 +513,7 @@ public abstract class Jep implements Interpreter {
             }
         }
 
-        getMemoryManager().closeInterpreter(this);
+        boolean closeInterp = getMemoryManager().closeInterpreter(this);
 
         // don't attempt close twice if something goes wrong
         this.closed = true;
@@ -487,12 +523,12 @@ public abstract class Jep implements Interpreter {
             exec(this.tstate, "jep.shared_modules_hook.teardownImporter()");
         }
 
-        this.close(tstate);
+        this.close(tstate, closeInterp);
         this.tstate = 0;
 
         threadUsed.set(false);
     }
 
-    private native void close(long tstate);
+    private native void close(long tstate, boolean closeInterp);
 
 }

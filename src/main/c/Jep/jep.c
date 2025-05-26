@@ -1,7 +1,7 @@
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2004-2022 JEP AUTHORS.
+   Copyright (c) 2004-2025 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -60,19 +60,28 @@ JNI_OnUnload(JavaVM *vm, void *reserved)
 
 /*
  * Class:     jep_Jep
- * Method:    init
+ * Method:    init_sub
  * Signature: (Ljava/lang/ClassLoader;Z)J
  */
-JNIEXPORT jlong JNICALL Java_jep_Jep_init
+JNIEXPORT jlong JNICALL Java_jep_Jep_init_1sub
 (JNIEnv *env, jobject obj, jobject cl, jboolean hasSharedModules,
- jboolean usesubinterpreter, jboolean isolated, jint useMainObmalloc,
- jint allowFork, jint allowExec, jint allowThreads,
- jint allowDaemonThreads, jint checkMultiInterpExtensions, jint ownGIL)
+ jboolean isolated, jint useMainObmalloc, jint allowFork, jint allowExec,
+ jint allowThreads, jint allowDaemonThreads, jint checkMultiInterpExtensions,
+ jint ownGIL)
 {
-    return pyembed_thread_init(env, cl, obj, hasSharedModules, usesubinterpreter,
-                               isolated, useMainObmalloc, allowFork, allowExec,
-                               allowThreads, allowDaemonThreads,
-                               checkMultiInterpExtensions, ownGIL);
+    return pyembed_thread_init_sub(env, cl, obj, hasSharedModules, isolated, useMainObmalloc, allowFork, allowExec, allowThreads, allowDaemonThreads, checkMultiInterpExtensions, ownGIL);
+}
+
+
+/*
+ * Class:     jep_Jep
+ * Method:    init_shared
+ * Signature: (Ljava/lang/ClassLoader;Z)J
+ */
+JNIEXPORT jlong JNICALL Java_jep_Jep_init_1shared
+(JNIEnv *env, jobject obj, jobject cl, jlong copyFrom, jboolean shareGlobals)
+{
+    return pyembed_thread_init_shared(env, cl, obj, (intptr_t) copyFrom, shareGlobals);
 }
 
 
@@ -189,9 +198,9 @@ JNIEXPORT jobject JNICALL Java_jep_Jep_getValue
  * Signature: (Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_jep_Jep_close
-(JNIEnv *env, jobject obj, jlong tstate)
+(JNIEnv *env, jobject obj, jlong tstate, jboolean closeInterp)
 {
-    pyembed_thread_close(env, (intptr_t) tstate);
+    pyembed_thread_close(env, (intptr_t) tstate, closeInterp);
 }
 
 // -------------------------------------------------- set() methods

@@ -429,6 +429,14 @@ void pyembed_startup(JNIEnv *env,
         return;
     }
 
+    // store java.lang.Class objects for later use.
+    if (!cache_frequent_classes(env)) {
+        return;
+    }
+    if (!cache_primitive_classes(env)) {
+        return;
+    }
+
     PyStatus status = PyStatus_Ok();
     PyConfig config;
     if (isolated) {
@@ -644,112 +652,22 @@ void pyembed_shared_import(JNIEnv *env, jstring module)
     PyEval_ReleaseThread(mainThreadState);
 }
 
-intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller,
-                             jboolean hasSharedModules, jboolean usesubinterpreter,
-                             jboolean isolated, jint useMainObmalloc, jint allowFork,
-                             jint allowExec, jint allowThreads, jint allowDaemonThreads,
-                             jint checkMultiInterpExtensions, jint ownGIL)
+static intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller, PyObject* globals, PyThreadState* tstate)
 {
-    JepThread *jepThread;
-    PyObject  *tdict, *globals;
-    if (cl == NULL) {
-        handle_startup_exception(env, "Invalid Classloader.", 0);
-        return 0;
-    }
-
-
+    PyObject *tdict;
     /*
      * Do not use PyMem_Malloc because PyGILState_Check() returns false since
      * the mainThreadState was created on a different thread. When python is
      * compiled with debug it checks the state and fails.
      */
-    jepThread = malloc(sizeof(JepThread));
+    JepThread *jepThread = malloc(sizeof(JepThread));
     if (!jepThread) {
         handle_startup_exception(env, "Out of memory.", 0);
         return 0;
     }
 
-    if (usesubinterpreter) {
-        PyEval_AcquireThread(mainThreadState);
-
-#if PY_MAJOR_VERSION > 3 || PY_MINOR_VERSION >= 12
-        PyInterpreterConfig config;
-        if (isolated) {
-            config = (PyInterpreterConfig) _PyInterpreterConfig_INIT;
-        } else {
-            config = (PyInterpreterConfig) _PyInterpreterConfig_LEGACY_INIT;
-        }
-        if (useMainObmalloc != -1) {
-            config.use_main_obmalloc = useMainObmalloc;
-        }
-        if (allowFork != -1) {
-            config.allow_fork = allowFork;
-        }
-        if (allowExec != -1) {
-            config.allow_exec = allowExec;
-        }
-        if (allowThreads != -1) {
-            config.allow_threads = allowThreads;
-        }
-        if (allowDaemonThreads != -1) {
-            config.allow_daemon_threads = allowDaemonThreads;
-        }
-        if (checkMultiInterpExtensions != -1) {
-            config.check_multi_interp_extensions = checkMultiInterpExtensions;
-        }
-        if (ownGIL == 0) {
-            config.gil = PyInterpreterConfig_SHARED_GIL;
-        } else if (ownGIL == 1) {
-            config.gil = PyInterpreterConfig_OWN_GIL;
-        }
-        PyStatus status = Py_NewInterpreterFromConfig(&(jepThread->tstate), &config);
-        if (PyStatus_Exception(status)) {
-            handle_startup_exception(env, status.err_msg, 0);
-            free(jepThread);
-            PyEval_ReleaseThread(mainThreadState);
-            return 0;
-        }
-#else
-        jepThread->tstate = Py_NewInterpreter();
-#endif
-        /*
-         * Py_NewInterpreter() seems to take the thread state, but we're going to
-         * save/release and reacquire it since that doesn't seem documented
-         */
-        PyEval_SaveThread();
-    } else {
-        jepThread->tstate = PyThreadState_New(mainThreadState->interp);
-    }
-    PyEval_AcquireThread(jepThread->tstate);
-
-    // store java.lang.Class objects for later use.
-    // it's a noop if already done, but to synchronize, have the lock first
-    if (!cache_frequent_classes(env)) {
-        printf("WARNING: Failed to get and cache frequent class types!\n");
-    }
-    if (!cache_primitive_classes(env)) {
-        printf("WARNING: Failed to get and cache primitive class types!\n");
-    }
-
-    if (usesubinterpreter) {
-        PyObject *mod_main = PyImport_AddModule("__main__");    /* borrowed */
-        if (mod_main == NULL) {
-            THROW_JEP(env, "Couldn't add module __main__.");
-            PyEval_ReleaseThread(jepThread->tstate);
-            free(jepThread);
-            return 0;
-        }
-        globals = PyModule_GetDict(mod_main);
-        Py_INCREF(globals);
-    } else {
-        globals = PyDict_New();
-        PyDict_SetItemString(globals, "__builtins__", PyEval_GetBuiltins());
-    }
-    if (initjep(env, hasSharedModules)) {
-        return 0;
-    }
-
     // init static module
+    jepThread->tstate          = tstate;
     jepThread->globals         = globals;
     jepThread->env             = env;
     jepThread->classloader     = (*env)->NewGlobalRef(env, cl);
@@ -770,8 +688,94 @@ intptr_t pyembed_thread_init(JNIEnv *env, jobject cl, jobject caller,
     return (intptr_t) jepThread;
 }
 
+intptr_t pyembed_thread_init_sub(JNIEnv *env, jobject cl, jobject caller, jboolean hasSharedModules, jboolean isolated, jint useMainObmalloc, jint allowFork, jint allowExec, jint allowThreads, jint allowDaemonThreads, jint checkMultiInterpExtensions, jint ownGIL)
+{
+    PyThreadState* tstate = NULL;
+    PyEval_AcquireThread(mainThreadState);
 
-void pyembed_thread_close(JNIEnv *env, intptr_t _jepThread)
+#if PY_MAJOR_VERSION > 3 || PY_MINOR_VERSION >= 12
+    PyInterpreterConfig config;
+    if (isolated) {
+        config = (PyInterpreterConfig) _PyInterpreterConfig_INIT;
+    } else {
+        config = (PyInterpreterConfig) _PyInterpreterConfig_LEGACY_INIT;
+    }
+    if (useMainObmalloc != -1) {
+        config.use_main_obmalloc = useMainObmalloc;
+    }
+    if (allowFork != -1) {
+        config.allow_fork = allowFork;
+    }
+    if (allowExec != -1) {
+        config.allow_exec = allowExec;
+    }
+    if (allowThreads != -1) {
+        config.allow_threads = allowThreads;
+    }
+    if (allowDaemonThreads != -1) {
+        config.allow_daemon_threads = allowDaemonThreads;
+    }
+    if (checkMultiInterpExtensions != -1) {
+        config.check_multi_interp_extensions = checkMultiInterpExtensions;
+    }
+    if (ownGIL == 0) {
+        config.gil = PyInterpreterConfig_SHARED_GIL;
+    } else if (ownGIL == 1) {
+        config.gil = PyInterpreterConfig_OWN_GIL;
+    }
+    PyStatus status = Py_NewInterpreterFromConfig(&tstate, &config);
+    if (PyStatus_Exception(status)) {
+        handle_startup_exception(env, status.err_msg, 0);
+        PyEval_ReleaseThread(mainThreadState);
+        return 0;
+        }
+#else
+    tstate = Py_NewInterpreter();
+#endif
+    PyObject *mod_main = PyImport_AddModule("__main__");    /* borrowed */
+    if (mod_main == NULL) {
+        THROW_JEP(env, "Couldn't add module __main__.");
+        PyEval_ReleaseThread(tstate);
+        return 0;
+    }
+    PyObject* globals = PyModule_GetDict(mod_main);
+    Py_INCREF(globals);
+    if (initjep(env, hasSharedModules)) {
+        return 0;
+    }
+    return pyembed_thread_init(env, cl, caller, globals, tstate);
+}
+
+
+intptr_t pyembed_thread_init_shared(JNIEnv *env, jobject cl, jobject caller, intptr_t copyFrom, jboolean shareGlobals)
+{
+    PyThreadState *tstate;
+    PyObject      *globals = NULL;
+    if (copyFrom) {
+        JepThread *jepThread = (JepThread *) copyFrom;
+        tstate = PyThreadState_New(jepThread->tstate->interp);
+        PyEval_AcquireThread(tstate);
+        if (shareGlobals) {
+            globals = jepThread->globals;
+            Py_INCREF(globals);
+        }
+    } else {
+        tstate = PyThreadState_New(mainThreadState->interp);
+        PyEval_AcquireThread(tstate);
+    }
+    if (!globals) {
+        globals = PyDict_New();
+        PyDict_SetItemString(globals, "__builtins__", PyEval_GetBuiltins());
+
+    }
+    if (initjep(env, JNI_FALSE)) {
+        return 0;
+    }
+    return pyembed_thread_init(env, cl, caller, globals, tstate);
+}
+
+
+void pyembed_thread_close(JNIEnv *env, intptr_t _jepThread, jboolean closeInterp)
 {
     JepThread     *jepThread;
     PyObject      *tdict, *key;
@@ -798,14 +802,14 @@ void pyembed_thread_close(JNIEnv *env, intptr_t _jepThread)
     if (jepThread->caller) {
         (*env)->DeleteGlobalRef(env, jepThread->caller);
     }
-    if (jepThread->tstate->interp == mainThreadState->interp) {
-        PyThreadState_Clear(jepThread->tstate);
-        PyEval_ReleaseThread(jepThread->tstate);
-        PyThreadState_Delete(jepThread->tstate);
-    } else {
+    if (closeInterp && jepThread->tstate->interp != mainThreadState->interp) {
         Py_EndInterpreter(jepThread->tstate);
         PyThreadState_Swap(mainThreadState);
         PyEval_ReleaseThread(mainThreadState);
+    } else {
+        PyThreadState_Clear(jepThread->tstate);
+        PyEval_ReleaseThread(jepThread->tstate);
+        PyThreadState_Delete(jepThread->tstate);
     }
     free(jepThread);
 }

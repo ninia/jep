@@ -1,7 +1,7 @@
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2016-2022 JEP AUTHORS.
+   Copyright (c) 2016-2025 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -46,12 +46,12 @@ static jmethodID getSuperclass      = 0;
 jclass java_lang_Class_getComponentType(JNIEnv* env, jclass this)
 {
     jclass result = NULL;
-    Py_BEGIN_ALLOW_THREADS
+    // getComponentType is used during intialization before python is
+    // available and it should be very fast so do not BEGIN_ALLOW_THREADS.
     if (JNI_METHOD(getComponentType, env, JCLASS_TYPE, "getComponentType",
                    "()Ljava/lang/Class;")) {
         result = (jclass) (*env)->CallObjectMethod(env, this, getComponentType);
     }
-    Py_END_ALLOW_THREADS
     return result;
 }
 

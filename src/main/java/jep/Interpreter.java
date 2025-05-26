@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2019 JEP AUTHORS.
+ * Copyright (c) 2019-2025 JEP AUTHORS.
  *
  * This file is licensed under the the zlib/libpng License.
  *
@@ -334,6 +334,31 @@ public interface Interpreter extends AutoCloseable {
      *             if an error occurs
      */
     public void set(String name, Object v) throws JepException;
+
+    /**
+     * <p>
+     * Create a new Interpreter that shares state with this Interpreter. The
+     * interpreter state consists of <code>sys.modules</code> and other internal
+     * Python structures including the GIL. Using this method is similar to
+     * creating a {@link SharedInterpreter} but this can be used with
+     * {@link SubInterpreter}s. Interpreters that share interpreter state can
+     * also share {@link PyObject}s.
+     * </p>
+     * <p>
+     * This method allows the same interpreter state to be used from multiple
+     * threads. Unlike most Interpreter methods this method must be called from
+     * a different thread then the thread where the existing Interpreter is
+     * running. The new Interpreter can only be used on the thread where it was
+     * created and must be closed when it is no longer used.
+     * </p>
+     * 
+     * @param shareGlobals
+     *            If true then the globals of the new interpreter will be the
+     *            same dict as this interpreter. If false the new interpreter
+     *            will have it's own independent globals.
+     * @return a new Interpreter which shares state with this Interpreter.
+     */
+    public Interpreter useThread(boolean shareGlobals);
 
     @Override
     public void close() throws JepException;

@@ -10,3 +10,16 @@ Python C API which was introduced with
 `PEP 587 <https://peps.python.org/pep-0587/>`_. Most of the existing methods
 are now deprecated. The deprecated methods will continue to work as they did
 before for now but they will be removed in a future release.
+
+Shared Interpreter State for SubInterpreters
+********************************************
+It is now possible to create new Interpreters on different threads that share
+interpreter state with an existing interpreter by calling
+`Interpreter.useThread() <https://ninia.github.io/jep/javadoc/4.3/jep/Interpreter.html#useThread-boolean->`.
+Interpreter state consists of ``sys.modules`` and other internal Python
+structures including the GIL. Interpreters that share interpreter state can
+also share PyObjects. SharedInterpereters have always shared a single
+interpreter state but the new functionality allows SubInterpreters to also
+share state.  Interpeters created with the new method also have the option
+to share global variables.
+
