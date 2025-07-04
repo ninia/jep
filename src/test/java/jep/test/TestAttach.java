@@ -16,7 +16,7 @@ import jep.python.PyCallable;
 /**
  * Test the functionality of Interreter.useThread().
  */
-public class TestUseThread {
+public class TestAttach {
 
     /**
      * On construction this creates a new Interpreter on a background thread and
@@ -78,7 +78,7 @@ public class TestUseThread {
          * a new thread.
          */
         public void testSharedPyCallable() {
-            try (Interpreter interp = this.interp.useThread(false)) {
+            try (Interpreter interp = this.interp.attach(false)) {
                 increment.call();
             }
         }
@@ -88,7 +88,7 @@ public class TestUseThread {
          * in a new thread.
          */
         public void testSharedGlobals() {
-            try (Interpreter interp = this.interp.useThread(true)) {
+            try (Interpreter interp = this.interp.attach(true)) {
                 interp.exec("increment()");
             }
         }
@@ -97,7 +97,7 @@ public class TestUseThread {
          * Test that modules can be used from a different thread.
          */
         public void testSharedModules() {
-            try (Interpreter interp = this.interp.useThread(false)) {
+            try (Interpreter interp = this.interp.attach(false)) {
                 boolean incrementDefined = interp
                         .getValue("'increment' in globals()", Boolean.class);
                 if (incrementDefined) {

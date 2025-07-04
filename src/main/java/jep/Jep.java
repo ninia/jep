@@ -437,7 +437,7 @@ public abstract class Jep implements Interpreter {
         return classLoader;
     }
 
-    public Interpreter useThread(boolean shareGlobals) {
+    public Interpreter attach(boolean shareGlobals) {
         JepConfig config = new JepConfig();
         config.classLoader = this.classLoader;
         config.interactive = this.interactive;
