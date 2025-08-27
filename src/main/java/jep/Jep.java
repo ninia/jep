@@ -513,7 +513,7 @@ public abstract class Jep implements Interpreter {
             }
         }
 
-        boolean closeInterp = getMemoryManager().closeInterpreter(this);
+        boolean closeInterpState = getMemoryManager().closeInterpreter(this);
 
         // don't attempt close twice if something goes wrong
         this.closed = true;
@@ -523,7 +523,7 @@ public abstract class Jep implements Interpreter {
             exec(this.tstate, "jep.shared_modules_hook.teardownImporter()");
         }
 
-        this.close(tstate, closeInterp);
+        this.close(tstate, closeInterpState);
         this.tstate = 0;
 
         threadUsed.set(false);
