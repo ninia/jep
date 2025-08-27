@@ -111,6 +111,11 @@ public class TestAttach {
 
         /**
          * Close the interpreter and verify the correct number of tests ran.
+         * This verifies the count from the background thread and also attaches
+         * the current thread to the background interpreter and re-verifies the
+         * count after the background interpreter has closed to ensure that
+         * attached interpreters are functional after the original interpreter
+         * closed.
          * 
          * @param expectedCount
          * @throws InterruptedException
@@ -119,12 +124,21 @@ public class TestAttach {
          */
         public void finish(int expectedCount) throws InterruptedException,
                 BrokenBarrierException, TimeoutException {
-            this.sync.await(5, TimeUnit.SECONDS);
-            this.join();
-            if (finalCount != expectedCount) {
-                throw new IllegalStateException(
-                        "Count does not match. Expected: " + expectedCount
-                                + " Actual: " + finalCount);
+            try (Interpreter interp = this.interp.attach(true)) {
+                this.sync.await(5, TimeUnit.SECONDS);
+                this.join();
+                if (finalCount != expectedCount) {
+                    throw new IllegalStateException(
+                            "Count does not match. Expected: " + expectedCount
+                                    + " Actual: " + finalCount);
+                }
+                int finalCount = interp.getValue("testModule.count",
+                        Integer.class);
+                if (finalCount != expectedCount) {
+                    throw new IllegalStateException(
+                            "Count after close does not match. Expected: "
+                                    + expectedCount + " Actual: " + finalCount);
+                }
             }
         }
 

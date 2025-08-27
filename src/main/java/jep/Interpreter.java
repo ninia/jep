@@ -350,7 +350,10 @@ public interface Interpreter extends AutoCloseable {
      * </p>
      * When this is used with a {@link SubInterpreter} then all Interpreters
      * created from the same SubInterpreter have sharing between each other but
-     * still isolated from other Interpreters.
+     * are still isolated from other Interpreters. If the original
+     * SubInterpreter is closed while other threads are attached to the
+     * interpreter state then the state remains open until the last attached
+     * interpreter is closed.
      * </p>
      * <p>
      * Concurrency between threads attached to the same interpreter state works
@@ -363,7 +366,7 @@ public interface Interpreter extends AutoCloseable {
      * different thread then the thread where the existing Interpreter is
      * running. The new Interpreter can only be used on the thread where it was
      * created and must be closed when it is no longer used. A thread can only
-     * be attached to one interpreter at a time and must be close before it can
+     * be attached to one interpreter at a time and must be closed before it can
      * be attached to a different Interpreter.
      * </p>
      * 
@@ -373,6 +376,7 @@ public interface Interpreter extends AutoCloseable {
      *            will have it's own independent globals.
      * @return a new Interpreter valid on the current thread which shares state
      *         with this Interpreter.
+     * @since 4.3
      */
     public Interpreter attach(boolean shareGlobals);
 

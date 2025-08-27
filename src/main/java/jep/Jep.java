@@ -529,6 +529,22 @@ public abstract class Jep implements Interpreter {
         threadUsed.set(false);
     }
 
+    /**
+     * Native method to close this interpreter. Each jep Interpreter corresponds
+     * to a cpython thread state so this will always close the thread state. The
+     * interpreter state is only closed if closeInterp is true. For shared
+     * interpreters and attached interpreters there may be multiple jep
+     * Interpreters using the same cpython interpreter state so closeInterp
+     * should only be true if this is the last jep Interpreter using the
+     * interpreter state.
+     * 
+     * @param tstate
+     *            The address of the native JepThread structure for this
+     *            interpreter
+     * @param closeInterp
+     *            true to close both the thread state and interpreter state.
+     *            false to close only the thread state.
+     */
     private native void close(long tstate, boolean closeInterp);
 
 }
