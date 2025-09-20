@@ -1,5 +1,8 @@
 [build-system]
-requires = ["setuptools >= 61.0"]
+requires = [
+  "setuptools >= 61.0",
+  "numpy >= 1.7" # Remove numpy to build without numpy support.
+]
 build-backend = "setuptools.build_meta:__legacy__"
 
 [project]

@@ -1,6 +1,8 @@
 Jep 4.3 Release Notes
 *********************
-This release drops support for versions of Python older than 3.10.
+This release drops support for versions of Python older than 3.10. It includes
+changes to modernize and simplify the build, improve compatibility with
+isolated sub-interpreters, and remove use of deprecated Python features.
 
 Updates to PyConfig
 *******************
@@ -18,3 +20,13 @@ It is now possible to attach multiple threads to an existing Interpreter using
 Interpreters created this way will share state such as ``sys.modules`` and
 even have the option to share globals which allows multiple threads to have
 identical access to an interpreter.
+
+Modernized build
+****************
+Project configuration is now in pyproject.toml. The actual build is still
+done with the legacy setuptools. For compatibility with the isolated build
+environment used by pip numpy is now a required build dependency. When jep is
+built with numpt it can be used without numpy as long as NDArrays are not
+passed from Java to Python. It is still possible to build jep without numpy
+if neccesary but it now requires downloading the source and modifying
+pyproject.toml to remove the numpy dependency.

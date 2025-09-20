@@ -39,12 +39,10 @@ Some benefits of embedding CPython in a JVM:
 
 Installation
 ------------
-Simply run ``pip install --no-cache-dir --no-build-isolation jep`` or download
-the source and run ``pip install .``. Building and installing require the JDK,
-Python, setuptools, and optionally numpy to be installed beforehand. The 
-``--no-cache-dir`` and ``--no-build-isolation`` options are not strictly
-required, however those settings enable Jep to make customizations for your
-environment such as enabling numpy specific behavior if numpy is installed.
+Simply run ``pip install jep`` or download the source and run
+``pip install .``. Building and installing require the JDK and Python,
+to be installed beforehand. Pip will need to be able to install setuptools
+and numpy to build jep.
 
 Dependencies
 ------------
