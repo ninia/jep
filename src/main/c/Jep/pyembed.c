@@ -1042,21 +1042,12 @@ static PyObject* pyembed_findclass(PyObject *self, PyObject *args)
     PyObject  *result    = NULL;
     char      *name, *p;
     jclass     clazz;
-    JepThread *jepThread;
 
     if (!PyArg_ParseTuple(args, "s", &name)) {
         return NULL;
     }
 
-    jepThread = pyembed_get_jepthread();
-    if (!jepThread) {
-        if (!PyErr_Occurred()) {
-            PyErr_SetString(PyExc_RuntimeError, "Invalid JepThread pointer.");
-        }
-        return NULL;
-    }
-
-    env = jepThread->env;
+    env = pyembed_get_env();
 
     // replace '.' with '/'
     // i'm told this is okay to do with unicode.
