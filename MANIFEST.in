@@ -7,3 +7,4 @@ include LICENSE
 include AUTHORS
 include README.rst
 include pom.xml
+include pyproject.toml
