@@ -25,8 +25,8 @@ Modernized build
 ****************
 Project configuration is now in pyproject.toml. The actual build is still
 done with the legacy setuptools. For compatibility with the isolated build
-environment used by pip numpy is now a required build dependency. When jep is
-built with numpt it can be used without numpy as long as NDArrays are not
+environment used by pip, numpy is now a required build dependency. When jep is
+built with numpy it can be used without numpy as long as NDArrays are not
 passed from Java to Python. It is still possible to build jep without numpy
 if neccesary but it now requires downloading the source and modifying
 pyproject.toml to remove the numpy dependency.
