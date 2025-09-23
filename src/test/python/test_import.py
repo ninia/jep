@@ -1,5 +1,6 @@
 import unittest
 from jep import JepJavaImporter, findClass
+from java.lang import Thread
 
 
 Jep = findClass('jep.Jep')
@@ -15,7 +16,7 @@ class TestImport(unittest.TestCase):
         from java.sql import DriverManager
 
     def test_not_found(self):
-        importer = JepJavaImporter()
+        importer = JepJavaImporter(Thread.currentThread().getContextClassLoader())
         spec = importer.find_spec('java.lang', None)
         mod = importer.create_module(spec)
         mod.Integer

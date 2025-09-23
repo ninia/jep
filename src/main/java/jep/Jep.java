@@ -238,10 +238,12 @@ public abstract class Jep implements Interpreter {
         if (enquirer == null) {
             enquirer = ClassList.getInstance();
         }
+        set("classLoader", this.classLoader);
         set("classlist", enquirer);
         exec("from jep import java_import_hook");
-        exec("java_import_hook.setupImporter(classlist)");
+        exec("java_import_hook.setupImporter(classLoader, classlist)");
         exec("del classlist");
+        exec("del classLoader");
         exec("del java_import_hook");
     }
 

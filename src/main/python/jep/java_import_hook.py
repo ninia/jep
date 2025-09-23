@@ -23,7 +23,6 @@
 #     distribution.
 #
 
-from _jep import forName
 import sys
 from types import ModuleType
 from importlib.util import spec_from_loader
@@ -54,7 +53,7 @@ class module(ModuleType):
                 return self.__dir__()
             else:
                 # assume it is a class and attempt the import
-                clazz = forName('{0}.{1}'.format(self.__name__, name))
+                clazz = self.__classLoader__.loadClass('{0}.{1}'.format(self.__name__, name))
                 setattr(self, name, clazz)
                 return clazz
 
@@ -71,7 +70,7 @@ class module(ModuleType):
         return result
 
 
-def makeModule(fullname, loader, classEnquirer):
+def makeModule(fullname, loader, classLoader, classEnquirer):
     mod = module(fullname)
     mod.__dict__.update({
         '__loader__': loader,
@@ -79,17 +78,19 @@ def makeModule(fullname, loader, classEnquirer):
         '__file__': '<java>',
         '__package__': None,
         '__classEnquirer__': classEnquirer,
+        '__classLoader__': classLoader,
     })
     return mod
 
 
 class JepJavaImporter(object):
 
-    def __init__(self, classEnquirer=None):
+    def __init__(self, classLoader, classEnquirer=None):
+        self.classLoader = classLoader
         if classEnquirer:
             self.classEnquirer = classEnquirer
         else:
-            self.classEnquirer = forName('jep.ClassList').getInstance()
+            self.classEnquirer = classLoader.loadClass('jep.ClassList').getInstance()
 
     def find_spec(self, fullname, path, target=None):
         if self.classEnquirer.isJavaPackage(fullname):
@@ -98,18 +99,18 @@ class JepJavaImporter(object):
 
     def create_module(self, spec):
         fullname = spec.name
-        mod = makeModule(fullname, self, self.classEnquirer)
+        mod = makeModule(fullname, self, self.classLoader, self.classEnquirer)
         return mod
 
     def exec_module(self, fullname):
         return None
 
 
-def setupImporter(classEnquirer):
+def setupImporter(classLoader, classEnquirer):
     alreadySetup = False
     for importer in sys.meta_path:
         if isinstance(importer, JepJavaImporter):
             alreadySetup = True
             break
     if not alreadySetup:
-        sys.meta_path.insert(0,JepJavaImporter(classEnquirer))
+        sys.meta_path.insert(0,JepJavaImporter(classLoader, classEnquirer))
