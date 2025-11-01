@@ -1,7 +1,7 @@
 Jep - Java Embedded Python
 ===========================
 
-[![Python: 3.10, 3.11, 3.12, 3.13](https://img.shields.io/pypi/pyversions/Jep.svg)](https://pypi.org/pypi/jep)
+[![Python: 3.10, 3.11, 3.12, 3.13 3.14](https://img.shields.io/pypi/pyversions/Jep.svg)](https://pypi.org/pypi/jep)
 [![License: zlib/libpng](https://img.shields.io/pypi/l/Jep.svg)](https://pypi.org/pypi/jep)
 [![Pypi: v4.3.0](https://img.shields.io/pypi/v/Jep.svg)](https://pypi.org/pypi/jep)
 [![Docs: wiki](https://img.shields.io/badge/docs-wiki-orange.svg)](https://github.com/ninia/jep/wiki)
