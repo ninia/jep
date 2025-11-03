@@ -40,6 +40,12 @@ class TestImport(unittest.TestCase):
         from java.lang import System
         System.out.print('')  # should still work
 
+    def test_subpaclage_access(sekf):
+        # Check that a subpackage is available through attribute access
+        # use a subpacakge that isn't commonly used from Python to avoid caching
+        import java
+        Charset = java.nio.charset.Charset
+
     def test_conflicting_package(self):
         from io import DEFAULT_BUFFER_SIZE
 

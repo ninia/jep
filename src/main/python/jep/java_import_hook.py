@@ -47,6 +47,7 @@ class module(ModuleType):
             if subpkgs and name in subpkgs:
                 fullname = self.__name__ + '.' + name
                 mod = makeModule(fullname, self.__loader__,
+                                 self.__classLoader__,
                                  self.__classEnquirer__)
                 return mod
             elif name == '__all__':
