@@ -632,6 +632,7 @@ char isFunctionalInterfaceType(JNIEnv *env, jclass type)
         return 0;
     }
     if (!isInterface) {
+        (*env)->PopLocalFrame(env, NULL);
         return 0; // It's not an interface, so it can't be functional
     }
     methods = java_lang_Class_getMethods(env, type);
