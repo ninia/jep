@@ -360,20 +360,24 @@ int process_py_exception(JNIEnv *env)
                  */
                 count = 0;
                 for (i = 0; i < stackSize; i++) {
-                    PyObject *stackEntry, *pyLine;
+                    PyObject *stackEntry, *pyFileObj, *pyLineNumObj, *pyFuncObj, *pyLine;
                     const char *charPyFile, *charPyFunc = NULL;
                     int pyLineNum;
 
                     stackEntry = PyList_GetItem(pystack, i);
                     // java order is classname, method name, filename, line number
                     // python order is filename, line number, function name, line
-                    charPyFile = PyUnicode_AsUTF8(
-                                     PySequence_GetItem(stackEntry, 0));
-                    pyLineNum = (int) PyLong_AsLongLong(
-                                    PySequence_GetItem(stackEntry, 1));
-                    charPyFunc = PyUnicode_AsUTF8(
-                                     PySequence_GetItem(stackEntry, 2));
-                    pyLine = PySequence_GetItem(stackEntry, 3);
+                    pyFileObj    = PySequence_GetItem(stackEntry, 0);
+                    pyLineNumObj = PySequence_GetItem(stackEntry, 1);
+                    pyFuncObj    = PySequence_GetItem(stackEntry, 2);
+                    pyLine       = PySequence_GetItem(stackEntry, 3);
+
+                    charPyFile = PyUnicode_AsUTF8(pyFileObj);
+
+                    pyLineNum  = (int) PyLong_AsLongLong(pyLineNumObj);
+                    Py_DECREF(pyLineNumObj);
+
+                    charPyFunc = PyUnicode_AsUTF8(pyFuncObj);
 
                     /*
                      * If pyLine is None, this seems to imply it was an eval,
@@ -426,6 +430,9 @@ int process_py_exception(JNIEnv *env)
                                          charPyFile, pyLineNum);
                             free(charPyFileNoDir);
                             free(charPyFileNoExt);
+                            Py_DECREF(pyFileObj);
+                            Py_DECREF(pyFuncObj);
+                            Py_DECREF(pyLine);
                             Py_DECREF(pystack);
                             return 1;
                         }
@@ -439,6 +446,10 @@ int process_py_exception(JNIEnv *env)
                         (*env)->DeleteLocalRef(env, pyFunc);
                         (*env)->DeleteLocalRef(env, element);
                     }
+
+                    Py_DECREF(pyFileObj);
+                    Py_DECREF(pyFuncObj);
+                    Py_DECREF(pyLine);
                 } // end of looping over Python traceback items
                 Py_DECREF(pystack);
 
