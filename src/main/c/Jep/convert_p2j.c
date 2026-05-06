@@ -67,7 +67,7 @@ static void raiseTypeError(JNIEnv *env, PyObject *pyobject, jclass expectedType)
     (*env)->DeleteLocalRef(env, expTypeJavaName);
 }
 
-static jobject PyObject_As_JPyObject(JNIEnv *env, PyObject *pyobject)
+jobject PyObject_As_JPyObject(JNIEnv *env, PyObject *pyobject)
 {
     jobject jpyobject;
 

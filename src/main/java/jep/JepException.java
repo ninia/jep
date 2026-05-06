@@ -43,12 +43,23 @@ public class JepException extends RuntimeException {
     private final long pythonType;
 
     /**
+     * The Python traceback formatted by the <code>traceback</code> module, or
+     * <code>null</code> if no traceback was available (e.g. the exception was not
+     * thrown as a result of a native Python exception or was not surfaced by a Python
+     * call, or formatting itself failed). Formatted like a normal multi-line Python
+     * traceback, suitable for direct logging.
+     *
+     */
+    private final String pythonTraceback;
+
+    /**
      * Creates a new <code>JepException</code> instance.
      * 
      */
     public JepException() {
         super();
         this.pythonType = 0;
+        this.pythonTraceback = null;
     }
 
     /**
@@ -60,6 +71,7 @@ public class JepException extends RuntimeException {
     public JepException(String s) {
         super(s);
         this.pythonType = 0;
+        this.pythonTraceback = null;
     }
 
     /**
@@ -73,9 +85,10 @@ public class JepException extends RuntimeException {
         if (t instanceof JepException) {
             JepException j = (JepException) t;
             this.pythonType = j.pythonType;
+            this.pythonTraceback = j.pythonTraceback;
         } else {
             this.pythonType = 0;
-
+            this.pythonTraceback = null;
         }
     }
 
@@ -92,8 +105,10 @@ public class JepException extends RuntimeException {
         if (t instanceof JepException) {
             JepException j = (JepException) t;
             this.pythonType = j.pythonType;
+            this.pythonTraceback = j.pythonTraceback;
         } else {
             this.pythonType = 0;
+            this.pythonTraceback = null;
         }
     }
 
@@ -110,6 +125,60 @@ public class JepException extends RuntimeException {
     protected JepException(String s, long pythonType) {
         super(s);
         this.pythonType = pythonType;
+        this.pythonTraceback = null;
+    }
+
+    /**
+     * Construct with the address of a Python exception type and a formatted Python
+     * traceback. This is for internal use only.
+     *
+     * @param s
+     *            error message
+     * @param pythonType
+     *            the address of the type of the python exception that triggered
+     *            this exception
+     * @param pythonTraceback
+     *            the python traceback of the python exception that triggered
+     *            this exception
+     */
+    protected JepException(String s, long pythonType, String pythonTraceback) {
+        super(s);
+        this.pythonType = pythonType;
+        this.pythonTraceback = pythonTraceback;
+    }
+
+    /**
+     * Construct with a Throwable cause and a formatted Python traceback. This
+     * is for internal use only.
+     * @param s
+     *            error message
+     * @param t
+     *            the <code>Throwable</code> that caused this exception
+     * @param pythonTraceback
+     *            the python traceback of the python exception that triggered
+     *            this exception
+     */
+    protected JepException(String s, Throwable t, String pythonTraceback) {
+        super(s, t);
+        if (t instanceof JepException) {
+            JepException j = (JepException) t;
+            this.pythonType = j.pythonType;
+        } else {
+            this.pythonType = 0;
+        }
+        this.pythonTraceback = pythonTraceback;
+    }
+
+    /**
+     * Returns the Python traceback as formatted by Python's <code>traceback</code>
+     * module, or <code>null</code> if no Python traceback is available. The string
+     * matches what <code>traceback.print_exc()</code> would print in pure Python,
+     * including source line text and PEP 657 carets, where applicable.
+     *
+     * @return The formatted Python traceback, or {@code null}
+     */
+    public String getPythonTraceback() {
+        return pythonTraceback;
     }
 
     /**
