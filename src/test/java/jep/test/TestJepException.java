@@ -33,21 +33,23 @@ public class TestJepException {
                 // Ensure the exception is a PythonException and that the
                 // attached exception object is a Python exception object
                 // with a traceback attribute
-                if (!(e instanceof PythonException pe)) {
+                if (!(e instanceof PythonException)) {
                     throw new RuntimeException(
                             "Expected PythonException for a pure Python exception, but got " +
                                     e.getClass().getName());
                 }
+                PythonException pe = (PythonException) e;
                 PyObject pyExc = pe.getPythonException();
                 if (pyExc == null) {
                     throw new RuntimeException(
                             "getPythonException() returned null for a Python exception");
                 }
                 Object py = pyExc.getAttr("__traceback__");
-                if (!(py instanceof PyObject pyObj)) {
+                if (!(py instanceof PyObject)) {
                     throw new RuntimeException(
                             "Could not fetch Python traceback from exception object");
                 }
+                PyObject pyObj = (PyObject) py;
                 String tbType = pyObj.getAttr("__class__", PyObject.class)
                         .getAttr("__name__", String.class);
                 if (!tbType.equals("traceback")) {
