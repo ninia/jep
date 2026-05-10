@@ -333,7 +333,6 @@ static PyObject* pyjmap_items(PyObject* self, PyObject* args)
         Py_DECREF(pyval);
 
         if (PyList_SetItem(pylist, index, pytuple) != 0) {
-            Py_DECREF(pytuple);
             Py_DECREF(pylist);
             goto FINALLY;
         }
