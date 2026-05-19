@@ -16,8 +16,8 @@ authors = [
   {name = "Mike Johnson", email = "mike@mrj0.com"}
 ]
 maintainers = [
-  {name = "Nate Jensen", email = "ndjensen@gmail.com"},
-  {name = "Ben Steffensmeier", email = "ben.steffensmeier@gmail.com"}
+  {name = "Ben Steffensmeier", email = "ben.steffensmeier@gmail.com"},
+  {name = "Nate Jensen", email = "ndjensen@gmail.com"}
 ]
 classifiers = [
   "License :: OSI Approved :: zlib/libpng License",
