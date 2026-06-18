@@ -429,7 +429,7 @@ static jobject convert_pyndarray_jndarray(JNIEnv *env, PyObject *pyobj)
         usigned = 1;
     } else if (paType == NPY_INT32) {
         desiredType = JINT_ARRAY_TYPE;
-    } else if (paType == NPY_INT32) {
+    } else if (paType == NPY_UINT32) {
         desiredType = JINT_ARRAY_TYPE;
         usigned = 1;
     } else if (paType == NPY_INT64) {
