@@ -31,53 +31,36 @@ static PyObject* pyerrtype_from_throwable(JNIEnv*, jthrowable);
 
 /*
  * Builds a Java String containing the formatted Python traceback by calling
- * traceback.format_exception(ptype, pvalue, ptrace), and also extracts the
- * frame list via traceback.extract_tb(ptrace) for the caller to use when
- * synthesizing StackTraceElements.
+ * traceback.format_exception(ptype, pvalue, ptrace) and returns
+ * a JNI local reference to a jstring, or NULL if formatting failed or no
+ * exception info was provided. Caller releases with DeleteLocalRef.
  *
- * On return:
- *   *out_traceback_str - local jstring ref, or NULL if formatting failed or
- *                        no traceback info was available. Caller releases.
- *   *out_pystack       - new reference to a list of frame tuples from
- *                        extract_tb, or NULL if ptrace was NULL or the call
- *                        failed. Caller calls Py_DECREF.
- *
- * If anything goes wrong inside the traceback module, the Python error is
- * printed to stderr (and thereby cleared) so it cannot leak into the caller's
- * exception processing.
+ * Any errors inside the traceback module are printed to stderr and cleared so
+ * they cannot leak into the caller's exception processing.
  */
-static void process_python_traceback(JNIEnv *env,
-                                    PyObject *ptype,
-                                    PyObject *pvalue,
-                                    PyObject *ptrace,
-                                    jstring *out_traceback_str,
-                                    PyObject **out_pystack)
+static jstring format_python_traceback(JNIEnv *env,
+                                       PyObject *ptype,
+                                       PyObject *pvalue,
+                                       PyObject *ptrace)
 {
     PyObject *modTB = NULL;
     PyObject *formatFunc = NULL;
-    PyObject *extractFunc = NULL;
     PyObject *tbList = NULL;
     PyObject *sep = NULL;
     PyObject *joined = NULL;
     const char *utf8 = NULL;
-
-    *out_traceback_str = NULL;
-    *out_pystack = NULL;
+    jstring result = NULL;
 
     if (ptype == NULL && pvalue == NULL && ptrace == NULL) {
-        return;
+        return NULL;
     }
 
     modTB = PyImport_ImportModule("traceback");
     if (modTB == NULL) {
-        /*
-         * Well this isn't good, we got an error while we're trying
-         * to process errors, let's just print it out.
-         */
         if (PyErr_Occurred()) {
             PyErr_Print();
         }
-        return;
+        return NULL;
     }
 
     formatFunc = PyObject_GetAttrString(modTB, "format_exception");
@@ -87,23 +70,18 @@ static void process_python_traceback(JNIEnv *env,
                                               pvalue ? pvalue : Py_None,
                                               ptrace ? ptrace : Py_None,
                                               NULL);
-
         if (tbList != NULL) {
             sep = PyUnicode_FromString("");
-
             if (sep != NULL) {
                 joined = PyUnicode_Join(sep, tbList);
-
                 if (joined != NULL) {
                     utf8 = PyUnicode_AsUTF8(joined);
-
                     if (utf8 != NULL) {
-                        *out_traceback_str = (*env)->NewStringUTF(env, utf8);
+                        result = (*env)->NewStringUTF(env, utf8);
                     }
                 }
             }
         }
-
         if (PyErr_Occurred()) {
             PyErr_Print();
         }
@@ -111,31 +89,58 @@ static void process_python_traceback(JNIEnv *env,
         PyErr_Print();
     }
 
-    if (ptrace != NULL) {
-        extractFunc = PyObject_GetAttrString(modTB, "extract_tb");
-
-        if (extractFunc != NULL) {
-            *out_pystack = PyObject_CallFunctionObjArgs(extractFunc,
-                                                        ptrace, NULL);
-        }
-
-        if (PyErr_Occurred()) {
-            PyErr_Print();
-        }
-    }
-
     Py_XDECREF(modTB);
     Py_XDECREF(formatFunc);
-    Py_XDECREF(extractFunc);
     Py_XDECREF(tbList);
     Py_XDECREF(sep);
     Py_XDECREF(joined);
+    return result;
+}
+
+/*
+ * Extracts the frame list from a Python traceback via traceback.extract_tb(ptrace).
+ * Returns a new reference to a list of frame tuples, or NULL if ptrace is NULL
+ * or the call failed. Caller calls Py_DECREF on the result.
+ *
+ * Any errors inside the traceback module are printed to stderr and cleared so
+ * they cannot leak into the caller's exception processing.
+ */
+static PyObject* extract_python_stack(PyObject *ptrace)
+{
+    PyObject *modTB = NULL;
+    PyObject *extractFunc = NULL;
+    PyObject *pystack = NULL;
+
+    if (ptrace == NULL) {
+        return NULL;
+    }
+
+    modTB = PyImport_ImportModule("traceback");
+    if (modTB == NULL) {
+        if (PyErr_Occurred()) {
+            PyErr_Print();
+        }
+        return NULL;
+    }
+
+    extractFunc = PyObject_GetAttrString(modTB, "extract_tb");
+    if (extractFunc != NULL) {
+        pystack = PyObject_CallFunctionObjArgs(extractFunc, ptrace, NULL);
+    }
+
+    if (PyErr_Occurred()) {
+        PyErr_Print();
+    }
+
+    Py_XDECREF(modTB);
+    Py_XDECREF(extractFunc);
+    return pystack;
 }
 
 // exception handling
-jmethodID jepExcInitStrThrowStr        = 0;
-jmethodID pythonExcInitStrLongStrPyObj = 0;
-jmethodID stackTraceElemInit           = 0;
+jmethodID pythonExcInitStrLongPyObjStr  = 0;  // PythonException(String, long, PyObject, String)
+jmethodID pythonExcInitStrThrowPyObjStr = 0;  // PythonException(String, Throwable, PyObject, String)
+jmethodID stackTraceElemInit            = 0;
 
 /*
  * Converts a Python exception to a JepException.  Returns true if an
@@ -219,7 +224,8 @@ int process_py_exception(JNIEnv *env)
             }
         }
 
-        process_python_traceback(env, ptype, pvalue, ptrace, &jtraceback, &pystack);
+        pystack = extract_python_stack(ptrace);
+        jtraceback = format_python_traceback(env, ptype, pvalue, ptrace);
 
         /*
          * Capture pvalue as a Java PyObject now, before the block below may
@@ -292,39 +298,39 @@ int process_py_exception(JNIEnv *env)
             }
             m = PyUnicode_AsUTF8(message);
 
-            // make a JepException
+            // make a PythonException
             jmsg = (*env)->NewStringUTF(env, (const char *) m);
             if (jexc != NULL) {
-                // constructor JepException(String, Throwable, String)
-                if (jepExcInitStrThrowStr == 0) {
-                    jepExcInitStrThrowStr = (*env)->GetMethodID(env, JEP_EXC_TYPE,
-                                         "<init>",
-                                         "(Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V");
-                }
-                jepException = (*env)->NewObject(env, JEP_EXC_TYPE,
-                                                 jepExcInitStrThrowStr,
-                                                 jmsg, jexc->object, jtraceback);
-            } else {
-                // constructor PythonException(String, long, String, PyObject)
-                if (pythonExcInitStrLongStrPyObj == 0) {
-                    pythonExcInitStrLongStrPyObj = (*env)->GetMethodID(env, PYTHON_EXC_TYPE,
-                                                            "<init>",
-                                                            "(Ljava/lang/String;JLjava/lang/String;Ljep/python/PyObject;)V");
+                // constructor PythonException(String, Throwable, PyObject, String)
+                if (pythonExcInitStrThrowPyObjStr == 0) {
+                    pythonExcInitStrThrowPyObjStr = (*env)->GetMethodID(env, PYTHON_EXC_TYPE,
+                                                 "<init>",
+                                                 "(Ljava/lang/String;Ljava/lang/Throwable;Ljep/python/PyObject;Ljava/lang/String;)V");
                 }
                 jepException = (*env)->NewObject(env, PYTHON_EXC_TYPE,
-                                                 pythonExcInitStrLongStrPyObj,
-                                                 jmsg, (jlong) ptype, jtraceback, jpyException);
+                                                 pythonExcInitStrThrowPyObjStr,
+                                                 jmsg, jexc->object, jpyException, jtraceback);
+            } else {
+                // constructor PythonException(String, long, PyObject, String)
+                if (pythonExcInitStrLongPyObjStr == 0) {
+                    pythonExcInitStrLongPyObjStr = (*env)->GetMethodID(env, PYTHON_EXC_TYPE,
+                                                    "<init>",
+                                                    "(Ljava/lang/String;JLjep/python/PyObject;Ljava/lang/String;)V");
+                }
+                jepException = (*env)->NewObject(env, PYTHON_EXC_TYPE,
+                                                 pythonExcInitStrLongPyObjStr,
+                                                 jmsg, (jlong) ptype, jpyException, jtraceback);
             }
             (*env)->DeleteLocalRef(env, jmsg);
-            if (jtraceback != NULL) {
-                (*env)->DeleteLocalRef(env, jtraceback);
-            }
             if (jpyException != NULL) {
                 (*env)->DeleteLocalRef(env, jpyException);
             }
+            if (jtraceback != NULL) {
+                (*env)->DeleteLocalRef(env, jtraceback);
+            }
             if ((*env)->ExceptionCheck(env) || !jepException) {
                 PyErr_SetString(PyExc_RuntimeError,
-                                "creating jep.JepException failed.");
+                                "creating jep.PythonException failed.");
                 return 1;
             }
 

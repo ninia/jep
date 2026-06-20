@@ -27,10 +27,11 @@ package jep;
 import jep.python.PyObject;
 
 /**
- * A {@link JepException} caused by a native Python exception in Python code.
- * Carries the Python exception instance as a {@link PyObject} proxy, allowing
- * callers to inspect attributes (e.g. {@code .args}, custom fields) on the
- * original exception.
+ * A {@link JepException} thrown whenever a Python exception is active, whether
+ * the root cause was Python code or a Java exception that surfaced through
+ * Python. Carries the Python exception instance as a {@link PyObject} proxy,
+ * allowing callers to inspect attributes (e.g. {@code .args}, {@code __traceback__},
+ * custom fields) on the original Python exception object.
  *
  * <p>The wrapped {@link PyObject} is subject to the same constraints as all
  * Jep proxy objects: it is only valid while the originating {@link Jep}
@@ -50,21 +51,49 @@ public class PythonException extends JepException {
     private final PyObject pythonException;
 
     /**
-     * Called from native code for pure-Python exceptions.
+     * The formatted Python traceback as a string, or {@code null} if it could
+     * not be computed at throw time.
+     */
+    private final String pythonTraceback;
+
+    /**
+     * Called from native code for pure-Python exceptions (no Java cause).
      *
      * @param s
      *            error message
      * @param pythonType
      *            address of the Python exception type
-     * @param pythonTraceback
-     *            formatted traceback string, or {@code null}
      * @param pythonException
      *            the Python exception instance, or {@code null}
+     * @param pythonTraceback
+     *            formatted traceback string, or {@code null}
      */
-    protected PythonException(String s, long pythonType, String pythonTraceback,
-            PyObject pythonException) {
-        super(s, pythonType, pythonTraceback);
+    protected PythonException(String s, long pythonType, PyObject pythonException,
+            String pythonTraceback) {
+        super(s, pythonType);
         this.pythonException = pythonException;
+        this.pythonTraceback = pythonTraceback;
+    }
+
+    /**
+     * Called from native code when a Java exception surfaces through Python.
+     * Preserves the Java exception as the cause while carrying the Python
+     * exception object that wraps it.
+     *
+     * @param s
+     *            error message
+     * @param cause
+     *            the originating Java exception
+     * @param pythonException
+     *            the Python exception instance wrapping the Java cause, or {@code null}
+     * @param pythonTraceback
+     *            formatted traceback string, or {@code null}
+     */
+    protected PythonException(String s, Throwable cause, PyObject pythonException,
+            String pythonTraceback) {
+        super(s, cause);
+        this.pythonException = pythonException;
+        this.pythonTraceback = pythonTraceback;
     }
 
     /**
@@ -75,5 +104,16 @@ public class PythonException extends JepException {
      */
     public PyObject getPythonException() {
         return pythonException;
+    }
+
+    /**
+     * Returns the formatted Python traceback as produced by
+     * {@code traceback.format_exception()}, or {@code null} if it was not
+     * available when the exception was thrown.
+     *
+     * @return the formatted traceback string, or {@code null}
+     */
+    public String getPythonTraceback() {
+        return pythonTraceback;
     }
 }
