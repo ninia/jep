@@ -52,8 +52,8 @@ public class TestNumpy {
         asPyObj = interp.getValue("zarray", PyObject.class);
 
         // test byte[]
-        NDArray<byte[]> barray = new NDArray<>(
-                new byte[] { 0x10, 0x00, 0x54, 0x32 }, dimensions);
+        NDArray<byte[]> barray = new NDArray<>(new byte[] { 10, 0, -54, 32 },
+                dimensions);
         interp.set("barray", barray);
         String b_dtype = interp.getValue("barray.dtype", String.class);
         if (!"int8".equals(b_dtype)) {
@@ -72,7 +72,8 @@ public class TestNumpy {
 
         // test unsigned byte[]
         NDArray<byte[]> ubarray = new NDArray<>(
-                new byte[] { 0x13, 0x41, 0x00, 0x17 }, true, dimensions);
+                new byte[] { 13, (byte) (Byte.MAX_VALUE + 10), 0, 17 }, true,
+                dimensions);
         interp.set("ubarray", ubarray);
         String ub_dtype = interp.getValue("ubarray.dtype", String.class);
         if (!"uint8".equals(ub_dtype)) {
@@ -91,8 +92,8 @@ public class TestNumpy {
         asPyObj = interp.getValue("ubarray", PyObject.class);
 
         // test short[]
-        NDArray<short[]> sarray = new NDArray<>(new short[] { 5, 3, 1, 8 },
-                dimensions);
+        NDArray<short[]> sarray = new NDArray<>(
+                new short[] { 50, 0, -15343, 9002 }, dimensions);
         interp.set("sarray", sarray);
         String s_dtype = interp.getValue("sarray.dtype", String.class);
         if (!"int16".equals(s_dtype)) {
@@ -110,7 +111,8 @@ public class TestNumpy {
         asPyObj = interp.getValue("sarray", PyObject.class);
 
         // test unsigned short[]
-        NDArray<short[]> usarray = new NDArray<>(new short[] { 4, 5, 2, 8 },
+        NDArray<short[]> usarray = new NDArray<>(
+                new short[] { 40, (short) (Short.MAX_VALUE + 16753), 0, 21954 },
                 true, dimensions);
         interp.set("usarray", usarray);
         String us_dtype = interp.getValue("usarray.dtype", String.class);
@@ -130,8 +132,8 @@ public class TestNumpy {
         asPyObj = interp.getValue("usarray", PyObject.class);
 
         // test int[]
-        NDArray<int[]> iarray = new NDArray<>(new int[] { 547, 232, -675, 101 },
-                dimensions);
+        NDArray<int[]> iarray = new NDArray<>(
+                new int[] { 547, 232001, -675, 0 }, dimensions);
         interp.set("iarray", iarray);
         String i_dtype = interp.getValue("iarray.dtype", String.class);
         if (!"int32".equals(i_dtype)) {
@@ -149,8 +151,9 @@ public class TestNumpy {
         asPyObj = interp.getValue("iarray", PyObject.class);
 
         // test unsigned int[]
-        NDArray<int[]> uiarray = new NDArray<>(new int[] { 74, 257, 903, 105 },
-                true, dimensions);
+        NDArray<int[]> uiarray = new NDArray<>(
+                new int[] { 0, Integer.MAX_VALUE + 434809, 903, 105 }, true,
+                dimensions);
         interp.set("uiarray", uiarray);
         String ui_dtype = interp.getValue("uiarray.dtype", String.class);
         if (!"uint32".equals(ui_dtype)) {
@@ -170,7 +173,7 @@ public class TestNumpy {
 
         // test long[]
         NDArray<long[]> larray = new NDArray<>(
-                new long[] { 62724764L, 3424637L, 3426734242L, -3429234L },
+                new long[] { 62724764L, 0, 3426734242L, -3429234L },
                 dimensions);
         interp.set("larray", larray);
         String l_dtype = interp.getValue("larray.dtype", String.class);
@@ -189,9 +192,8 @@ public class TestNumpy {
         asPyObj = interp.getValue("larray", PyObject.class);
 
         // test unsigned long[]
-        NDArray<long[]> ularray = new NDArray<>(
-                new long[] { 5376842154L, 0L, 3497532177L, 9463522108L }, true,
-                dimensions);
+        NDArray<long[]> ularray = new NDArray<>(new long[] { 5376842154L, 0L,
+                3497532177L, Long.MAX_VALUE + 252778L }, true, dimensions);
         interp.set("ularray", ularray);
         String ul_dtype = interp.getValue("ularray.dtype", String.class);
         if (!"uint64".equals(ul_dtype)) {
@@ -211,7 +213,7 @@ public class TestNumpy {
 
         // test float[]
         NDArray<float[]> farray = new NDArray<>(
-                new float[] { 4.32f, -0.0001f, 349.285f, 3201.0f }, dimensions);
+                new float[] { 4.32f, -0.0001f, 349.285f, 0.0f }, dimensions);
         interp.set("farray", farray);
         String f_dtype = interp.getValue("farray.dtype", String.class);
         if (!"float32".equals(f_dtype)) {
@@ -230,8 +232,7 @@ public class TestNumpy {
 
         // test double[]
         NDArray<double[]> darray = new NDArray<>(
-                new double[] { 0.44321, 0.00015, -9.34278, 235574.53 },
-                dimensions);
+                new double[] { 0.44321, 0.00015, -9.34278, 0.0 }, dimensions);
         interp.set("darray", darray);
         String d_dtype = interp.getValue("darray.dtype", String.class);
         if (!"float64".equals(d_dtype)) {
