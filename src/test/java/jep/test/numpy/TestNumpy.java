@@ -52,8 +52,8 @@ public class TestNumpy {
         asPyObj = interp.getValue("zarray", PyObject.class);
 
         // test byte[]
-        NDArray<byte[]> barray = new NDArray<>(
-                new byte[] { 0x10, 0x00, 0x54, 032 }, dimensions);
+        NDArray<byte[]> barray = new NDArray<>(new byte[] { 10, 0, -54, 32 },
+                dimensions);
         interp.set("barray", barray);
         String b_dtype = interp.getValue("barray.dtype", String.class);
         if (!"int8".equals(b_dtype)) {
@@ -70,9 +70,30 @@ public class TestNumpy {
         }
         asPyObj = interp.getValue("barray", PyObject.class);
 
-        // test short[]
-        NDArray<short[]> sarray = new NDArray<>(new short[] { 5, 3, 1, 8 },
+        // test unsigned byte[]
+        NDArray<byte[]> ubarray = new NDArray<>(
+                new byte[] { 13, (byte) (Byte.MAX_VALUE + 10), 0, 17 }, true,
                 dimensions);
+        interp.set("ubarray", ubarray);
+        String ub_dtype = interp.getValue("ubarray.dtype", String.class);
+        if (!"uint8".equals(ub_dtype)) {
+            throw new AssertionError(
+                    "unsigned byte ndarray set failed, dtype = " + ub_dtype);
+        }
+        NDArray<?> retUB = (NDArray<?>) interp.getValue("ubarray");
+        if (!ubarray.equals(retUB)) {
+            throw new AssertionError(
+                    "unsigned byte[] before != unsigned byte[] after");
+        }
+        if (ubarray.hashCode() != retUB.hashCode()) {
+            throw new AssertionError(
+                    "unsigned byte[].hashCode() before != unsigned byte[].hasCode() after");
+        }
+        asPyObj = interp.getValue("ubarray", PyObject.class);
+
+        // test short[]
+        NDArray<short[]> sarray = new NDArray<>(
+                new short[] { 50, 0, -15343, 9002 }, dimensions);
         interp.set("sarray", sarray);
         String s_dtype = interp.getValue("sarray.dtype", String.class);
         if (!"int16".equals(s_dtype)) {
@@ -89,9 +110,30 @@ public class TestNumpy {
         }
         asPyObj = interp.getValue("sarray", PyObject.class);
 
+        // test unsigned short[]
+        NDArray<short[]> usarray = new NDArray<>(
+                new short[] { 40, (short) (Short.MAX_VALUE + 16753), 0, 21954 },
+                true, dimensions);
+        interp.set("usarray", usarray);
+        String us_dtype = interp.getValue("usarray.dtype", String.class);
+        if (!"uint16".equals(us_dtype)) {
+            throw new AssertionError(
+                    "unsigned short ndarray set failed, dtype = " + us_dtype);
+        }
+        NDArray<?> retUS = (NDArray<?>) interp.getValue("usarray");
+        if (!usarray.equals(retUS)) {
+            throw new AssertionError(
+                    "unsigned short[] before != unsigned short[] after");
+        }
+        if (usarray.hashCode() != retUS.hashCode()) {
+            throw new AssertionError(
+                    "unsigned short[].hashCode() before != unsigned short[].hasCode() after");
+        }
+        asPyObj = interp.getValue("usarray", PyObject.class);
+
         // test int[]
-        NDArray<int[]> iarray = new NDArray<>(new int[] { 547, 232, -675, 101 },
-                dimensions);
+        NDArray<int[]> iarray = new NDArray<>(
+                new int[] { 547, 232001, -675, 0 }, dimensions);
         interp.set("iarray", iarray);
         String i_dtype = interp.getValue("iarray.dtype", String.class);
         if (!"int32".equals(i_dtype)) {
@@ -108,9 +150,30 @@ public class TestNumpy {
         }
         asPyObj = interp.getValue("iarray", PyObject.class);
 
+        // test unsigned int[]
+        NDArray<int[]> uiarray = new NDArray<>(
+                new int[] { 0, Integer.MAX_VALUE + 434809, 903, 105 }, true,
+                dimensions);
+        interp.set("uiarray", uiarray);
+        String ui_dtype = interp.getValue("uiarray.dtype", String.class);
+        if (!"uint32".equals(ui_dtype)) {
+            throw new AssertionError(
+                    "unsigned int ndarray set failed, dtype = " + ui_dtype);
+        }
+        NDArray<?> retUI = (NDArray<?>) interp.getValue("uiarray");
+        if (!uiarray.equals(retUI)) {
+            throw new AssertionError(
+                    "unsigned int[] before != unsigned int[] after");
+        }
+        if (uiarray.hashCode() != retUI.hashCode()) {
+            throw new AssertionError(
+                    "unsigned int[].hashCode() before != unsigned int[].hasCode() after");
+        }
+        asPyObj = interp.getValue("uiarray", PyObject.class);
+
         // test long[]
         NDArray<long[]> larray = new NDArray<>(
-                new long[] { 62724764L, 3424637L, 3426734242L, -3429234L },
+                new long[] { 62724764L, 0, 3426734242L, -3429234L },
                 dimensions);
         interp.set("larray", larray);
         String l_dtype = interp.getValue("larray.dtype", String.class);
@@ -128,9 +191,29 @@ public class TestNumpy {
         }
         asPyObj = interp.getValue("larray", PyObject.class);
 
+        // test unsigned long[]
+        NDArray<long[]> ularray = new NDArray<>(new long[] { 5376842154L, 0L,
+                3497532177L, Long.MAX_VALUE + 252778L }, true, dimensions);
+        interp.set("ularray", ularray);
+        String ul_dtype = interp.getValue("ularray.dtype", String.class);
+        if (!"uint64".equals(ul_dtype)) {
+            throw new AssertionError(
+                    "unsigned long ndarray set failed, dtype = " + ul_dtype);
+        }
+        NDArray<?> retUL = (NDArray<?>) interp.getValue("ularray");
+        if (!ularray.equals(retUL)) {
+            throw new AssertionError(
+                    "unsigned long[] before != unsigned long[] after");
+        }
+        if (ularray.hashCode() != retUL.hashCode()) {
+            throw new AssertionError(
+                    "unsigned long[].hashCode() before != unsigned long[].hasCode() after");
+        }
+        asPyObj = interp.getValue("ularray", PyObject.class);
+
         // test float[]
         NDArray<float[]> farray = new NDArray<>(
-                new float[] { 4.32f, -0.0001f, 349.285f, 3201.0f }, dimensions);
+                new float[] { 4.32f, -0.0001f, 349.285f, 0.0f }, dimensions);
         interp.set("farray", farray);
         String f_dtype = interp.getValue("farray.dtype", String.class);
         if (!"float32".equals(f_dtype)) {
@@ -149,8 +232,7 @@ public class TestNumpy {
 
         // test double[]
         NDArray<double[]> darray = new NDArray<>(
-                new double[] { 0.44321, 0.00015, -9.34278, 235574.53 },
-                dimensions);
+                new double[] { 0.44321, 0.00015, -9.34278, 0.0 }, dimensions);
         interp.set("darray", darray);
         String d_dtype = interp.getValue("darray.dtype", String.class);
         if (!"float64".equals(d_dtype)) {
