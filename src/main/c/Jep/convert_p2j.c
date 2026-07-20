@@ -61,9 +61,11 @@ static void raiseTypeError(JNIEnv *env, PyObject *pyobject, jclass expectedType)
     } else {
         actTypeName = pyobject->ob_type->tp_name;
     }
-    PyErr_Format(PyExc_TypeError, "Expected %s but received a %s.", expTypeName,
-                 actTypeName);
-    (*env)->ReleaseStringUTFChars(env, expTypeJavaName, expTypeName);
+    PyErr_Format(PyExc_TypeError, "Expected %s but received a %s.",
+                 expTypeName ? expTypeName : "<unknown>", actTypeName);
+    if (expTypeName != NULL) {
+        (*env)->ReleaseStringUTFChars(env, expTypeJavaName, expTypeName);
+    }
     (*env)->DeleteLocalRef(env, expTypeJavaName);
 }
 
