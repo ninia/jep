@@ -56,14 +56,24 @@ static void raiseTypeError(JNIEnv *env, PyObject *pyobject, jclass expectedType)
         return;
     }
     expTypeName = (*env)->GetStringUTFChars(env, expTypeJavaName, 0);
+    if (expTypeName == NULL) {
+        /*
+         * GetStringUTFChars can fail and leave a pending JNI exception (such as
+         * OutOfMemoryError). Clear it so it does not interfere with later JNI
+         * calls; the type error is still reported with a fallback name below.
+         */
+        (*env)->ExceptionClear(env);
+    }
     if (PyJClass_Check(pyobject)) {
         actTypeName = "java.lang.Class";
     } else {
         actTypeName = pyobject->ob_type->tp_name;
     }
-    PyErr_Format(PyExc_TypeError, "Expected %s but received a %s.", expTypeName,
-                 actTypeName);
-    (*env)->ReleaseStringUTFChars(env, expTypeJavaName, expTypeName);
+    PyErr_Format(PyExc_TypeError, "Expected %s but received a %s.",
+                 expTypeName ? expTypeName : "<unknown>", actTypeName);
+    if (expTypeName != NULL) {
+        (*env)->ReleaseStringUTFChars(env, expTypeJavaName, expTypeName);
+    }
     (*env)->DeleteLocalRef(env, expTypeJavaName);
 }
 
