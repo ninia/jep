@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2012-2022 JEP AUTHORS.
+# Copyright (c) 2012-2026 JEP AUTHORS.
 #
 # This file is licensed under the the zlib/libpng License.
 #
@@ -23,5 +23,5 @@
 #     distribution.
 #
 
-__VERSION__ = '4.3.2'
+__VERSION__ = '4.4.0'
 VERSION = __VERSION__
