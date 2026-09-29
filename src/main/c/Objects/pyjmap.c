@@ -171,7 +171,7 @@ static int pyjmap_setitem(PyObject *o, PyObject *key, PyObject *v)
 
         jkey = PyObject_As_jobject(env, key, JOBJECT_TYPE);
         if (!jkey && PyErr_Occurred()) {
-            return -1;
+            goto FINALLY;
         }
 
         java_util_Map_put(env, obj->object, jkey, value);
