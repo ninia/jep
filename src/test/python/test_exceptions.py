@@ -80,7 +80,7 @@ class TestExceptions(unittest.TestCase):
             pass
 
     def test_exception_cause(self):
-        jep_pipe(build_java_process_cmd('jep.test.TestExceptionCause'))
+        jep_pipe(build_java_process_cmd('jep.test.TestJepException'))
 
     # TODO come up with a way to test MemoryError and AssertionError given
     # I coded support for that.

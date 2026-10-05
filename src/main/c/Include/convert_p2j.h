@@ -87,6 +87,13 @@ jstring  PyObject_As_jstring(JNIEnv*, PyObject*);
 jobject  PyObject_As_jobject(JNIEnv*, PyObject*, jclass);
 
 /*
+ * Wraps a PyObject* in a Java jep.python.PyObject instance. Increments the
+ * Python refcount so the object survives until the Java wrapper is GC'd.
+ * NULL will be returned and a Java exception will be set if the call fails.
+ */
+jobject PyObject_As_JPyObject(JNIEnv*, PyObject*);
+
+/*
  * Use PyErr_Occurred() after this to check for errors
  */
 jvalue   PyObject_As_jvalue(JNIEnv*, PyObject*, jclass);

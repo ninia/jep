@@ -44,7 +44,7 @@ public class JepException extends RuntimeException {
 
     /**
      * Creates a new <code>JepException</code> instance.
-     * 
+     *
      */
     public JepException() {
         super();
@@ -53,7 +53,7 @@ public class JepException extends RuntimeException {
 
     /**
      * Creates a new <code>JepException</code> instance.
-     * 
+     *
      * @param s
      *            a <code>String</code> value
      */
@@ -64,7 +64,7 @@ public class JepException extends RuntimeException {
 
     /**
      * Creates a new <code>JepException</code> instance.
-     * 
+     *
      * @param t
      *            a <code>Throwable</code> value
      */
@@ -75,13 +75,12 @@ public class JepException extends RuntimeException {
             this.pythonType = j.pythonType;
         } else {
             this.pythonType = 0;
-
         }
     }
 
     /**
      * Creates a new <code>JepException</code> instance.
-     * 
+     *
      * @param s
      *            a <code>String</code> value
      * @param t
