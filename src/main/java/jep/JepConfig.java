@@ -154,6 +154,13 @@ public class JepConfig {
     }
 
     /**
+     * @deprecated Python 3.12 included changes to better isolate
+     * sub-interpreters which cause classes in shared modules to behave
+     * erratically so we cannot guarantee the functionality of shared modules
+     * and will be removing them entirely in a future version. Please move to
+     * SharedInterpreter or only use modules that natively support
+     * sub-interpreters.
+     *
      * Sets the names of modules which should be shared with other Jep
      * sub-interpreters. This can make it possible to use modules which are not
      * designed for use from Python sub-interpreters. This should not be
@@ -171,6 +178,7 @@ public class JepConfig {
      * @return a reference to this JepConfig
      * 
      * @since 3.6
+     * @Deprecated
      */
     public JepConfig setSharedModules(Set<String> sharedModules) {
         this.sharedModules = sharedModules;
@@ -178,6 +186,13 @@ public class JepConfig {
     }
 
     /**
+     * @deprecated Python 3.12 included changes to better isolate
+     * sub-interpreters which cause classes in shared modules to behave
+     * erratically so we cannot guarantee the functionality of shared modules
+     * and will be removing them entirely in a future version. Please move to
+     * SharedInterpreter or only use modules that natively support
+     * sub-interpreters.
+     *
      * Adds module names to the set of shared modules
      * 
      * @param sharedModule
@@ -186,6 +201,7 @@ public class JepConfig {
      * @see #setSharedModules(Set)
      * 
      * @since 3.6
+     * @Deprecated
      */
     public JepConfig addSharedModules(String... sharedModule) {
         if (sharedModules == null) {

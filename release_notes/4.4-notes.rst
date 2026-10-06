@@ -1,0 +1,23 @@
+Jep 4.3 Release Notes
+*********************
+This release adds more information to Java JepExceptions that are caused by 
+python exception, deprecation of shared modules, and fixes for rare memory
+leaks.
+
+
+Exception improvements
+**********************
+A new class, PythonException, has been added which extends JepExceptions. When
+an exception is thrown in Python and not caught it will be converted to a
+PythonException and thrown in Java, instead of the previous behavior of throwing
+a plain JepException. PythonException exposes additional details such as the
+Python stack trace and a PyObject version of the original Python Exception that
+can be used to get additional information about the cause.
+
+Shared Module Deprecation
+*************************
+Python 3.12 included changes to better isolate sub-interpreters which cause
+classes in shared modules to behave erratically so we cannot guarantee the
+functionality of shared modules and will be removing them entirely in a future
+version. Please move to SharedInterpreter or only use modules that natively
+support sub-interpreters.
