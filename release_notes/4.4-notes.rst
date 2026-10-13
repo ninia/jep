@@ -1,13 +1,13 @@
-Jep 4.3 Release Notes
+Jep 4.4 Release Notes
 *********************
 This release adds more information to Java JepExceptions that are caused by 
-python exception, deprecation of shared modules, and fixes for rare memory
+Python exceptions, deprecation of shared modules, and fixes for rare memory
 leaks.
 
 
 Exception improvements
 **********************
-A new class, PythonException, has been added which extends JepExceptions. When
+A new class, PythonException, has been added which extends JepException. When
 an exception is thrown in Python and not caught it will be converted to a
 PythonException and thrown in Java, instead of the previous behavior of throwing
 a plain JepException. PythonException exposes additional details such as the
