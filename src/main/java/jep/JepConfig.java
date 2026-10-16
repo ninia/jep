@@ -178,8 +178,8 @@ public class JepConfig {
      * @return a reference to this JepConfig
      * 
      * @since 3.6
-     * @Deprecated
      */
+    @Deprecated
     public JepConfig setSharedModules(Set<String> sharedModules) {
         this.sharedModules = sharedModules;
         return this;
@@ -201,8 +201,8 @@ public class JepConfig {
      * @see #setSharedModules(Set)
      * 
      * @since 3.6
-     * @Deprecated
      */
+    @Deprecated
     public JepConfig addSharedModules(String... sharedModule) {
         if (sharedModules == null) {
             sharedModules = new HashSet<>();
