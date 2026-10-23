@@ -300,9 +300,18 @@ static jarray convert_pyndarray_jprimitivearray(JNIEnv* env,
                && (paType == NPY_FLOAT64)) {
         arr = (*env)->NewDoubleArray(env, sz);
     } else {
+        PyArray_Descr *descr = PyArray_DESCR(copy);
+        PyObject *type_name_obj = PyObject_GetAttrString((PyObject*) descr, "name");
+        const char *name_c_str = "";
+        if (type_name_obj != NULL) {
+            name_c_str = PyUnicode_AsUTF8(type_name_obj);
+            Py_DECREF(type_name_obj);
+        }
         Py_XDECREF(copy);
-        PyErr_SetString(PyExc_RuntimeError,
-                        "Error matching ndarray.dtype to Java primitive type");
+        PyErr_Format(PyExc_TypeError,
+                     "Error matching ndarray.dtype %s to desired Java primitive array type",
+                     name_c_str);
+
         return NULL;
     }
 

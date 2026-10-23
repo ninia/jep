@@ -100,8 +100,19 @@ class TestNumpy(unittest.TestCase):
     def testIncompatibleConversion(self):
         import numpy
         fa = numpy.zeros((15, 5), numpy.float32)
-        with self.assertRaises(TypeError):
+        with self.assertRaises(TypeError) as float32_error:
             self.test.callDoubleMethod(fa)
+        self.assertIn('ndarray.dtype float32', str(float32_error.exception))
+
+        la = numpy.zeros((6, 5), numpy.int64);
+        with self.assertRaises(TypeError) as int64_error:
+            self.test.callDoubleMethod(la)
+        self.assertIn('ndarray.dtype int64', str(int64_error.exception))
+
+        ba = numpy.zeros((12, 3), numpy.uint8)
+        with self.assertRaises(TypeError) as uint8_error:
+            self.test.callIntMethod(ba)
+        self.assertIn('ndarray.dtype uint8', str(uint8_error.exception))
 
     def testCharArrayCreation(self):
         NDArray = jep.findClass("jep.NDArray")
