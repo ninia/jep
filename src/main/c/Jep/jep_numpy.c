@@ -300,9 +300,41 @@ static jarray convert_pyndarray_jprimitivearray(JNIEnv* env,
                && (paType == NPY_FLOAT64)) {
         arr = (*env)->NewDoubleArray(env, sz);
     } else {
+        // type mismatch, can't do the conversion
+
+        // prepare the desired Java type name for the error message
+        jstring desTypeJavaName = java_lang_Class_getName(env, desiredType);
+        if (process_java_exception(env)) {
+            Py_XDECREF(copy);
+            return NULL;
+        }
+        const char *desTypeName = (*env)->GetStringUTFChars(env, desTypeJavaName, 0);
+        if (desTypeName == NULL) {
+            (*env)->ExceptionClear(env);
+        }
+
+        // get the readable name of the ndarray's dtype for the error message
+        PyArray_Descr *descr = PyArray_DESCR(copy);
+        PyObject *dtypeName = PyObject_GetAttrString((PyObject*) descr, "name");
+        if (dtypeName == NULL) {
+            Py_XDECREF(copy);
+            if (desTypeName != NULL) {
+                (*env)->ReleaseStringUTFChars(env, desTypeJavaName, desTypeName);
+            }
+            (*env)->DeleteLocalRef(env, desTypeJavaName);
+            return NULL;
+        }
+
         Py_XDECREF(copy);
-        PyErr_SetString(PyExc_RuntimeError,
-                        "Error matching ndarray.dtype to Java primitive type");
+        PyErr_Format(PyExc_TypeError,
+                     "Error matching ndarray with dtype %U to desired Java type %s",
+                     dtypeName,
+                     desTypeName ? desTypeName : "<unknown>");
+        Py_DECREF(dtypeName);
+        if (desTypeName != NULL) {
+            (*env)->ReleaseStringUTFChars(env, desTypeJavaName, desTypeName);
+        }
+        (*env)->DeleteLocalRef(env, desTypeJavaName);
         return NULL;
     }
 
