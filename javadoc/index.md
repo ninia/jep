@@ -1,6 +1,8 @@
 Javadoc
 ========
 
+[Version 4.4](4.4)
+
 [Version 4.3](4.3)
 
 [Version 4.2](4.2)
